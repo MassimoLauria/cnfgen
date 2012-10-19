@@ -1,12 +1,12 @@
-#+TITLE: Documentation of =cnfgen= formulas generator.
 #+LANGUAGE:    en
 #+OPTIONS:     H:2 num:nil toc:nil \n:nil @:t ::t |:t ^:t f:t TeX:t
 
 
 * Generator of propositional formulas in CNF form
 
-  Tool =cnfgen= is CNF formulas generator (i.e. propositional
-  formulas in conjunctive normal form).
+  Tool =cnfgen= is CNF formulas generator (i.e. propositional formulas
+  in  conjunctive normal form).  It is  still in  its infancy,  so you
+  cannot use it.
 
 ** What is a CNF?
 
