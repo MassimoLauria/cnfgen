@@ -12,6 +12,7 @@ format. Such formulas are ready to be fed to sat solvers.
 from __future__ import print_function
 import itertools
 
+
 class CNF(object):
     """Formula in conjunctive normal form
     """
@@ -222,6 +223,71 @@ def GT(size,total=False):
             yield [ (False,'x_{{{0},{1}}}'.format(v1,v2)),
                     (False,'x_{{{0},{1}}}'.format(v2,v1))]
 
+def RAM(s,k,N):
+    """Formula claiming that Ramsey number r(s,k) > N
+
+    Arguments:
+    - `s`: independent set size
+    - `k`: clique size
+    - `N`: vertices
+    """
+
+    yield "CNF encoding of the claim that:"
+    yield "there is a graph of N vertices with no"
+    yield " clique of size k and not indipendent set of size s."
+
+    # No independent set of size s
+    for vertex_set in itertools.combinations(xrange(1,N+1),s):
+        clause=[]
+        for edge in itertools.combinations(vertex_set,2):
+            clause+=[(True,'e_{{{0},{1}}}'.format(*edge))]
+        yield clause
+
+    # No clique of size k
+    for vertex_set in itertools.combinations(xrange(1,N+1),k):
+        clause=[]
+        for edge in itertools.combinations(vertex_set,2):
+            clause+=[(False,'e_{{{0},{1}}}'.format(*edge))]
+        yield clause
+
+
+
+class _Graph(object):
+    """Simple graph class for internal representation.
+    """
+
+    def __init__(self, V,E):
+        """
+        Build the graph for a set of vertices and edges. If the
+        list of edges names some vertex which is not in the list V, it
+        is appended to the list. In particular the list is given for
+        adding isolated vertices or to enforce some order.
+
+        Arguments:
+        - `V`: initial list of vertices
+        - `E`: edges of the graph.
+        """
+        self._V = V
+        self._E = []
+        # Sanitize edge list
+        for (u,v) in E:
+            if (u,v) in self._E: pass
+            if (v,u) in self._E: pass
+            if not u in V: V.append(u)
+            if not v in V: V.append(v)
+
+    def _get_edges(self):
+        return self._E
+
+    edges = property(_get_edges)
+
+    def _get_vertices(self):
+        return self._vertices
+
+    vertices = property(_get_vertices)
+
+
+
 
 if __name__ == '__main__':
     # Parse the command line arguments
@@ -229,5 +295,5 @@ if __name__ == '__main__':
     # Select the appropriate generator
 
     # Output the formula
-    c=CNF(GT(10))
+    c=CNF(RAM(4,3,8))
     c.dimacs()
