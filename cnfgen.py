@@ -37,12 +37,18 @@ p cnf 5 3
 """
 
 from __future__ import print_function
+import sys
 import itertools
+
 
 _default_header="""
 Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
+
+###
+### Basic CNF class
+###
 
 class CNF(object):
     """Propositional formulas in conjunctive normal form.
@@ -66,10 +72,8 @@ class CNF(object):
         self._clauses = []
         self._name_to_id = {}
         self._id_to_name = {}
-        if header:
-            self._header=header
-        else:
-            self._header=_default_header
+
+        self._header= header or _default_header
 
         for c in clauses_and_comments:
             self.add_clause_or_comment(c)
@@ -117,7 +121,7 @@ class CNF(object):
         - `var`: the name of the variable to add (string).
         """
         if type(var) != str:
-            raise TypeError("The name of a variable must be a string" %clause)
+            raise TypeError("The name of a variable must be a string")
 
         if not var in self._name_to_id:
             id=len(self._name_to_id)+1
@@ -176,34 +180,33 @@ class CNF(object):
 
 
 
-    def dimacs(self,outputfile=None,output_header=True,output_comments=True):
+    def dimacs(self,output_file=sys.stdout,output_header=True,output_comments=True):
         """
         Produce the dimacs encoding of the formula
         """
-
         # Count the number of variables and clauses
         n = len(self._name_to_id)
         m = len([c for c in self._clauses if type(c)!=str])
 
         # A nice header
         if output_header:
-            for s in self.header.split("\n"): print(u"c "+s)
+            for s in self.header.split("\n"): print(u"c "+s,file=output_file)
 
         # Formula specification
-        print(u"p cnf {0} {1}".format(n,m))
+        print(u"p cnf {0} {1}".format(n,m),file=output_file)
 
         # We produce clauses and comments
         for c in self._clauses:
             if type(c)==str:
-                if output_comments: print(u"c "+c)
+                if output_comments: print(u"c "+c,file=output_file)
             else:
                 for neg,var in c:
                     v = self._name_to_id[var]
                     if not neg: v = -v
-                    print(u"{0} ".format(v),end="")
-                print(u"0")
+                    print(u"{0} ".format(v),end="",file=output_file)
+                print(u"0",file=output_file)
 
-    def latex(self,outputfile=None,output_header=True,output_comments=True):
+    def latex(self,output_file=sys.stdout,output_header=True,output_comments=True):
         """
         Produce the LaTeX version of the formula
 
@@ -226,11 +229,11 @@ class CNF(object):
 
         # A nice header
         if output_header:
-            for s in self.header.split("\n"): print((u"% "+s).strip())
+            for s in self.header.split("\n"): print((u"% "+s).strip(),file=output_file)
 
         # We produce clauses and comments
         if len(self._clauses)==0:
-            print("\\ensuremath{\\square}")
+            print("\\ensuremath{\\square}",file=output_file)
             return
 
         # map literals (neg,var) to latex formulas
@@ -238,22 +241,28 @@ class CNF(object):
             if l[0]: return "\\neg{%s}"%l[1]
             else: return "    {%s}"%l[1]
 
-        print("\ensuremath{%",end="")
+        print("\ensuremath{%",end="",file=output_file)
         first_clause=True
 
         for c in self._clauses:
             if type(c)==str:
-                if output_comments: print((u"% "+c).strip())
+                if output_comments:
+                    print('\n',file=output_file)
+                    print((u"% {}".format(c)).strip(),end='',file=output_file)
             else:
-                if first_clause: print("\n      ",end="")
-                else: print("\n\\land ",end="")
+                if first_clause: print("\n      ",end="",file=output_file)
+                else: print("\n\\land ",end="",file=output_file)
                 # build the latex clause
                 print("\\left( " + \
                       " \\lor ".join(map(map_literals,c)) + \
-                      " \\right)",end="")
+                      " \\right)",end="",file=output_file)
                 first_clause=False
-        print("}")
+        print(" }",file=output_file)
 
+
+###
+### Pigeonhole principle
+###
 
 def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     """Pigeonhole Principle CNF formula
@@ -354,6 +363,9 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     return php
 
 
+###
+### Ordering Principle
+###
 
 def OrderingPrinciple(size,total=False):
     """Generates the clauses of ordering principle
@@ -410,6 +422,7 @@ def OrderingPrinciple(size,total=False):
 
     return gt
 
+
 def RamseyNumber(s,k,N):
     """Formula claiming that Ramsey number r(s,k) > N
 
@@ -446,48 +459,212 @@ indipendent set of size %d and no clique of size %d
 
     return ram
 
-class _Graph(object):
-    """Simple graph class for internal representation.
-    """
 
-    def __init__(self, V,E):
+
+
+###
+### Command line utility
+###
+
+def __setup_cmdline(parser):
+    """Setup general command line options
+
+    Arguments:
+    - `parser`: parser to fill with options
+    """
+    parser.add_argument('--output','-o',
+                        type=str,
+                        metavar="<output>",
+                        default='-',
+                        help="""Output file. The formula is saved on file instead of being sent to
+                        standard output. Setting '<output>' to '-' is
+                        another way to send the formula to standard
+                        output.
+                        (default: -)
+                        """)
+    parser.add_argument('--output-format','-of',
+                        choices=['latex','dimacs'],
+                        default='dimacs',
+                        help="""
+                        Output format of the formulas. 'latex' is
+                        convenient to insert formulas into papers, and
+                        'dimacs' is the format used by sat solvers.
+                        (default: dimacs)
+                        """)
+    g=parser.add_mutually_exclusive_group()
+    g.add_argument('--verbose', '-v',action='store_const',default=1,const=2,
+                   help="""Add comments inside the formula. It may not be supported by very old
+                   sat solvers.
+                   """)
+    g.add_argument('--quiet', '-q',action='store_const',const=0,dest='verbose',
+                   help="""Output just the formula with not header or comment.""")
+
+
+
+
+### Formula Family command line helpers
+
+class _CMDLineHelper(object):
+    """Base Command Line helper
+
+    For every formula family there should be a subclass.
+    """
+    description=None
+    name=None
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Add command line options for this family of formulas
         """
-        Build the graph for a set of vertices and edges. If the
-        list of edges names some vertex which is not in the list V, it
-        is appended to the list. In particular the list is given for
-        adding isolated vertices or to enforce some order.
+        pass
+
+    @staticmethod
+    def build_cnf(args):
+        pass
+
+
+
+class _PHP(_CMDLineHelper):
+    name='php'
+    description='pigeonhole principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for pigeonhole principle formula
 
         Arguments:
-        - `V`: initial list of vertices
-        - `E`: edges of the graph.
+        - `parser`: parser to load with options.
         """
-        self._V = V
-        self._E = []
-        # Sanitize edge list
-        for (u,v) in E:
-            if (u,v) in self._E: pass
-            if (v,u) in self._E: pass
-            if not u in V: V.append(u)
-            if not v in V: V.append(v)
+        parser.add_argument('pigeons',metavar='<pigeons>',type=int,help="Number of pigeons")
+        parser.add_argument('holes',metavar='<holes>',type=int,help="Number of holes")
+        parser.add_argument('--functional',action='store_true',
+                            help="pigeons sit in at most one hole")
+        parser.add_argument('--onto',action='store_true',
+                            help="every hole has a sitting pigeon")
+        parser.set_defaults(func=_PHP.build_cnf)
 
-    def _get_edges(self):
-        return self._E
+    @staticmethod
+    def build_cnf(args):
+        """Build a PHP formula according to the arguments
 
-    edges = property(_get_edges)
+        Arguments:
+        - `args`: command line options
+        """
+        return PigeonholePrinciple(args.pigeons,
+                                   args.holes,
+                                   functional=args.functional,
+                                   onto=args.onto)
 
-    def _get_vertices(self):
-        return self._vertices
 
-    vertices = property(_get_vertices)
+class _RAM(_CMDLineHelper):
+    """Command line helper for RamseyNumber formulas
+    """
+    name='ram'
+    description='ramsey number principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Ramsey formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('s',metavar='<s>',type=int,help="Forbidden independent set size")
+        parser.add_argument('k',metavar='<k>',type=int,help="Forbidden independent clique")
+        parser.add_argument('N',metavar='<N>',type=int,help="Graph size")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a Ramsey formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        return RamseyNumber(args.s, args.k, args.N)
 
 
+class _OP(_CMDLineHelper):
+    """Command line helper for RamseyNumber formulas
+    """
+    name='op'
+    description='ordering principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Ordering principle formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('N',metavar='<N>',type=int,help="domain size")
+        parser.add_argument('--total','-t',action='store_true',help="assume a total order")
+        parser.set_defaults(func=_OP.build_cnf)
+
+    @staticmethod
+    def build_cnf(args):
+        """Build an Ordering principle formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        return OrderingPrinciple(args.N,args.total)
 
 
 if __name__ == '__main__':
+    # Formula families
+    formula_families=[_PHP,_RAM,_OP]
+
+    # Python 2.6 does not have argparse library
+    try:
+        import argparse
+    except ImportError:
+        print("Sorry: %s requires `argparse` library, which is missing.\n"%sys.argv[0],file=sys.stderr)
+        print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
+        print(" * http://pypi.python.org/pypi/argparse",file=sys.stderr)
+        print(" * http://code.google.com/p/argparse",file=sys.stderr)
+        print("",file=sys.stderr)
+        exit(-1)
+
     # Parse the command line arguments
+    parser=argparse.ArgumentParser(prog='cnfgen',epilog="""
+    Each <formula type> has its own command line arguments and options.
+    For more information type 'cnfgen <formula type> [--help | -h ]'
+    """)
+    __setup_cmdline(parser)
+    subparsers=parser.add_subparsers(title="Available formula types",metavar='<formula type>')
+
+    # Setup of various formula command lines options
+    for ff in formula_families:
+        p=subparsers.add_parser(ff.name,help=ff.description)
+        ff.setup_command_line(p)
+        p.set_defaults(func=ff.build_cnf)
 
     # Select the appropriate generator
+    args=parser.parse_args()
+    cnf=args.func(args)
 
-    # Output the formula
-    c=CNF(RAM(4,3,8))
-    c.dimacs()
+    # Set the output file
+    if args.output==None or args.output=='-':
+        output_file = sys.stdout
+    else:
+        output_file=open(args.output,'w')
+
+    # Do we wnat comments or not
+    output_comments=args.verbose >= 2
+    output_header  =args.verbose >= 1
+
+    if args.output_format == 'latex':
+        cnf.latex(output_file=output_file,
+                  output_header=output_header,
+                  output_comments=output_comments)
+    elif args.output_format == 'dimacs':
+        cnf.dimacs(output_file=output_file,
+                  output_header=output_header,
+                  output_comments=output_comments)
+    else:
+        cnf.dimacs(output_file=output_file,
+                  output_header=output_header,
+                  output_comments=output_comments)
+
+    if output_file!=sys.stdout:
+        output_file.close()
