@@ -41,7 +41,7 @@ import sys
 import itertools
 
 
-_default_header="""
+_default_header=r"""
 Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
@@ -54,7 +54,7 @@ class CNF(object):
     """Propositional formulas in conjunctive normal form.
     """
 
-    def __init__(self, clauses_and_comments=[],header=None):
+    def __init__(self, clauses_and_comments=[], header=None):
         """Propositional formulas in conjunctive normal form.
 
         To add commented clauses use the `add_clause` and
@@ -73,7 +73,7 @@ class CNF(object):
         self._name_to_id = {}
         self._id_to_name = {}
 
-        self._header= header or _default_header
+        self._header = header or _default_header
 
         for c in clauses_and_comments:
             self.add_clause_or_comment(c)
@@ -178,6 +178,22 @@ class CNF(object):
         else:
             self.add_clause(data)
 
+    def get_variables(self):
+        """Return the list of variable names
+        """
+        return self._name_to_id.keys()[:]
+
+    def get_clauses_and_comments(self):
+        """Return the list of clauses
+        """
+        return self._clauses[:]
+
+    def get_clauses(self):
+        """Return the list of clauses
+        """
+        return [c for c in self._clauses if type(c)!=str]
+
+
 
 
     def dimacs(self,output_file=sys.stdout,output_header=True,output_comments=True):
@@ -207,12 +223,12 @@ class CNF(object):
                 print(u"0",file=output_file)
 
     def latex(self,output_file=sys.stdout,output_header=True,output_comments=True):
-        """
+        r"""
         Produce the LaTeX version of the formula
 
-        >>> c=CNF([[(True,"x_1"),(False,"x_2"),(True,"x_3")], \
-                   [(True,"x_2"),(True,"x_4")], \
-                   [(False,"x_2"),(False,"x_3"),(True,"x_4")]])
+        >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")], \
+                   [(False,"x_2"),(False,"x_4")], \
+                   [(True,"x_2"),(True,"x_3"),(False,"x_4")]])
         >>> c.latex()
         %
         % Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
@@ -238,10 +254,10 @@ class CNF(object):
 
         # map literals (neg,var) to latex formulas
         def map_literals(l):
-            if l[0]: return "\\neg{%s}"%l[1]
-            else: return "    {%s}"%l[1]
+            if l[0]: return "    {%s}"%l[1]
+            else: return "\\neg{%s}"%l[1]
 
-        print("\ensuremath{%",end="",file=output_file)
+        print(r"\ensuremath{%",end="",file=output_file)
         first_clause=True
 
         for c in self._clauses:
@@ -259,9 +275,146 @@ class CNF(object):
                 first_clause=False
         print(" }",file=output_file)
 
+###
+### Lifted CNFs
+###
+
+class Lift(CNF):
+    """Lifted formula
+
+A formula is made harder by the process of lifting.
+    """
+
+    def __init__(self, cnf):
+        """Build a new CNF with by lifing the old CNF
+
+        Arguments:
+        - `cnf`: the original cnf
+        """
+        self._orig_cnf = cnf
+        CNF.__init__(self)
+
+        for c in self._orig_cnf.get_clauses_and_comments():
+            if type(c)==str:
+                self.add_comment(c)
+            else:
+                for x in self.lift_a_clause(c):
+                    self.add_clause(x)
+
+
+
+
+    def lift_a_literal(self, polarity, name):
+        """Substitute a literal with the lifting function
+
+        Arguments:
+        - `polarity`: polarity of the literal
+        - `name`:     variable to be substituted
+
+        Returns: a list of clauses
+        """
+        raise ImplementationError("Specialize this class to implement some type of lifting")
+
+
+    def lift_a_clause(self, clause):
+        """Substitute each variables with the lifted function
+
+        Arguments:
+        - `clause`: lifting is applied to this clause
+
+        Returns: a list of clauses
+        """
+        if len(clause)==0:
+            return []
+        else:
+            domains=[ self.lift_a_literal(n,v) for n,v in clause  ]
+            domains=tuple(domains)
+            return [reduce(lambda x,y: x+y,c,[])
+                    for c in itertools.product(*domains)]
+
+class InnerXor(Lift):
+    """Lifted formula: substitutes variable with a XOR
+    """
+    name='xor'
+    description='substitute variables with xors'
+
+    def __init__(self, cnf, rank):
+        """Build a new CNF obtained by substituting a XOR to the
+        variables of the original CNF
+
+        Arguments:
+        - `cnf`: the original cnf
+        - `rank`: how many variables in each xor
+        """
+        self._rank = rank
+
+        Lift.__init__(self,cnf)
+
+        self._header="XOR {} substituted formula\n".format(self._rank) \
+            +self._header
+
+    def lift_a_literal(self, polarity,varname):
+        """Substitute a literal with a (negated) XOR
+
+        Arguments:
+        - `polarity`: polarity of the literal
+        - `varname`: fariable to be substituted
+
+        Returns: a list of clauses
+        """
+        domains=[]
+        names = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
+        domains = tuple([ ((True,name),(False,name)) for name in names] )
+        clauses=[]
+        for c in itertools.product(*domains):
+            # Save only the clauses with the right polarity
+            parity = sum(l[0] for l in c) % 2
+            if parity ^ polarity : clauses.append(list(c))
+        return clauses
+
+class Selection(Lift):
+    """Lifted formula: Y variable select X values
+    """
+    name='select'
+    description='substitute variables V[i] with X[i][Y[i]]'
+
+    def __init__(self, cnf, rank):
+        """Build a new CNF obtained by lifting procedures
+
+        Arguments:
+        - `cnf`: the original cnf
+        - `rank`: how many variables in each xor
+        """
+        self._rank = rank
+
+        Lift.__init__(self,cnf)
+
+        # Add additional clauses to realize the lifting
+        for v in cnf.get_variables():
+            self.add_clause([ (False,   "Y_{{{}}}^{}".format(v,i))
+                               for i in range(self._rank)])
+
+        self._header="Rank {} lifted formula\n".format(self._rank) \
+            +self._header
+
+    def lift_a_literal(self, polarity,varname):
+        """Substitute a literal with a (negated) XOR
+
+        Arguments:
+        - `polarity`: polarity of the literal
+        - `varname`: fariable to be substituted
+
+        Returns: a list of clauses
+        """
+        clauses=[]
+        for i in range(self._rank):
+            clauses.append([ (False,   "Y_{{{}}}^{}".format(varname,i)),
+                             (polarity,"X_{{{}}}^{}".format(varname,i)) ])
+        return clauses
+
 
 ###
-### Pigeonhole principle
+### Formula families
 ###
 
 def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
@@ -363,10 +516,6 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     return php
 
 
-###
-### Ordering Principle
-###
-
 def OrderingPrinciple(size,total=False):
     """Generates the clauses of ordering principle
 
@@ -461,51 +610,9 @@ indipendent set of size %d and no clique of size %d
 
 
 ###
-###
-###
-
-
-###
-### Command line utility
+### Command line helpers
 ###
 
-def __setup_cmdline(parser):
-    """Setup general command line options
-
-    Arguments:
-    - `parser`: parser to fill with options
-    """
-    parser.add_argument('--output','-o',
-                        type=argparse.FileType('wb',0),
-                        metavar="<output>",
-                        default='-',
-                        help="""Output file. The formula is saved on file instead of being sent to
-                        standard output. Setting '<output>' to '-' is
-                        another way to send the formula to standard
-                        output.
-                        (default: -)
-                        """)
-    parser.add_argument('--output-format','-of',
-                        choices=['latex','dimacs'],
-                        default='dimacs',
-                        help="""
-                        Output format of the formulas. 'latex' is
-                        convenient to insert formulas into papers, and
-                        'dimacs' is the format used by sat solvers.
-                        (default: dimacs)
-                        """)
-    g=parser.add_mutually_exclusive_group()
-    g.add_argument('--verbose', '-v',action='store_const',default=1,const=2,
-                   help="""Add comments inside the formula. It may not be supported by very old
-                   sat solvers.
-                   """)
-    g.add_argument('--quiet', '-q',action='store_const',const=0,dest='verbose',
-                   help="""Output just the formula with not header or comment.""")
-
-
-
-
-### Formula Family command line helpers
 
 class _CMDLineHelper(object):
     """Base Command Line helper
@@ -527,7 +634,56 @@ class _CMDLineHelper(object):
         pass
 
     @staticmethod
-    def graph_input_cmdline(parser):
+    def additional_options_check(args):
+        pass
+
+
+class _GeneralCommandLine(_CMDLineHelper)
+    """Command Line helper for the general commands
+
+    For every formula family there should be a subclass.
+    """
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup general command line options
+
+        Arguments:
+        - `parser`: parser to fill with options
+        """
+        parser.add_argument('--output','-o',
+                            type=argparse.FileType('wb',0),
+                            metavar="<output>",
+                            default='-',
+                            help="""Output file. The formula is saved
+                            on file instead of being sent to standard
+                            output. Setting '<output>' to '-' is another
+                            way to send the formula to standard output.
+                            (default: -)
+                            """)
+        parser.add_argument('--output-format','-of',
+                            choices=['latex','dimacs'],
+                            default='dimacs',
+                            help="""
+                            Output format of the formulas. 'latex' is
+                            convenient to insert formulas into papers, and
+                            'dimacs' is the format used by sat solvers.
+                            (default: dimacs)
+                            """)
+        g=parser.add_mutually_exclusive_group()
+        g.add_argument('--verbose', '-v',action='store_const',default=1,const=2,
+                       help="""Add comments inside the formula. It may
+                            not be supported by very old sat solvers.
+                            """)
+        g.add_argument('--quiet', '-q',action='store_const',const=0,dest='verbose',
+                       help="""Output just the formula with not header
+                            or comment.""")
+
+
+class _GraphInputHelper(_CMDLineHelper):
+
+    @staticmethod
+    def setup_command_line(parser):
         """Setup input options for command lines
         """
         gr=parser.add_argument_group("Reading graph from input")
@@ -548,8 +704,6 @@ class _CMDLineHelper(object):
                         supported in networkx is installed.  (default:
                         dimacs)
                         """)
-
-
 
 
 class _PHP(_CMDLineHelper):
@@ -612,7 +766,7 @@ class _RAM(_CMDLineHelper):
 
 
 class _OP(_CMDLineHelper):
-    """Command line helper for RamseyNumber formulas
+    """Command line helper for Ordering principle formulas
     """
     name='op'
     description='ordering principle'
@@ -626,8 +780,6 @@ class _OP(_CMDLineHelper):
         """
         parser.add_argument('N',metavar='<N>',type=int,help="domain size")
         parser.add_argument('--total','-t',action='store_true',help="assume a total order")
-        _OP.graph_input_cmdline(parser)
-
 
     @staticmethod
     def build_cnf(args):
@@ -639,9 +791,15 @@ class _OP(_CMDLineHelper):
         return OrderingPrinciple(args.N,args.total)
 
 
+###
+### Main program
+###
+
 if __name__ == '__main__':
-    # Formula families
-    formula_families=[_PHP,_RAM,_OP]
+
+    # Commands and subcommand lines
+    cmdline = _GeneralCommandLine
+    subcommands=[_PHP,_RAM,_OP]
 
     # Python 2.6 does not have argparse library
     try:
@@ -659,18 +817,22 @@ if __name__ == '__main__':
     Each <formula type> has its own command line arguments and options.
     For more information type 'cnfgen <formula type> [--help | -h ]'
     """)
-    __setup_cmdline(parser)
+    cmdline.setup_command_line(parser)
     subparsers=parser.add_subparsers(title="Available formula types",metavar='<formula type>')
 
     # Setup of various formula command lines options
-    for ff in formula_families:
-        p=subparsers.add_parser(ff.name,help=ff.description)
-        ff.setup_command_line(p)
-        p.set_defaults(func=ff.build_cnf)
+    for sc in subcommands:
+        p=subparsers.add_parser(sc.name,help=sc.description)
+        sc.setup_command_line(p)
+        p.set_defaults(subcommand=sc)
 
-    # Select the appropriate generator
+    # Process the options
     args=parser.parse_args()
-    cnf=args.func(args)
+    cmdline.additional_options_check(args)
+    args.subcommand.additional_options_check(args)
+
+    # Generate the basic formula
+    cnf=args.subcommand.build_cnf(args)
 
     # Do we wnat comments or not
     output_comments=args.verbose >= 2
