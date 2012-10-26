@@ -460,6 +460,9 @@ indipendent set of size %d and no clique of size %d
     return ram
 
 
+###
+###
+###
 
 
 ###
@@ -473,7 +476,7 @@ def __setup_cmdline(parser):
     - `parser`: parser to fill with options
     """
     parser.add_argument('--output','-o',
-                        type=str,
+                        type=argparse.FileType('wb',0),
                         metavar="<output>",
                         default='-',
                         help="""Output file. The formula is saved on file instead of being sent to
@@ -518,9 +521,34 @@ class _CMDLineHelper(object):
         """
         pass
 
+
     @staticmethod
     def build_cnf(args):
         pass
+
+    @staticmethod
+    def graph_input_cmdline(parser):
+        """Setup input options for command lines
+        """
+        gr=parser.add_argument_group("Reading graph from input")
+        gr.add_argument('--input','-i',
+                        type=argparse.FileType('r',0),
+                        metavar="<input>",
+                        default='-',
+                        help="""Input file. The graph is read from a file instead of being read from
+                        standard output. Setting '<input>' to '-' is
+                        another way to read from standard
+                        input.  (default: -)
+                        """)
+        gr.add_argument('--input-format','-if',
+                        choices=['dimacs','graph6','sparse6',],
+                        default='dimacs',
+                        help="""
+                        Format of the graph in input, several formats are
+                        supported in networkx is installed.  (default:
+                        dimacs)
+                        """)
+
 
 
 
@@ -598,7 +626,8 @@ class _OP(_CMDLineHelper):
         """
         parser.add_argument('N',metavar='<N>',type=int,help="domain size")
         parser.add_argument('--total','-t',action='store_true',help="assume a total order")
-        parser.set_defaults(func=_OP.build_cnf)
+        _OP.graph_input_cmdline(parser)
+
 
     @staticmethod
     def build_cnf(args):
@@ -643,28 +672,22 @@ if __name__ == '__main__':
     args=parser.parse_args()
     cnf=args.func(args)
 
-    # Set the output file
-    if args.output==None or args.output=='-':
-        output_file = sys.stdout
-    else:
-        output_file=open(args.output,'w')
-
     # Do we wnat comments or not
     output_comments=args.verbose >= 2
     output_header  =args.verbose >= 1
 
     if args.output_format == 'latex':
-        cnf.latex(output_file=output_file,
+        cnf.latex(output_file=args.output,
                   output_header=output_header,
                   output_comments=output_comments)
     elif args.output_format == 'dimacs':
-        cnf.dimacs(output_file=output_file,
+        cnf.dimacs(output_file=args.output,
                   output_header=output_header,
                   output_comments=output_comments)
     else:
-        cnf.dimacs(output_file=output_file,
+        cnf.dimacs(output_file=args.output,
                   output_header=output_header,
                   output_comments=output_comments)
 
-    if output_file!=sys.stdout:
-        output_file.close()
+    if args.output!=sys.stdout:
+        args.output.close()
