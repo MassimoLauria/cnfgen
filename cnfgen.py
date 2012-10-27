@@ -563,7 +563,7 @@ def PebblingFormula(digraph):
     - `digraph`: directed acyclic graph
     """
     if not networkx.algorithms.is_directed_acyclic_graph(digraph):
-        RuntimeError("Pebbling formula is defined only for directed acyclic graphs")
+        raise RuntimeError("Pebbling formula is defined only for directed acyclic graphs")
     peb=CNF()
     peb.header="Pebbling formula.\n"+peb.header
     for v in networkx.algorithms.topological_sort(digraph):
@@ -953,10 +953,10 @@ class _PEB(_CMDLineHelper):
         """
         #  _GraphInputHelper.setup_command_line(parser)
         g=parser.add_mutually_exclusive_group()
-        g.add_argument('--tree',type=int,action='store',metavar="<height>",
+        g.add_argument('--tree',type=int,default=0,action='store',metavar="<height>",
                             help="tree graph")
 
-        g.add_argument('--pyramid',type=int,action='store',metavar="<height>",
+        g.add_argument('--pyramid',type=int,default=0,action='store',metavar="<height>",
                             help="pyramid graph")
 
 
@@ -988,7 +988,7 @@ class _PEB(_CMDLineHelper):
                     D.add_edge(X[h-1][i+1],X[h][i])
             return PebblingFormula(D)
         else:
-            NotImplementedError("Reading graphs from input not implemented yet")
+            raise NotImplementedError("Reading graphs from input not implemented yet")
 
 
 
