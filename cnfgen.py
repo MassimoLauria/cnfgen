@@ -104,7 +104,7 @@ class CNF(object):
         new_clause=[]
         # Check for the format
         for neg,var in clause:
-            if type(neg)!=bool :
+            if type(neg)!=bool and not isinstance(var,basestring):
                 raise TypeError("%s is not a well formatted clause" %clause)
             new_clause.append((neg,var))
         # Add all missing variables
@@ -123,7 +123,7 @@ class CNF(object):
         Arguments:
         - `var`: the name of the variable to add (string).
         """
-        if type(var) != str:
+        if not isinstance(var,basestring):
             raise TypeError("The name of a variable must be a string")
 
         if not var in self._name_to_id:
@@ -566,9 +566,18 @@ def PebblingFormula(digraph):
     """
     if not networkx.algorithms.is_directed_acyclic_graph(digraph):
         raise RuntimeError("Pebbling formula is defined only for directed acyclic graphs")
+
     peb=CNF()
-    peb.header="Pebbling formula.\n"+peb.header
+
+    if hasattr(digraph,'header'):
+        peb.header="Pebbling formula of:\n"+digraph.header+peb.header
+    else:
+        peb.header="Pebbling formula\n"+peb.header
+
     for v in networkx.algorithms.topological_sort(digraph):
+
+        # add variables in topological order, to get a much readable formula
+        peb.add_variable(v)
 
         # If predecessors are pebbled it must be pebbles
         if digraph.in_degree(v)!=0:
@@ -676,9 +685,114 @@ indipendent set of size %d and no clique of size %d
 
     return ram
 
+#################################################################
+#          Graph Decoders
+#################################################################
+implemented_graphformats = {
+    'digraph': ['dot','kth'],
+    'graph': ['dot','kth']
+    }
+
+
+def readDigraph(file,format,force_dag=False,multi=False):
+    """Read a directed graph from file
+
+    Arguments:
+    - `file`: file object
+    - `format`: file format
+    - `force_dag`: enforce whether graph must be acyclic
+    - `multi`: are multiple edge allowed
+
+    Return: a networkx.DiGraph / networkx.MultiDiGraph object.
+    """
+    if format not in implemented_graphformats['digraph']:
+        raise ValueError("Invalid format for directed graph")
+
+    if multi:
+        grtype=networkx.MultiDiGraph
+    else:
+        grtype=networkx.DiGraph
+
+    if format=='dot':
+
+        D=grtype(pygraphviz.AGraph(file.read()).edges())
+
+    elif format=='kth':
+
+        D=grtype()
+        D.header=''
+
+        for l in file.readlines():
+
+            # add the comment to the header
+            if l[0]=='c':
+                D.header+=l[2:]
+
+            if ':' not in l: continue # vertex number spec
+
+            target,sources=l.split(':')
+            target=target.strip()
+            sources=sources.split()
+            for s in sources:
+                D.add_edge(s,target)
+
+    else:
+        raise RuntimeError("Internal error, format {} not implemented".format(format))
+
+    if force_dag and not networkx.algorithms.is_directed_acyclic_graph(D):
+        raise ValueError("Graph must be acyclic".format(format))
+
+    return D
+
+
+def readGraph(file,format,multi=False):
+    """Read a graph from file
+
+    Arguments:
+    - `file`: file object
+    - `format`: file format
+    - `multi`: are multiple edge allowed
+
+    Return: a networkx.Graph / networkx.MultiGraph object.
+    """
+    if format not in implemented_graphformats['graph']:
+        raise ValueError("Invalid format for directed graph")
+
+    if multi:
+        grtype=networkx.MultiGraph
+    else:
+        grtype=networkx.Graph
+
+    if format=='dot':
+
+        G=grtype(pygraphviz.AGraph(file.read()).edges())
+
+    elif format=='kth':
+
+        G=grtype()
+        G.header=''
+
+        for l in file.readlines():
+
+            # add the comments to the header
+            if l[0]=='c':
+                G.header+=l[2:]
+
+            if ':' not in l: continue # vertex number spec
+
+            target,sources=l.split(':')
+            target=target.strip()
+            sources=sources.split()
+            for s in sources:
+                G.add_edge(s,target)
+
+    else:
+        raise RuntimeError("Internal error, format {} not implemented".format(format))
+
+    return G
 
 #################################################################
-#          Command line tool implementation follows
+#          Command line tool follows
 #################################################################
 
 ###
@@ -794,6 +908,7 @@ class _GraphInputHelper(_CMDLineHelper):
     def setup_command_line(parser):
         """Setup input options for command lines
         """
+
         gr=parser.add_argument_group("Reading graph from input")
         gr.add_argument('--input','-i',
                         type=argparse.FileType('r',0),
@@ -805,7 +920,7 @@ class _GraphInputHelper(_CMDLineHelper):
                         input.  (default: -)
                         """)
         gr.add_argument('--inputformat','-if',
-                        choices=['dimacs','graph6','sparse6','dot'],
+                        choices=['kth','dot'],
                         default='dot',
                         help="""
                         Format of the graph in input, several formats are
@@ -955,10 +1070,10 @@ class _PEB(_CMDLineHelper):
         """
         _GraphInputHelper.setup_command_line(parser)
         g=parser.add_mutually_exclusive_group()
-        g.add_argument('--tree',type=int,default=0,action='store',metavar="<height>",
+        g.add_argument('--tree',type=int,action='store',metavar="<height>",
                             help="tree graph")
 
-        g.add_argument('--pyramid',type=int,default=0,action='store',metavar="<height>",
+        g.add_argument('--pyramid',type=int,action='store',metavar="<height>",
                             help="pyramid graph")
 
 
@@ -969,7 +1084,8 @@ class _PEB(_CMDLineHelper):
         Arguments:
         - `args`: command line options
         """
-        if args.tree>0:
+        if hasattr(args,'tree') and args.tree>0:
+
             D=networkx.DiGraph()
             # vertices
             v=['v_{}'.format(i) for i in range(2*(2**args.tree)-1)]
@@ -978,7 +1094,9 @@ class _PEB(_CMDLineHelper):
                 D.add_edge(v[2*i+1],v[i])
                 D.add_edge(v[2*i+2],v[i])
             return PebblingFormula(D)
-        elif args.pyramid>0:
+
+        elif hasattr(args,'pyramid') and args.pyramid>0:
+
             D=networkx.DiGraph()
             # vertices
             X=[ ['x_{{{},{}}}'.format(h,i) for i in range(args.pyramid-h+1) ]
@@ -989,12 +1107,14 @@ class _PEB(_CMDLineHelper):
                     D.add_edge(X[h-1][i]  ,X[h][i])
                     D.add_edge(X[h-1][i+1],X[h][i])
             return PebblingFormula(D)
-        elif args.inputformat=='dot':
-            D=pygraphviz.AGraph(args.input.read())
-            D=networkx.DiGraph(D.edges())
+
+        elif args.inputformat:
+
+            D=readDigraph(args.input,args.inputformat,force_dag=True)
             return PebblingFormula(D)
+
         else:
-            raise NotImplementedError("Reading graphs from input not implemented yet")
+            raise RuntimeError("Invalid graph specification on command line")
 
 
 
