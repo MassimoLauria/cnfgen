@@ -39,6 +39,8 @@ p cnf 5 3
 from __future__ import print_function
 import sys
 import itertools
+
+import pygraphviz
 import networkx
 import networkx.algorithms
 
@@ -102,7 +104,7 @@ class CNF(object):
         new_clause=[]
         # Check for the format
         for neg,var in clause:
-            if type(neg)!=bool or type(var) != str:
+            if type(neg)!=bool :
                 raise TypeError("%s is not a well formatted clause" %clause)
             new_clause.append((neg,var))
         # Add all missing variables
@@ -802,13 +804,13 @@ class _GraphInputHelper(_CMDLineHelper):
                         another way to read from standard
                         input.  (default: -)
                         """)
-        gr.add_argument('--input-format','-if',
+        gr.add_argument('--inputformat','-if',
                         choices=['dimacs','graph6','sparse6','dot'],
-                        default='dimacs',
+                        default='dot',
                         help="""
                         Format of the graph in input, several formats are
                         supported in networkx is installed.  (default:
-                        dimacs)
+                        dot)
                         """)
 
 class _FormulaFamilyHelper(object):
@@ -951,7 +953,7 @@ class _PEB(_CMDLineHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        #  _GraphInputHelper.setup_command_line(parser)
+        _GraphInputHelper.setup_command_line(parser)
         g=parser.add_mutually_exclusive_group()
         g.add_argument('--tree',type=int,default=0,action='store',metavar="<height>",
                             help="tree graph")
@@ -986,6 +988,10 @@ class _PEB(_CMDLineHelper):
                 for i in range(len(X[h])):
                     D.add_edge(X[h-1][i]  ,X[h][i])
                     D.add_edge(X[h-1][i+1],X[h][i])
+            return PebblingFormula(D)
+        elif args.inputformat=='dot':
+            D=pygraphviz.AGraph(args.input.read())
+            D=networkx.DiGraph(D.edges())
             return PebblingFormula(D)
         else:
             raise NotImplementedError("Reading graphs from input not implemented yet")
