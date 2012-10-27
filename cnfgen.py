@@ -39,7 +39,8 @@ p cnf 5 3
 from __future__ import print_function
 import sys
 import itertools
-
+import networkx
+import networkx.algorithms
 
 _default_header=r"""
 Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
@@ -292,7 +293,7 @@ A formula is made harder by the process of lifting.
         - `cnf`: the original cnf
         """
         self._orig_cnf = cnf
-        CNF.__init__(self)
+        CNF.__init__(self,[],header=cnf._header)
 
         for c in self._orig_cnf.get_clauses_and_comments():
             if type(c)==str:
@@ -313,7 +314,7 @@ A formula is made harder by the process of lifting.
 
         Returns: a list of clauses
         """
-        raise ImplementationError("Specialize this class to implement some type of lifting")
+        raise NotImplementedError("Specialize this class to implement some type of lifting")
 
 
     def lift_a_clause(self, clause):
@@ -332,12 +333,44 @@ A formula is made harder by the process of lifting.
             return [reduce(lambda x,y: x+y,c,[])
                     for c in itertools.product(*domains)]
 
+class InnerOr(Lift):
+    """Lifted formula: substitutes variable with a OR
+    """
+    def __init__(self, cnf, rank):
+        """Build a new CNF obtained by substituting a OR to the
+        variables of the original CNF
+
+        Arguments:
+        - `cnf`: the original cnf
+        - `rank`: how many variables in each or
+        """
+        self._rank = rank
+
+        Lift.__init__(self,cnf)
+
+        self._header="OR {} substituted formula\n\n".format(self._rank) \
+            +self._header
+
+    def lift_a_literal(self, polarity,varname):
+        """Substitute a positive literal with an OR,
+        and negative literals with its negation.
+
+        Arguments:
+        - `polarity`: polarity of the literal
+        - `varname`: fariable to be substituted
+
+        Returns: a list of clauses
+        """
+        names = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
+        if polarity:
+            return [[ (True,name) for name in names ]]
+        else:
+            return [ [(False,name)] for name in names ]
+
+
 class InnerXor(Lift):
     """Lifted formula: substitutes variable with a XOR
     """
-    name='xor'
-    description='substitute variables with xors'
-
     def __init__(self, cnf, rank):
         """Build a new CNF obtained by substituting a XOR to the
         variables of the original CNF
@@ -350,7 +383,7 @@ class InnerXor(Lift):
 
         Lift.__init__(self,cnf)
 
-        self._header="XOR {} substituted formula\n".format(self._rank) \
+        self._header="XOR {} substituted formula\n\n".format(self._rank) \
             +self._header
 
     def lift_a_literal(self, polarity,varname):
@@ -368,16 +401,13 @@ class InnerXor(Lift):
         clauses=[]
         for c in itertools.product(*domains):
             # Save only the clauses with the right polarity
-            parity = sum(l[0] for l in c) % 2
-            if parity ^ polarity : clauses.append(list(c))
+            parity = sum(1-l[0] for l in c) % 2
+            if parity != polarity : clauses.append(list(c))
         return clauses
 
 class Selection(Lift):
     """Lifted formula: Y variable select X values
     """
-    name='select'
-    description='substitute variables V[i] with X[i][Y[i]]'
-
     def __init__(self, cnf, rank):
         """Build a new CNF obtained by lifting procedures
 
@@ -389,10 +419,20 @@ class Selection(Lift):
 
         Lift.__init__(self,cnf)
 
-        # Add additional clauses to realize the lifting
+        self._header="Formula lifted by selectors over {} values\n\n".format(self._rank) \
+            +self._header
+
+        # Each selector must select!
+        self.add_comment("Selections must be defined")
         for v in cnf.get_variables():
-            self.add_clause([ (False,   "Y_{{{}}}^{}".format(v,i))
+            self.add_clause([ (True,   "Y_{{{}}}^{}".format(v,i))
                                for i in range(self._rank)])
+        # Selection must be unique
+        self.add_comment("Selections must be unique")
+        for v in cnf.get_variables():
+            for s1,s2 in itertools.combinations(["Y_{{{}}}^{}".format(v,i)
+                                                 for i in range(self._rank)],2):
+                self.add_clause([(False,s1),(False,s2)])
 
         self._header="Rank {} lifted formula\n".format(self._rank) \
             +self._header
@@ -516,6 +556,32 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     return php
 
 
+def PebblingFormula(digraph):
+    """Pebbling formula
+
+    Arguments:
+    - `digraph`: directed acyclic graph
+    """
+    if not networkx.algorithms.is_directed_acyclic_graph(digraph):
+        RuntimeError("Pebbling formula is defined only for directed acyclic graphs")
+    peb=CNF()
+    peb.header="Pebbling formula.\n"+peb.header
+    for v in networkx.algorithms.topological_sort(digraph):
+
+        # If predecessors are pebbled it must be pebbles
+        if digraph.in_degree(v)!=0:
+            peb.add_comment("Pebbling propagates on vertex {}".format(v))
+        else:
+            peb.add_comment("Source vertex {}".format(v))
+
+        peb.add_clause([(False,p) for p in digraph.predecessors(v)]+[(True,v)])
+
+        if digraph.out_degree(v)==0: #the sink
+            peb.add_clause([(False,v)])
+
+    return peb
+
+
 def OrderingPrinciple(size,total=False):
     """Generates the clauses of ordering principle
 
@@ -609,10 +675,29 @@ indipendent set of size %d and no clique of size %d
     return ram
 
 
+#################################################################
+#          Command line tool implementation follows
+#################################################################
+
+###
+### Implemented features
+###
+implemented_lifting = {
+
+    # lifting name : ("help description", function, default rank)
+
+    'none': ("leaves the formula alone", (lambda c,r:c),1),
+    'or'  : ("OR substitution   (default rank: 2)", InnerOr,2),
+    'xor' : ("XOR substitution  (default rank: 2)", InnerXor,2),
+    'sel' : ("selection lifting (default rank: 3)", Selection,3)
+
+    }
+
+
+
 ###
 ### Command line helpers
 ###
-
 
 class _CMDLineHelper(object):
     """Base Command Line helper
@@ -628,17 +713,12 @@ class _CMDLineHelper(object):
         """
         pass
 
-
-    @staticmethod
-    def build_cnf(args):
-        pass
-
     @staticmethod
     def additional_options_check(args):
         pass
 
 
-class _GeneralCommandLine(_CMDLineHelper)
+class _GeneralCommandLine(_CMDLineHelper):
     """Command Line helper for the general commands
 
     For every formula family there should be a subclass.
@@ -651,6 +731,17 @@ class _GeneralCommandLine(_CMDLineHelper)
         Arguments:
         - `parser`: parser to fill with options
         """
+        parser.add_argument('--help-lifting',action='store_true',help="""
+                             Formula can be made harder applying some
+                             so called "lifting procedures".
+                             This gives information about the implemented lifting.
+                             (not implemented yet)
+                             """)
+        parser.add_argument('--help-inputgraph',action='store_true',help="""
+                             Some formulas are built around graph structures.
+                             This document how to read them in input.
+                             (not implemented yet)
+                             """)
         parser.add_argument('--output','-o',
                             type=argparse.FileType('wb',0),
                             metavar="<output>",
@@ -671,13 +762,28 @@ class _GeneralCommandLine(_CMDLineHelper)
                             (default: dimacs)
                             """)
         g=parser.add_mutually_exclusive_group()
-        g.add_argument('--verbose', '-v',action='store_const',default=1,const=2,
+        g.add_argument('--verbose', '-v',action='count',default=1,
                        help="""Add comments inside the formula. It may
                             not be supported by very old sat solvers.
                             """)
         g.add_argument('--quiet', '-q',action='store_const',const=0,dest='verbose',
                        help="""Output just the formula with not header
                             or comment.""")
+        parser.add_argument('--lift','-l',
+                            metavar="<lifting method>",
+                            choices=implemented_lifting.keys(),
+                            default='none',
+                            help="""
+                            Apply a lifting procedure to make the CNF harder.
+                            See `--help-lifting` for more informations
+                            """)
+        parser.add_argument('--liftrank','-lr',
+                            metavar="<lifting rank>",
+                            type=int,
+                            help="""
+                            Hardness parameter for the lifting procedure.
+                            See `--help-lifting` for more informations
+                            """)
 
 
 class _GraphInputHelper(_CMDLineHelper):
@@ -697,7 +803,7 @@ class _GraphInputHelper(_CMDLineHelper):
                         input.  (default: -)
                         """)
         gr.add_argument('--input-format','-if',
-                        choices=['dimacs','graph6','sparse6',],
+                        choices=['dimacs','graph6','sparse6','dot'],
                         default='dimacs',
                         help="""
                         Format of the graph in input, several formats are
@@ -705,8 +811,20 @@ class _GraphInputHelper(_CMDLineHelper):
                         dimacs)
                         """)
 
+class _FormulaFamilyHelper(object):
+    """Command Line helper for formula families
 
-class _PHP(_CMDLineHelper):
+    For every formula family there should be a subclass.
+    """
+    description=None
+    name=None
+
+    @staticmethod
+    def build_cnf(args):
+        pass
+
+
+class _PHP(_FormulaFamilyHelper):
     name='php'
     description='pigeonhole principle'
 
@@ -738,7 +856,7 @@ class _PHP(_CMDLineHelper):
                                    onto=args.onto)
 
 
-class _RAM(_CMDLineHelper):
+class _RAM(_FormulaFamilyHelper):
     """Command line helper for RamseyNumber formulas
     """
     name='ram'
@@ -765,7 +883,7 @@ class _RAM(_CMDLineHelper):
         return RamseyNumber(args.s, args.k, args.N)
 
 
-class _OP(_CMDLineHelper):
+class _OP(_FormulaFamilyHelper):
     """Command line helper for Ordering principle formulas
     """
     name='op'
@@ -790,6 +908,119 @@ class _OP(_CMDLineHelper):
         """
         return OrderingPrinciple(args.N,args.total)
 
+class _OR(_FormulaFamilyHelper):
+    """Command line helper for a single clause formula
+    """
+    name='or'
+    description='a single disjunction'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for single or of literals
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('P',metavar='<P>',type=int,help="positive literals")
+        parser.add_argument('N',metavar='<N>',type=int,help="negative literals")
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build an disjunction
+
+        Arguments:
+        - `args`: command line options
+        """
+        clause = [ (True,"x_{}".format(i)) for i in range(args.P) ] + \
+                 [ (False,"y_{}".format(i)) for i in range(args.N) ]
+        return CNF([clause],
+                   header="""Single clause with {} positive and {} negative literals""".format(args.P,args.N))
+
+
+class _PEB(_CMDLineHelper):
+    """Command line helper for a single clause formula
+    """
+    name='peb'
+    description='pebbling formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for pebbling formulas
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        #  _GraphInputHelper.setup_command_line(parser)
+        g=parser.add_mutually_exclusive_group()
+        g.add_argument('--tree',type=int,action='store',metavar="<height>",
+                            help="tree graph")
+
+        g.add_argument('--pyramid',type=int,action='store',metavar="<height>",
+                            help="pyramid graph")
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build the pebbling formula
+
+        Arguments:
+        - `args`: command line options
+        """
+        if args.tree>0:
+            D=networkx.DiGraph()
+            # vertices
+            v=['v_{}'.format(i) for i in range(2*(2**args.tree)-1)]
+            # edges
+            for i in range(len(v)//2):
+                D.add_edge(v[2*i+1],v[i])
+                D.add_edge(v[2*i+2],v[i])
+            return PebblingFormula(D)
+        elif args.pyramid>0:
+            D=networkx.DiGraph()
+            # vertices
+            X=[ ['x_{{{},{}}}'.format(h,i) for i in range(args.pyramid-h+1) ]
+                for h in range(args.pyramid+1)]
+            # edges
+            for h in range(1,len(X)):
+                for i in range(len(X[h])):
+                    D.add_edge(X[h-1][i]  ,X[h][i])
+                    D.add_edge(X[h-1][i+1],X[h][i])
+            return PebblingFormula(D)
+        else:
+            NotImplementedError("Reading graphs from input not implemented yet")
+
+
+
+class _AND(_FormulaFamilyHelper):
+    """Command line helper for a single clause formula
+    """
+    name='and'
+    description='a single conjunction'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for an and of literals
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('P',metavar='<P>',type=int,help="positive literals")
+        parser.add_argument('N',metavar='<N>',type=int,help="negative literals")
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a conjunction
+
+        Arguments:
+        - `args`: command line options
+        """
+        clauses = [ [(True,"x_{}".format(i))] for i in range(args.P) ] + \
+                  [ [(False,"y_{}".format(i))] for i in range(args.N) ]
+        return CNF(clauses,
+                   header="""Singleton clauses: {} positive and {} negative""".format(args.P,args.N))
+
 
 ###
 ### Main program
@@ -799,7 +1030,7 @@ if __name__ == '__main__':
 
     # Commands and subcommand lines
     cmdline = _GeneralCommandLine
-    subcommands=[_PHP,_RAM,_OP]
+    subcommands=[_PHP,_RAM,_OP,_PEB,_OR,_AND]
 
     # Python 2.6 does not have argparse library
     try:
@@ -834,22 +1065,27 @@ if __name__ == '__main__':
     # Generate the basic formula
     cnf=args.subcommand.build_cnf(args)
 
+    # Apply the lifting
+    lift_method=implemented_lifting[args.lift][1]
+    lift_rank=args.liftrank or implemented_lifting[args.lift][2]
+    lcnf=lift_method(cnf,lift_rank)
+
     # Do we wnat comments or not
     output_comments=args.verbose >= 2
     output_header  =args.verbose >= 1
 
     if args.output_format == 'latex':
-        cnf.latex(output_file=args.output,
-                  output_header=output_header,
-                  output_comments=output_comments)
+        lcnf.latex(output_file=args.output,
+                   output_header=output_header,
+                   output_comments=output_comments)
     elif args.output_format == 'dimacs':
-        cnf.dimacs(output_file=args.output,
-                  output_header=output_header,
-                  output_comments=output_comments)
+        lcnf.dimacs(output_file=args.output,
+                    output_header=output_header,
+                    output_comments=output_comments)
     else:
-        cnf.dimacs(output_file=args.output,
-                  output_header=output_header,
-                  output_comments=output_comments)
+        lcnf.dimacs(output_file=args.output,
+                    output_header=output_header,
+                    output_comments=output_comments)
 
     if args.output!=sys.stdout:
         args.output.close()
