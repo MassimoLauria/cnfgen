@@ -574,9 +574,9 @@ def PebblingFormula(digraph):
     else:
         peb.header="Pebbling formula\n"+peb.header
 
+    # add clauses in topological order, to get a much readable formula
     for v in networkx.algorithms.topological_sort(digraph):
 
-        # add variables in topological order, to get a much readable formula
         peb.add_variable(v)
 
         # If predecessors are pebbled it must be pebbles
@@ -733,6 +733,7 @@ def readDigraph(file,format,force_dag=False,multi=False):
             target,sources=l.split(':')
             target=target.strip()
             sources=sources.split()
+            D.add_node(target)
             for s in sources:
                 D.add_edge(s,target)
 
