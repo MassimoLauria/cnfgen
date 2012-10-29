@@ -979,7 +979,7 @@ class _FormulaFamilyHelper(object):
         pass
 
 
-class _PHP(_FormulaFamilyHelper):
+class _PHP(_FormulaFamilyHelper,_CMDLineHelper):
     name='php'
     description='pigeonhole principle'
 
@@ -1011,7 +1011,7 @@ class _PHP(_FormulaFamilyHelper):
                                    onto=args.onto)
 
 
-class _RAM(_FormulaFamilyHelper):
+class _RAM(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for RamseyNumber formulas
     """
     name='ram'
@@ -1038,7 +1038,7 @@ class _RAM(_FormulaFamilyHelper):
         return RamseyNumber(args.s, args.k, args.N)
 
 
-class _OP(_FormulaFamilyHelper):
+class _OP(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for Ordering principle formulas
     """
     name='op'
@@ -1063,7 +1063,7 @@ class _OP(_FormulaFamilyHelper):
         """
         return OrderingPrinciple(args.N,args.total)
 
-class _OR(_FormulaFamilyHelper):
+class _OR(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for a single clause formula
     """
     name='or'
@@ -1093,7 +1093,7 @@ class _OR(_FormulaFamilyHelper):
                    header="""Single clause with {} positive and {} negative literals""".format(args.P,args.N))
 
 
-class _PEB(_CMDLineHelper):
+class _PEB(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for a single clause formula
     """
     name='peb'
@@ -1156,7 +1156,7 @@ class _PEB(_CMDLineHelper):
 
 
 
-class _AND(_FormulaFamilyHelper):
+class _AND(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for a single clause formula
     """
     name='and'
