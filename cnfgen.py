@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding:utf-8 -*-
+
 """
 -------------
 CNF generator
@@ -310,7 +312,7 @@ class CNF(object):
                 else: print("\n\\land ",end="",file=output_file)
                 # build the latex clause
                 print("\\left( " + \
-                      " \\lor ".join(map(map_literals,c)) + \
+                      " \\lor ".join(map_literals(l) for l in c) + \
                       " \\right)",end="",file=output_file)
                 first_clause=False
         print(" }",file=output_file)
@@ -372,6 +374,88 @@ A formula is made harder by the process of lifting.
             return [reduce(lambda x,y: x+y,c,[])
                     for c in itertools.product(*domains)]
 
+
+class IfThenElse(Lift):
+    """Lifted formula: substitutes variable with a three variables
+    if-then-else
+    """
+    def __init__(self, cnf, rank=3):
+        """Build a new CNF obtained by substituting an if-then-else to the
+        variables of the original CNF
+
+        Arguments:
+        - `cnf`: the original cnf
+        - `rank`: ignored
+        """
+        self._rank = 3
+
+        Lift.__init__(self,cnf)
+
+        self._header="If-Then-Else substituted formula\n\n".format(self._rank) \
+            +self._header
+
+    def lift_a_literal(self, polarity,varname):
+        """Substitute a positive literal with an if then else statement,
+
+        Arguments:
+        - `polarity`: polarity of the literal
+        - `varname`: fariable to be substituted
+
+        Returns: a list of clauses
+        """
+        X = "{{{}}}^{x}".format(varname)
+        Y = "{{{}}}^{y}".format(varname)
+        Z = "{{{}}}^{z}".format(varname)
+
+        return [ [ (False,X) , (polarity,Y) ] , [ (True, X) , (polarity,Z) ] ]
+
+class Majority(Lift):
+    """Lifted formula: substitutes variable with a Majority
+    """
+    def __init__(self, cnf, rank):
+        """Build a new CNF obtained by substituting a Majority to the
+        variables of the original CNF
+
+        Arguments:
+        - `cnf`: the original cnf
+        - `rank`: how many variables in each or
+        """
+        self._rank = rank
+
+        Lift.__init__(self,cnf)
+
+        self._header="Majority {} substituted formula\n\n".format(self._rank) \
+            +self._header
+
+    def lift_a_literal(self, polarity,varname):
+        """Substitute a positive literal with Loose Majority,
+        and negative literals with Strict Minority.
+
+        Arguments:
+        - `polarity`: polarity of the literal
+        - `varname`: fariable to be substituted
+
+        Returns: a list of clauses
+        """
+
+        # Majority is espressed as a set of positive clauses,
+        # while Minority as a set on negative ones
+        lit = [ (polarity,"{{{}}}^{}".format(varname,i)) for i in range(self._rank) ]
+
+        total    =  self._rank
+        majority = (self._rank +1) // 2
+
+        if polarity:
+            witness = self._rank // 2 + 1   # avoid strict majority of 'False'
+        else:
+            witness = (self._rank + 1) // 2 # avoid loose  majority of 'True'
+
+        binom = itertools.combinations
+
+        return [ s for s in binom(lit,witness) ]
+
+
+
 class InnerOr(Lift):
     """Lifted formula: substitutes variable with a OR
     """
@@ -405,6 +489,41 @@ class InnerOr(Lift):
             return [[ (True,name) for name in names ]]
         else:
             return [ [(False,name)] for name in names ]
+
+class Equality(Lift):
+    """Lifted formula: substitutes variable with 'all equals'
+    """
+    def __init__(self, cnf, rank):
+        """Build a new CNF obtained by substituting 'all equals' to the
+        variables of the original CNF
+
+        Arguments:
+        - `cnf`: the original cnf
+        - `rank`: how many variables in each or
+        """
+        self._rank = rank
+
+        Lift.__init__(self,cnf)
+
+        self._header="EQ {} substituted formula\n\n".format(self._rank) \
+            +self._header
+
+    def lift_a_literal(self, polarity,varname):
+        """Substitute a positive literal with an 'all equal' statement,
+
+        Arguments:
+        - `polarity`: polarity of the literal
+        - `varname`: fariable to be substituted
+
+        Returns: a list of clauses
+        """
+        names = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
+        pairs = itertools.permutations(names,2)
+        if polarity:
+            return [ [ (False,a) , (True,b) ] for a,b in pairs ] # a true variable implies all the others to true.
+
+        else:
+            return [[ (False,a) for a in names ] , [ (True,a) for a in names ] ] # at least a true and a false variable.
 
 
 class InnerXor(Lift):
@@ -841,10 +960,12 @@ implemented_lifting = {
     # lifting name : ("help description", function, default rank)
 
     'none': ("leaves the formula alone", (lambda c,r:c),1),
-    'or'  : ("OR substitution   (default rank: 2)", InnerOr,2),
-    'xor' : ("XOR substitution  (default rank: 2)", InnerXor,2),
-    'sel' : ("selection lifting (default rank: 3)", Selection,3)
-
+    'or'  : ("OR substitution     (default rank: 2)", InnerOr,2),
+    'xor' : ("XOR substitution    (default rank: 2)", InnerXor,2),
+    'sel' : ("selection lifting   (default rank: 3)", Selection,3),
+    'eq'  : ("all variables equal (default rank: 2)", Equality,3),
+    'ite' : ("if x then y else z  (rank ignored)",    IfThenElse,3)
+    'maj' : ("Loose majority      (default rank: 2)", Majority,3)
     }
 
 
