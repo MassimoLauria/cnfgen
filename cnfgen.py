@@ -65,22 +65,24 @@ class CNF(object):
 
         Arguments:
         - `clauses`: ordered list of clauses; a clause with k literals
-                     is a tuple with 2k position. Odd ones are the
-                     polarities, even one are utf8 encoded string with
-                     variable names.
+                     is a `frozenset` object containing k pairs,
+                     each representing a literal.
+                     First element is the polarity and the second is
+                     the variable, which must be an hashable object.
 
-                     E.g. (not x3) or x4 or (not x2) is encoded as (False,u"x3",True,u"x4",False,u"x2")
+                     E.g. (not x3) or x4 or (not x2) is encoded as (False,"x3",True,"x4",False,"x2")
+
         - `header`: a preamble which documents the formula
         """
-        self._clauses = []
-        self._name_to_id = {}
-        self._id_to_name = {}
+        self._clauses   = []
+        self._variables = []
 
         self._header = header or _default_header
 
         for c in clauses_and_comments:
             self.add_clause_or_comment(c)
 
+    # Header
     def _set_header(self, value):
         self._header = value
 
@@ -88,6 +90,29 @@ class CNF(object):
         return self._header
 
     header = property(_get_header, _set_header)
+
+    # Variable/Clause management
+    @staticmethod
+    def is_legal_variable(v):
+        try:
+            hash(v)
+            return True
+        except TypeError:
+            return False
+
+    class Clause(frozenset):
+        """Clause object
+        """
+        def __str__(self):
+            lit=[]
+            for p,v in self:
+                if not p: lit.append("~"+unicode(v))
+                else: lit.append(unicode(v))
+            return '( '+' V '.join(lit)+' )'
+
+        def __repr__(self):
+            return 'Clause('+repr(list(self))+')'
+
 
     def add_clause(self,clause):
         """Add a well formatted clause to the CNF. It raises
@@ -104,17 +129,15 @@ class CNF(object):
         new_clause=[]
         # Check for the format
         for neg,var in clause:
-            if type(neg)!=bool and not isinstance(var,basestring):
+            if type(neg)!=bool or not CNF.is_legal_variable(var):
                 raise TypeError("%s is not a well formatted clause" %clause)
             new_clause.append((neg,var))
         # Add all missing variables
         for _,var in new_clause:
-            if not var in self._name_to_id:
-                id=len(self._name_to_id)+1
-                self._name_to_id[var]=id
-                self._id_to_name[id]=var
+            if not var in self._variables:
+                self._variables.append(var)
         # Add the clause
-        self._clauses.append(new_clause)
+        self._clauses.append(CNF.Clause(new_clause))
 
     def add_variable(self,var):
         """Add a variable to the formula. This is useful to add
@@ -126,10 +149,8 @@ class CNF(object):
         if not isinstance(var,basestring):
             raise TypeError("The name of a variable must be a string")
 
-        if not var in self._name_to_id:
-            id=len(self._name_to_id)+1
-            self._name_to_id[var]=id
-            self._id_to_name[id]=var
+        if not var in self._variables:
+            self._variables.append(var)
 
     def add_comment(self,comment):
         """Add a comment to the formula.
@@ -184,7 +205,7 @@ class CNF(object):
     def get_variables(self):
         """Return the list of variable names
         """
-        return self._name_to_id.keys()[:]
+        return self._variables[:]
 
     def get_clauses_and_comments(self):
         """Return the list of clauses
@@ -194,18 +215,34 @@ class CNF(object):
     def get_clauses(self):
         """Return the list of clauses
         """
-        return [c for c in self._clauses if type(c)!=str]
+        return [c for c in self._clauses if isinstance(c,self.__class__.Clause)]
+
+    # Clauses iterator
+    def __iter__(self):
+        """Iterates over all clauses of the CNF
+        """
+        for c in self._clauses:
+            if isinstance(c,self.__class__.Clause): yield c
 
 
-
+    def __str__(self):
+        return "\n".join([str(c) for c in self._clauses])+'\n'
 
     def dimacs(self,output_file=sys.stdout,output_header=True,output_comments=True):
         """
         Produce the dimacs encoding of the formula
         """
         # Count the number of variables and clauses
-        n = len(self._name_to_id)
-        m = len([c for c in self._clauses if type(c)!=str])
+        n = len(self._variables)
+        m = len(self.get_clauses())
+
+        # give numerical indexes to variables
+        numidx = {}
+        idx = 1
+        for v in self._variables:
+            numidx[v]=idx
+            idx = idx + 1
+        assert idx==n+1
 
         # A nice header
         if output_header:
@@ -220,7 +257,7 @@ class CNF(object):
                 if output_comments: print(u"c "+c,file=output_file)
             else:
                 for neg,var in c:
-                    v = self._name_to_id[var]
+                    v = numidx[var]
                     if not neg: v = -v
                     print(u"{0} ".format(v),end="",file=output_file)
                 print(u"0",file=output_file)
