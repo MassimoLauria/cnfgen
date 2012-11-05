@@ -964,7 +964,7 @@ implemented_lifting = {
     'xor' : ("XOR substitution    (default rank: 2)", InnerXor,2),
     'sel' : ("selection lifting   (default rank: 3)", Selection,3),
     'eq'  : ("all variables equal (default rank: 2)", Equality,3),
-    'ite' : ("if x then y else z  (rank ignored)",    IfThenElse,3)
+    'ite' : ("if x then y else z  (rank ignored)",    IfThenElse,3),
     'maj' : ("Loose majority      (default rank: 2)", Majority,3)
     }
 
