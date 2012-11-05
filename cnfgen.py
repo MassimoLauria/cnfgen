@@ -146,10 +146,10 @@ class CNF(object):
         the variable in a nice order than the appearence one.
 
         Arguments:
-        - `var`: the name of the variable to add (string).
+        - `var`: the variable to add.
         """
-        if not isinstance(var,basestring):
-            raise TypeError("The name of a variable must be a string")
+        if not CNF.is_legal_variable(var):
+                raise TypeError("%s is not a legal variable name" %var)
 
         if not var in self._variables:
             self._variables.append(var)
@@ -409,6 +409,7 @@ class IfThenElse(Lift):
 
         return [ [ (False,X) , (polarity,Y) ] , [ (True, X) , (polarity,Z) ] ]
 
+
 class Majority(Lift):
     """Lifted formula: substitutes variable with a Majority
     """
@@ -455,7 +456,6 @@ class Majority(Lift):
         return [ s for s in binom(lit,witness) ]
 
 
-
 class InnerOr(Lift):
     """Lifted formula: substitutes variable with a OR
     """
@@ -489,6 +489,7 @@ class InnerOr(Lift):
             return [[ (True,name) for name in names ]]
         else:
             return [ [(False,name)] for name in names ]
+
 
 class Equality(Lift):
     """Lifted formula: substitutes variable with 'all equals'
@@ -562,6 +563,7 @@ class InnerXor(Lift):
             parity = sum(1-l[0] for l in c) % 2
             if parity != polarity : clauses.append(list(c))
         return clauses
+
 
 class Selection(Lift):
     """Lifted formula: Y variable select X values
@@ -754,7 +756,7 @@ def OrderingPrinciple(size,total=False):
 
     Arguments:
     - `size`:   numer of elements
-    - `total`:  add clauses to enforce totality
+    - `total`: encode "x < y" as the negation of "x > y"
     """
     gt=CNF()
     # Describe the formula
@@ -805,6 +807,76 @@ def OrderingPrinciple(size,total=False):
     return gt
 
 
+def GraphOrderingPrinciple(graph,total=False):
+    """Generates the clauses for graph ordering principle
+
+    Arguments:
+    - `graph`: undirected graph
+    - `total`: encode "x < y" as the negation of "x > y"
+    """
+    gop=CNF()
+    # Describe the formula
+    if total:
+        name="Total graph ordering principle"
+    else:
+        name="Graph ordering principle"
+
+    if hasattr(graph,'header'):
+        gop.header=name+" on graph:\n"+graph.header+gop.header
+    else:
+        gop.header=name+" on graph:\n"+gop.header
+
+    # Non minimality axioms
+    gop.add_comment("Each vertex has a predecessor")
+
+    # Fix the vertex order
+    V=graph.nodes()
+
+    # Clause is generated in such a way that if totality is enforces,
+    # every pair occurs with a specific orientation.
+    for med in xrange(len(V)):
+        clause = []
+        for lo in xrange(med):
+            if graph.has_edge(V[med],V[lo]):
+                clause += [(True,'x_{{{0},{1}}}'.format(lo,med))]
+        for hi in xrange(med+1,len(V)):
+            if not graph.has_edge(V[med],V[hi]):
+                continue
+            elif total:
+                clause += [(False,'x_{{{0},{1}}}'.format(med,hi))]
+            else:
+                clause += [(True,'x_{{{0},{1}}}'.format(hi,med))]
+        gop.add_clause(clause)
+
+    # Transitivity axiom
+    gop.add_comment("Relation must be transitive")
+
+    if len(V)>=3:
+        if total:
+            # Optimized version if totality is included (less formulas)
+            for (v1,v2,v3) in itertools.combinations(V,3):
+                gop.add_clause([ (True,'x_{{{0},{1}}}'.format(v1,v2)),
+                                (True,'x_{{{0},{1}}}'.format(v2,v3)),
+                                (False,'x_{{{0},{1}}}'.format(v1,v3))])
+                gop.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
+                                (False,'x_{{{0},{1}}}'.format(v2,v3)),
+                                (True,'x_{{{0},{1}}}'.format(v1,v3))])
+        else:
+            for (v1,v2,v3) in itertools.permutations(V,3):
+                gop.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
+                                (False,'x_{{{0},{1}}}'.format(v2,v3)),
+                                (True, 'x_{{{0},{1}}}'.format(v1,v3))])
+
+    # Antisymmetry axioms
+    if not total:
+        gop.add_comment("Relation must be anti-symmetric")
+        for (v1,v2) in itertools.permutations(V,2):
+            gop.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
+                            (False,'x_{{{0},{1}}}'.format(v2,v1))])
+
+    return gop
+
+
 def RamseyNumber(s,k,N):
     """Formula claiming that Ramsey number r(s,k) > N
 
@@ -841,10 +913,59 @@ indipendent set of size %d and no clique of size %d
 
     return ram
 
+
+def TseitinFormula(graph,charges=None):
+    """Build a Tseitin formula based on the input graph.
+
+Odd charge is put on the first vertex by default, unless other
+vertices are is specified in input.
+
+    Arguments:
+    - `graph`: input graph
+    - `charges': odd or even charge for each vertex
+    """
+    V=graph.nodes()
+
+    if charges==None:
+        charges=[1]+[0]*(len(V)-1)             # odd charge on first vertex
+    else:
+        charges = [bool(c) for c in charges]   # map to boolean
+
+    if len(charges)<len(V):
+        charges=charges+[0]*(len(V)-len(charges))  # pad with even charges
+
+    # init formula
+    ordered_edges=graph.edges()
+    tse=CNF()
+    for (v,w) in graph.edges():
+        tse.add_variable("E_{{{0},{1}}}".format(v,w))
+
+    # add constraints
+    ordered_edges=graph.edges()
+    for v,c in zip(V,charges):
+        tse.add_comment("Vertex {} must have {} charge".format(v," odd" if c else "even"))
+
+        edges=filter(lambda e: v in e, ordered_edges)
+
+        # produce all clauses and save half of them
+        names = [ "E_{{{0},{1}}}".format(v,w) for (v,w) in edges ]
+        domains = tuple([ ((True,name),(False,name)) for name in names] )
+        clauses=[]
+        for clause in itertools.product(*domains):
+            # Save only the clauses with the right polarity
+            parity = sum(1-l[0] for l in clause) % 2
+            if parity != c : tse.add_clause(list(clause))
+
+    return tse
+#    raise NotImplementedError("Tseitin formulas not implemented yet")
+
+
 #################################################################
-#          Graph Decoders
+#          Graph Decoders (first is default)
 #################################################################
 implemented_graphformats = {
+    'dag':   ['dot','kth'],
+    'bipartite':   ['dot','kth'],
     'digraph': ['dot','kth'],
     'graph': ['dot','kth']
     }
@@ -856,8 +977,8 @@ def readDigraph(file,format,force_dag=False,multi=False):
     Arguments:
     - `file`: file object
     - `format`: file format
-    - `force_dag`: enforce whether graph must be acyclic
-    - `multi`: are multiple edge allowed
+    - `force_dag`: enforces whether graph must be acyclic
+    - `multi`:     multiple edge allowed
 
     Return: a networkx.DiGraph / networkx.MultiDiGraph object.
     """
@@ -908,7 +1029,7 @@ def readGraph(file,format,multi=False):
     Arguments:
     - `file`: file object
     - `format`: file format
-    - `multi`: are multiple edge allowed
+    - `multi`: multiple edge allowed
 
     Return: a networkx.Graph / networkx.MultiGraph object.
     """
@@ -1061,14 +1182,96 @@ class _GeneralCommandLine(_CMDLineHelper):
                             """)
 
 
-class _GraphInputHelper(_CMDLineHelper):
+### Graph readers/generators
+
+class _GraphInputHelper(object):
+    """Command Line helper for reading graphs
+    """
+
+    @staticmethod
+    def obtain_graph(args):
+        raise NotImplementedError("Graph Input helper must be subclassed")
+
+
+class _DAGHelper(_GraphInputHelper,_CMDLineHelper):
 
     @staticmethod
     def setup_command_line(parser):
         """Setup input options for command lines
         """
 
-        gr=parser.add_argument_group("Reading graph from input")
+        gr=parser.add_argument_group("Reading a directed acyclic graph (DAG) from input")
+        gr.add_argument('--input','-i',
+                        type=argparse.FileType('r',0),
+                        metavar="<input>",
+                        default='-',
+                        help="""Input file. The DAG is read from a file instead of being read from
+                        standard output. Setting '<input>' to '-' is
+                        another way to read from standard
+                        input.  (default: -)
+                        """)
+        gr.add_argument('--inputformat','-if',
+                        choices=implemented_graphformats['dag'],
+                        default=implemented_graphformats['dag'][0],
+                        help="""
+                        Format of the graph in input, several formats are
+                        supported in networkx is installed.  (default:
+                        {})
+                        """.format(implemented_graphformats['dag'][0]))
+
+        gr=parser.add_argument_group("Generate input DAG from a library")
+        gr=gr.add_mutually_exclusive_group()
+        gr.add_argument('--tree',type=int,action='store',metavar="<height>",
+                            help="tree graph")
+
+        gr.add_argument('--pyramid',type=int,action='store',metavar="<height>",
+                            help="pyramid graph")
+
+    @staticmethod
+    def obtain_graph(args):
+        """Produce a DAG from either input or library
+        """
+        if hasattr(args,'tree') and args.tree>0:
+
+            D=networkx.DiGraph()
+            # vertices
+            v=['v_{}'.format(i) for i in range(2*(2**args.tree)-1)]
+            # edges
+            for i in range(len(v)//2):
+                D.add_edge(v[2*i+1],v[i])
+                D.add_edge(v[2*i+2],v[i])
+            return D
+
+        elif hasattr(args,'pyramid') and args.pyramid>0:
+
+            D=networkx.DiGraph()
+            # vertices
+            X=[ ['x_{{{},{}}}'.format(h,i) for i in range(args.pyramid-h+1) ]
+                for h in range(args.pyramid+1)]
+            # edges
+            for h in range(1,len(X)):
+                for i in range(len(X[h])):
+                    D.add_edge(X[h-1][i]  ,X[h][i])
+                    D.add_edge(X[h-1][i+1],X[h][i])
+            return D
+
+        elif args.inputformat:
+
+            D=readDigraph(args.input,args.inputformat,force_dag=True)
+            return D
+
+        else:
+            raise RuntimeError("Invalid graph specification on command line")
+
+
+class _SimpleGraphHelper(_GraphInputHelper,_CMDLineHelper):
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup input options for command lines
+        """
+
+        gr=parser.add_argument_group("Read an undirected graph from input")
         gr.add_argument('--input','-i',
                         type=argparse.FileType('r',0),
                         metavar="<input>",
@@ -1079,13 +1282,77 @@ class _GraphInputHelper(_CMDLineHelper):
                         input.  (default: -)
                         """)
         gr.add_argument('--inputformat','-if',
-                        choices=['kth','dot'],
-                        default='dot',
+                        choices=implemented_graphformats['graph'],
+                        default=implemented_graphformats['graph'][0],
                         help="""
                         Format of the graph in input, several formats are
                         supported in networkx is installed.  (default:
-                        dot)
-                        """)
+                        {})
+                        """.format(implemented_graphformats['graph'][0]))
+
+
+        gr=parser.add_argument_group("Generate input graph from a library")
+        gr=gr.add_mutually_exclusive_group()
+
+        class IntFloat(argparse.Action):
+            def __call__(self, parser, args, values, option_string = None):
+                n, p = int(values[0]),float(values[1])
+                if not isinstance(n,int):
+                    raise ValueError('n must be an integer')
+                if not (isinstance(p,float) and p<=1.0 and p>=0):
+                    raise ValueError('p must be an float between 0 and 1')
+                setattr(args, self.dest, (n,p))
+
+        gr.add_argument('--gnp',nargs=2,action=IntFloat,metavar=('n','p'),
+                            help="random graph according to G(n,p) model (i.e. independent edges)")
+
+        gr.add_argument('--gnm',type=int,nargs=2,action='store',metavar=('n','m'),
+                            help="random graph according to G(n,m) model (i.e. m random edges)")
+
+        gr.add_argument('--gnd',type=int,nargs=2,action='store',metavar=('n','d'),
+                            help="random d-regular graph according to G(n,d) model (i.e. d random edges per vertex)")
+
+        gr.add_argument('--complete',type=int,action='store',metavar="<N>",
+                            help="complete graph on N vertices")
+
+    @staticmethod
+    def obtain_graph(args):
+        """Build a Graph according to command line arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        if hasattr(args,'gnd') and args.gnd:
+
+            n,d = args.gnd
+            if (n*d)%2 == 1:
+                raise ValueError("n * d must be even")
+            G=networkx.random_regular_graph(d,n)
+            return G
+
+        elif hasattr(args,'gnp') and args.gnp:
+
+            n,p = args.gnp
+            G=networkx.gnp_random_graph(n,p)
+
+        elif hasattr(args,'gnm') and args.gnm:
+
+            n,m = args.gnm
+            G=networkx.gnm_random_graph(n,m)
+
+        elif hasattr(args,'complete') and args.complete>0:
+
+            G=networkx.complete_graph(args.complete)
+
+        elif args.inputformat:
+
+            G=readGraph(args.input,args.inputformat)
+        else:
+            raise RuntimeError("Invalid graph specification on command line")
+
+        return G
+
+### Formula families
 
 class _FormulaFamilyHelper(object):
     """Command Line helper for formula families
@@ -1173,7 +1440,7 @@ class _OP(_FormulaFamilyHelper,_CMDLineHelper):
         - `parser`: parser to load with options.
         """
         parser.add_argument('N',metavar='<N>',type=int,help="domain size")
-        parser.add_argument('--total','-t',action='store_true',help="assume a total order")
+        parser.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
 
     @staticmethod
     def build_cnf(args):
@@ -1183,6 +1450,61 @@ class _OP(_FormulaFamilyHelper,_CMDLineHelper):
         - `args`: command line options
         """
         return OrderingPrinciple(args.N,args.total)
+
+
+class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for Graph Ordering principle formulas
+    """
+    name='gop'
+    description='graph ordering principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Graph ordering principle formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
+        _SimpleGraphHelper.setup_command_line(parser)
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a Graph ordering principle formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        G=_SimpleGraphHelper.obtain_graph(args)
+        return GraphOrderingPrinciple(G,args.total)
+
+
+class _TSE(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for Tseitin  formulas
+    """
+    name='tseitin'
+    description='tseitin formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Tseitin formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        _SimpleGraphHelper.setup_command_line(parser)
+
+    @staticmethod
+    def build_cnf(args):
+        """Build Tseitin formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        G=_SimpleGraphHelper.obtain_graph(args)
+        return TseitinFormula(G)
+
 
 class _OR(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for a single clause formula
@@ -1227,14 +1549,7 @@ class _PEB(_FormulaFamilyHelper,_CMDLineHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        _GraphInputHelper.setup_command_line(parser)
-        g=parser.add_mutually_exclusive_group()
-        g.add_argument('--tree',type=int,action='store',metavar="<height>",
-                            help="tree graph")
-
-        g.add_argument('--pyramid',type=int,action='store',metavar="<height>",
-                            help="pyramid graph")
-
+        _DAGHelper.setup_command_line(parser)
 
     @staticmethod
     def build_cnf(args):
@@ -1243,38 +1558,8 @@ class _PEB(_FormulaFamilyHelper,_CMDLineHelper):
         Arguments:
         - `args`: command line options
         """
-        if hasattr(args,'tree') and args.tree>0:
-
-            D=networkx.DiGraph()
-            # vertices
-            v=['v_{}'.format(i) for i in range(2*(2**args.tree)-1)]
-            # edges
-            for i in range(len(v)//2):
-                D.add_edge(v[2*i+1],v[i])
-                D.add_edge(v[2*i+2],v[i])
-            return PebblingFormula(D)
-
-        elif hasattr(args,'pyramid') and args.pyramid>0:
-
-            D=networkx.DiGraph()
-            # vertices
-            X=[ ['x_{{{},{}}}'.format(h,i) for i in range(args.pyramid-h+1) ]
-                for h in range(args.pyramid+1)]
-            # edges
-            for h in range(1,len(X)):
-                for i in range(len(X[h])):
-                    D.add_edge(X[h-1][i]  ,X[h][i])
-                    D.add_edge(X[h-1][i+1],X[h][i])
-            return PebblingFormula(D)
-
-        elif args.inputformat:
-
-            D=readDigraph(args.input,args.inputformat,force_dag=True)
-            return PebblingFormula(D)
-
-        else:
-            raise RuntimeError("Invalid graph specification on command line")
-
+        D=_DAGHelper.obtain_graph(args)
+        return PebblingFormula(D)
 
 
 class _AND(_FormulaFamilyHelper,_CMDLineHelper):
@@ -1315,7 +1600,7 @@ if __name__ == '__main__':
 
     # Commands and subcommand lines
     cmdline = _GeneralCommandLine
-    subcommands=[_PHP,_RAM,_OP,_PEB,_OR,_AND]
+    subcommands=[_PHP,_TSE,_OP,_GOP,_PEB,_RAM,_OR,_AND]
 
     # Python 2.6 does not have argparse library
     try:
