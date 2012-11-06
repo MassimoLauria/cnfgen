@@ -949,7 +949,6 @@ vertices are is specified in input.
             tse.add_clause(list(cls))
 
     return tse
-#    raise NotImplementedError("Tseitin formulas not implemented yet")
 
 
 #################################################################
@@ -1300,7 +1299,7 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
         gr.add_argument('--savegraph','-sg',
                             type=argparse.FileType('wb',0),
                             metavar="<graph_file>",
-                            default='-',
+                            default=None,
                             help="""Output the DAG to a file. The
                             graph is saved, which is useful if the
                             graph is generated internally.
@@ -1360,7 +1359,11 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
             raise RuntimeError("Invalid graph specification on command line")
 
         # Output the graph is requested
-        if args.savegraph: writeGraph(D,args.savegraph,args.graphformat,graph_type='dag',sort_dag=True)
+        if hasattr(args,'savegraph') and args.savegraph:
+            writeGraph(D,
+                       args.savegraph,
+                       args.graphformat,
+                       graph_type='dag',sort_dag=True)
 
         return D
 
@@ -1385,7 +1388,7 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
         gr.add_argument('--savegraph','-sg',
                             type=argparse.FileType('wb',0),
                             metavar="<graph_file>",
-                            default='-',
+                            default=None,
                             help="""Output the graph to a file. The
                             graph is saved, which is useful if the
                             graph is randomly generated internally.
@@ -1456,7 +1459,7 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
             n,m = args.gnm
             G=networkx.gnm_random_graph(n,m)
 
-        elif hasattr(args,'grid') and len(args.grid)>1:
+        elif hasattr(args,'grid') and args.grid:
 
             G=networkx.grid_graph(args.grid)
 
@@ -1470,8 +1473,13 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
         else:
             raise RuntimeError("Invalid graph specification on command line")
 
+
         # Output the graph is requested
-        if args.savegraph: writeGraph(G,args.savegraph,args.graphformat)
+        if hasattr(args,'savegraph') and args.savegraph:
+            writeGraph(G,
+                       args.savegraph,
+                       args.graphformat,
+                       graph_type='simple')
 
         return G
 
@@ -1616,6 +1624,14 @@ class _TSE(_FormulaFamilyHelper,_CMDLineHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
+        parser.add_argument('--charge',metavar='<charge>',default='first',
+                            choices=['first','random','randomodd','randomeven'],
+                            help="""charge on the vertices.
+                                    `first'  puts odd charge on first vertex;
+                                    `random' puts a random charge on vertices;
+                                    `randomodd' puts random odd  charge on vertices;
+                                    `randomeven' puts random even charge on vertices.
+                                     """)
         _SimpleGraphHelper.setup_command_line(parser)
 
     @staticmethod
@@ -1626,7 +1642,29 @@ class _TSE(_FormulaFamilyHelper,_CMDLineHelper):
         - `args`: command line options
         """
         G=_SimpleGraphHelper.obtain_graph(args)
-        return TseitinFormula(G)
+
+        if G.order()<1:
+            charge=None
+
+        elif args.charge=='first':
+
+            charge=[1]+[0]*(G.order()-1)
+
+        else: # random vector
+            charge=[random.randint(0,1) for i in xrange(G.order()-1)]
+
+            parity=sum(charge) % 2
+
+            if args.charge=='random':
+                charge.append(random.randint(0,1))
+            elif args.charge=='randomodd':
+                charge.append(1-parity)
+            elif args.charge=='randomeven':
+                charge.append(parity)
+            else:
+                raise ValueError('Illegal charge specification on command line')
+
+        return TseitinFormula(G,charge)
 
 
 class _OR(_FormulaFamilyHelper,_CMDLineHelper):
