@@ -42,6 +42,9 @@ from __future__ import print_function
 import sys
 import itertools
 
+import argparse
+
+import random
 import pygraphviz
 import networkx
 import networkx.algorithms
@@ -1206,17 +1209,6 @@ class _GeneralCommandLine(_CMDLineHelper):
         Arguments:
         - `parser`: parser to fill with options
         """
-        parser.add_argument('--help-lifting',action='store_true',help="""
-                             Formula can be made harder applying some
-                             so called "lifting procedures".
-                             This gives information about the implemented lifting.
-                             (not implemented yet)
-                             """)
-        parser.add_argument('--help-inputgraph',action='store_true',help="""
-                             Some formulas are built around graph structures.
-                             This document how to read them in input.
-                             (not implemented yet)
-                             """)
         parser.add_argument('--output','-o',
                             type=argparse.FileType('wb',0),
                             metavar="<output>",
@@ -1235,6 +1227,16 @@ class _GeneralCommandLine(_CMDLineHelper):
                             convenient to insert formulas into papers, and
                             'dimacs' is the format used by sat solvers.
                             (default: dimacs)
+                            """)
+
+        parser.add_argument('--seed','-S',
+                            metavar="<seed>",
+                            default=None,
+                            type=str,
+                            action='store',
+                            help="""Seed for any random process in the
+                            program. Any python hashable object will
+                            be fine.  (default: current time)
                             """)
         g=parser.add_mutually_exclusive_group()
         g.add_argument('--verbose', '-v',action='count',default=1,
@@ -1259,6 +1261,12 @@ class _GeneralCommandLine(_CMDLineHelper):
                             Hardness parameter for the lifting procedure.
                             See `--help-lifting` for more informations
                             """)
+        parser.add_argument('--help-lifting',action='store_true',help="""
+                             Formula can be made harder applying some
+                             so called "lifting procedures".
+                             This gives information about the implemented lifting.
+                             (not implemented yet)
+                             """)
 
 
 ### Graph readers/generators
@@ -1746,6 +1754,10 @@ if __name__ == '__main__':
     args=parser.parse_args()
     cmdline.additional_options_check(args)
     args.subcommand.additional_options_check(args)
+
+    # If necessary, init the random generator
+    if hasattr(args,'seed') and args.seed:
+        random.seed(args.seed)
 
     # Generate the basic formula
     cnf=args.subcommand.build_cnf(args)
