@@ -956,7 +956,7 @@ implemented_graphformats = {
     'dag':   ['dot','kth'],
     'bipartite':   ['dot','kth'],
     'digraph': ['dot','kth'],
-    'graph': ['dot','kth']
+    'simple': ['dot','kth']
     }
 
 
@@ -1022,8 +1022,8 @@ def readGraph(file,format,multi=False):
 
     Return: a networkx.Graph / networkx.MultiGraph object.
     """
-    if format not in implemented_graphformats['graph']:
-        raise ValueError("Invalid format for directed graph")
+    if format not in implemented_graphformats['simple']:
+        raise ValueError("Invalid format for undirected graph")
 
     if multi:
         grtype=networkx.MultiGraph
@@ -1057,6 +1057,66 @@ def readGraph(file,format,multi=False):
         raise RuntimeError("Internal error, format {} not implemented".format(format))
 
     return G
+
+
+def writeGraph(G,output_file,format,graph_type='simple',sort_dag=False):
+    """Write a graph to a file
+
+    Arguments:
+    - `G`: graph object
+    - `output_file`: file name or file handle to write on
+    - `output_format`: graph format (e.g. dot, gml)
+    - `graph_type`: one among {graph,digraph,dag,bipartite}
+    - `sort_dag`: if DAG output maintaining topological order.
+
+    Return: none.
+    """
+    if graph_type not in implemented_graphformats.keys():
+        raise ValueError("Invalid graph type")
+
+    if format not in implemented_graphformats[graph_type]:
+        raise ValueError("Invalid format for {} graph".format(graph_type))
+
+    if sort_dag and not networkx.algorithms.is_directed_acyclic_graph(G):
+        raise ValueError("Graph must be acyclic")
+
+    if format=='dot':
+
+        networkx.write_dot(G,output_file)
+
+    elif format=='kth':
+
+        print("c {}".format(G.name))
+        print("{}".format(G.order()))
+
+        # we need numerical indices for the vertices
+        if sort_dag:
+            enumeration = zip( networkx.algorithms.topological_sort(G),
+                               xrange(G.order()))
+        else:
+            enumeration = zip( G.nodes(), xrange(G.order()))
+
+        # adj list in the same order
+        indices = dict( enumeration )
+
+        for v,i in enumeration:
+
+            if G.is_directed():
+                neighbors = [indices[w] for w in G.nodes() if v in G.adj[w] ]  # kth format inverts arcs
+
+            else:
+                neighbors = [indices[w] for w in G.adj[v].keys()]
+
+            neighbors.sort()
+
+            print( "{0} : ".format(i) , end="", file=output_file)
+            print( " ".join([str(i) for i in neighbors]), file=output_file )
+
+    else:
+        raise RuntimeError("Internal error, format {} not implemented".format(format))
+
+    return G
+
 
 ###
 ### Various utility function
@@ -1203,7 +1263,7 @@ class _GeneralCommandLine(_CMDLineHelper):
 
 ### Graph readers/generators
 
-class _GraphInputHelper(object):
+class _GraphHelper(object):
     """Command Line helper for reading graphs
     """
 
@@ -1212,7 +1272,7 @@ class _GraphInputHelper(object):
         raise NotImplementedError("Graph Input helper must be subclassed")
 
 
-class _DAGHelper(_GraphInputHelper,_CMDLineHelper):
+class _DAGHelper(_GraphHelper,_CMDLineHelper):
 
     @staticmethod
     def setup_command_line(parser):
@@ -1229,13 +1289,24 @@ class _DAGHelper(_GraphInputHelper,_CMDLineHelper):
                         another way to read from standard
                         input.  (default: -)
                         """)
-        gr.add_argument('--inputformat','-if',
+        gr.add_argument('--savegraph','-sg',
+                            type=argparse.FileType('wb',0),
+                            metavar="<graph_file>",
+                            default='-',
+                            help="""Output the DAG to a file. The
+                            graph is saved, which is useful if the
+                            graph is generated internally.
+                            Setting '<graph_file>' to '-' is
+                            another way to send the graph to
+                            standard output.  (default:  -)
+                            """)
+        gr.add_argument('--graphformat','-gf',
                         choices=implemented_graphformats['dag'],
                         default=implemented_graphformats['dag'][0],
                         help="""
-                        Format of the graph in input, several formats are
-                        supported in networkx is installed.  (default:
-                        {})
+                        Format of the DAG in input/output, several
+                        formats are supported if networkx is
+                        installed.  (default:  {})
                         """.format(implemented_graphformats['dag'][0]))
 
         gr=parser.add_argument_group("Generate input DAG from a library")
@@ -1259,11 +1330,11 @@ class _DAGHelper(_GraphInputHelper,_CMDLineHelper):
             for i in range(len(v)//2):
                 D.add_edge(v[2*i+1],v[i])
                 D.add_edge(v[2*i+2],v[i])
-            return D
 
         elif hasattr(args,'pyramid') and args.pyramid>0:
 
             D=networkx.DiGraph()
+            D.name='Pyramid of height {}'.format(args.pyramid)
             # vertices
             X=[ ['x_{{{},{}}}'.format(h,i) for i in range(args.pyramid-h+1) ]
                 for h in range(args.pyramid+1)]
@@ -1272,25 +1343,28 @@ class _DAGHelper(_GraphInputHelper,_CMDLineHelper):
                 for i in range(len(X[h])):
                     D.add_edge(X[h-1][i]  ,X[h][i])
                     D.add_edge(X[h-1][i+1],X[h][i])
-            return D
 
         elif args.inputformat:
 
             D=readDigraph(args.input,args.inputformat,force_dag=True)
-            return D
 
         else:
             raise RuntimeError("Invalid graph specification on command line")
 
+        # Output the graph is requested
+        if args.savegraph: writeGraph(D,args.savegraph,args.graphformat,graph_type='dag',sort_dag=True)
 
-class _SimpleGraphHelper(_GraphInputHelper,_CMDLineHelper):
+        return D
+
+
+class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
 
     @staticmethod
     def setup_command_line(parser):
         """Setup input options for command lines
         """
 
-        gr=parser.add_argument_group("Read an undirected graph from input")
+        gr=parser.add_argument_group("Read/Write the underlying undirected graph")
         gr.add_argument('--input','-i',
                         type=argparse.FileType('r',0),
                         metavar="<input>",
@@ -1300,14 +1374,25 @@ class _SimpleGraphHelper(_GraphInputHelper,_CMDLineHelper):
                         another way to read from standard
                         input.  (default: -)
                         """)
-        gr.add_argument('--inputformat','-if',
-                        choices=implemented_graphformats['graph'],
-                        default=implemented_graphformats['graph'][0],
+        gr.add_argument('--savegraph','-sg',
+                            type=argparse.FileType('wb',0),
+                            metavar="<graph_file>",
+                            default='-',
+                            help="""Output the graph to a file. The
+                            graph is saved, which is useful if the
+                            graph is randomly generated internally.
+                            Setting '<graph_file>' to '-' is
+                            another way to send the graph to
+                            standard output.  (default:  -)
+                            """)
+        gr.add_argument('--graphformat','-gf',
+                        choices=implemented_graphformats['simple'],
+                        default=implemented_graphformats['simple'][0],
                         help="""
-                        Format of the graph in input, several formats are
-                        supported in networkx is installed.  (default:
-                        {})
-                        """.format(implemented_graphformats['graph'][0]))
+                        Format of the graph in input/output, several
+                        formats are supported in networkx is
+                        installed.  (default:  {})
+                        """.format(implemented_graphformats['simple'][0]))
 
 
         gr=parser.add_argument_group("Generate input graph from a library")
@@ -1325,11 +1410,15 @@ class _SimpleGraphHelper(_GraphInputHelper,_CMDLineHelper):
         gr.add_argument('--gnp',nargs=2,action=IntFloat,metavar=('n','p'),
                             help="random graph according to G(n,p) model (i.e. independent edges)")
 
+
         gr.add_argument('--gnm',type=int,nargs=2,action='store',metavar=('n','m'),
                             help="random graph according to G(n,m) model (i.e. m random edges)")
 
         gr.add_argument('--gnd',type=int,nargs=2,action='store',metavar=('n','d'),
                             help="random d-regular graph according to G(n,d) model (i.e. d random edges per vertex)")
+
+        gr.add_argument('--grid',type=int,nargs='+',action='store',metavar=('d1','d2'),
+                        help="n-dimensional grid of dimension d1 x d2 x ... ")
 
         gr.add_argument('--complete',type=int,action='store',metavar="<N>",
                             help="complete graph on N vertices")
@@ -1359,15 +1448,22 @@ class _SimpleGraphHelper(_GraphInputHelper,_CMDLineHelper):
             n,m = args.gnm
             G=networkx.gnm_random_graph(n,m)
 
+        elif hasattr(args,'grid') and len(args.grid)>1:
+
+            G=networkx.grid_graph(args.grid)
+
         elif hasattr(args,'complete') and args.complete>0:
 
             G=networkx.complete_graph(args.complete)
 
         elif args.inputformat:
 
-            G=readGraph(args.input,args.inputformat)
+            G=readGraph(args.input,args.graphformat)
         else:
             raise RuntimeError("Invalid graph specification on command line")
+
+        # Output the graph is requested
+        if args.savegraph: writeGraph(G,args.savegraph,args.graphformat)
 
         return G
 
