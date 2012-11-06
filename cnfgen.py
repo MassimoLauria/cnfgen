@@ -554,15 +554,8 @@ class InnerXor(Lift):
 
         Returns: a list of clauses
         """
-        domains=[]
         names = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
-        domains = tuple([ ((True,name),(False,name)) for name in names] )
-        clauses=[]
-        for c in itertools.product(*domains):
-            # Save only the clauses with the right polarity
-            parity = sum(1-l[0] for l in c) % 2
-            if parity != polarity : clauses.append(list(c))
-        return clauses
+        return parity_constraint(names,polarity)
 
 
 class Selection(Lift):
@@ -949,12 +942,8 @@ vertices are is specified in input.
 
         # produce all clauses and save half of them
         names = [ "E_{{{0},{1}}}".format(v,w) for (v,w) in edges ]
-        domains = tuple([ ((True,name),(False,name)) for name in names] )
-        clauses=[]
-        for clause in itertools.product(*domains):
-            # Save only the clauses with the right polarity
-            parity = sum(1-l[0] for l in clause) % 2
-            if parity != c : tse.add_clause(list(clause))
+        for cls in parity_constraint(names,c):
+            tse.add_clause(list(cls))
 
     return tse
 #    raise NotImplementedError("Tseitin formulas not implemented yet")
@@ -1068,6 +1057,36 @@ def readGraph(file,format,multi=False):
         raise RuntimeError("Internal error, format {} not implemented".format(format))
 
     return G
+
+###
+### Various utility function
+###
+def parity_constraint( vars, b ):
+    """Output the CNF encoding of a parity constraint
+
+    E.g. X1 + X2 + X3 = 1 (mod 2) is encoded as
+
+    ( X1 v  X2 v  X3)
+    (~X1 v ~X2 v  X3)
+    (~X1 v  X2 v ~X3)
+    ( X1 v ~X2 v ~X3)
+
+    Arguments:
+    - `vars`: variables in the constraint
+    - `b`   : the requested parity
+
+    Returns: a list of clauses
+    >>> parity_constraint(['a','b','c'],1)
+    """
+    domains = tuple([ ((True,var),(False,var)) for var in vars] )
+    clauses=[]
+    for c in itertools.product(*domains):
+        # Save only the clauses with the right polarity
+        parity = sum(1-l[0] for l in c) % 2
+        if parity != b : clauses.append(list(c))
+    return clauses
+
+
 
 #################################################################
 #          Command line tool follows
