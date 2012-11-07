@@ -104,9 +104,27 @@ class CNF(object):
         except TypeError:
             return False
 
-    class Clause(frozenset):
+    class Clause(tuple):
         """Clause object
         """
+        # def __init__(self, seq, check=True):
+        #     """A clause of a CNF
+
+        #     A clause is a sequence of literals represented as
+        #     (bool,value) where 'value' is any hashable data. The
+        #     clause is basically an ordered tuple of such literals.
+
+        #     Arguments:
+        #     - `seq`  : a sequence of literals
+        #     - `check`: check if the elements are legal literals
+        #     """
+        #     if check:
+        #         for b,v in seq:
+        #             if not CNF.is_legal_variable(v):
+        #                 raise TypeError("%s is not a legal variable name" %v)
+
+        #     tuple.__init__(self, [(bool(b),v) for b,v in seq ] )
+
         def __str__(self):
             lit=[]
             for p,v in self:
@@ -118,7 +136,7 @@ class CNF(object):
             return 'Clause('+repr(list(self))+')'
 
 
-    def add_clause(self,clause):
+    def add_clause(self,clause,repetition=False):
         """Add a well formatted clause to the CNF. It raises
            `ValueError` if the clause is not well formatted.
 
@@ -129,6 +147,7 @@ class CNF(object):
 
                     E.g. (not x3) or x4 or (not x2) is encoded as
                          [(False,u"x3"),(True,u"x4"),(False,u"x2")]
+        - `repetition`: allow repeated clauses
         """
         new_clause=[]
         # Check for the format
@@ -136,6 +155,12 @@ class CNF(object):
             if type(neg)!=bool or not CNF.is_legal_variable(var):
                 raise TypeError("%s is not a well formatted clause" %clause)
             new_clause.append((neg,var))
+
+        # Check for clause repetition
+        if (not repetition):
+            for cla in self:
+                if set(cla)==set(new_clause): return
+
         # Add all missing variables
         for _,var in new_clause:
             if not var in self._variables:
