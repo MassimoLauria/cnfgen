@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
+from __future__ import print_function
+
 """
 -------------
 CNF generator
@@ -19,7 +21,7 @@ Create you own CNFs:
 
 >>> c=CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], \
           [(False,"x2"),(True,"x4")] ])
->>> c.dimacs(output_header=False)
+>>> print( c.dimacs(False) )
 p cnf 4 2
 1 2 -3 0
 -2 4 0
@@ -27,7 +29,7 @@ p cnf 4 2
 You can add clauses later in the process:
 
 >>> c.add_clause( [(False,"x3"),(True,"x4"),(False,"x5")] )
->>> c.dimacs(output_header=False)
+>>> print( c.dimacs(add_header=False))
 p cnf 5 3
 1 2 -3 0
 -2 4 0
@@ -36,7 +38,6 @@ p cnf 5 3
 `cnfgen` module contains a lot of prepackaged CNF generator
 """
 
-from __future__ import print_function
 import sys
 import itertools
 
@@ -172,13 +173,13 @@ class CNF(object):
         >>> c.add_clause([(True,"x"),(False,"y")])
         >>> c.add_comment("Second clause")
         >>> c.add_clause([(True,"y"),(False,"z")])
-        >>> c.dimacs(output_header=False,output_comments=True)
+        >>> c.dimacs(add_header=False,add_comments=True)
         p cnf 3 2
         c First clause
         1 -2 0
         c Second clause
         2 -3 0
-        >>> c.dimacs(output_header=False,output_comments=False)
+        >>> print c.dimacs(add_header=False,add_comments=False)
         p cnf 3 2
         1 -2 0
         2 -3 0
@@ -194,13 +195,13 @@ class CNF(object):
         >>> c=CNF()
         >>> data=["Hej",[(False,"x"),(True,"y")],"Hej da"]
         >>> for d in data: c.add_clause_or_comment(d)
-        >>> c.dimacs(output_header=False)
+        >>> c.dimacs(add_header=False)
         p cnf 2 1
         c Hej
         -1 2 0
         c Hej da
         """
-        if type(data)==str:
+        if isinstance(data,basestring):
             self.add_comment(data)
         else:
             self.add_clause(data)
@@ -231,10 +232,13 @@ class CNF(object):
     def __str__(self):
         return "\n".join([str(c) for c in self._clauses])+'\n'
 
-    def dimacs(self,output_file=sys.stdout,output_header=True,output_comments=True):
+    def dimacs(self,add_header=True,add_comments=True):
         """
         Produce the dimacs encoding of the formula
         """
+
+        output = u""
+
         # Count the number of variables and clauses
         n = len(self._variables)
         m = len(self.get_clauses())
@@ -245,34 +249,41 @@ class CNF(object):
         for v in self._variables:
             numidx[v]=idx
             idx = idx + 1
-        assert idx==n+1
 
         # A nice header
-        if output_header:
-            for s in self.header.split("\n"): print(u"c "+s,file=output_file)
+        if add_header:
+            for s in self.header.split("\n"): output+="c {0}\n".format(s.strip())
 
         # Formula specification
-        print(u"p cnf {0} {1}".format(n,m),file=output_file)
+        output += "p cnf {0} {1}\n".format(n,m)
 
         # We produce clauses and comments
         for c in self._clauses:
-            if type(c)==str:
-                if output_comments: print(u"c "+c,file=output_file)
-            else:
+
+            if isinstance(c,basestring) and add_comments:
+                for s in c.split("\n"): output+="c {0}\n".format(s.strip())
+
+            elif isinstance(c,CNF.Clause):
+
                 for neg,var in c:
+
                     v = numidx[var]
                     if not neg: v = -v
-                    print(u"{0} ".format(v),end="",file=output_file)
-                print(u"0",file=output_file)
+                    output += "{0} ".format(v)
 
-    def latex(self,output_file=sys.stdout,output_header=True,output_comments=True):
+                output+="0\n"
+
+        # final formula
+        return output.strip()
+
+    def latex(self,add_header=True,add_comments=True):
         r"""
         Produce the LaTeX version of the formula
 
-        >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")], \
-                   [(False,"x_2"),(False,"x_4")], \
+        >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],
+                   [(False,"x_2"),(False,"x_4")],
                    [(True,"x_2"),(True,"x_3"),(False,"x_4")]])
-        >>> c.latex()
+        >>> print(c.latex())
         %
         % Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
         % https://github.com/MassimoLauria/cnfgen.git
@@ -282,41 +293,55 @@ class CNF(object):
         \\land \\left( \\neg{x_2} \\lor \\neg{x_4} \\right)
         \\land \\left(     {x_2} \\lor     {x_3} \\lor \\neg{x_4} \\right)}
         >>> c=CNF()
-        >>> c.latex(output_header=False)
-        \ensuremath{\square}
+        >>> print(c.latex(add_header=False))
+        \ensuremath{%
+           \top }
         """
 
-        # A nice header
-        if output_header:
-            for s in self.header.split("\n"): print((u"% "+s).strip(),file=output_file)
+        output = u""
 
-        # We produce clauses and comments
-        if len(self._clauses)==0:
-            print("\\ensuremath{\\square}",file=output_file)
-            return
+        # A nice header
+        if add_header:
+            for s in self.header.split("\n"): output+="% {0}\n".format(s.strip())
 
         # map literals (neg,var) to latex formulas
         def map_literals(l):
             if l[0]: return "    {%s}"%l[1]
             else: return "\\neg{%s}"%l[1]
 
-        print(r"\ensuremath{%",end="",file=output_file)
-        first_clause=True
+
+        # We produce clauses and comments
+        output += "\ensuremath{%"
+        empty_cnf=True
 
         for c in self._clauses:
-            if type(c)==str:
-                if output_comments:
-                    print('\n',file=output_file)
-                    print((u"% {}".format(c)).strip(),end='',file=output_file)
-            else:
-                if first_clause: print("\n      ",end="",file=output_file)
-                else: print("\n\\land ",end="",file=output_file)
+
+            if isinstance(c,basestring) and add_comments:
+                for s in c.split("\n"): output+="\n% {0}".format(s.strip())
+
+            elif isinstance(c,CNF.Clause):
+
+                output += "\n      " if empty_cnf else "\n\\land "
+                empty_cnf = False
+
                 # build the latex clause
-                print("\\left( " + \
-                      " \\lor ".join(map_literals(l) for l in c) + \
-                      " \\right)",end="",file=output_file)
-                first_clause=False
-        print(" }",file=output_file)
+                if len(c)==0:
+                    output += "\\square"
+
+                else:
+                    output += "\\left( " + \
+                              " \\lor ".join(map_literals(l) for l in c) + \
+                              " \\right)"
+
+
+        # No clause in the CNF
+        if empty_cnf: output+="\n   \\top"
+
+        # final formula
+        output +=" }"
+        return output.strip()
+
+
 
 ###
 ### Lifted CNFs
@@ -632,7 +657,7 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     - `functional`: add clauses to enforce at most one hole per pigeon
     - `onto`: add clauses to enforce that any hole must have a pigeon
 
-    >>> PigeonholePrinciple(4,3).dimacs(output_header=False,output_comments=True)
+    >>> print(PigeonholePrinciple(4,3).dimacs(False,True))
     p cnf 12 22
     c Pigeon axiom: pigeon 1 sits in a hole
     1 2 3 0
@@ -1785,17 +1810,17 @@ if __name__ == '__main__':
     output_header  =args.verbose >= 1
 
     if args.output_format == 'latex':
-        lcnf.latex(output_file=args.output,
-                   output_header=output_header,
-                   output_comments=output_comments)
+        output=lcnf.latex(add_header=output_header,
+                          add_comments=output_comments)
+
     elif args.output_format == 'dimacs':
-        lcnf.dimacs(output_file=args.output,
-                    output_header=output_header,
-                    output_comments=output_comments)
+        output=lcnf.dimacs(add_header=output_header,
+                           add_comments=output_comments)
     else:
-        lcnf.dimacs(output_file=args.output,
-                    output_header=output_header,
-                    output_comments=output_comments)
+        output=lcnf.dimacs(add_header=output_header,
+                           add_comments=output_comments)
+
+    print(output,file=args.output)
 
     if args.output!=sys.stdout:
         args.output.close()
