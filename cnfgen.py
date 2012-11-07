@@ -34,8 +34,6 @@ p cnf 5 3
 -3 4 -5 0
 
 `cnfgen` module contains a lot of prepackaged CNF generator
-
->>>
 """
 
 from __future__ import print_function
@@ -747,75 +745,36 @@ def PebblingFormula(digraph):
     return peb
 
 
-def OrderingPrinciple(size,total=False):
-    """Generates the clauses of ordering principle
+def OrderingPrinciple(size,total=False,smart=False):
+    """Generates the clauses for ordering principle
 
     Arguments:
-    - `size`:   numer of elements
-    - `total`: encode "x < y" as the negation of "x > y"
+    - `size`  : size of the domain
+    - `total` : add totality axioms (i.e. "x < y" or "x > y")
+    - `smart` : "x < y" and "x > y" are represented by a single variable (implies totality)
     """
-    gt=CNF()
-    # Describe the formula
-    if total:
-        gt.header="Total ordering principle on domain of size %s\n"%size+gt.header
-    else:
-        gt.header="Ordering principle on domain of size %s\n"%size+gt.header
 
-    # Non minimality axioms
-    gt.add_comment("Each vertex has a predecessor")
-    for v in xrange(size):
-        clause = []
-        for u in xrange(v):
-            clause += [(True,'x_{{{0},{1}}}'.format(u,v))]
-        for w in xrange(v+1,size):
-            if total:
-                clause += [(False,'x_{{{0},{1}}}'.format(v,w))]
-            else:
-                clause += [(True,'x_{{{0},{1}}}'.format(w,v))]
-        gt.add_clause(clause)
-
-    # Transitivity axiom
-    gt.add_comment("Relation must be transitive")
-
-    if size>=3:
-        if total:
-            # Optimized version if totality is included (less formulas)
-            for (v1,v2,v3) in itertools.combinations(xrange(size),3):
-                gt.add_clause([ (True,'x_{{{0},{1}}}'.format(v1,v2)),
-                                (True,'x_{{{0},{1}}}'.format(v2,v3)),
-                                (False,'x_{{{0},{1}}}'.format(v1,v3))])
-                gt.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
-                                (False,'x_{{{0},{1}}}'.format(v2,v3)),
-                                (True,'x_{{{0},{1}}}'.format(v1,v3))])
-        else:
-            for (v1,v2,v3) in itertools.permutations(xrange(size),3):
-                gt.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
-                                (False,'x_{{{0},{1}}}'.format(v2,v3)),
-                                (True, 'x_{{{0},{1}}}'.format(v1,v3))])
-
-    # Antisymmetry axioms
-    if not total:
-        gt.add_comment("Relation must be anti-symmetric")
-        for (v1,v2) in itertools.permutations(xrange(size),2):
-            gt.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
-                            (False,'x_{{{0},{1}}}'.format(v2,v1))])
-
-    return gt
+    return GraphOrderingPrinciple(networkx.complete_graph(size),total,smart)
 
 
-def GraphOrderingPrinciple(graph,total=False):
+def GraphOrderingPrinciple(graph,total=False,smart=False):
     """Generates the clauses for graph ordering principle
 
     Arguments:
-    - `graph`: undirected graph
-    - `total`: encode "x < y" as the negation of "x > y"
+    - `graph` : undirected graph
+    - `total` : add totality axioms (i.e. "x < y" or "x > y")
+    - `smart` : "x < y" and "x > y" are represented by a single variable (implies totality)
     """
     gop=CNF()
+
     # Describe the formula
-    if total:
+    if total or smart:
         name="Total graph ordering principle"
     else:
         name="Graph ordering principle"
+
+    if smart:
+        name = name + "(compact representation)"
 
     if hasattr(graph,'header'):
         gop.header=name+" on graph:\n"+graph.header+gop.header
@@ -838,7 +797,7 @@ def GraphOrderingPrinciple(graph,total=False):
         for hi in xrange(med+1,len(V)):
             if not graph.has_edge(V[med],V[hi]):
                 continue
-            elif total:
+            elif smart:
                 clause += [(False,'x_{{{0},{1}}}'.format(med,hi))]
             else:
                 clause += [(True,'x_{{{0},{1}}}'.format(hi,med))]
@@ -848,8 +807,8 @@ def GraphOrderingPrinciple(graph,total=False):
     gop.add_comment("Relation must be transitive")
 
     if len(V)>=3:
-        if total:
-            # Optimized version if totality is included (less formulas)
+        if smart:
+            # Optimized version if smart representation of totality is used
             for (v1,v2,v3) in itertools.combinations(V,3):
                 gop.add_clause([ (True,'x_{{{0},{1}}}'.format(v1,v2)),
                                 (True,'x_{{{0},{1}}}'.format(v2,v3)),
@@ -863,12 +822,21 @@ def GraphOrderingPrinciple(graph,total=False):
                                 (False,'x_{{{0},{1}}}'.format(v2,v3)),
                                 (True, 'x_{{{0},{1}}}'.format(v1,v3))])
 
-    # Antisymmetry axioms
-    if not total:
+    # Antisymmetry axioms (useless for 'smart' representation)
+    if (not total) and (not smart):
         gop.add_comment("Relation must be anti-symmetric")
         for (v1,v2) in itertools.permutations(V,2):
             gop.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
                             (False,'x_{{{0},{1}}}'.format(v2,v1))])
+
+    # Antisymmetry axioms and totality (useless for 'smart' representation)
+    elif total and (not smart):
+        gop.add_comment("Relation must be anti-symmetric and total")
+        for (v1,v2) in itertools.permutations(V,2):
+            gop.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
+                            (False,'x_{{{0},{1}}}'.format(v2,v1))])
+            gop.add_clause([ (True,'x_{{{0},{1}}}'.format(v1,v2)),
+                            (True,'x_{{{0},{1}}}'.format(v2,v1))])
 
     return gop
 
@@ -1138,7 +1106,12 @@ def parity_constraint( vars, b ):
     - `b`   : the requested parity
 
     Returns: a list of clauses
-    >>> parity_constraint(['a','b','c'],1)
+    >>> parity_constraint(['a','b'],1)
+    [[(True, 'a'), (True, 'b')], [(False, 'a'), (False, 'b')]]
+    >>> parity_constraint(['a','b'],0)
+    [[(True, 'a'), (False, 'b')], [(False, 'a'), (True, 'b')]]
+    >>> parity_constraint(['a'],0)
+    [[(False, 'a')]]
     """
     domains = tuple([ ((True,var),(False,var)) for var in vars] )
     clauses=[]
@@ -1572,6 +1545,7 @@ class _OP(_FormulaFamilyHelper,_CMDLineHelper):
         """
         parser.add_argument('N',metavar='<N>',type=int,help="domain size")
         parser.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
+        parser.add_argument('--smart','-s',default=False,action='store_true',help="encode 'x<y' and 'x>y' in a single variable (implies totality)")
 
     @staticmethod
     def build_cnf(args):
@@ -1580,7 +1554,7 @@ class _OP(_FormulaFamilyHelper,_CMDLineHelper):
         Arguments:
         - `args`: command line options
         """
-        return OrderingPrinciple(args.N,args.total)
+        return OrderingPrinciple(args.N,args.total,args.smart)
 
 
 class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
@@ -1597,6 +1571,7 @@ class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
         - `parser`: parser to load with options.
         """
         parser.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
+        parser.add_argument('--smart','-s',default=False,action='store_true',help="encode 'x<y' and 'x>y' in a single variable (implies totality)")
         _SimpleGraphHelper.setup_command_line(parser)
 
 
@@ -1608,7 +1583,7 @@ class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
         - `args`: command line options
         """
         G=_SimpleGraphHelper.obtain_graph(args)
-        return GraphOrderingPrinciple(G,args.total)
+        return GraphOrderingPrinciple(G,args.total,args.smart)
 
 
 class _TSE(_FormulaFamilyHelper,_CMDLineHelper):
