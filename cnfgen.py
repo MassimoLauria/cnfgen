@@ -95,15 +95,6 @@ class CNF(object):
 
     header = property(_get_header, _set_header)
 
-    # Variable/Clause management
-    @staticmethod
-    def is_legal_variable(v):
-        try:
-            hash(v)
-            return True
-        except TypeError:
-            return False
-
     class Clause(tuple):
         """Clause object
         """
@@ -131,12 +122,14 @@ class CNF(object):
                          [(False,u"x3"),(True,u"x4"),(False,u"x2")]
         - `repetition`: allow repeated clauses
         """
-        new_clause=[]
-        # Check for the format
-        for neg,var in clause:
-            if type(neg)!=bool or not CNF.is_legal_variable(var):
-                raise TypeError("%s is not a well formatted clause" %clause)
-            new_clause.append((neg,var))
+
+        new_clause=CNF.Clause(clause)
+
+        # A clause must be an immutable object
+        try:
+            hash(new_clause)
+        except:
+            raise TypeError("%s is not a well formatted clause" %clause)
 
         # Check for clause repetition
         if (not repetition):
@@ -144,11 +137,15 @@ class CNF(object):
                 if set(cla)==set(new_clause): return
 
         # Add all missing variables
-        for _,var in new_clause:
-            if not var in self._variables:
-                self._variables.append(var)
+        try:
+            for _,var in new_clause:
+                if not var in self._variables:
+                    self._variables.append(var)
+        except:
+            raise TypeError("%s is not a well formatted clause" %clause)
+
         # Add the clause
-        self._clauses.append(CNF.Clause(new_clause))
+        self._clauses.append(new_clause)
 
     def add_variable(self,var):
         """Add a variable to the formula. This is useful to add
@@ -157,8 +154,10 @@ class CNF(object):
         Arguments:
         - `var`: the variable to add.
         """
-        if not CNF.is_legal_variable(var):
-                raise TypeError("%s is not a legal variable name" %var)
+        try:
+            hash(var)
+        except:
+            raise TypeError("%s is not a legal variable name" %var)
 
         if not var in self._variables:
             self._variables.append(var)
@@ -244,7 +243,8 @@ class CNF(object):
         Produce the dimacs encoding of the formula
         """
 
-        output = u""
+        from cStringIO import StringIO
+        output = StringIO()
 
         # Count the number of variables and clauses
         n = len(self._variables)
@@ -259,16 +259,16 @@ class CNF(object):
 
         # A nice header
         if add_header:
-            for s in self.header.split("\n"): output+="c {0}".format(s).strip()+"\n"
+            for s in self.header.split("\n"): output.write("c {0}".format(s).strip()+"\n")
 
         # Formula specification
-        output += "p cnf {0} {1}\n".format(n,m)
+        output.write( "p cnf {0} {1}\n".format(n,m) )
 
         # We produce clauses and comments
         for c in self._clauses:
 
             if isinstance(c,basestring) and add_comments:
-                for s in c.split("\n"): output+="c {0}\n".format(s.strip())
+                for s in c.split("\n"): output.write( "c {0}".format(s).strip()+"\n" )
 
             elif isinstance(c,CNF.Clause):
 
@@ -276,12 +276,12 @@ class CNF(object):
 
                     v = numidx[var]
                     if not neg: v = -v
-                    output += "{0} ".format(v)
+                    output.write( "{0} ".format(v) )
 
-                output+="0\n"
+                output.write("0\n")
 
         # final formula
-        return output.strip()
+        return output.getvalue().strip()
 
     def latex(self,add_header=True,add_comments=True):
         """
@@ -305,11 +305,12 @@ class CNF(object):
            \\top }
         """
 
-        output = u""
+        from cStringIO import StringIO
+        output = StringIO()
 
         # A nice header
         if add_header:
-            for s in self.header.split("\n"): output+="% {0}".format(s).strip()+"\n"
+            for s in self.header.split("\n"): output.write( "% {0}".format(s).strip()+"\n" )
 
         # map literals (neg,var) to latex formulas
         def map_literals(l):
@@ -318,36 +319,35 @@ class CNF(object):
 
 
         # We produce clauses and comments
-        output += "\ensuremath{%"
+        output.write( "\\ensuremath{%" )
         empty_cnf=True
 
         for c in self._clauses:
 
             if isinstance(c,basestring) and add_comments:
-                for s in c.split("\n"): output+="\n% {0}".format(s.strip())
+                for s in c.split("\n"): output.write( "\n% {0}".format(s).strip(' ') )
 
             elif isinstance(c,CNF.Clause):
 
-                output += "\n      " if empty_cnf else "\n\\land "
+                output.write( "\n      " if empty_cnf else "\n\\land " )
                 empty_cnf = False
 
                 # build the latex clause
                 if len(c)==0:
-                    output += "\\square"
+                    output.write("\\square")
 
                 else:
-                    output += "\\left( " + \
-                              " \\lor ".join(map_literals(l) for l in c) + \
-                              " \\right)"
+                    output.write("\\left( " + \
+                                 " \\lor ".join(map_literals(l) for l in c) + \
+                                 " \\right)")
 
 
         # No clause in the CNF
-        if empty_cnf: output+="\n   \\top"
+        if empty_cnf: output.write("\n   \\top")
 
         # final formula
-        output +=" }"
-        return output.strip()
-
+        output.write(" }")
+        return output.getvalue()
 
 
 ###
@@ -1754,11 +1754,9 @@ class _AND(_FormulaFamilyHelper,_CMDLineHelper):
         return CNF(clauses,
                    header="""Singleton clauses: {} positive and {} negative""".format(args.P,args.N))
 
-
 ###
 ### Main program
 ###
-
 if __name__ == '__main__':
 
     # Commands and subcommand lines
