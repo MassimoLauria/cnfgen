@@ -107,24 +107,6 @@ class CNF(object):
     class Clause(tuple):
         """Clause object
         """
-        # def __init__(self, seq, check=True):
-        #     """A clause of a CNF
-
-        #     A clause is a sequence of literals represented as
-        #     (bool,value) where 'value' is any hashable data. The
-        #     clause is basically an ordered tuple of such literals.
-
-        #     Arguments:
-        #     - `seq`  : a sequence of literals
-        #     - `check`: check if the elements are legal literals
-        #     """
-        #     if check:
-        #         for b,v in seq:
-        #             if not CNF.is_legal_variable(v):
-        #                 raise TypeError("%s is not a legal variable name" %v)
-
-        #     tuple.__init__(self, [(bool(b),v) for b,v in seq ] )
-
         def __str__(self):
             lit=[]
             for p,v in self:
@@ -198,13 +180,13 @@ class CNF(object):
         >>> c.add_clause([(True,"x"),(False,"y")])
         >>> c.add_comment("Second clause")
         >>> c.add_clause([(True,"y"),(False,"z")])
-        >>> c.dimacs(add_header=False,add_comments=True)
+        >>> print( c.dimacs(False,True) )
         p cnf 3 2
         c First clause
         1 -2 0
         c Second clause
         2 -3 0
-        >>> print c.dimacs(add_header=False,add_comments=False)
+        >>> print(c.dimacs(add_header=False,add_comments=False))
         p cnf 3 2
         1 -2 0
         2 -3 0
@@ -220,7 +202,7 @@ class CNF(object):
         >>> c=CNF()
         >>> data=["Hej",[(False,"x"),(True,"y")],"Hej da"]
         >>> for d in data: c.add_clause_or_comment(d)
-        >>> c.dimacs(add_header=False)
+        >>> print(c.dimacs(add_header=False))
         p cnf 2 1
         c Hej
         -1 2 0
@@ -277,7 +259,7 @@ class CNF(object):
 
         # A nice header
         if add_header:
-            for s in self.header.split("\n"): output+="c {0}\n".format(s.strip())
+            for s in self.header.split("\n"): output+="c {0}".format(s).strip()+"\n"
 
         # Formula specification
         output += "p cnf {0} {1}\n".format(n,m)
@@ -302,11 +284,11 @@ class CNF(object):
         return output.strip()
 
     def latex(self,add_header=True,add_comments=True):
-        r"""
+        """
         Produce the LaTeX version of the formula
 
-        >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],
-                   [(False,"x_2"),(False,"x_4")],
+        >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],\
+                   [(False,"x_2"),(False,"x_4")], \
                    [(True,"x_2"),(True,"x_3"),(False,"x_4")]])
         >>> print(c.latex())
         %
@@ -316,18 +298,18 @@ class CNF(object):
         \ensuremath{%
               \\left( \\neg{x_1} \\lor     {x_2} \\lor \\neg{x_3} \\right)
         \\land \\left( \\neg{x_2} \\lor \\neg{x_4} \\right)
-        \\land \\left(     {x_2} \\lor     {x_3} \\lor \\neg{x_4} \\right)}
+        \\land \\left(     {x_2} \\lor     {x_3} \\lor \\neg{x_4} \\right) }
         >>> c=CNF()
         >>> print(c.latex(add_header=False))
         \ensuremath{%
-           \top }
+           \\top }
         """
 
         output = u""
 
         # A nice header
         if add_header:
-            for s in self.header.split("\n"): output+="% {0}\n".format(s.strip())
+            for s in self.header.split("\n"): output+="% {0}".format(s).strip()+"\n"
 
         # map literals (neg,var) to latex formulas
         def map_literals(l):
