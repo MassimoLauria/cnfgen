@@ -118,7 +118,7 @@ class CNF(object):
             return 'Clause('+repr(list(self))+')'
 
 
-    def add_clause(self,clause,repetition=False):
+    def add_clause(self,clause,repetition=True):
         """Add a well formatted clause to the CNF. It raises
            `ValueError` if the clause is not well formatted.
 
@@ -475,9 +475,6 @@ class Majority(Lift):
         # Majority is espressed as a set of positive clauses,
         # while Minority as a set on negative ones
         lit = [ (polarity,"{{{}}}^{}".format(varname,i)) for i in range(self._rank) ]
-
-        total    =  self._rank
-        majority = (self._rank +1) // 2
 
         if polarity:
             witness = self._rank // 2 + 1   # avoid strict majority of 'False'
@@ -854,21 +851,19 @@ def GraphOrderingPrinciple(graph,total=False,smart=False):
                                 (False,'x_{{{0},{1}}}'.format(v2,v3)),
                                 (True, 'x_{{{0},{1}}}'.format(v1,v3))])
 
-    # Antisymmetry axioms (useless for 'smart' representation)
-    if (not total) and (not smart):
+    if not smart:
+        # Antisymmetry axioms (useless for 'smart' representation)
         gop.add_comment("Relation must be anti-symmetric")
-        for (v1,v2) in itertools.permutations(V,2):
+        for (v1,v2) in itertools.combinations(V,2):
             gop.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
                             (False,'x_{{{0},{1}}}'.format(v2,v1))])
 
-    # Antisymmetry axioms and totality (useless for 'smart' representation)
-    elif total and (not smart):
-        gop.add_comment("Relation must be anti-symmetric and total")
-        for (v1,v2) in itertools.permutations(V,2):
-            gop.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
-                            (False,'x_{{{0},{1}}}'.format(v2,v1))])
-            gop.add_clause([ (True,'x_{{{0},{1}}}'.format(v1,v2)),
-                            (True,'x_{{{0},{1}}}'.format(v2,v1))])
+        # Totality axioms (useless for 'smart' representation)
+        if total:
+            gop.add_comment("Relation must be total")
+            for (v1,v2) in itertools.combinations(V,2):
+                gop.add_clause([ (True,'x_{{{0},{1}}}'.format(v1,v2)),
+                                 (True,'x_{{{0},{1}}}'.format(v2,v1))])
 
     return gop
 
