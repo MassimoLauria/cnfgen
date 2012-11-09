@@ -78,8 +78,9 @@ class CNF(object):
 
         - `header`: a preamble which documents the formula
         """
-        self._clauses   = []
-        self._variables = []
+        self._clauses     = []
+        self._variableset = set()
+        self._variableseq = []
 
         self._header = header or _default_header
 
@@ -128,20 +129,19 @@ class CNF(object):
         # A clause must be an immutable object
         try:
             hash(new_clause)
-        except:
+        except TypeError:
             raise TypeError("%s is not a well formatted clause" %clause)
 
-        # Check for clause repetition
+        # # Check for clause repetition
         if (not repetition):
             for cla in self:
                 if set(cla)==set(new_clause): return
 
-        # Add all missing variables
+        # # Add all missing variables
         try:
             for _,var in new_clause:
-                if not var in self._variables:
-                    self._variables.append(var)
-        except:
+                self.add_variable(var)
+        except TypeError:
             raise TypeError("%s is not a well formatted clause" %clause)
 
         # Add the clause
@@ -149,18 +149,18 @@ class CNF(object):
 
     def add_variable(self,var):
         """Add a variable to the formula. This is useful to add
-        the variable in a nice order than the appearence one.
+        the variable in a nicer order than the appearence one.
 
         Arguments:
         - `var`: the variable to add.
         """
         try:
-            hash(var)
+            if not var in self._variableset:
+                self._variableseq.append(var)
+                self._variableset.add(var)
         except:
             raise TypeError("%s is not a legal variable name" %var)
 
-        if not var in self._variables:
-            self._variables.append(var)
 
     def add_comment(self,comment):
         """Add a comment to the formula.
@@ -215,7 +215,7 @@ class CNF(object):
     def get_variables(self):
         """Return the list of variable names
         """
-        return self._variables[:]
+        return self._variableseq[:]
 
     def get_clauses_and_comments(self):
         """Return the list of clauses
@@ -247,13 +247,13 @@ class CNF(object):
         output = StringIO()
 
         # Count the number of variables and clauses
-        n = len(self._variables)
+        n = len(self.get_variables())
         m = len(self.get_clauses())
 
         # give numerical indexes to variables
         numidx = {}
         idx = 1
-        for v in self._variables:
+        for v in self.get_variables():
             numidx[v]=idx
             idx = idx + 1
 
