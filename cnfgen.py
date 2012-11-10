@@ -40,6 +40,7 @@ p cnf 5 3
 
 import sys
 import itertools
+from itertools import product,permutations,combinations
 
 import argparse
 
@@ -945,6 +946,113 @@ vertices are is specified in input.
 
     return tse
 
+def SubgraphFormula(graph,templates):
+    """Formula which claims that one of the subgraph is contained in a
+    graph.
+
+    Arguments:
+    - `graph'    : input graph
+    - `templates': a sequence of graphs
+    """
+
+    F=CNF()
+
+    # One of the templates is chosen to be the subgraph
+    if len(templates)==0:
+        return F
+    elif len(templates)==1:
+        selectors=[]
+    elif len(templates)==2:
+        selectors=['c']
+    else:
+        selectors=['c_{{{}}}'.format(i) for i in range(len(templates))]
+
+    if len(selectors)>1:
+
+        F.add_comment("Exactly of the graphs must be a subgraph")
+        F.add_clause([(True,v) for v in selectors])
+
+        for (a,b) in combinations(selectors):
+            F.add_clause( [ (False,a), (False,b) ] )
+
+    # comment the formula accordingly
+    if len(selectors)>1:
+        F.header="""CNF encoding of the claim that a graph contains one among
+        a family of {0} possible subgraphs.""".format(len(templates))
+        + F.header
+    else:
+        F.header="""CNF encoding of the claim that a graph contains an induced
+        copy of a subgraph.""".format(len(templates))  + F.header
+
+
+    # A subgraph is chosen
+    N=graph.order()
+    k=max([s.order() for s in templates])
+
+    for i,j in product(range(k),range(N)):
+        F.add_variable("S_{{{0}}}{{{1}}}".format(i,j))
+
+    # each vertex has an image
+    F.add_comment("A subgraph is chosen")
+    for i in range(k):
+        F.add_clause([(True,"S_{{{0}}}{{{1}}}".format(i,j)) for j in range(N)])
+
+    # and exactly one
+    F.add_comment("The mapping is a function")
+    for i,(a,b) in product(range(k),combinations(range(N),2)):
+        F.add_clause([(False,"S_{{{0}}}{{{1}}}".format(i,a)),
+                      (False,"S_{{{0}}}{{{1}}}".format(i,b))  ])
+
+    # and there are no collision
+    F.add_comment("The function is injective")
+    for (a,b),j in product(combinations(range(k),2),range(N)):
+        F.add_clause([(False,"S_{{{0}}}{{{1}}}".format(a,j)),
+                      (False,"S_{{{0}}}{{{1}}}".format(b,j))  ])
+
+
+    # The selectors choose a template subgraph.  A mapping must map
+    # edges to edges and non-edges to non-edges for the active
+    # template.
+
+    if len(templates)==1:
+
+        activation_prefixes=[[]]
+
+    elif len(templates)==2:
+
+        activation_prefixes = [[(True,selectors[0])],[(False,selectors[0])]]
+
+    else:
+        activation_prefixes = [[(True,v)] for v in selectors]
+
+
+    # maps must preserve the structure of the template graph
+    gV = graph.nodes()
+
+    for i in range(len(templates)):
+
+        F.add_comment("structure constraints for subgraph {}".format(i))
+
+        k  = templates[i].order()
+        tV = templates[i].nodes()
+
+        localmaps = product(combinations(range(k),2),
+                            permutations(range(N),2))
+
+        for (i1,i2),(j1,j2) in localmaps:
+
+            # check if this mapping is compatible
+            tedge=templates[i].has_edge(tV[i1],tV[i2])
+            gedge=graph.has_edge(gV[i1],tV[i2])
+            if tedge == gedge: continue
+
+            # if it is not, add the corresponding
+            F.add_clause(activation_prefixes[i] + \
+                         [(False,"S_{{{0}}}{{{1}}}".format(i1,j1)),
+                          (False,"S_{{{0}}}{{{1}}}".format(i2,j2)) ])
+
+    return F
+
 
 #################################################################
 #          Graph Decoders (first is default)
@@ -1613,6 +1721,65 @@ class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
         return GraphOrderingPrinciple(G,args.total,args.smart)
 
 
+class _KClique(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for k-clique formula
+    """
+    name='kclique'
+    description='k clique formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for k-clique formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('k',metavar='<k>',type=int,action='store',help="size of the clique to be found")
+        _SimpleGraphHelper.setup_command_line(parser)
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a k-clique formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        G=_SimpleGraphHelper.obtain_graph(args)
+        return SubgraphFormula(G,[networkx.complete_graph(args.k)])
+
+
+class _RAMLB(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for ramsey graph formula
+    """
+    name='ramlb'
+    description='unsat if G witnesses that r(k,s)>|V(G)| (i.e. G has not k-clique nor s-stable)'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for ramsey witness formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('k',metavar='<k>',type=int,action='store',help="size of the clique to be found")
+        parser.add_argument('s',metavar='<s>',type=int,action='store',help="size of the stable to be found")
+        _SimpleGraphHelper.setup_command_line(parser)
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a formula to check that a graph is a ramsey number lower bound
+
+        Arguments:
+        - `args`: command line options
+        """
+        G=_SimpleGraphHelper.obtain_graph(args)
+        return SubgraphFormula(G,[networkx.complete_graph(args.k),
+                                  networkx.complete_graph(args.s)])
+
+
+
 class _TSE(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for Tseitin  formulas
     """
@@ -1761,7 +1928,7 @@ if __name__ == '__main__':
 
     # Commands and subcommand lines
     cmdline = _GeneralCommandLine
-    subcommands=[_PHP,_TSE,_OP,_GOP,_PEB,_RAM,_OR,_AND]
+    subcommands=[_PHP,_TSE,_OP,_GOP,_PEB,_RAM,_RAMLB,_KClique,_OR,_AND]
 
     # Python 2.6 does not have argparse library
     try:
