@@ -40,6 +40,7 @@ p cnf 5 3
 
 import sys
 import itertools
+from textwrap import dedent
 from itertools import product,permutations,combinations
 
 import argparse
@@ -285,8 +286,7 @@ class CNF(object):
         return output.getvalue().strip()
 
     def latex(self,add_header=True,add_comments=True):
-        """
-        Produce the LaTeX version of the formula
+        """Produce the LaTeX version of the formula
 
         >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],\
                    [(False,"x_2"),(False,"x_4")], \
@@ -302,8 +302,9 @@ class CNF(object):
         \\land \\left(     {x_2} \\lor     {x_3} \\lor \\neg{x_4} \\right) }
         >>> c=CNF()
         >>> print(c.latex(add_header=False))
-        \ensuremath{%
+        \\ensuremath{%
            \\top }
+
         """
 
         from cStringIO import StringIO
@@ -880,10 +881,10 @@ def RamseyNumber(s,k,N):
 
     ram=CNF()
 
-    ram.header="""
-CNF encoding of the claim that there is a graph of %d vertices with no
-indipendent set of size %d and no clique of size %d
-""" % (s,k,N) + ram.header
+    ram.header=dedent("""\
+        CNF encoding of the claim that there is a graph of %d vertices
+        with no indipendent set of size %d and no clique of size %d
+        """ % (s,k,N)) + ram.header
 
     # No independent set of size s
     ram.add_comment("No independent set of size %d" % s)
@@ -891,7 +892,7 @@ indipendent set of size %d and no clique of size %d
     for vertex_set in itertools.combinations(xrange(1,N+1),s):
         clause=[]
         for edge in itertools.combinations(vertex_set,2):
-            clause+=[(True,'e_{{{0},{1}}}'.format(*edge))]
+            clause += [(True,'e_{{{0},{1}}}'.format(*edge))]
         ram.add_clause(clause)
 
     # No clique of size k
@@ -977,13 +978,15 @@ def SubgraphFormula(graph,templates):
 
     # comment the formula accordingly
     if len(selectors)>1:
-        F.header="""CNF encoding of the claim that a graph contains one among
-        a family of {0} possible subgraphs.""".format(len(templates))
-        + F.header
+        F.header=dedent("""\
+                 CNF encoding of the claim that a graph contains one among
+                 a family of {0} possible subgraphs.
+                 """.format(len(templates))) + F.header
     else:
-        F.header="""CNF encoding of the claim that a graph contains an induced
-        copy of a subgraph.""".format(len(templates))  + F.header
-
+        F.header=dedent("""\
+                 CNF encoding of the claim that a graph contains an induced
+                 copy of a subgraph.
+                 """.format(len(templates)))  + F.header
 
     # A subgraph is chosen
     N=graph.order()
@@ -1977,14 +1980,14 @@ if __name__ == '__main__':
     output_header  =args.verbose >= 1
 
     if args.output_format == 'latex':
-        output=lcnf.latex(add_header=output_header,
-                          add_comments=output_comments)
+        output = lcnf.latex(add_header=output_header,
+                            add_comments=output_comments)
 
     elif args.output_format == 'dimacs':
-        output=lcnf.dimacs(add_header=output_header,
+        output = lcnf.dimacs(add_header=output_header,
                            add_comments=output_comments)
     else:
-        output=lcnf.dimacs(add_header=output_header,
+        output = lcnf.dimacs(add_header=output_header,
                            add_comments=output_comments)
 
     print(output,file=args.output)
