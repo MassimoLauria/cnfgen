@@ -39,9 +39,8 @@ p cnf 5 3
 """
 
 import sys
-import itertools
 from textwrap import dedent
-from itertools import product,permutations,combinations
+from itertools import product,permutations,combinations,combinations_with_replacement
 
 import argparse
 
@@ -407,7 +406,7 @@ A formula is made harder by the process of lifting.
             domains=[ self.lift_a_literal(n,v) for n,v in clause  ]
             domains=tuple(domains)
             return [reduce(lambda x,y: x+y,c,[])
-                    for c in itertools.product(*domains)]
+                    for c in product(*domains)]
 
 
 class IfThenElse(Lift):
@@ -483,7 +482,7 @@ class Majority(Lift):
         else:
             witness = (self._rank + 1) // 2 # avoid loose  majority of 'True'
 
-        binom = itertools.combinations
+        binom = combinations
 
         return [ s for s in binom(lit,witness) ]
 
@@ -551,7 +550,7 @@ class Equality(Lift):
         Returns: a list of clauses
         """
         names = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
-        pairs = itertools.permutations(names,2)
+        pairs = permutations(names,2)
         if polarity:
             return [ [ (False,a) , (True,b) ] for a,b in pairs ] # a true variable implies all the others to true.
 
@@ -615,7 +614,7 @@ class Selection(Lift):
         # Selection must be unique
         self.add_comment("Selections must be unique")
         for v in cnf.get_variables():
-            for s1,s2 in itertools.combinations(["Y_{{{}}}^{}".format(v,i)
+            for s1,s2 in combinations(["Y_{{{}}}^{}".format(v,i)
                                                  for i in range(self._rank)],2):
                 self.add_clause([(False,s1),(False,s2)])
 
@@ -720,14 +719,14 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
         # No conflicts axioms
         for h in xrange(1,holes+1):
             yield "No collision in hole {0}".format(h)
-            for (p1,p2) in itertools.combinations(range(1,pigeons+1),2):
+            for (p1,p2) in combinations(range(1,pigeons+1),2):
                 yield [ (False,'p_{{{0},{1}}}'.format(p1,h)),
                         (False,'p_{{{0},{1}}}'.format(p2,h)) ]
         # Function axioms
         if functional:
             for p in xrange(1,pigeons+1):
                 yield "No multiple images for pigeon {0}".format(p)
-                for (h1,h2) in itertools.combinations(range(1,holes+1),2):
+                for (h1,h2) in combinations(range(1,holes+1),2):
                     yield [ (False,'p_{{{0},{1}}}'.format(p,h1)),
                             (False,'p_{{{0},{1}}}'.format(p,h2)) ]
 
@@ -840,7 +839,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False):
     if len(V)>=3:
         if smart:
             # Optimized version if smart representation of totality is used
-            for (v1,v2,v3) in itertools.combinations(V,3):
+            for (v1,v2,v3) in combinations(V,3):
                 gop.add_clause([ (True,'x_{{{0},{1}}}'.format(v1,v2)),
                                 (True,'x_{{{0},{1}}}'.format(v2,v3)),
                                 (False,'x_{{{0},{1}}}'.format(v1,v3))])
@@ -848,7 +847,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False):
                                 (False,'x_{{{0},{1}}}'.format(v2,v3)),
                                 (True,'x_{{{0},{1}}}'.format(v1,v3))])
         else:
-            for (v1,v2,v3) in itertools.permutations(V,3):
+            for (v1,v2,v3) in permutations(V,3):
                 gop.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
                                 (False,'x_{{{0},{1}}}'.format(v2,v3)),
                                 (True, 'x_{{{0},{1}}}'.format(v1,v3))])
@@ -856,14 +855,14 @@ def GraphOrderingPrinciple(graph,total=False,smart=False):
     if not smart:
         # Antisymmetry axioms (useless for 'smart' representation)
         gop.add_comment("Relation must be anti-symmetric")
-        for (v1,v2) in itertools.combinations(V,2):
+        for (v1,v2) in combinations(V,2):
             gop.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
                             (False,'x_{{{0},{1}}}'.format(v2,v1))])
 
         # Totality axioms (useless for 'smart' representation)
         if total:
             gop.add_comment("Relation must be total")
-            for (v1,v2) in itertools.combinations(V,2):
+            for (v1,v2) in combinations(V,2):
                 gop.add_clause([ (True,'x_{{{0},{1}}}'.format(v1,v2)),
                                  (True,'x_{{{0},{1}}}'.format(v2,v1))])
 
@@ -889,18 +888,18 @@ def RamseyNumber(s,k,N):
     # No independent set of size s
     ram.add_comment("No independent set of size %d" % s)
 
-    for vertex_set in itertools.combinations(xrange(1,N+1),s):
+    for vertex_set in combinations(xrange(1,N+1),s):
         clause=[]
-        for edge in itertools.combinations(vertex_set,2):
+        for edge in combinations(vertex_set,2):
             clause += [(True,'e_{{{0},{1}}}'.format(*edge))]
         ram.add_clause(clause)
 
     # No clique of size k
     ram.add_comment("No clique of size %d"%k)
 
-    for vertex_set in itertools.combinations(xrange(1,N+1),k):
+    for vertex_set in combinations(xrange(1,N+1),k):
         clause=[]
-        for edge in itertools.combinations(vertex_set,2):
+        for edge in combinations(vertex_set,2):
             clause+=[(False,'e_{{{0},{1}}}'.format(*edge))]
         ram.add_clause(clause)
 
@@ -1006,11 +1005,19 @@ def SubgraphFormula(graph,templates):
         F.add_clause([(False,"S_{{{0}}}{{{1}}}".format(i,a)),
                       (False,"S_{{{0}}}{{{1}}}".format(i,b))  ])
 
-    # and there are no collision
-    F.add_comment("The function is injective")
-    for (a,b),j in product(combinations(range(k),2),range(N)):
-        F.add_clause([(False,"S_{{{0}}}{{{1}}}".format(a,j)),
-                      (False,"S_{{{0}}}{{{1}}}".format(b,j))  ])
+    # # and there are no collision
+    # F.add_comment("The function is injective")
+    # for (a,b),j in product(combinations(range(k),2),range(N)):
+    #     F.add_clause([(False,"S_{{{0}}}{{{1}}}".format(a,j)),
+    #                   (False,"S_{{{0}}}{{{1}}}".format(b,j))  ])
+
+    F.add_comment("Mapping is strictly monotone increasing (so it is also injective)")
+    localmaps = product(combinations(range(k),2),
+                        combinations_with_replacement(range(N),2))
+
+    for (a,b),(i,j) in localmaps:
+        F.add_clause([(False,"S_{{{0}}}{{{1}}}".format(min(a,b),max(i,j))),
+                      (False,"S_{{{0}}}{{{1}}}".format(max(a,b),min(i,j)))  ])
 
 
     # The selectors choose a template subgraph.  A mapping must map
@@ -1034,13 +1041,14 @@ def SubgraphFormula(graph,templates):
 
     for i in range(len(templates)):
 
-        F.add_comment("structure constraints for subgraph {}".format(i))
 
         k  = templates[i].order()
         tV = templates[i].nodes()
 
         localmaps = product(combinations(range(k),2),
-                            permutations(range(N),2))
+                            combinations(range(N),2))
+
+        F.add_comment("structure constraints for subgraph {}".format(i))
 
         for (i1,i2),(j1,j2) in localmaps:
 
@@ -1051,8 +1059,8 @@ def SubgraphFormula(graph,templates):
 
             # if it is not, add the corresponding
             F.add_clause(activation_prefixes[i] + \
-                         [(False,"S_{{{0}}}{{{1}}}".format(i1,j1)),
-                          (False,"S_{{{0}}}{{{1}}}".format(i2,j2)) ])
+                         [(False,"S_{{{0}}}{{{1}}}".format(min(i1,i2),min(j1,j2))),
+                          (False,"S_{{{0}}}{{{1}}}".format(max(i1,i2),max(j1,j2))) ])
 
     return F
 
@@ -1253,7 +1261,7 @@ def parity_constraint( vars, b ):
     """
     domains = tuple([ ((True,var),(False,var)) for var in vars] )
     clauses=[]
-    for c in itertools.product(*domains):
+    for c in product(*domains):
         # Save only the clauses with the right polarity
         parity = sum(1-l[0] for l in c) % 2
         if parity != b : clauses.append(list(c))
