@@ -1046,7 +1046,7 @@ def SubgraphFormula(graph,templates):
 
             # check if this mapping is compatible
             tedge=templates[i].has_edge(tV[i1],tV[i2])
-            gedge=graph.has_edge(gV[i1],tV[i2])
+            gedge=graph.has_edge(gV[j1],gV[j2])
             if tedge == gedge: continue
 
             # if it is not, add the corresponding
@@ -1545,6 +1545,11 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
         gr.add_argument('--complete',type=int,action='store',metavar="<N>",
                             help="complete graph on N vertices")
 
+        gr=parser.add_argument_group("Graph modifications")
+        gr.add_argument('--plantclique',type=int,action='store',metavar="<k>",
+                            help="choose k vertices at random and add all edges among them")
+
+
     @staticmethod
     def obtain_graph(args):
         """Build a Graph according to command line arguments
@@ -1578,12 +1583,19 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
 
             G=networkx.complete_graph(args.complete)
 
-        elif args.inputformat:
+        elif args.graphformat:
 
             G=readGraph(args.input,args.graphformat)
         else:
             raise RuntimeError("Invalid graph specification on command line")
 
+        # Graph modifications
+        if hasattr(args,'plantclique') and args.plantclique>1:
+
+            clique=random.sample(G.nodes(),args.plantclique)
+
+            for v,w in combinations(clique,2):
+                G.add_edge(v,w)
 
         # Output the graph is requested
         if hasattr(args,'savegraph') and args.savegraph:
