@@ -1947,7 +1947,7 @@ class _AND(_FormulaFamilyHelper,_CMDLineHelper):
 ###
 ### Main program
 ###
-if __name__ == '__main__':
+def command_line_utility(argv):
 
     # Commands and subcommand lines
     cmdline = _GeneralCommandLine
@@ -1957,7 +1957,7 @@ if __name__ == '__main__':
     try:
         import argparse
     except ImportError:
-        print("Sorry: %s requires `argparse` library, which is missing.\n"%sys.argv[0],file=sys.stderr)
+        print("Sorry: %s requires `argparse` library, which is missing.\n"%argv[0],file=sys.stderr)
         print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
         print(" * http://pypi.python.org/pypi/argparse",file=sys.stderr)
         print(" * http://code.google.com/p/argparse",file=sys.stderr)
@@ -2014,3 +2014,8 @@ if __name__ == '__main__':
 
     if args.output!=sys.stdout:
         args.output.close()
+
+
+### Launcher
+if __name__ == '__main__':
+    command_line_utility(sys.argv)
