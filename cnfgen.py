@@ -43,11 +43,23 @@ from textwrap import dedent
 from itertools import product,permutations,combinations,combinations_with_replacement
 
 import argparse
-
 import random
-import pygraphviz
-import networkx
-import networkx.algorithms
+
+try:
+    import networkx
+    import networkx.algorithms
+except:
+    print("ERROR: Missing 'networkx' library: no support for graph based formulas.",
+          file=sys.stderr)
+    exit(-1)
+
+try:
+    import pygraphviz
+except ImportError:
+    print("WARNING: Missing 'dot' library: no support for graph based formulas.",
+          file=sys.stderr)
+
+
 
 _default_header=r"""
 Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
@@ -75,7 +87,7 @@ class CNF(object):
                      First element is the polarity and the second is
                      the variable, which must be an hashable object.
 
-                     E.g. (not x3) or x4 or (not x2) is encoded as (False,"x3",True,"x4",False,"x2")
+                     E.g. (not x3) or x4 or (not x2) is encoded as (False,"x3"),(True,"x4"),False,"x2")
 
         - `header`: a preamble which documents the formula
         """
@@ -1075,6 +1087,16 @@ implemented_graphformats = {
     'simple': ['dot','kth']
     }
 
+# remove dot format if graphviz is not installed
+# we put it by default for documentation purpose
+if not pygraphviz:
+    for k in implemented_graphformats.values():
+        try:
+            k.remove('dot')
+        except ValueError:
+            pass
+
+
 
 def readDigraph(file,format,force_dag=False,multi=False):
     """Read a directed graph from file
@@ -1202,8 +1224,8 @@ def writeGraph(G,output_file,format,graph_type='simple',sort_dag=False):
 
     elif format=='kth':
 
-        print("c {}".format(G.name))
-        print("{}".format(G.order()))
+        print("c {}".format(G.name),file=output_file)
+        print("{}".format(G.order()),file=output_file)
 
         # we need numerical indices for the vertices
         if sort_dag:
@@ -1215,18 +1237,24 @@ def writeGraph(G,output_file,format,graph_type='simple',sort_dag=False):
         # adj list in the same order
         indices = dict( enumeration )
 
+        from cStringIO import StringIO
+        output = StringIO()
+
         for v,i in enumeration:
 
             if G.is_directed():
-                neighbors = [indices[w] for w in G.nodes() if v in G.adj[w] ]  # kth format inverts arcs
+                neighbors = [indices[w] for w in G.predecessors(v)]
 
             else:
                 neighbors = [indices[w] for w in G.adj[v].keys()]
 
             neighbors.sort()
 
-            print( "{0} : ".format(i) , end="", file=output_file)
-            print( " ".join([str(i) for i in neighbors]), file=output_file )
+            output.write( str(i)+" : ")
+            output.write( " ".join([str(i) for i in neighbors]))
+            output.write( "\n")
+
+        print(output.getvalue(),file=output_file)
 
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(format))
@@ -1943,6 +1971,16 @@ class _AND(_FormulaFamilyHelper,_CMDLineHelper):
                   [ [(False,"y_{}".format(i))] for i in range(args.N) ]
         return CNF(clauses,
                    header="""Singleton clauses: {} positive and {} negative""".format(args.P,args.N))
+
+
+###
+### Register signals
+###
+import signal
+def signal_handler(signal, frame):
+        print('Program interrupted',file=sys.stderr)
+        sys.exit(-1)
+signal.signal(signal.SIGINT, signal_handler)
 
 ###
 ### Main program
