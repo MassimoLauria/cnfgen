@@ -272,29 +272,31 @@ class CNF(object):
 
         # A nice header
         if add_header:
-            for s in self.header.split("\n"): output.write("c {0}".format(s).strip()+"\n")
+            for s in self.header.split("\n"): output.write( "\nc "+s.rstrip()+"\n")
 
         # Formula specification
-        output.write( "p cnf {0} {1}\n".format(n,m) )
+        output.write( "p cnf {0} {1}".format(n,m) )
 
         # We produce clauses and comments
         for c in self._clauses:
 
             if isinstance(c,basestring) and add_comments:
-                for s in c.split("\n"): output.write( "c {0}".format(s).strip()+"\n" )
+                for s in c.split("\n"): output.write( "\nc "+s.rstrip())
 
             elif isinstance(c,CNF.Clause):
+
+                output.write("\n")
 
                 for neg,var in c:
 
                     v = numidx[var]
                     if not neg: v = -v
-                    output.write( "{0} ".format(v) )
+                    output.write( str(v)+" " )
 
-                output.write("0\n")
+                output.write("0")
 
         # final formula
-        return output.getvalue().strip()
+        return output.getvalue()
 
     def latex(self,add_header=True,add_comments=True):
         """Produce the LaTeX version of the formula
