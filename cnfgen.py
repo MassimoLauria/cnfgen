@@ -13,7 +13,7 @@ order  to be printed  in dimacs  or LaTeX  formats. Such  formulas are
 ready to be  fed to sat solvers.  In  particular the module implements
 both a library of CNF generators and a command line utility.
 
-Copyright (C) 2012  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 
@@ -1470,9 +1470,9 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
                     D.add_edge(X[h-1][i]  ,X[h][i])
                     D.add_edge(X[h-1][i+1],X[h][i])
 
-        elif args.inputformat:
+        elif args.graphformat:
 
-            D=readDigraph(args.input,args.inputformat,force_dag=True)
+            D=readDigraph(args.input,args.graphformat,force_dag=True)
 
         else:
             raise RuntimeError("Invalid graph specification on command line")
