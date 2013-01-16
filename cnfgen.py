@@ -145,6 +145,22 @@ class CNF(object):
         """
         return [ (l>0, self._index2name[abs(l)]) for l in clause ]
 
+    def _compress_clause(self, clause):
+        """Compress the text representation of a clause to the numeric
+        representation.
+        WARNING: only for internal use!
+
+        Arguments:
+        - `clause`: clause to be compressed
+
+        >>> c=CNF()
+        >>> c.add_clause([(True,"x"),(False,"y")])
+        >>> print(c._compress_clause([(False, 'x'), (False, 'y')]))
+        (-1, -2)
+        """
+        return tuple( (1 if p else -1) * self._name2index[n] for p,n in clause)
+
+
     # Fast clause insertion
     def _add_compressed_clauses(self, clauses):
         """Add to the CNF a list of compressed clauses. This method
@@ -158,7 +174,7 @@ class CNF(object):
         - `clauses`: a sequence of compressed clauses.
         """
         self._coherent = False
-        self.clauses.append(tuple(c) for c in clauses)
+        self._clauses.extend(tuple(c) for c in clauses)
         self._clauses_number += len(clauses)
 
     def check_coherence(self, force=False):
@@ -200,7 +216,7 @@ class CNF(object):
         assert counter == M
 
         # formula passed all tests
-        self._coherent == True
+        self._coherent = True
         return True
 
 
@@ -231,7 +247,7 @@ class CNF(object):
             raise TypeError("%s is not a well formatted clause" %clause)
 
         # Transform to internal representation
-        new_clause = tuple( (1 if p else -1) * self._name2index[n] for p,n in clause)
+        new_clause = self._compress_clause(clause)
 
         # Add the clause
         self._clauses_number += 1
@@ -446,13 +462,49 @@ A formula is made harder by the process of lifting.
         self._orig_cnf = cnf
         CNF.__init__(self,[],header=cnf._header)
 
-        for c in self._orig_cnf.get_clauses_and_comments():
-            if isinstance(c,basestring):
-                self.add_comment(c)
-            else:
-                for x in self.lift_a_clause(c):
-                    self.add_clause(x)
+        # Load original variable names
+        literal  =[None,None]
+        names = [None]+self._orig_cnf.get_variables()
+        index = self._orig_cnf._name2index
+        literal[False]=names[:]
+        literal[True] =names[:]
 
+        # Lift all possible literals
+        for i in range(1,len(names)):
+            literal[True] [i]=self.lift_a_literal(True, literal[True][i])
+            literal[False][i]=self.lift_a_literal(False,literal[False][i])
+
+
+        # Collect new variable names from the CNFs:
+        # clause compression needs the variable names
+        for i in range(1,len(names)):
+            for clause in literal[True][i]:
+                for _,varname in clause:
+                    self.add_variable(varname)
+            # for clause in literal[True][i]:     # we do not need to explore both polarities
+            #     for _,varname in clause:
+            #         self.add_variable(varname)
+
+
+        # Compress cnfs
+        for i in range(1,len(names)):
+            literal[True][i] =[list(self._compress_clause(cls)) for cls in literal[True][i]  ]
+            literal[False][i]=[list(self._compress_clause(cls)) for cls in literal[False][i] ]
+
+        # Create the clauses to be added
+        for clause in self._orig_cnf.get_clauses_and_comments():
+            if isinstance(clause,basestring):
+                self.add_comment(clause)
+            elif len(clause)==0:
+                self.add_clause([])
+            else:
+                # adding compressed clauses should be faster
+                domains=[ literal[pol][index[var]] for pol,var in clause  ]
+                domains=tuple(domains)
+                block  =[reduce(lambda x,y: x+y,c,[]) for c in product(*domains)]
+                self._add_compressed_clauses(block)
+
+        assert self.check_coherence()
 
     def lift_a_literal(self, polarity, name):
         """Substitute a literal with the lifting function
@@ -465,22 +517,6 @@ A formula is made harder by the process of lifting.
         """
         raise NotImplementedError("Specialize this class to implement some type of lifting")
 
-
-    def lift_a_clause(self, clause):
-        """Substitute each variables with the lifted function
-
-        Arguments:
-        - `clause`: lifting is applied to this clause
-
-        Returns: a list of clauses
-        """
-        if len(clause)==0:
-            return []
-        else:
-            domains=[ self.lift_a_literal(n,v) for n,v in clause  ]
-            domains=tuple(domains)
-            return [reduce(lambda x,y: x+y,c,[])
-                    for c in product(*domains)]
 
 
 class IfThenElse(Lift):
@@ -507,7 +543,7 @@ class IfThenElse(Lift):
 
         Arguments:
         - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
+        - `varname`: variable to be substituted
 
         Returns: a list of clauses
         """
