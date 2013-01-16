@@ -82,7 +82,7 @@ class CNF(object):
 
         Arguments:
         - `clauses`: ordered list of clauses; a clause with k literals
-                     is a `frozenset` object containing k pairs,
+                     list containing k pairs,
                      each representing a literal.
                      First element is the polarity and the second is
                      the variable, which must be an hashable object.
@@ -91,16 +91,25 @@ class CNF(object):
 
         - `header`: a preamble which documents the formula
         """
-        self._clauses     = []
-        self._variableset = set()
-        self._variableseq = []
 
         self._header = header or _default_header
 
+        self._clauses         = []
+        self._variables_number = 0
+        self._clauses_number = 0
+
+        self._index2name      = [None]   # we put variables from index 1
+        self._name2index      = dict()   # index-name bijection
+
+        self._coherent        = True     # internal coherence verified
+
+        # Add input data
         for c in clauses_and_comments:
             self.add_clause_or_comment(c)
 
-    # Header
+
+
+    # Formula contains an header property
     def _set_header(self, value):
         self._header = value
 
@@ -109,21 +118,93 @@ class CNF(object):
 
     header = property(_get_header, _set_header)
 
-    class Clause(tuple):
-        """Clause object
+    # Clauses iterator
+    def __iter__(self):
+        """Iterates over all clauses of the CNF
         """
-        def __str__(self):
-            lit=[]
-            for p,v in self:
-                if not p: lit.append("~"+unicode(v))
-                else: lit.append(unicode(v))
-            return '( '+' V '.join(lit)+' )'
-
-        def __repr__(self):
-            return 'Clause('+repr(list(self))+')'
+        assert self._coherent
+        for c in self._clauses:
+            if isinstance(c,tuple): yield self._uncompress_clause(c)
 
 
-    def add_clause(self,clause,repetition=True):
+    def __str__(self):
+        return "\n".join([str(c) for c in self._clauses])+'\n'
+
+    # Clause representation
+    def _uncompress_clause(self, clause):
+        """Uncompress the numeric representation of a clause.
+        WARNING: only for internal use!
+
+        Arguments:
+        - `clause`: clause to be uncompressed
+
+        >>> c=CNF()
+        >>> c.add_clause([(True,"x"),(False,"y")])
+        >>> print(c._uncompress_clause([-1,-2]))
+        [(False, 'x'), (False, 'y')]
+        """
+        return [ (l>0, self._index2name[abs(l)]) for l in clause ]
+
+    # Fast clause insertion
+    def _add_compressed_clauses(self, clauses):
+        """Add to the CNF a list of compressed clauses. This method
+        does not check a lot of internal coherence conditions.  Please
+        call method `CNF._check_coherence` after adding clauses in
+        this way.
+        WARNING: only for internal use!
+        WARNING: this method does not check for new variables.
+
+        Arguments:
+        - `clauses`: a sequence of compressed clauses.
+        """
+        self._coherent = False
+        self.clauses.append(tuple(c) for c in clauses)
+        self._clauses_number += len(clauses)
+
+    def check_coherence(self, force=False):
+        """Check if the formula is internally consistent.
+        Certain fast manipulation methods are not safe, if used incorrectly.
+
+        Arguments:
+        - `force`: force check even if the formula claims coherence
+        """
+        if not force and self._coherent: return True
+
+        # data
+        N = self._variables_number
+        M = self._clauses_number
+
+        varindex=self._name2index
+        varnames=self._index2name
+
+        cls_cmnt= self._clauses
+
+        # Correct number of variables
+        assert N == len(varindex.keys())
+        assert N == len(varnames)-1
+        # Consistency in the dictionary
+        for i in range(1,N+1):
+            assert varindex[varnames[i]]==i
+
+        # Count clauses and check literal representation
+        counter=0
+        for clause in cls_cmnt:
+            if isinstance(clause,basestring): continue
+
+            for literal in clause:
+                assert 0 < abs(literal) <= N
+
+            counter +=1
+
+        # the cached number of clauses in correct
+        assert counter == M
+
+        # formula passed all tests
+        self._coherent == True
+        return True
+
+
+    def add_clause(self,clause):
         """Add a well formatted clause to the CNF. It raises
            `ValueError` if the clause is not well formatted.
 
@@ -134,30 +215,26 @@ class CNF(object):
 
                     E.g. (not x3) or x4 or (not x2) is encoded as
                          [(False,u"x3"),(True,u"x4"),(False,u"x2")]
-        - `repetition`: allow repeated clauses
         """
-
-        new_clause=CNF.Clause(clause)
 
         # A clause must be an immutable object
         try:
-            hash(new_clause)
+            hash(tuple(clause))
         except TypeError:
             raise TypeError("%s is not a well formatted clause" %clause)
 
-        # # Check for clause repetition
-        if (not repetition):
-            for cla in self:
-                if set(cla)==set(new_clause): return
-
-        # # Add all missing variables
+        # Add all missing variables
         try:
-            for _,var in new_clause:
+            for _,var in clause:
                 self.add_variable(var)
         except TypeError:
             raise TypeError("%s is not a well formatted clause" %clause)
 
+        # Transform to internal representation
+        new_clause = tuple( (1 if p else -1) * self._name2index[n] for p,n in clause)
+
         # Add the clause
+        self._clauses_number += 1
         self._clauses.append(new_clause)
 
     def add_variable(self,var):
@@ -168,12 +245,13 @@ class CNF(object):
         - `var`: the variable to add.
         """
         try:
-            if not var in self._variableset:
-                self._variableseq.append(var)
-                self._variableset.add(var)
-        except:
+            if not var in self._name2index:
+                # name correpsond to the last variable so far
+                self._variables_number += 1
+                self._name2index[var] = self._variables_number
+                self._index2name.append(var)
+        except TypeError:
             raise TypeError("%s is not a legal variable name" %var)
-
 
     def add_comment(self,comment):
         """Add a comment to the formula.
@@ -226,53 +304,42 @@ class CNF(object):
             self.add_clause(data)
 
     def get_variables(self):
-        """Return the list of variable names
+        """Return the list of variable names in the immutable order.
         """
-        return self._variableseq[:]
+        assert self._coherent
+        return self._index2name[1:]
 
     def get_clauses_and_comments(self):
         """Return the list of clauses
         """
-        return self._clauses[:]
+        assert self._coherent
+
+        for c in self._clauses:
+            if isinstance(c,tuple): yield self._uncompress_clause(c)
+            else: yield c
+
 
     def get_clauses(self):
         """Return the list of clauses
         """
-        return [c for c in self._clauses if isinstance(c,self.__class__.Clause)]
-
-    # Clauses iterator
-    def __iter__(self):
-        """Iterates over all clauses of the CNF
-        """
-        for c in self._clauses:
-            if isinstance(c,self.__class__.Clause): yield c
-
-
-    def __str__(self):
-        return "\n".join([str(c) for c in self._clauses])+'\n'
+        return self.__iter__()
 
     def dimacs(self,add_header=True,add_comments=True):
         """
         Produce the dimacs encoding of the formula
         """
+        assert self._coherent
 
         from cStringIO import StringIO
         output = StringIO()
 
         # Count the number of variables and clauses
-        n = len(self.get_variables())
-        m = len(self.get_clauses())
-
-        # give numerical indexes to variables
-        numidx = {}
-        idx = 1
-        for v in self.get_variables():
-            numidx[v]=idx
-            idx = idx + 1
+        n = self._variables_number
+        m = self._clauses_number
 
         # A nice header
         if add_header:
-            for s in self.header.split("\n"): output.write( "\nc "+s.rstrip()+"\n")
+            for s in self.header.split("\n"): output.write( "c "+s.rstrip()+"\n")
 
         # Formula specification
         output.write( "p cnf {0} {1}".format(n,m) )
@@ -283,17 +350,9 @@ class CNF(object):
             if isinstance(c,basestring) and add_comments:
                 for s in c.split("\n"): output.write( "\nc "+s.rstrip())
 
-            elif isinstance(c,CNF.Clause):
+            elif isinstance(c,tuple):
 
-                output.write("\n")
-
-                for neg,var in c:
-
-                    v = numidx[var]
-                    if not neg: v = -v
-                    output.write( str(v)+" " )
-
-                output.write("0")
+                output.write("\n" +  " ".join(map(str,c))  + " 0")
 
         # final formula
         return output.getvalue()
@@ -319,6 +378,7 @@ class CNF(object):
            \\top }
 
         """
+        assert self._coherent
 
         from cStringIO import StringIO
         output = StringIO()
@@ -327,10 +387,12 @@ class CNF(object):
         if add_header:
             for s in self.header.split("\n"): output.write( "% {0}".format(s).strip()+"\n" )
 
-        # map literals (neg,var) to latex formulas
+        # map literals to latex formulas
         def map_literals(l):
-            if l[0]: return "    {%s}"%l[1]
-            else: return "\\neg{%s}"%l[1]
+            if l>0 :
+                return  "    {"+self._index2name[ l]+"}"
+            else:
+                return "\\neg{"+self._index2name[-l]+"}"
 
 
         # We produce clauses and comments
@@ -340,9 +402,9 @@ class CNF(object):
         for c in self._clauses:
 
             if isinstance(c,basestring) and add_comments:
-                for s in c.split("\n"): output.write( "\n% {0}".format(s).strip(' ') )
+                for s in c.split("\n"): output.write( "\n% "+s.rstrip(' ') )
 
-            elif isinstance(c,CNF.Clause):
+            elif isinstance(c,tuple):
 
                 output.write( "\n      " if empty_cnf else "\n\\land " )
                 empty_cnf = False
@@ -385,13 +447,11 @@ A formula is made harder by the process of lifting.
         CNF.__init__(self,[],header=cnf._header)
 
         for c in self._orig_cnf.get_clauses_and_comments():
-            if type(c)==str:
+            if isinstance(c,basestring):
                 self.add_comment(c)
             else:
                 for x in self.lift_a_clause(c):
                     self.add_clause(x)
-
-
 
 
     def lift_a_literal(self, polarity, name):
@@ -1211,7 +1271,7 @@ def writeGraph(G,output_file,format,graph_type='simple',sort_dag=False):
 
     Return: none.
     """
-    if graph_type not in implemented_graphformats.keys():
+    if graph_type not in implemented_graphformats:
         raise ValueError("Invalid graph type")
 
     if format not in implemented_graphformats[graph_type]:
@@ -2029,11 +2089,14 @@ def command_line_utility(argv):
 
     # Generate the basic formula
     cnf=args.subcommand.build_cnf(args)
+    assert cnf.check_coherence(force=True)
 
     # Apply the lifting
     lift_method=implemented_lifting[args.lift][1]
     lift_rank=args.liftrank or implemented_lifting[args.lift][2]
     lcnf=lift_method(cnf,lift_rank)
+    assert lcnf.check_coherence(force=True)
+
 
     # Do we wnat comments or not
     output_comments=args.verbose >= 2
