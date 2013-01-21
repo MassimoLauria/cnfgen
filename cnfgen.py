@@ -139,7 +139,10 @@ class CNF(object):
 
     header = property(_get_header, _set_header)
 
-    # Clauses iterator
+    #
+    # Implementation of some standard methods
+    #
+
     def __iter__(self):
         """Iterates over all clauses of the CNF
 
@@ -149,11 +152,15 @@ class CNF(object):
         for c in self._clauses:
             if isinstance(c,tuple): yield self._uncompress_clause(c)
 
-    # Formula representation.
     def __str__(self):
+        """String representation of the formula
+        """
         return "\n".join([str(c) for c in self._clauses])+'\n'
 
-    # Clause representation
+    #
+    # Internal implementation methods, use at your own risk!
+    #
+
     def _uncompress_clause(self, clause):
         """(INTERNAL USE) Uncompress a clause for the numeric representation.
 
@@ -181,15 +188,16 @@ class CNF(object):
         return tuple( (1 if p else -1) * self._name2index[n] for p,n in clause)
 
 
-    # Fast clause insertion
     def _add_compressed_clauses(self, clauses):
-        """(INTERAL USE) Add to the CNF a list of compressed clauses.
+        """(INTERNAL USE) Add to the CNF a list of compressed clauses.
 
         This method uses the internal compressed clause representation
-        to add a large batch of data into the CNF. It does not check
-        for a lot of internal coherence conditions.  When assertions
-        are tested, a call to this method will disable the standard
-        API, since the CNF can be in an inconsistent state.
+        to add a large batch of data  into the CNF.  It does not check
+        for internal  coherence conditions,  and it  does not  need to
+        convert between  internal and external  clause representation,
+        so it  is very fast.   When assertions  are tested, a  call to
+        this method will  disable the standard API, since  the CNF can
+        be in an inconsistent state.
 
         Whenever the high level API is used with an inconsisten state
         the code will fail some assertion.
@@ -198,7 +206,7 @@ class CNF(object):
         variable in the formula.
 
         To test consistency and re-enable the API, please call method
-        `CNF.check_coherence`.
+        `CNF._check_coherence`.
 
         Arguments:
         - `clauses`: a sequence of compressed clauses.
@@ -217,7 +225,7 @@ class CNF(object):
         the high level API is available again.
 
         >>> c._add_compressed_clauses([[-1,2,3],[-2,1],[1,-3]])
-        >>> c.check_coherence()
+        >>> c._check_coherence()
         True
         >>> print(c.dimacs(add_header=False,add_comments=False))
         p cnf 3 3
@@ -230,7 +238,7 @@ class CNF(object):
 
         >>> c._add_compressed_clauses([[-2,-3]])
         >>> c._add_compressed_clauses([[-1, 2]])
-        >>> c.check_coherence()
+        >>> c._check_coherence()
         True
         >>> print(c.dimacs(add_header=False,add_comments=False))
         p cnf 3 5
@@ -244,7 +252,8 @@ class CNF(object):
         self._clauses.extend(tuple(c) for c in clauses)
         self._clauses_number += len(clauses)
 
-    def check_coherence(self, force=False):
+
+    def _check_coherence(self, force=False):
         """Check if the formula is internally consistent.
 
         Certain fast manipulation methods are not safe if used
@@ -262,14 +271,14 @@ class CNF(object):
         not coherent.
 
         >>> c._add_compressed_clauses([[-1,2],[1,-2],[1,3]])
-        >>> c.check_coherence()
+        >>> c._check_coherence()
         False
 
         If we add another one, it become coherent.
 
-        >>> c.add_variable("z")
-        >>> c.check_coherence()
-        True
+        >>> c.get_clauses()
+        Traceback (most recent call last):
+        AssertionError
         """
         if not force and self._coherent: return True
 
@@ -306,6 +315,9 @@ class CNF(object):
         self._coherent = True
         return True
 
+    #
+    # High level API: build the CNF
+    #
 
     def add_clause(self,clause):
         """Add a clause to the CNF.
@@ -325,6 +337,7 @@ class CNF(object):
                     First coords are the polarities, second coords are
                     utf8 encoded strings with variable names.
         """
+        assert self._coherent
 
         # A clause must be an immutable object
         try:
@@ -356,6 +369,7 @@ class CNF(object):
         Arguments:
         - `var`: the variable to add.
         """
+        assert self._coherent
         try:
             if not var in self._name2index:
                 # name correpsond to the last variable so far
@@ -393,6 +407,7 @@ class CNF(object):
         1 -2 0
         2 -3 0
         """
+        assert self._coherent
         self._clauses.append(comment[:])
 
     def add_clause_or_comment(self, data):
@@ -414,16 +429,22 @@ class CNF(object):
         -1 2 0
         c Hej da
         """
+        assert self._coherent
         if isinstance(data,basestring):
             self.add_comment(data)
         else:
             self.add_clause(data)
+
+    #
+    # High level API: read the CNF
+    #
 
     def get_variables(self):
         """Returns (a copy of) the list of variable names.
         """
         assert self._coherent
         return self._index2name[1:]
+
 
     def get_clauses_and_comments(self):
         """Iterator over all clauses and comments in the formula.
@@ -438,11 +459,33 @@ class CNF(object):
     def get_clauses(self):
         """Return the list of clauses
         """
+        assert self._coherent
         return self.__iter__()
 
+    #
+    #  Export to useful output format
+    #
+
     def dimacs(self,add_header=True,add_comments=True):
-        """
-        Produce the dimacs encoding of the formula
+        """Produce the dimacs encoding of the formula
+
+        >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],\
+                   [(False,"x_2"),(False,"x_4")], \
+                   [(True,"x_2"),(True,"x_3"),(False,"x_4")]])
+        >>> print(c.dimacs())
+        c Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
+        c https://github.com/MassimoLauria/cnfgen.git
+        c
+        p cnf 4 3
+        -1 2 -3 0
+        -2 -4 0
+        2 3 -4 0
+
+        The empty formula
+
+        >>> c=CNF()
+        >>> print(c.dimacs(add_header=False))
+        p cnf 0 0
         """
         assert self._coherent
 
@@ -455,7 +498,7 @@ class CNF(object):
 
         # A nice header
         if add_header:
-            for s in self.header.split("\n"): output.write( "c "+s.rstrip()+"\n")
+            for s in self.header.split("\n"): output.write( ("c "+s).rstrip()+"\n")
 
         # Formula specification
         output.write( "p cnf {0} {1}".format(n,m) )
@@ -464,7 +507,7 @@ class CNF(object):
         for c in self._clauses:
 
             if isinstance(c,basestring) and add_comments:
-                for s in c.split("\n"): output.write( "\nc "+s.rstrip())
+                for s in c.split("\n"): output.write( ("\nc "+s).rstrip())
 
             elif isinstance(c,tuple):
 
@@ -480,7 +523,6 @@ class CNF(object):
                    [(False,"x_2"),(False,"x_4")], \
                    [(True,"x_2"),(True,"x_3"),(False,"x_4")]])
         >>> print(c.latex())
-        %
         % Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
         % https://github.com/MassimoLauria/cnfgen.git
         %
@@ -501,7 +543,7 @@ class CNF(object):
 
         # A nice header
         if add_header:
-            for s in self.header.split("\n"): output.write( "% {0}".format(s).strip()+"\n" )
+            for s in self.header.split("\n"): output.write( ("% "+s).rstrip()+"\n" )
 
         # map literals to latex formulas
         def map_literals(l):
@@ -559,6 +601,7 @@ A formula is made harder by the process of lifting.
         Arguments:
         - `cnf`: the original cnf
         """
+        assert cnf._coherent
         self._orig_cnf = cnf
         CNF.__init__(self,[],header=cnf._header)
 
@@ -604,7 +647,7 @@ A formula is made harder by the process of lifting.
                 block  =[reduce(lambda x,y: x+y,c,[]) for c in product(*domains)]
                 self._add_compressed_clauses(block)
 
-        assert self.check_coherence()
+        assert self._check_coherence()
 
     def lift_a_literal(self, polarity, name):
         """Substitute a literal with the lifting function
@@ -2225,13 +2268,11 @@ def command_line_utility(argv):
 
     # Generate the basic formula
     cnf=args.subcommand.build_cnf(args)
-    assert cnf.check_coherence(force=True)
 
     # Apply the lifting
     lift_method=implemented_lifting[args.lift][1]
     lift_rank=args.liftrank or implemented_lifting[args.lift][2]
     lcnf=lift_method(cnf,lift_rank)
-    assert lcnf.check_coherence(force=True)
 
 
     # Do we wnat comments or not
