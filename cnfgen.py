@@ -3,14 +3,11 @@
 
 from __future__ import print_function
 
-"""
--------------
-CNF generator
--------------
+"""Utilities to build CNF formulas interesting for proof complexity.
 
-The module  `cnfgen` contains facilities to generate  cnf formulas, in
-order  to be printed  in dimacs  or LaTeX  formats. Such  formulas are
-ready to be  fed to sat solvers.  In  particular the module implements
+The module `cnfgen`  contains facilities to generate  cnf formulas, in
+order to  be printed  in dimacs  or LaTeX  formats. Such  formulas are
+ready to be  fed to sat solvers.  In particular  the module implements
 both a library of CNF generators and a command line utility.
 
 Copyright (C) 2012, 2013  Massimo Lauria <lauria@kth.se>
@@ -35,7 +32,6 @@ p cnf 5 3
 -2 4 0
 -3 4 -5 0
 
-`cnfgen` module contains a lot of prepackaged CNF generator
 """
 
 import sys
@@ -61,8 +57,7 @@ except ImportError:
 
 
 
-_default_header=r"""
-Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
+_default_header=r"""Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
@@ -72,41 +67,67 @@ https://github.com/MassimoLauria/cnfgen.git
 
 class CNF(object):
     """Propositional formulas in conjunctive normal form.
+
+    A CNF  formula is a  sequence of  clauses, which are  sequences of
+    literals. Each literal is either a variable or its negation.
+
+    Use `add_variable` method to add a variable to the formula. Two
+    variable with the same name are considered the same variable, add
+    successive additions do not have any effect.
+
+    Use `add_clause` to add new clauses to CNF. Clauses will be added
+    multiple times in case of multiple insertion of the same clauses.
+
+    For  documentation purpose  it  is possible  use `add_comment`  to
+    interleave  clauses   with  documentation  text,  which   will  be
+    *optionally* exported to LaTeX or dimacs.  Note that strict dimacs
+    format   do   not   allow   comments   except   for   an   initial
+    header.  Nevertheless  most of  SAT  solver  allows such  comments
+    anyway.
+
+    Implementation:  for  efficiency reason  clauses and  variable can
+    only be added,  and not deleted. Furthermore order  matters in the
+    representation.
     """
 
     def __init__(self, clauses_and_comments=[], header=None):
         """Propositional formulas in conjunctive normal form.
 
-        To add commented clauses use the `add_clause` and
-        `add_comment` methods.
-
         Arguments:
-        - `clauses`: ordered list of clauses; a clause with k literals
-                     list containing k pairs,
-                     each representing a literal.
-                     First element is the polarity and the second is
-                     the variable, which must be an hashable object.
+        - `clauses_and_comments`: ordered list of clauses or comments;
+                            a clause with k literals list containing k
+                            pairs, each representing a literal (see
+                            `add_clause`).  First element is the
+                            polarity and the second is the variable,
+                            which must be an hashable object. A
+                            comment is just a string of text (see
+                            `add_comment`)
 
-                     E.g. (not x3) or x4 or (not x2) is encoded as (False,"x3"),(True,"x4"),False,"x2")
+                     E.g. (not x3) or x4 or (not x2) is encoded as
+                     [(False,"x3"),(True,"x4"),False,"x2")]
 
         - `header`: a preamble which documents the formula
         """
 
         self._header = header or _default_header
 
+        # Initial empty formula
         self._clauses         = []
         self._variables_number = 0
         self._clauses_number = 0
 
-        self._index2name      = [None]   # we put variables from index 1
-        self._name2index      = dict()   # index-name bijection
+        # Variable indexes <--> Variable names correspondence
+        # first variable is indexed with 1.
+        self._index2name      = [None]
+        self._name2index      = dict()
 
-        self._coherent        = True     # internal coherence verified
+        # Internal coherence can be disrupted by some methods.  API
+        # methods require it to be rechecked.
+        self._coherent        = True
 
-        # Add input data
+        # Load the initial data into the CNF
         for c in clauses_and_comments:
             self.add_clause_or_comment(c)
-
 
 
     # Formula contains an header property
@@ -121,19 +142,20 @@ class CNF(object):
     # Clauses iterator
     def __iter__(self):
         """Iterates over all clauses of the CNF
+
+        Iterator over all clauses, ignoring the interleaving comments.
         """
         assert self._coherent
         for c in self._clauses:
             if isinstance(c,tuple): yield self._uncompress_clause(c)
 
-
+    # Formula representation.
     def __str__(self):
         return "\n".join([str(c) for c in self._clauses])+'\n'
 
     # Clause representation
     def _uncompress_clause(self, clause):
-        """Uncompress the numeric representation of a clause.
-        WARNING: only for internal use!
+        """(INTERNAL USE) Uncompress a clause for the numeric representation.
 
         Arguments:
         - `clause`: clause to be uncompressed
@@ -146,9 +168,7 @@ class CNF(object):
         return [ (l>0, self._index2name[abs(l)]) for l in clause ]
 
     def _compress_clause(self, clause):
-        """Compress the text representation of a clause to the numeric
-        representation.
-        WARNING: only for internal use!
+        """(INTERNAL USE) Compress a clause to the numeric representation.
 
         Arguments:
         - `clause`: clause to be compressed
@@ -163,15 +183,62 @@ class CNF(object):
 
     # Fast clause insertion
     def _add_compressed_clauses(self, clauses):
-        """Add to the CNF a list of compressed clauses. This method
-        does not check a lot of internal coherence conditions.  Please
-        call method `CNF._check_coherence` after adding clauses in
-        this way.
-        WARNING: only for internal use!
-        WARNING: this method does not check for new variables.
+        """(INTERAL USE) Add to the CNF a list of compressed clauses.
+
+        This method uses the internal compressed clause representation
+        to add a large batch of data into the CNF. It does not check
+        for a lot of internal coherence conditions.  When assertions
+        are tested, a call to this method will disable the standard
+        API, since the CNF can be in an inconsistent state.
+
+        Whenever the high level API is used with an inconsisten state
+        the code will fail some assertion.
+
+        In particular it does not check if the indexes correspond to a
+        variable in the formula.
+
+        To test consistency and re-enable the API, please call method
+        `CNF.check_coherence`.
 
         Arguments:
         - `clauses`: a sequence of compressed clauses.
+
+        >>> c=CNF()
+
+        We add the variables in advance, so that the internal status
+        stays coherent.
+
+        >>> c.add_variable("x")
+        >>> c.add_variable("y")
+        >>> c.add_variable("z")
+
+        When we add some compressed clauses, we need to test the
+        internal status of the object. If the test is positive, then
+        the high level API is available again.
+
+        >>> c._add_compressed_clauses([[-1,2,3],[-2,1],[1,-3]])
+        >>> c.check_coherence()
+        True
+        >>> print(c.dimacs(add_header=False,add_comments=False))
+        p cnf 3 3
+        -1 2 3 0
+        -2 1 0
+        1 -3 0
+
+        If we call the internal API several times, we need to test the
+        object only once.
+
+        >>> c._add_compressed_clauses([[-2,-3]])
+        >>> c._add_compressed_clauses([[-1, 2]])
+        >>> c.check_coherence()
+        True
+        >>> print(c.dimacs(add_header=False,add_comments=False))
+        p cnf 3 5
+        -1 2 3 0
+        -2 1 0
+        1 -3 0
+        -2 -3 0
+        -1 2 0
         """
         self._coherent = False
         self._clauses.extend(tuple(c) for c in clauses)
@@ -179,10 +246,30 @@ class CNF(object):
 
     def check_coherence(self, force=False):
         """Check if the formula is internally consistent.
-        Certain fast manipulation methods are not safe, if used incorrectly.
+
+        Certain fast manipulation methods are not safe if used
+        incorrectly, so the CNF object may be corrupted. This method
+        tests if that was not the case.
 
         Arguments:
         - `force`: force check even if the formula claims coherence
+
+        >>> c=CNF()
+        >>> c.add_variable("x")
+        >>> c.add_variable("y")
+
+        We add clauses mentioning three variables, and the formula is
+        not coherent.
+
+        >>> c._add_compressed_clauses([[-1,2],[1,-2],[1,3]])
+        >>> c.check_coherence()
+        False
+
+        If we add another one, it become coherent.
+
+        >>> c.add_variable("z")
+        >>> c.check_coherence()
+        True
         """
         if not force and self._coherent: return True
 
@@ -196,11 +283,11 @@ class CNF(object):
         cls_cmnt= self._clauses
 
         # Correct number of variables
-        assert N == len(varindex.keys())
-        assert N == len(varnames)-1
+        if N != len(varindex.keys()): return False
+        if N != len(varnames)-1:      return False
         # Consistency in the dictionary
         for i in range(1,N+1):
-            assert varindex[varnames[i]]==i
+            if varindex[varnames[i]]!=i: return False
 
         # Count clauses and check literal representation
         counter=0
@@ -208,12 +295,12 @@ class CNF(object):
             if isinstance(clause,basestring): continue
 
             for literal in clause:
-                assert 0 < abs(literal) <= N
+                if not 0 < abs(literal) <= N: return False
 
             counter +=1
 
         # the cached number of clauses in correct
-        assert counter == M
+        if counter != M: return False
 
         # formula passed all tests
         self._coherent = True
@@ -221,16 +308,22 @@ class CNF(object):
 
 
     def add_clause(self,clause):
-        """Add a well formatted clause to the CNF. It raises
-           `ValueError` if the clause is not well formatted.
+        """Add a clause to the CNF.
+
+        The clause must be well formatted. Otherwise it raises
+        `TypeError` if the clause is not well formatted.
+
+        E.g. (not x3) or x4 or (not x2) is encoded as
+             [(False,u"x3"),(True,u"x4"),(False,u"x2")]
+
+        All variable mentioned in the clause will be added to the list
+        of variables  of the CNF,  in the  order of appearance  in the
+        clauses.
 
         Arguments:
         - `clause`: a clause with k literals is a list with k pairs.
                     First coords are the polarities, second coords are
                     utf8 encoded strings with variable names.
-
-                    E.g. (not x3) or x4 or (not x2) is encoded as
-                         [(False,u"x3"),(True,u"x4"),(False,u"x2")]
         """
 
         # A clause must be an immutable object
@@ -254,8 +347,11 @@ class CNF(object):
         self._clauses.append(new_clause)
 
     def add_variable(self,var):
-        """Add a variable to the formula. This is useful to add
-        the variable in a nicer order than the appearence one.
+        """Add a variable to the formula (if not already resent).
+
+        The variable must be `hashable`. I.e. it must be usable as key
+        in a dictionary.  It raises `TypeError` if the variable cannot
+        be hashed.
 
         Arguments:
         - `var`: the variable to add.
@@ -273,10 +369,10 @@ class CNF(object):
         """Add a comment to the formula.
 
         This is useful for documenting cnfs in DIMACS format which may
-        be  quite  cryptic.   Notice  that  you  have  the  option  to
-        intersperse comments  among the clauses,  but that may  not be
-        supported by  your tool. Anyway  comments can be  removed from
-        you Dimacs/LaTeX output.
+        be quite cryptic.  Notice that you have the option to
+        intersperse comments among the clauses, but that may not be
+        supported by your SAT solver. Anyway comments can be removed
+        from you Dimacs/LaTeX output.
 
         Arguments:
         - `comment`: an unicode string of text.
@@ -302,6 +398,10 @@ class CNF(object):
     def add_clause_or_comment(self, data):
         """Add a clause or a comment to the formula
 
+        Call either `add_comment` or `add_clause`, depending on the
+        type of the input value. If it is a string then it is a
+        comment.
+
         Arguments:
         - `data`: either a clause or a comment.
 
@@ -320,13 +420,13 @@ class CNF(object):
             self.add_clause(data)
 
     def get_variables(self):
-        """Return the list of variable names in the immutable order.
+        """Returns (a copy of) the list of variable names.
         """
         assert self._coherent
         return self._index2name[1:]
 
     def get_clauses_and_comments(self):
-        """Return the list of clauses
+        """Iterator over all clauses and comments in the formula.
         """
         assert self._coherent
 
