@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+__docstring__ =\
 """Utilities to build CNF formulas interesting for proof complexity.
 
 The module `cnfgen`  contains facilities to generate  cnf formulas, in
@@ -44,16 +45,10 @@ import random
 try:
     import networkx
     import networkx.algorithms
-except:
+except ImportError:
     print("ERROR: Missing 'networkx' library: no support for graph based formulas.",
           file=sys.stderr)
     exit(-1)
-
-try:
-    import pygraphviz
-except ImportError:
-    print("WARNING: Missing 'dot' library: no support for graph based formulas.",
-          file=sys.stderr)
 
 
 
@@ -90,7 +85,7 @@ class CNF(object):
     representation.
     """
 
-    def __init__(self, clauses_and_comments=[], header=None):
+    def __init__(self, clauses_and_comments=None, header=None):
         """Propositional formulas in conjunctive normal form.
 
         Arguments:
@@ -126,7 +121,7 @@ class CNF(object):
         self._coherent        = True
 
         # Load the initial data into the CNF
-        for c in clauses_and_comments:
+        for c in (clauses_and_comments or []):
             self.add_clause_or_comment(c)
 
 
@@ -526,7 +521,7 @@ class CNF(object):
         % Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
         % https://github.com/MassimoLauria/cnfgen.git
         %
-        \ensuremath{%
+        \\ensuremath{%
               \\left( \\neg{x_1} \\lor     {x_2} \\lor \\neg{x_3} \\right)
         \\land \\left( \\neg{x_2} \\lor \\neg{x_4} \\right)
         \\land \\left(     {x_2} \\lor     {x_3} \\lor \\neg{x_4} \\right) }
@@ -624,7 +619,7 @@ A formula is made harder by the process of lifting.
             for clause in literal[True][i]:
                 for _,varname in clause:
                     self.add_variable(varname)
-            # for clause in literal[True][i]:     # we do not need to explore both polarities
+            # for clause in literal[False][i]:     # we do not need to explore both polarities
             #     for _,varname in clause:
             #         self.add_variable(varname)
 
@@ -666,7 +661,7 @@ class IfThenElse(Lift):
     """Lifted formula: substitutes variable with a three variables
     if-then-else
     """
-    def __init__(self, cnf, rank=3):
+    def __init__(self, cnf, rank=1):
         """Build a new CNF obtained by substituting an if-then-else to the
         variables of the original CNF
 
@@ -674,7 +669,7 @@ class IfThenElse(Lift):
         - `cnf`: the original cnf
         - `rank`: ignored
         """
-        self._rank = 3
+        self._rank = rank
 
         Lift.__init__(self,cnf)
 
@@ -690,9 +685,9 @@ class IfThenElse(Lift):
 
         Returns: a list of clauses
         """
-        X = "{{{}}}^{x}".format(varname)
-        Y = "{{{}}}^{y}".format(varname)
-        Z = "{{{}}}^{z}".format(varname)
+        X = "{{{}}}^{{x}}".format(varname)
+        Y = "{{{}}}^{{y}}".format(varname)
+        Z = "{{{}}}^{{z}}".format(varname)
 
         return [ [ (False,X) , (polarity,Y) ] , [ (True, X) , (polarity,Z) ] ]
 
@@ -983,7 +978,7 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
                     yield [ (False,'p_{{{0},{1}}}'.format(p,h1)),
                             (False,'p_{{{0},{1}}}'.format(p,h2)) ]
 
-    php=CNF();
+    php=CNF()
     php.header="{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes) + php.header
 
     clauses=_PHP_clause_generator(pigeons,holes,functional,onto)
@@ -996,23 +991,31 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
 def PebblingFormula(digraph):
     """Pebbling formula
 
+    Build a pebbling formula from the directed graph. If the graph
+    vertices have a `rank` attribute, then that is used to enumerate
+    the vertices (and the corresponding variables).
+
     Arguments:
-    - `digraph`: directed acyclic graph
+    - `digraph`: directed acyclic graph.
     """
     if not networkx.algorithms.is_directed_acyclic_graph(digraph):
         raise RuntimeError("Pebbling formula is defined only for directed acyclic graphs")
 
     peb=CNF()
 
-    if hasattr(digraph,'header'):
-        peb.header="Pebbling formula of:\n"+digraph.header+peb.header
+    if hasattr(digraph,'name'):
+        peb.header="Pebbling formula of: "+digraph.name+"\n"+peb.header
     else:
         peb.header="Pebbling formula\n"+peb.header
 
-    # add clauses in topological order, to get a much readable formula
-    for v in networkx.algorithms.topological_sort(digraph):
+    # add variables in the appropriate order
+    vertices=enumerate_vertices(digraph)
 
+    for v in vertices:
         peb.add_variable(v)
+
+    # add the clauses
+    for v in vertices:
 
         # If predecessors are pebbled it must be pebbles
         if digraph.in_degree(v)!=0:
@@ -1023,6 +1026,7 @@ def PebblingFormula(digraph):
         peb.add_clause([(False,p) for p in digraph.predecessors(v)]+[(True,v)])
 
         if digraph.out_degree(v)==0: #the sink
+            peb.add_comment("Sink vertex {}".format(v))
             peb.add_clause([(False,v)])
 
     return peb
@@ -1059,10 +1063,10 @@ def GraphOrderingPrinciple(graph,total=False,smart=False):
     if smart:
         name = name + "(compact representation)"
 
-    if hasattr(graph,'header'):
-        gop.header=name+" on graph:\n"+graph.header+gop.header
+    if hasattr(graph,'name'):
+        gop.header=name+" on graph:\n"+graph.name+"\n"+gop.header
     else:
-        gop.header=name+" on graph:\n"+gop.header
+        gop.header=name+".\n"+gop.header
 
     # Non minimality axioms
     gop.add_comment("Each vertex has a predecessor")
@@ -1322,21 +1326,24 @@ def SubgraphFormula(graph,templates):
 #          Graph Decoders (first is default)
 #################################################################
 implemented_graphformats = {
-    'dag':   ['dot','kth'],
-    'bipartite':   ['dot','kth'],
-    'digraph': ['dot','kth'],
-    'simple': ['dot','kth']
+    'dag':   ['kth','gml','dot'],
+    'bipartite':   ['kth','gml','dot'],
+    'digraph': ['kth','gml','dot'],
+    'simple': ['kth','gml','dot']
     }
 
 # remove dot format if graphviz is not installed
 # we put it by default for documentation purpose
-if not pygraphviz:
+try:
+    import pygraphviz
+except ImportError:
+    print("WARNING: Missing 'dot' library: no support for graph based formulas.",
+          file=sys.stderr)
     for k in implemented_graphformats.values():
         try:
             k.remove('dot')
         except ValueError:
             pass
-
 
 
 def readDigraph(file,format,force_dag=False,multi=False):
@@ -1362,23 +1369,33 @@ def readDigraph(file,format,force_dag=False,multi=False):
 
         D=grtype(pygraphviz.AGraph(file.read()).edges())
 
+    elif format=='gml':
+
+        D=grtype(networkx.read_gml(file))
+
     elif format=='kth':
 
         D=grtype()
-        D.header=''
+        D.name=''
 
         for l in file.readlines():
 
             # add the comment to the header
             if l[0]=='c':
-                D.header+=l[2:]
+                D.name+=l[2:]
+                continue
 
-            if ':' not in l: continue # vertex number spec
+            if ':' not in l:
+                continue # vertex number spec (we ignore it)
 
             target,sources=l.split(':')
             target=target.strip()
             sources=sources.split()
-            D.add_node(target)
+
+            # Load all vertices in this line
+            for vertex in [target]+sources:
+                D.add_node(vertex,rank=int(vertex))
+
             for s in sources:
                 D.add_edge(s,target)
 
@@ -1413,22 +1430,33 @@ def readGraph(file,format,multi=False):
 
         G=grtype(pygraphviz.AGraph(file.read()).edges())
 
+    elif format=='gml':
+
+        G=grtype(networkx.read_gml(file))
+
     elif format=='kth':
 
         G=grtype()
-        G.header=''
+        G.name=''
 
         for l in file.readlines():
 
-            # add the comments to the header
+            # add the comment to the header
             if l[0]=='c':
-                G.header+=l[2:]
+                G.name+=l[2:]
+                continue
 
-            if ':' not in l: continue # vertex number spec
+            if ':' not in l:
+                continue # vertex number spec
 
             target,sources=l.split(':')
             target=target.strip()
             sources=sources.split()
+
+            # Load all vertices in this line
+            for vertex in [target]+sources:
+                G.add_node(vertex,rank=int(vertex))
+
             for s in sources:
                 G.add_edge(s,target)
 
@@ -1438,7 +1466,7 @@ def readGraph(file,format,multi=False):
     return G
 
 
-def writeGraph(G,output_file,format,graph_type='simple',sort_dag=False):
+def writeGraph(G,output_file,format,graph_type='simple'):
     """Write a graph to a file
 
     Arguments:
@@ -1446,7 +1474,6 @@ def writeGraph(G,output_file,format,graph_type='simple',sort_dag=False):
     - `output_file`: file name or file handle to write on
     - `output_format`: graph format (e.g. dot, gml)
     - `graph_type`: one among {graph,digraph,dag,bipartite}
-    - `sort_dag`: if DAG output maintaining topological order.
 
     Return: none.
     """
@@ -1456,12 +1483,13 @@ def writeGraph(G,output_file,format,graph_type='simple',sort_dag=False):
     if format not in implemented_graphformats[graph_type]:
         raise ValueError("Invalid format for {} graph".format(graph_type))
 
-    if sort_dag and not networkx.algorithms.is_directed_acyclic_graph(G):
-        raise ValueError("Graph must be acyclic")
-
     if format=='dot':
 
         networkx.write_dot(G,output_file)
+
+    elif format=='gml':
+
+        networkx.write_gml(G,output_file)
 
     elif format=='kth':
 
@@ -1469,11 +1497,8 @@ def writeGraph(G,output_file,format,graph_type='simple',sort_dag=False):
         print("{}".format(G.order()),file=output_file)
 
         # we need numerical indices for the vertices
-        if sort_dag:
-            enumeration = zip( networkx.algorithms.topological_sort(G),
+        enumeration = zip( enumerate_vertices(G),
                                xrange(G.order()))
-        else:
-            enumeration = zip( G.nodes(), xrange(G.order()))
 
         # adj list in the same order
         indices = dict( enumeration )
@@ -1535,6 +1560,32 @@ def parity_constraint( vars, b ):
         parity = sum(1-l[0] for l in c) % 2
         if parity != b : clauses.append(list(c))
     return clauses
+
+def enumerate_vertices(graph):
+    """Compute an ordered list of vertices of `graph`
+
+    The list is ordered according to the following criteria: first all
+    vertices with an integer attribute `rank`, according the specified
+    order; then the remaining vertices, topologically sorted, if the
+    graph is a DAG.
+
+    Arguments:
+    - `graph`: input graph
+    """
+    ranked  =[(graph.node[v]['rank'],v)
+              for v in graph if 'rank' in graph.node[v]]
+    ranked.sort()
+    ranked = [v for _,v in ranked]
+
+    if networkx.is_directed_acyclic_graph(graph):
+        unsorted = networkx.topological_sort(graph)
+    else:
+        unsorted = graph.nodes()
+
+    unsorted=[ v for v in unsorted if v not in ranked ]
+
+    return ranked+unsorted
+
 
 
 
@@ -1720,24 +1771,33 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
 
             D=networkx.DiGraph()
             # vertices
-            v=['v_{}'.format(i) for i in range(2*(2**args.tree)-1)]
+            vert=['v_{}'.format(i) for i in range(2*(2**args.tree)-1)]
+            for w in vert: D.add_node(w)
             # edges
-            for i in range(len(v)//2):
-                D.add_edge(v[2*i+1],v[i])
-                D.add_edge(v[2*i+2],v[i])
+            for i in range(len(vert)//2):
+                D.add_edge(vert[2*i+1],vert[i])
+                D.add_edge(vert[2*i+2],vert[i])
 
         elif hasattr(args,'pyramid') and args.pyramid>0:
 
             D=networkx.DiGraph()
             D.name='Pyramid of height {}'.format(args.pyramid)
+
             # vertices
-            X=[ ['x_{{{},{}}}'.format(h,i) for i in range(args.pyramid-h+1) ]
-                for h in range(args.pyramid+1)]
+            X=[
+                [('x_{{{},{}}}'.format(h,i),h,i) for i in range(args.pyramid-h+1)]
+                for h in range(args.pyramid+1)
+              ]
+
+            for layer in X:
+                for (name,h,i) in layer:
+                    D.add_node(name,rank=(h,i))
+
             # edges
             for h in range(1,len(X)):
                 for i in range(len(X[h])):
-                    D.add_edge(X[h-1][i]  ,X[h][i])
-                    D.add_edge(X[h-1][i+1],X[h][i])
+                    D.add_edge(X[h-1][i][0]  ,X[h][i][0])
+                    D.add_edge(X[h-1][i+1][0],X[h][i][0])
 
         elif args.graphformat:
 
@@ -1751,7 +1811,7 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
             writeGraph(D,
                        args.savegraph,
                        args.graphformat,
-                       graph_type='dag',sort_dag=True)
+                       graph_type='dag')
 
         return D
 
@@ -2218,9 +2278,10 @@ class _AND(_FormulaFamilyHelper,_CMDLineHelper):
 ### Register signals
 ###
 import signal
-def signal_handler(signal, frame):
-        print('Program interrupted',file=sys.stderr)
-        sys.exit(-1)
+def signal_handler(insignal, frame):
+    print('Program interrupted',file=sys.stderr)
+    sys.exit(-1)
+
 signal.signal(signal.SIGINT, signal_handler)
 
 ###
