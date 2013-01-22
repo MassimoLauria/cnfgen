@@ -37,7 +37,8 @@ p cnf 5 3
 
 import sys
 from textwrap import dedent
-from itertools import product,permutations,combinations,combinations_with_replacement
+from itertools import product,permutations
+from itertools import combinations,combinations_with_replacement,chain
 
 import argparse
 import random
@@ -265,7 +266,7 @@ class CNF(object):
         We add clauses mentioning three variables, and the formula is
         not coherent.
 
-        >>> c._add_compressed_clauses([[-1,2],[1,-2],[1,3]])
+        >>> c._add_compressed_clauses([(-1,2),(1,-2),(1,3)])
         >>> c._check_coherence()
         False
 
@@ -638,7 +639,9 @@ A formula is made harder by the process of lifting.
                 # adding compressed clauses should be faster
                 domains=[ literal[pol][index[var]] for pol,var in clause  ]
                 domains=tuple(domains)
-                block  =[reduce(lambda x,y: x+y,c,[]) for c in product(*domains)]
+                # block  =[ list(chain.from_iterable(c)) for c in product(*domains)]
+                block = [ tuple([l for sublist in c for l in sublist ])
+                          for c in product(*domains)]
                 self._add_compressed_clauses(block)
 
         assert self._check_coherence()
@@ -1765,9 +1768,12 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
         if hasattr(args,'tree') and args.tree>0:
 
             D=networkx.DiGraph()
+            D.ordered_vertices=[]
             # vertices
-            vert=['v_{}'.format(i) for i in range(2*(2**args.tree)-1)]
-            for w in vert: D.add_node(w)
+            vert=['v_{}'.format(i) for i in range(1,2*(2**args.tree))]
+            for w in vert:
+                D.add_node(w)
+                D.ordered_vertices.append(w)
             # edges
             for i in range(len(vert)//2):
                 D.add_edge(vert[2*i+1],vert[i])
