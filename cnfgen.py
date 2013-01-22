@@ -402,7 +402,6 @@ class CNF(object):
         1 -2 0
         2 -3 0
         """
-        assert self._coherent
         self._clauses.append(comment[:])
 
     def add_clause_or_comment(self, data):
@@ -634,7 +633,7 @@ A formula is made harder by the process of lifting.
             if isinstance(clause,basestring):
                 self.add_comment(clause)
             elif len(clause)==0:
-                self.add_clause([])
+                self._add_compressed_clauses([()])
             else:
                 # adding compressed clauses should be faster
                 domains=[ literal[pol][index[var]] for pol,var in clause  ]
