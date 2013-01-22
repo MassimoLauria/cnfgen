@@ -990,9 +990,9 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
 def PebblingFormula(digraph):
     """Pebbling formula
 
-    Build a pebbling formula from the directed graph. If the graph
-    vertices have a `rank` attribute, then that is used to enumerate
-    the vertices (and the corresponding variables).
+    Build a pebbling formula from the directed graph. If the graph has
+    an `ordered_vertices` attribute, then it is used to enumerate the
+    vertices (and the corresponding variables).
 
     Arguments:
     - `digraph`: directed acyclic graph.
@@ -1569,16 +1569,15 @@ def parity_constraint( vars, b ):
 def enumerate_vertices(graph):
     """Compute an ordered list of vertices of `graph`
 
-    The list is ordered according to the following criteria: first all
-    vertices with an integer attribute `rank`, according the specified
-    order; then the remaining vertices, topologically sorted, if the
-    graph is a DAG.
+    If the graph as the field `ordered_vertices` use it. Otherwise
+    give an arbitrary vertex sequence.
 
     Arguments:
     - `graph`: input graph
     """
     if hasattr(graph,"ordered_vertices"):
         assert graph.order()==len(graph.ordered_vertices)
+        assert set(graph.nodes())==set(graph.ordered_vertices)
         return graph.ordered_vertices
     else:
         return graph.nodes()
