@@ -505,7 +505,7 @@ class CNF(object):
 
             elif isinstance(c,tuple):
 
-                output.write("\n" +  " ".join(map(str,c))  + " 0")
+                output.write("\n" +  " ".join([str(l) for l in c])  + " 0")
 
         # final formula
         return output.getvalue()
@@ -1376,6 +1376,7 @@ def readDigraph(file,format,force_dag=False,multi=False):
 
         D=grtype()
         D.name=''
+        D.ordered_vertices=[]
 
         for l in file.readlines():
 
@@ -1393,7 +1394,9 @@ def readDigraph(file,format,force_dag=False,multi=False):
 
             # Load all vertices in this line
             for vertex in [target]+sources:
-                D.add_node(vertex,rank=int(vertex))
+                if vertex not in D:
+                    D.add_node(vertex)
+                    D.ordered_vertices.append(vertex)
 
             for s in sources:
                 D.add_edge(s,target)
@@ -1437,6 +1440,7 @@ def readGraph(file,format,multi=False):
 
         G=grtype()
         G.name=''
+        G.ordered_vertices=[]
 
         for l in file.readlines():
 
@@ -1454,7 +1458,9 @@ def readGraph(file,format,multi=False):
 
             # Load all vertices in this line
             for vertex in [target]+sources:
-                G.add_node(vertex,rank=int(vertex))
+                if vertex not in G:
+                    G.add_node(vertex)
+                    G.ordered_vertices.append(vertex)
 
             for s in sources:
                 G.add_edge(s,target)
@@ -1497,7 +1503,7 @@ def writeGraph(G,output_file,format,graph_type='simple'):
 
         # we need numerical indices for the vertices
         enumeration = zip( enumerate_vertices(G),
-                               xrange(G.order()))
+                               xrange(1,G.order()+1))
 
         # adj list in the same order
         indices = dict( enumeration )
@@ -1571,20 +1577,11 @@ def enumerate_vertices(graph):
     Arguments:
     - `graph`: input graph
     """
-    ranked  =[(graph.node[v]['rank'],v)
-              for v in graph if 'rank' in graph.node[v]]
-    ranked.sort()
-    ranked = [v for _,v in ranked]
-
-    if networkx.is_directed_acyclic_graph(graph):
-        unsorted = networkx.topological_sort(graph)
+    if hasattr(graph,"ordered_vertices"):
+        assert graph.order()==len(graph.ordered_vertices)
+        return graph.ordered_vertices
     else:
-        unsorted = graph.nodes()
-
-    unsorted=[ v for v in unsorted if v not in ranked ]
-
-    return ranked+unsorted
-
+        return graph.nodes()
 
 
 
@@ -1781,6 +1778,7 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
 
             D=networkx.DiGraph()
             D.name='Pyramid of height {}'.format(args.pyramid)
+            D.ordered_vertices=[]
 
             # vertices
             X=[
@@ -1791,6 +1789,7 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
             for layer in X:
                 for (name,h,i) in layer:
                     D.add_node(name,rank=(h,i))
+                    D.ordered_vertices.append(name)
 
             # edges
             for h in range(1,len(X)):
