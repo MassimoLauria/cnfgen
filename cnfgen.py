@@ -57,6 +57,21 @@ _default_header=r"""Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
+## implementation of lookahead iterator
+class _ClosedIterator:
+    def __init__(self, iter,endToken=None):
+        self.iter = iter
+        self.endToken = endToken
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        try:
+            return self.iter.next()
+        except StopIteration:
+            return self.endToken
+
 ###
 ### Basic CNF class
 ###
@@ -105,12 +120,11 @@ class CNF(object):
         - `header`: a preamble which documents the formula
         """
 
-        self._header = header or _default_header
+        self._header = header if header!=None else _default_header
 
         # Initial empty formula
         self._clauses         = []
-        self._variables_number = 0
-        self._clauses_number = 0
+        self._comments        = []
 
         # Variable indexes <--> Variable names correspondence
         # first variable is indexed with 1.
@@ -144,20 +158,20 @@ class CNF(object):
 
         Iterator over all clauses, ignoring the interleaving comments.
         """
-        assert self._coherent
         for c in self._clauses:
-            if isinstance(c,tuple): yield self._uncompress_clause(c)
+            assert self._coherent
+            yield self._uncompress_clause(c)
 
     def __str__(self):
         """String representation of the formula
         """
-        return "\n".join([str(c) for c in self._clauses])+'\n'
+        assert self._coherent
+        return self._header
 
     def __len__(self):
         """Number of clauses in the formula
         """
-        assert self._coherent
-        return self._clauses_number
+        return len(self._clauses)
 
 
     #
@@ -253,7 +267,6 @@ class CNF(object):
         """
         self._coherent = False
         self._clauses.extend(tuple(c) for c in clauses)
-        self._clauses_number += len(clauses)
 
 
     def _check_coherence(self, force=False):
@@ -277,42 +290,38 @@ class CNF(object):
         >>> c._check_coherence()
         False
 
-        If we add another one, it become coherent.
+        We cannot use the API now
 
-        >>> c.get_clauses()
+        >>> c.clauses()
         Traceback (most recent call last):
         AssertionError
         """
         if not force and self._coherent: return True
 
-        # data
-        N = self._variables_number
-        M = self._clauses_number
-
         varindex=self._name2index
         varnames=self._index2name
 
-        cls_cmnt= self._clauses
+        # number of variables and clauses
+        N=len(varindex.keys())
+        M=len(self._clauses)
 
-        # Correct number of variables
-        if N != len(varindex.keys()): return False
+
+        # Consistency in the variable dictionary
         if N != len(varnames)-1:      return False
-        # Consistency in the dictionary
         for i in range(1,N+1):
             if varindex[varnames[i]]!=i: return False
 
-        # Count clauses and check literal representation
-        counter=0
-        for clause in cls_cmnt:
-            if isinstance(clause,basestring): continue
 
+        # Count clauses and check literal representation
+        for clause in self._clauses:
             for literal in clause:
                 if not 0 < abs(literal) <= N: return False
 
-            counter +=1
-
-        # the cached number of clauses in correct
-        if counter != M: return False
+        # Check that comments refer to actual clauses (or one more)
+        oldpos=0
+        for pos,text in self._comments:
+            if not oldpos <= pos <= M: return False
+            oldpos = pos
 
         # formula passed all tests
         self._coherent = True
@@ -355,12 +364,9 @@ class CNF(object):
         except TypeError:
             raise TypeError("%s is not a well formatted clause" %clause)
 
-        # Transform to internal representation
-        new_clause = self._compress_clause(clause)
+        # Add the compressed clause
+        self._clauses.append( self._compress_clause(clause) )
 
-        # Add the clause
-        self._clauses_number += 1
-        self._clauses.append(new_clause)
 
     def add_variable(self,var):
         """Add a variable to the formula (if not already resent).
@@ -376,9 +382,8 @@ class CNF(object):
         try:
             if not var in self._name2index:
                 # name correpsond to the last variable so far
-                self._variables_number += 1
-                self._name2index[var] = self._variables_number
                 self._index2name.append(var)
+                self._name2index[var] = len(self._index2name)-1
         except TypeError:
             raise TypeError("%s is not a legal variable name" %var)
 
@@ -410,7 +415,7 @@ class CNF(object):
         1 -2 0
         2 -3 0
         """
-        self._clauses.append(comment[:])
+        self._comments.append((len(self),comment[:]))
 
     def add_clause_or_comment(self, data):
         """Add a clause or a comment to the formula
@@ -445,18 +450,9 @@ class CNF(object):
         """Returns (a copy of) the list of variable names.
         """
         assert self._coherent
-        return self._index2name[1:]
-
-
-    def clauses_and_comments(self):
-        """Iterator over all clauses and comments in the formula.
-        """
-        assert self._coherent
-
-        for c in self._clauses:
-            if isinstance(c,tuple): yield self._uncompress_clause(c)
-            else: yield c
-
+        vars=iter(self._index2name)
+        vars.next()
+        return vars
 
     def clauses(self):
         """Return the list of clauses
@@ -495,8 +491,8 @@ class CNF(object):
         output = StringIO()
 
         # Count the number of variables and clauses
-        n = self._variables_number
-        m = self._clauses_number
+        n = len(self._index2name)-1
+        m = len(self)
 
         # A nice header
         if add_header:
@@ -505,15 +501,30 @@ class CNF(object):
         # Formula specification
         output.write( "p cnf {0} {1}".format(n,m) )
 
-        # We produce clauses and comments
-        for c in self._clauses:
-
-            if isinstance(c,basestring) and add_comments:
-                for s in c.split("\n"): output.write( ("\nc "+s).rstrip())
-
-            elif isinstance(c,tuple):
-
+        # No comments
+        if not add_comments:
+            for c in self._clauses:
                 output.write("\n" +  " ".join([str(l) for l in c])  + " 0")
+            return output.getvalue()
+
+
+        # with comments
+        clauseidx=_ClosedIterator(enumerate(self._clauses),(m+1,None))
+        comments =_ClosedIterator(iter(self._comments),(m+1,None))
+
+        index_clause,clause   = clauseidx.next()
+        index_comment,comment = comments.next()
+
+        while True:
+
+            if index_clause==index_comment==m+1: break
+
+            if index_comment <= index_clause:
+                for s in comment.split("\n"): output.write( ("\nc "+s).rstrip())
+                index_comment,comment = comments.next()
+            else:
+                output.write("\n" +  " ".join([str(l) for l in clause])  + " 0")
+                index_clause,clause   = clauseidx.next()
 
         # final formula
         return output.getvalue()
@@ -555,29 +566,48 @@ class CNF(object):
                 return "\\neg{"+self._index2name[-l]+"}"
 
 
-        # We produce clauses and comments
+       # We produce clauses and comments
         output.write( "\\ensuremath{%" )
         empty_cnf=True
 
-        for c in self._clauses:
+        # format clause
+        def write_clause(cls,first):
+            """
+            """
+            output.write( "\n      " if first else "\n\\land " )
+            first = False
 
-            if isinstance(c,basestring) and add_comments:
-                for s in c.split("\n"): output.write( "\n% "+s.rstrip(' ') )
+            # build the latex clause
+            if len(cls)==0:
+                output.write("\\square")
 
-            elif isinstance(c,tuple):
+            else:
+                output.write("\\left( " + \
+                             " \\lor ".join(map_literals(l) for l in cls) + \
+                             " \\right)")
 
-                output.write( "\n      " if empty_cnf else "\n\\land " )
-                empty_cnf = False
+        # with comments
+        m = len(self._clauses)
+        clauseidx=_ClosedIterator(enumerate(self._clauses),(m+1,None))
+        if add_comments:
+            comments =_ClosedIterator(iter(self._comments),(m+1,None))
+        else:
+            comments =_ClosedIterator(iter([]),(m+1,None))
 
-                # build the latex clause
-                if len(c)==0:
-                    output.write("\\square")
+        index_clause,clause   = clauseidx.next()
+        index_comment,comment = comments.next()
 
-                else:
-                    output.write("\\left( " + \
-                                 " \\lor ".join(map_literals(l) for l in c) + \
-                                 " \\right)")
+        while True:
 
+            if index_clause==index_comment==m+1: break
+
+            if index_comment <= index_clause:
+                for s in comment.split("\n"): output.write( ("\n% "+s).rstrip(' ') )
+                index_comment,comment = comments.next()
+            else:
+                write_clause(clause,empty_cnf)
+                index_clause,clause   = clauseidx.next()
+                empty_cnf=False
 
         # No clause in the CNF
         if empty_cnf: output.write("\n   \\top")
@@ -1013,9 +1043,9 @@ def PebblingFormula(digraph):
     peb=CNF()
 
     if hasattr(digraph,'name'):
-        peb.header="Pebbling formula of: "+digraph.name+"\n"+peb.header
+        peb.header="Pebbling formula of: "+digraph.name+"\n\n"+peb.header
     else:
-        peb.header="Pebbling formula\n"+peb.header
+        peb.header="Pebbling formula\n\n"+peb.header
 
     # add variables in the appropriate order
     vertices=enumerate_vertices(digraph)

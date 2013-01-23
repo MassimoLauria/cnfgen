@@ -3,16 +3,5 @@ from Cython.Build import cythonize
 
 setup(
     name = "Cnf Generator",
-    ext_modules = cythonize('cnfgen.pyx'), # accepts a glob pattern
+    ext_modules = cythonize('reshuffle.pyx'), # accepts a glob pattern
 )
-
-
-
-
-
-
-
-
-
-
-

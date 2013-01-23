@@ -21,7 +21,7 @@ from cnfgen import CNF
 def read_dimacs_file(file_handle):
     """Load dimacs file into a CNF object
     """
-    cnf=CNF()
+    cnf=CNF(header="")
 
     n = -1  # negative signal that spec line has not been read
     m = -1
@@ -37,9 +37,9 @@ def read_dimacs_file(file_handle):
         # add the comment to the header or in the middle
         if l[0]=='c':
             if n<0:
-                cnf.header = cnf.header+l[2:]
+                cnf.header = cnf.header+(l[2:] or '\n')
             else:
-                cnf.add_comment(l[2:])
+                cnf.add_comment(l[2:].rstrip('\n') or '\n')
             continue
 
         # parse spec line
@@ -53,6 +53,7 @@ def read_dimacs_file(file_handle):
             for i in range(1,n+1):
                 cnf.add_variable(str(i))
             continue
+
 
         # parse literals
         for lv in [int(lit) for lit in l.split()]:
@@ -86,15 +87,18 @@ def reshuffle(cnf,
               ):
 
     # empty cnf
-    out=CNF()
-    out.header="Reshuffling of:\n"+cnf.header
+    out=CNF(header='')
 
-    N=len(cnf.variables())
+    out.header="Reshuffling of:\n\n"+cnf.header
+
+
+    vars=list(cnf.variables())
+    N=len(vars)
     M=len(cnf)
 
     # variable permutation
     if variable_permutation==None:
-        variable_permutation=cnf.variables()[:]
+        variable_permutation=vars
         random.shuffle(variable_permutation)
     else:
         assert len(variable_permutation)==N
@@ -113,13 +117,12 @@ def reshuffle(cnf,
         out.add_variable(v)
 
     substitution=[None]*(2*N+1)
-    new_list=[None]+out.variables()
+    reverse_idx=dict([(v,i) for (i,v) in enumerate(out.variables(),1)])
     polarity_flip = [None]+polarity_flip
 
     for i,v in enumerate(cnf.variables(),1):
-        substitution[i]=polarity_flip[i]*new_list.index(v)
-    for i in range(1,N+1):
-        substitution[-i]= - substitution[i]
+        substitution[i]=  polarity_flip[i]*reverse_idx[v]
+        substitution[-i]= -substitution[i]
 
     #
     # permutation of clauses
@@ -128,23 +131,19 @@ def reshuffle(cnf,
         clause_permutation=range(M)
         random.shuffle(clause_permutation)
 
-    # n.b. previous clauses are preserved if any.
-    offset=len(out._clauses)
-    out._clauses += [None]*M
-    out._clauses_number += M
-    idx=0
-    for cls in cnf._clauses:
-        if isinstance(cls,tuple):
-            out._clauses[offset+
-                         clause_permutation[idx]]=list(cls)
-            idx +=1
+    # load clauses
+    out._clauses = [None]*M
+    for (old,new) in enumerate(clause_permutation):
+        out._clauses[new]=tuple( substitution[l] for l in cnf._clauses[old])
 
-    # convert literals
-    for c in xrange(offset,M):
-        cls = out._clauses[c]
-        for i in xrange(len(cls)):
-            cls[i]=substitution[cls[i]]
-        out._clauses[c]=tuple(cls)
+    # load comments
+    assert len(out._comments)==0
+    clause_permutation.append((M,M)) # comments after last clause do not move
+    for (pos,text) in cnf._comments:
+        out._comments.append((clause_permutation[pos],text))
+    def key(t): return t[0]
+    out._comments.sort(key=key)
+
 
     # return the formula
     assert out._check_coherence(force=True)
