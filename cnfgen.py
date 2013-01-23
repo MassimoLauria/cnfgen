@@ -38,7 +38,7 @@ p cnf 5 3
 import sys
 from textwrap import dedent
 from itertools import product,permutations
-from itertools import combinations,combinations_with_replacement,chain
+from itertools import combinations,combinations_with_replacement
 
 import argparse
 import random
