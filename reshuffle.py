@@ -14,7 +14,6 @@ https://github.com/MassimoLauria/cnfgen.git
 
 """
 
-import copy
 import sys
 import random
 from cnfgen import CNF
@@ -78,6 +77,80 @@ def read_dimacs_file(file_handle):
     # return the formula
     cnf._check_coherence(force=True)
     return cnf
+
+
+def reshuffle(cnf,
+              variable_permutation=None,
+              clause_permutation=None,
+              polarity_flip=None
+              ):
+
+    # empty cnf
+    out=CNF()
+    out.header="Reshuffling of:\n"+cnf.header
+
+    N=len(cnf.variables())
+    M=len(cnf)
+
+    # variable permutation
+    if variable_permutation==None:
+        variable_permutation=cnf.variables()[:]
+        random.shuffle(variable_permutation)
+    else:
+        assert len(variable_permutation)==N
+
+    # polarity flip
+    if polarity_flip==None:
+        polarity_flip=[1-2*random.randint(0,1)
+                              for i in xrange(N)]
+    else:
+        assert len(polarity_flip)==N
+
+    #
+    # substitution of variables
+    #
+    for v in variable_permutation:
+        out.add_variable(v)
+
+    substitution=[None]*(2*N+1)
+    new_list=[None]+out.variables()
+    polarity_flip = [None]+polarity_flip
+
+    for i,v in enumerate(cnf.variables(),1):
+        substitution[i]=polarity_flip[i]*new_list.index(v)
+    for i in range(1,N+1):
+        substitution[-i]= - substitution[i]
+
+    #
+    # permutation of clauses
+    #
+    if clause_permutation==None:
+        clause_permutation=range(M)
+        random.shuffle(clause_permutation)
+
+    # n.b. previous clauses are preserved if any.
+    offset=len(out._clauses)
+    out._clauses += [None]*M
+    out._clauses_number += M
+    idx=0
+    for cls in cnf._clauses:
+        if isinstance(cls,tuple):
+            out._clauses[offset+
+                         clause_permutation[idx]]=list(cls)
+            idx +=1
+
+    # convert literals
+    for c in xrange(offset,M):
+        cls = out._clauses[c]
+        for i in xrange(len(cls)):
+            cls[i]=substitution[cls[i]]
+        out._clauses[c]=tuple(cls)
+
+    # return the formula
+    assert out._check_coherence(force=True)
+    return out
+
+
 
 
 def command_line_reshuffle(argv):
@@ -145,7 +218,7 @@ def command_line_reshuffle(argv):
 
     input_cnf=read_dimacs_file(args.input)
 
-    output_cnf=CNF(input_cnf.get_clauses_and_comments(),input_cnf.header)
+    output_cnf=reshuffle(input_cnf)
 
     # Do we wnat comments or not
     output_comments=args.verbose >= 2

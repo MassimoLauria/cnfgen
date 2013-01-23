@@ -153,6 +153,13 @@ class CNF(object):
         """
         return "\n".join([str(c) for c in self._clauses])+'\n'
 
+    def __len__(self):
+        """Number of clauses in the formula
+        """
+        assert self._coherent
+        return self._clauses_number
+
+
     #
     # Internal implementation methods, use at your own risk!
     #
@@ -434,14 +441,14 @@ class CNF(object):
     # High level API: read the CNF
     #
 
-    def get_variables(self):
+    def variables(self):
         """Returns (a copy of) the list of variable names.
         """
         assert self._coherent
         return self._index2name[1:]
 
 
-    def get_clauses_and_comments(self):
+    def clauses_and_comments(self):
         """Iterator over all clauses and comments in the formula.
         """
         assert self._coherent
@@ -451,7 +458,7 @@ class CNF(object):
             else: yield c
 
 
-    def get_clauses(self):
+    def clauses(self):
         """Return the list of clauses
         """
         assert self._coherent
@@ -602,7 +609,7 @@ A formula is made harder by the process of lifting.
 
         # Load original variable names
         literal  =[None,None]
-        names = [None]+self._orig_cnf.get_variables()
+        names = [None]+self._orig_cnf.variables()
         index = self._orig_cnf._name2index
         literal[False]=names[:]
         literal[True] =names[:]
@@ -630,7 +637,7 @@ A formula is made harder by the process of lifting.
             literal[False][i]=[list(self._compress_clause(cls)) for cls in literal[False][i] ]
 
         # Create the clauses to be added
-        for clause in self._orig_cnf.get_clauses_and_comments():
+        for clause in self._orig_cnf.clauses_and_comments():
             if isinstance(clause,basestring):
                 self.add_comment(clause)
             elif len(clause)==0:
@@ -858,12 +865,12 @@ class Selection(Lift):
 
         # Each selector must select!
         self.add_comment("Selections must be defined")
-        for v in cnf.get_variables():
+        for v in cnf.variables():
             self.add_clause([ (True,   "Y_{{{}}}^{}".format(v,i))
                                for i in range(self._rank)])
         # Selection must be unique
         self.add_comment("Selections must be unique")
-        for v in cnf.get_variables():
+        for v in cnf.variables():
             for s1,s2 in combinations(["Y_{{{}}}^{}".format(v,i)
                                                  for i in range(self._rank)],2):
                 self.add_clause([(False,s1),(False,s2)])
