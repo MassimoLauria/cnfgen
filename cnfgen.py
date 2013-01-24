@@ -642,33 +642,37 @@ class Lift(CNF):
         CNF.__init__(self,[],header=cnf._header)
 
         # Load original variable names
-        names = [None]+list(self._orig_cnf.variables())
-        literal = [None]*(2*len(names)-1)
+        variablenames = [None]+list(self._orig_cnf.variables())
+        substitutions = [None]*(2*len(variablenames)-1)
 
         # Lift all possible literals
-        for i in range(1,len(names)):
-            literal[i]=self.lift_a_literal(True, names[i])
-            literal[-i]=self.lift_a_literal(False,names[i])
+        for i in range(1,len(variablenames)):
+            substitutions[i] =self.lift_a_literal(True, variablenames[i])
+            substitutions[-i]=self.lift_a_literal(False,variablenames[i])
 
         # Collect new variable names from the CNFs:
         # clause compression needs the variable names
-        for i in range(1,len(literal)):
-            for clause in literal[i]:
+        for i in range(1,len(substitutions)):
+            for clause in substitutions[i]:
                 for _,varname in clause:
                     self.add_variable(varname)
 
         # Compress substitution cnfs
-        for i in range(1,len(literal)):
-            literal[i] =[list(self._compress_clause(cls)) for cls in literal[i] ]
+        for i in range(1,len(substitutions)):
+            substitutions[i] =[list(self._compress_clause(cls))
+                               for cls in substitutions[i] ]
 
         # build and add new clauses
         for clause in self._orig_cnf._clauses:
-            # adding compressed clauses should be faster
-            domains=[ literal[l] for l in clause  ]
+
+            # a substituted clause is the OR of the substituted literals
+            domains=[ substitutions[lit] for lit in clause  ]
             domains=tuple(domains)
-            # block  =[ list(chain.from_iterable(c)) for c in product(*domains)]
-            block = [ tuple([l for sublist in c for l in sublist ])
-                      for c in product(*domains)]
+
+            block = [ tuple([lit for clause in clause_tuple
+                                 for lit in clause ])
+                      for clause_tuple in product(*domains)]
+
             self._add_compressed_clauses(block)
 
         assert self._check_coherence()
