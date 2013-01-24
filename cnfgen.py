@@ -430,7 +430,7 @@ class CNF(object):
         >>> c=CNF()
         >>> data=["Hej",[(False,"x"),(True,"y")],"Hej da"]
         >>> for d in data: c.add_clause_or_comment(d)
-        >>> print(c.dimacs(add_header=False))
+        >>> print(c.dimacs(add_header=False,add_comments=True))
         p cnf 2 1
         c Hej
         -1 2 0
@@ -464,7 +464,7 @@ class CNF(object):
     #  Export to useful output format
     #
 
-    def dimacs(self,add_header=True,add_comments=True):
+    def dimacs(self,add_header=True,add_comments=False):
         """Produce the dimacs encoding of the formula
 
         >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],\
@@ -638,41 +638,32 @@ A formula is made harder by the process of lifting.
         CNF.__init__(self,[],header=cnf._header)
 
         # Load original variable names
-        literal  =[None,None]
         names = [None]+list(self._orig_cnf.variables())
-        index = self._orig_cnf._name2index
-        literal[False]=names[:]
-        literal[True] =names[:]
+        literal = [None]*(2*len(names)-1)
 
         # Lift all possible literals
         for i in range(1,len(names)):
-            literal[True] [i]=self.lift_a_literal(True, literal[True][i])
-            literal[False][i]=self.lift_a_literal(False,literal[False][i])
-
+            literal[i]=self.lift_a_literal(True, names[i])
+            literal[-i]=self.lift_a_literal(False,names[i])
 
         # Collect new variable names from the CNFs:
         # clause compression needs the variable names
-        for i in range(1,len(names)):
-            for clause in literal[True][i]:
+        for i in range(1,len(literal)):
+            for clause in literal[i]:
                 for _,varname in clause:
                     self.add_variable(varname)
-            # for clause in literal[False][i]:     # we do not need to explore both polarities
-            #     for _,varname in clause:
-            #         self.add_variable(varname)
-
 
         # Compress cnfs
-        for i in range(1,len(names)):
-            literal[True][i] =[list(self._compress_clause(cls)) for cls in literal[True][i]  ]
-            literal[False][i]=[list(self._compress_clause(cls)) for cls in literal[False][i] ]
+        for i in range(1,len(literal)):
+            literal[i] =[list(self._compress_clause(cls)) for cls in literal[i] ]
 
         # Create the clauses to be added
-        for clause in self._orig_cnf:
+        for clause in self._orig_cnf._clauses:
             if len(clause)==0:
                 self._add_compressed_clauses([()])
             else:
                 # adding compressed clauses should be faster
-                domains=[ literal[pol][index[var]] for pol,var in clause  ]
+                domains=[ literal[l] for l in clause  ]
                 domains=tuple(domains)
                 # block  =[ list(chain.from_iterable(c)) for c in product(*domains)]
                 block = [ tuple([l for sublist in c for l in sublist ])
