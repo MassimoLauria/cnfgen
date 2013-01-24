@@ -509,7 +509,7 @@ class CNF(object):
 
 
         # with comments
-        assert not add_comments
+        assert add_comments
         clauseidx=_ClosedIterator(enumerate(self._clauses),(m+1,None))
         comments =_ClosedIterator(iter(self._comments),(m+1,None))
 
@@ -663,17 +663,34 @@ class Lift(CNF):
                                for cls in substitutions[i] ]
 
         # build and add new clauses
-        for clause in self._orig_cnf._clauses:
+        clauses=self._orig_cnf._clauses
+
+        # dictionary of comments
+        commentlines=dict()
+        for (i,c) in self._orig_cnf._comments:
+            commentlines.setdefault(i,[]).append(c)
+
+        for i in xrange(len(clauses)):
+
+            # add comments if necessary
+            if i in commentlines:
+                for comment in commentlines[i]:
+                    self._comments.append((len(self._clauses),comment))
 
             # a substituted clause is the OR of the substituted literals
-            domains=[ substitutions[lit] for lit in clause  ]
+            domains=[ substitutions[lit] for lit in clauses[i] ]
             domains=tuple(domains)
 
-            block = [ tuple([lit for clause in clause_tuple
-                                 for lit in clause ])
+            block = [ tuple([lit for clauses[i] in clause_tuple
+                                 for lit in clauses[i] ])
                       for clause_tuple in product(*domains)]
 
             self._add_compressed_clauses(block)
+
+        # add trailing comments
+        if len(clauses) in commentlines:
+            for comment in commentlines[len(clauses)]:
+                self._comments.append((len(self._clauses),comment))
 
         assert self._check_coherence()
 
