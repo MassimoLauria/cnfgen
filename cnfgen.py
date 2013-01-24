@@ -626,9 +626,6 @@ class Lift(CNF):
     """Lifted formula
 
     A formula is made harder by the process of lifting.
-
-    For efficiency reasons current implementation do not include
-    comments in the lifted version of the formula.
     """
 
     def __init__(self, cnf):
