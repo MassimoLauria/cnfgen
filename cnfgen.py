@@ -639,7 +639,7 @@ A formula is made harder by the process of lifting.
 
         # Load original variable names
         literal  =[None,None]
-        names = [None]+self._orig_cnf.variables()
+        names = [None]+list(self._orig_cnf.variables())
         index = self._orig_cnf._name2index
         literal[False]=names[:]
         literal[True] =names[:]
@@ -667,10 +667,8 @@ A formula is made harder by the process of lifting.
             literal[False][i]=[list(self._compress_clause(cls)) for cls in literal[False][i] ]
 
         # Create the clauses to be added
-        for clause in self._orig_cnf.clauses_and_comments():
-            if isinstance(clause,basestring):
-                self.add_comment(clause)
-            elif len(clause)==0:
+        for clause in self._orig_cnf:
+            if len(clause)==0:
                 self._add_compressed_clauses([()])
             else:
                 # adding compressed clauses should be faster
