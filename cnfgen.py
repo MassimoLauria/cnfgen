@@ -430,7 +430,7 @@ class CNF(object):
         >>> c=CNF()
         >>> data=["Hej",[(False,"x"),(True,"y")],"Hej da"]
         >>> for d in data: c.add_clause_or_comment(d)
-        >>> print(c.dimacs(add_header=False))
+        >>> print(c.dimacs(add_header=False,add_comments=True))
         p cnf 2 1
         c Hej
         -1 2 0
@@ -464,7 +464,7 @@ class CNF(object):
     #  Export to useful output format
     #
 
-    def dimacs(self,add_header=True,add_comments=True):
+    def dimacs(self,add_header=True,add_comments=False):
         """Produce the dimacs encoding of the formula
 
         >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],\
@@ -509,6 +509,7 @@ class CNF(object):
 
 
         # with comments
+        assert add_comments
         clauseidx=_ClosedIterator(enumerate(self._clauses),(m+1,None))
         comments =_ClosedIterator(iter(self._comments),(m+1,None))
 
@@ -624,7 +625,7 @@ class CNF(object):
 class Lift(CNF):
     """Lifted formula
 
-A formula is made harder by the process of lifting.
+    A formula is made harder by the process of lifting.
     """
 
     def __init__(self, cnf):
@@ -638,46 +639,55 @@ A formula is made harder by the process of lifting.
         CNF.__init__(self,[],header=cnf._header)
 
         # Load original variable names
-        literal  =[None,None]
-        names = [None]+list(self._orig_cnf.variables())
-        index = self._orig_cnf._name2index
-        literal[False]=names[:]
-        literal[True] =names[:]
+        variablenames = [None]+list(self._orig_cnf.variables())
+        substitutions = [None]*(2*len(variablenames)-1)
 
         # Lift all possible literals
-        for i in range(1,len(names)):
-            literal[True] [i]=self.lift_a_literal(True, literal[True][i])
-            literal[False][i]=self.lift_a_literal(False,literal[False][i])
-
+        for i in range(1,len(variablenames)):
+            substitutions[i] =self.lift_a_literal(True, variablenames[i])
+            substitutions[-i]=self.lift_a_literal(False,variablenames[i])
 
         # Collect new variable names from the CNFs:
         # clause compression needs the variable names
-        for i in range(1,len(names)):
-            for clause in literal[True][i]:
+        for i in range(1,len(substitutions)):
+            for clause in substitutions[i]:
                 for _,varname in clause:
                     self.add_variable(varname)
-            # for clause in literal[False][i]:     # we do not need to explore both polarities
-            #     for _,varname in clause:
-            #         self.add_variable(varname)
 
+        # Compress substitution cnfs
+        for i in range(1,len(substitutions)):
+            substitutions[i] =[list(self._compress_clause(cls))
+                               for cls in substitutions[i] ]
 
-        # Compress cnfs
-        for i in range(1,len(names)):
-            literal[True][i] =[list(self._compress_clause(cls)) for cls in literal[True][i]  ]
-            literal[False][i]=[list(self._compress_clause(cls)) for cls in literal[False][i] ]
+        # build and add new clauses
+        clauses=self._orig_cnf._clauses
 
-        # Create the clauses to be added
-        for clause in self._orig_cnf:
-            if len(clause)==0:
-                self._add_compressed_clauses([()])
-            else:
-                # adding compressed clauses should be faster
-                domains=[ literal[pol][index[var]] for pol,var in clause  ]
-                domains=tuple(domains)
-                # block  =[ list(chain.from_iterable(c)) for c in product(*domains)]
-                block = [ tuple([l for sublist in c for l in sublist ])
-                          for c in product(*domains)]
-                self._add_compressed_clauses(block)
+        # dictionary of comments
+        commentlines=dict()
+        for (i,c) in self._orig_cnf._comments:
+            commentlines.setdefault(i,[]).append(c)
+
+        for i in xrange(len(clauses)):
+
+            # add comments if necessary
+            if i in commentlines:
+                for comment in commentlines[i]:
+                    self._comments.append((len(self._clauses),comment))
+
+            # a substituted clause is the OR of the substituted literals
+            domains=[ substitutions[lit] for lit in clauses[i] ]
+            domains=tuple(domains)
+
+            block = [ tuple([lit for clauses[i] in clause_tuple
+                                 for lit in clauses[i] ])
+                      for clause_tuple in product(*domains)]
+
+            self._add_compressed_clauses(block)
+
+        # add trailing comments
+        if len(clauses) in commentlines:
+            for comment in commentlines[len(clauses)]:
+                self._comments.append((len(self._clauses),comment))
 
         assert self._check_coherence()
 
