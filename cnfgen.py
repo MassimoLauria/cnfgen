@@ -509,6 +509,7 @@ class CNF(object):
 
 
         # with comments
+        assert not add_comments
         clauseidx=_ClosedIterator(enumerate(self._clauses),(m+1,None))
         comments =_ClosedIterator(iter(self._comments),(m+1,None))
 
@@ -624,7 +625,10 @@ class CNF(object):
 class Lift(CNF):
     """Lifted formula
 
-A formula is made harder by the process of lifting.
+    A formula is made harder by the process of lifting.
+
+    For efficiency reasons current implementation do not include
+    comments in the lifted version of the formula.
     """
 
     def __init__(self, cnf):
@@ -653,22 +657,19 @@ A formula is made harder by the process of lifting.
                 for _,varname in clause:
                     self.add_variable(varname)
 
-        # Compress cnfs
+        # Compress substitution cnfs
         for i in range(1,len(literal)):
             literal[i] =[list(self._compress_clause(cls)) for cls in literal[i] ]
 
-        # Create the clauses to be added
+        # build and add new clauses
         for clause in self._orig_cnf._clauses:
-            if len(clause)==0:
-                self._add_compressed_clauses([()])
-            else:
-                # adding compressed clauses should be faster
-                domains=[ literal[l] for l in clause  ]
-                domains=tuple(domains)
-                # block  =[ list(chain.from_iterable(c)) for c in product(*domains)]
-                block = [ tuple([l for sublist in c for l in sublist ])
-                          for c in product(*domains)]
-                self._add_compressed_clauses(block)
+            # adding compressed clauses should be faster
+            domains=[ literal[l] for l in clause  ]
+            domains=tuple(domains)
+            # block  =[ list(chain.from_iterable(c)) for c in product(*domains)]
+            block = [ tuple([l for sublist in c for l in sublist ])
+                      for c in product(*domains)]
+            self._add_compressed_clauses(block)
 
         assert self._check_coherence()
 
