@@ -1,17 +1,28 @@
 import cnfgen
+import reshuffle
+
 import unittest
 import networkx as nx
+import StringIO
+import random
 
 class TestCNF(unittest.TestCase) :
     def assertCnfEqual(self,cnf1,cnf2) :
-        self.assertListEqual(list(cnf1.variables()),list(cnf2.variables()))
-        self.assertListEqual(list(cnf1.clauses()),list(cnf2.clauses()))
+        self.assertSetEqual(set(cnf1.variables()),set(cnf2.variables()))
+        self.assertSetSetEqual(cnf1.clauses(),cnf2.clauses())
 
     def assertSetSetEqual(self,list1,list2) :
         set1=set(frozenset(x) for x in list1)
         set2=set(frozenset(x) for x in list2)
         self.assertSetEqual(set1,set2)
 
+    @staticmethod
+    def randomCnf(width, num_variables, num_clauses) :
+        return cnfgen.CNF([
+                [(random.choice([True,False]),x+1)
+                 for x in random.sample(xrange(num_variables),width)]
+                for C in xrange(num_clauses)])
+    
     def test_empty(self) :
         F=cnfgen.CNF()
         self.assertTrue(F._check_coherence())
@@ -63,6 +74,48 @@ class TestPebbling(TestCNF) :
         G=nx.cycle_graph(10,nx.DiGraph())
         with self.assertRaises(RuntimeError) :
             peb = cnfgen.PebblingFormula(G)
+
+class TestDimacsParser(TestCNF) :
+    def test_empty_file(self) :
+        dimacs = StringIO.StringIO()
+        with self.assertRaises(ValueError) :
+            reshuffle.read_dimacs_file(dimacs)
+
+    def test_empty_cnf(self) :
+        dimacs = StringIO.StringIO("p cnf 0 0\n")
+        cnf = reshuffle.read_dimacs_file(dimacs)
+        self.assertCnfEqual(cnf,cnfgen.CNF())
+
+    def test_comment_only_file(self) :
+        dimacs = StringIO.StringIO("c Hej!\n")
+        with self.assertRaises(ValueError) :
+            reshuffle.read_dimacs_file(dimacs)
+
+    def test_invalid_file(self) :
+        dimacs = StringIO.StringIO("Hej!\n")
+        with self.assertRaises(ValueError) :
+            reshuffle.read_dimacs_file(dimacs)
+
+    def test_commented_empty_cnf(self) :
+        dimacs = StringIO.StringIO("c Hej!\np cnf 0 0\n")
+        cnf = reshuffle.read_dimacs_file(dimacs)
+        self.assertCnfEqual(cnf,cnfgen.CNF())
+
+    def test_one_clause_cnf(self) :
+        dimacs = StringIO.StringIO("c Hej!\np cnf 2 1\n1 -2 0\n")
+        cnf = reshuffle.read_dimacs_file(dimacs)
+        self.assertCnfEqual(cnf,cnfgen.CNF([[(True, 1),(False, 2)]]))
+
+    def test_one_var_cnf(self) :
+        dimacs = StringIO.StringIO("c Hej!\np cnf 1 2\n1 0\n-1 0\n")
+        cnf = reshuffle.read_dimacs_file(dimacs)
+        self.assertCnfEqual(cnf,cnfgen.CNF([[(True, 1)],[(False, 1)]]))
+    
+    def test_inverse(self) :
+        cnf = self.randomCnf(4,10,100)
+        dimacs = StringIO.StringIO(cnf.dimacs())
+        cnf2 = reshuffle.read_dimacs_file(dimacs)
+        self.assertCnfEqual(cnf2,cnf)
 
 if __name__ == '__main__':
     unittest.main()
