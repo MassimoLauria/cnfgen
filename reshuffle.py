@@ -141,6 +141,7 @@ def reshuffle(cnf,
     clause_permutation.append((M,M)) # comments after last clause do not move
     for (pos,text) in cnf._comments:
         out._comments.append((clause_permutation[pos],text))
+    clause_permutation.pop()
     def key(t): return t[0]
     out._comments.sort(key=key)
 

@@ -117,5 +117,38 @@ class TestDimacsParser(TestCNF) :
         cnf2 = reshuffle.read_dimacs_file(dimacs)
         self.assertCnfEqual(cnf2,cnf)
 
+class TestReshuffler(TestCNF) :
+    @staticmethod
+    def inverse_permutation(permutation, base=0) :
+        inverse = [0]*len(permutation)
+        for i,p in enumerate(permutation) :
+            inverse[p-base] = i+base
+        return inverse
+
+    def test_identity(self) :
+        cnf = self.randomCnf(4,10,100)
+        variable_permutation = range(1,11)
+        clause_permutation = range(100)
+        polarity_flip = [1]*10
+        shuffle = reshuffle.reshuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
+        self.assertCnfEqual(cnf,shuffle)
+
+    def test_inverse(self) :
+        cnf = self.randomCnf(4,10,100)
+        variable_permutation = range(10)
+        random.shuffle(variable_permutation)
+        clause_permutation = range(100)
+        random.shuffle(clause_permutation)
+        polarity_flip = [random.choice([-1,1]) for x in xrange(10)]
+        variables = list(cnf.variables())
+        massimos_fancy_input = [variables[variable_permutation[i]] for i in xrange(10)]
+        shuffle = reshuffle.reshuffle(cnf, massimos_fancy_input, clause_permutation,polarity_flip)
+        i_variable_permutation = self.inverse_permutation(variable_permutation)
+        i_clause_permutation = self.inverse_permutation(clause_permutation)
+        i_polarity_flip = [polarity_flip[i] for i in variable_permutation]
+        cnf2 = reshuffle.reshuffle(shuffle, variables, i_clause_permutation, i_polarity_flip)
+        self.assertCnfEqual(cnf2,cnf)
+
+
 if __name__ == '__main__':
     unittest.main()
