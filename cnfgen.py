@@ -642,10 +642,12 @@ class Lift(CNF):
         variablenames = [None]+list(self._orig_cnf.variables())
         substitutions = [None]*(2*len(variablenames)-1)
 
+
         # Lift all possible literals
         for i in range(1,len(variablenames)):
             substitutions[i] =self.lift_a_literal(True, variablenames[i])
             substitutions[-i]=self.lift_a_literal(False,variablenames[i])
+
 
         # Collect new variable names from the CNFs:
         # clause compression needs the variable names
@@ -667,6 +669,8 @@ class Lift(CNF):
         for (i,c) in self._orig_cnf._comments:
             commentlines.setdefault(i,[]).append(c)
 
+        assert self._orig_cnf._check_coherence(True)
+
         for i in xrange(len(clauses)):
 
             # add comments if necessary
@@ -678,17 +682,19 @@ class Lift(CNF):
             domains=[ substitutions[lit] for lit in clauses[i] ]
             domains=tuple(domains)
 
-            block = [ tuple([lit for clauses[i] in clause_tuple
-                                 for lit in clauses[i] ])
+            block = [ tuple([lit for clause in clause_tuple
+                                 for lit in clause ])
                       for clause_tuple in product(*domains)]
 
             self._add_compressed_clauses(block)
 
+          
         # add trailing comments
         if len(clauses) in commentlines:
             for comment in commentlines[len(clauses)]:
                 self._comments.append((len(self._clauses),comment))
 
+        assert self._orig_cnf._check_coherence()
         assert self._check_coherence()
 
     def lift_a_literal(self, polarity, name):
@@ -931,6 +937,48 @@ class Selection(Lift):
                              (polarity,"X_{{{}}}^{}".format(varname,i)) ])
         return clauses
 
+class One(Lift):
+    """Lifted formula: exactly one variable is true
+    """
+    def __init__(self, cnf, rank):
+        """Build a new CNF obtained by lifting procedures
+
+        Arguments:
+        - `cnf`: the original cnf
+        - `rank`: how many variables in each substitution
+        """
+        self._rank = rank
+
+        Lift.__init__(self,cnf)
+
+        self._header="Formula lifted by \"exactly one\""+ \
+                     " substitution over {} values\n\n".format(self._rank) \
+                     +self._header
+
+    def lift_a_literal(self, polarity,varname):
+        """Substitute a literal with a (negated) XOR
+
+        Arguments:
+        - `polarity`: polarity of the literal
+        - `varname`: fariable to be substituted
+
+        Returns: a list of clauses
+        """
+        clauses=[]
+        varnames=["X_{{{}}}^{}".format(varname,i) for i in range(self._rank)]
+        
+        if polarity:
+            # at least one variable is true
+            clauses.append([ (True,name) for name in varnames ])
+            # no two variables are true
+            for (n1,n2) in combinations(varnames,2):
+                clauses.append([ (False,n1), (False,n2)])
+        else:
+            # if all variables but one are false, the other must be false
+            for name in varnames:
+                clauses.append([(False,name)]+
+                               [(True,other) for other in varnames if other!=name])
+        return clauses
 
 ###
 ### Formula families
@@ -1647,12 +1695,45 @@ implemented_lifting = {
     'or'  : ("OR substitution     (default rank: 2)", InnerOr,2),
     'xor' : ("XOR substitution    (default rank: 2)", InnerXor,2),
     'sel' : ("selection lifting   (default rank: 3)", Selection,3),
-    'eq'  : ("all variables equal (default rank: 2)", Equality,3),
+    'eq'  : ("all variables equal (default rank: 3)", Equality,3),
     'ite' : ("if x then y else z  (rank ignored)",    IfThenElse,3),
-    'maj' : ("Loose majority      (default rank: 2)", Majority,3)
+    'maj' : ("Loose majority      (default rank: 3)", Majority,3),
+    'one' : ("Exactly one         (default rank: 3)", One,3)    
     }
 
 
+def LiftFormula(cnf,lift_method,lift_rank=None):
+    """Lift a formula using one of the known methods
+    
+    Arguments:
+    - `cnf`: the formula to be lifted
+    - `lift_method`: a string naming the lift method
+    - `lift_rank`: the rank of the lift method
+    """
+    if not lift_method in implemented_lifting:
+        raise ValueError("There is no implementation for lifting method {}".format(lift_method))
+    
+    method=implemented_lifting[lift_method][1]
+    rank=lift_rank or implemented_lifting[lift_method][2]
+
+    return method(cnf,rank)
+
+
+
+    
+
+class HelpLiftingAction(argparse.Action):
+    def __init__(self, **kwargs):
+        super(HelpLiftingAction, self).__init__(**kwargs)
+
+    def __call__(self, parser, namespace, value, option_string=None):
+        print("""
+        Liftings/Substitutions available
+        """)
+        for k in implemented_lifting:
+            print("{}\t:  {}".format(k,implemented_lifting[k][0]))
+        print("\n")
+        sys.exit(0)
 
 ###
 ### Command line helpers
@@ -1742,11 +1823,10 @@ class _GeneralCommandLine(_CMDLineHelper):
                             Hardness parameter for the lifting procedure.
                             See `--help-lifting` for more informations
                             """)
-        parser.add_argument('--help-lifting',action='store_true',help="""
+        parser.add_argument('--help-lifting',nargs=0,action=HelpLiftingAction,help="""
                              Formula can be made harder applying some
                              so called "lifting procedures".
                              This gives information about the implemented lifting.
-                             (not implemented yet)
                              """)
 
 
