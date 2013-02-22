@@ -642,10 +642,12 @@ class Lift(CNF):
         variablenames = [None]+list(self._orig_cnf.variables())
         substitutions = [None]*(2*len(variablenames)-1)
 
+
         # Lift all possible literals
         for i in range(1,len(variablenames)):
             substitutions[i] =self.lift_a_literal(True, variablenames[i])
             substitutions[-i]=self.lift_a_literal(False,variablenames[i])
+
 
         # Collect new variable names from the CNFs:
         # clause compression needs the variable names
@@ -667,6 +669,8 @@ class Lift(CNF):
         for (i,c) in self._orig_cnf._comments:
             commentlines.setdefault(i,[]).append(c)
 
+        assert self._orig_cnf._check_coherence(True)
+
         for i in xrange(len(clauses)):
 
             # add comments if necessary
@@ -678,17 +682,19 @@ class Lift(CNF):
             domains=[ substitutions[lit] for lit in clauses[i] ]
             domains=tuple(domains)
 
-            block = [ tuple([lit for clauses[i] in clause_tuple
-                                 for lit in clauses[i] ])
+            block = [ tuple([lit for clause in clause_tuple
+                                 for lit in clause ])
                       for clause_tuple in product(*domains)]
 
             self._add_compressed_clauses(block)
 
+          
         # add trailing comments
         if len(clauses) in commentlines:
             for comment in commentlines[len(clauses)]:
                 self._comments.append((len(self._clauses),comment))
 
+        assert self._orig_cnf._check_coherence()
         assert self._check_coherence()
 
     def lift_a_literal(self, polarity, name):
@@ -1695,6 +1701,26 @@ implemented_lifting = {
     'one' : ("Exactly one         (default rank: 3)", One,3)    
     }
 
+
+def LiftFormula(cnf,lift_method,lift_rank=None):
+    """Lift a formula using one of the known methods
+    
+    Arguments:
+    - `cnf`: the formula to be lifted
+    - `lift_method`: a string naming the lift method
+    - `lift_rank`: the rank of the lift method
+    """
+    if not lift_method in implemented_lifting:
+        raise ValueError("There is no implementation for lifting method {}".format(lift_method))
+    
+    method=implemented_lifting[lift_method][1]
+    rank=lift_rank or implemented_lifting[lift_method][2]
+
+    return method(cnf,rank)
+
+
+
+    
 
 class HelpLiftingAction(argparse.Action):
     def __init__(self, **kwargs):
