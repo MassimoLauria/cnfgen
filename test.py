@@ -1,17 +1,29 @@
+#!/usr/bin/env python
 import cnfgen
+import reshuffle
+
 import unittest
 import networkx as nx
+import StringIO
+import random
 
 class TestCNF(unittest.TestCase) :
     def assertCnfEqual(self,cnf1,cnf2) :
-        self.assertListEqual(list(cnf1.variables()),list(cnf2.variables()))
-        self.assertListEqual(list(cnf1.clauses()),list(cnf2.clauses()))
+        self.assertSetEqual(set(cnf1.variables()),set(cnf2.variables()))
+        self.assertSetSetEqual(cnf1.clauses(),cnf2.clauses())
 
     def assertSetSetEqual(self,list1,list2) :
         set1=set(frozenset(x) for x in list1)
         set2=set(frozenset(x) for x in list2)
         self.assertSetEqual(set1,set2)
 
+    @staticmethod
+    def randomCnf(width, num_variables, num_clauses) :
+        return cnfgen.CNF([
+                [(random.choice([True,False]),x+1)
+                 for x in random.sample(xrange(num_variables),width)]
+                for C in xrange(num_clauses)])
+    
     def test_empty(self) :
         F=cnfgen.CNF()
         self.assertTrue(F._check_coherence())
@@ -63,6 +75,153 @@ class TestPebbling(TestCNF) :
         G=nx.cycle_graph(10,nx.DiGraph())
         with self.assertRaises(RuntimeError) :
             peb = cnfgen.PebblingFormula(G)
+
+class TestDimacsParser(TestCNF) :
+    def test_empty_file(self) :
+        dimacs = StringIO.StringIO()
+        with self.assertRaises(ValueError) :
+            reshuffle.read_dimacs_file(dimacs)
+
+    def test_empty_cnf(self) :
+        dimacs = StringIO.StringIO("p cnf 0 0\n")
+        cnf = reshuffle.read_dimacs_file(dimacs)
+        self.assertCnfEqual(cnf,cnfgen.CNF())
+
+    def test_comment_only_file(self) :
+        dimacs = StringIO.StringIO("c Hej!\n")
+        with self.assertRaises(ValueError) :
+            reshuffle.read_dimacs_file(dimacs)
+
+    def test_invalid_file(self) :
+        dimacs = StringIO.StringIO("Hej!\n")
+        with self.assertRaises(ValueError) :
+            reshuffle.read_dimacs_file(dimacs)
+
+    def test_commented_empty_cnf(self) :
+        dimacs = StringIO.StringIO("c Hej!\np cnf 0 0\n")
+        cnf = reshuffle.read_dimacs_file(dimacs)
+        self.assertCnfEqual(cnf,cnfgen.CNF())
+
+    def test_one_clause_cnf(self) :
+        dimacs = StringIO.StringIO("c Hej!\np cnf 2 1\n1 -2 0\n")
+        cnf = reshuffle.read_dimacs_file(dimacs)
+        self.assertCnfEqual(cnf,cnfgen.CNF([[(True, 1),(False, 2)]]))
+
+    def test_one_var_cnf(self) :
+        dimacs = StringIO.StringIO("c Hej!\np cnf 1 2\n1 0\n-1 0\n")
+        cnf = reshuffle.read_dimacs_file(dimacs)
+        self.assertCnfEqual(cnf,cnfgen.CNF([[(True, 1)],[(False, 1)]]))
+    
+    def test_inverse(self) :
+        cnf = self.randomCnf(4,10,100)
+        dimacs = StringIO.StringIO(cnf.dimacs())
+        cnf2 = reshuffle.read_dimacs_file(dimacs)
+        self.assertCnfEqual(cnf2,cnf)
+
+class TestReshuffler(TestCNF) :
+    @staticmethod
+    def inverse_permutation(permutation, base=0) :
+        inverse = [0]*len(permutation)
+        for i,p in enumerate(permutation) :
+            inverse[p-base] = i+base
+        return inverse
+
+    def test_identity(self) :
+        cnf = self.randomCnf(4,10,100)
+        variable_permutation = range(1,11)
+        clause_permutation = range(100)
+        polarity_flip = [1]*10
+        shuffle = reshuffle.reshuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
+        self.assertCnfEqual(cnf,shuffle)
+
+    def test_inverse(self) :
+        cnf = self.randomCnf(4,10,100)
+        variable_permutation = range(10)
+        random.shuffle(variable_permutation)
+        clause_permutation = range(100)
+        random.shuffle(clause_permutation)
+        polarity_flip = [random.choice([-1,1]) for x in xrange(10)]
+        variables = list(cnf.variables())
+        massimos_fancy_input = [variables[variable_permutation[i]] for i in xrange(10)]
+        shuffle = reshuffle.reshuffle(cnf, massimos_fancy_input, clause_permutation,polarity_flip)
+        i_variable_permutation = self.inverse_permutation(variable_permutation)
+        i_clause_permutation = self.inverse_permutation(clause_permutation)
+        i_polarity_flip = [polarity_flip[i] for i in variable_permutation]
+        cnf2 = reshuffle.reshuffle(shuffle, variables, i_clause_permutation, i_polarity_flip)
+        self.assertCnfEqual(cnf2,cnf)
+
+class TestSubstitution(TestCNF) :
+    def test_or(self) :
+        cnf = cnfgen.CNF([[(True,'x'),(False,'y')]])
+        lift = cnfgen.LiftFormula(cnf, 'or', 3)
+        self.assertCnfEqual(lift,cnfgen.CNF([
+                    [(True,'{x}^0'),(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^0')],
+                    [(True,'{x}^0'),(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^1')],
+                    [(True,'{x}^0'),(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^2')],
+                    ]))
+        lift2 = cnfgen.LiftFormula(cnf, 'or', 3)
+        self.assertCnfEqual(lift,lift2)
+
+    def test_xor(self) :
+        cnf = cnfgen.CNF([[(True,'x'),(False,'y')]])
+        lift = cnfgen.LiftFormula(cnf, 'xor', 2)
+        self.assertCnfEqual(lift,cnfgen.CNF([
+                    [(True,'{x}^0'),(True,'{x}^1'),(True,'{y}^0'),(False,'{y}^1')],
+                    [(False,'{x}^0'),(False,'{x}^1'),(True,'{y}^0'),(False,'{y}^1')],
+                    [(True,'{x}^0'),(True,'{x}^1'),(False,'{y}^0'),(True,'{y}^1')],
+                    [(False,'{x}^0'),(False,'{x}^1'),(False,'{y}^0'),(True,'{y}^1')],
+                    ]))
+        lift2 = cnfgen.LiftFormula(cnf, 'xor', 2)
+        self.assertCnfEqual(lift,lift2)
+
+    def test_majority(self) :
+        cnf = cnfgen.CNF([[(True,'x'),(False,'y')]])
+        lift = LiftFormula(cnf, 'maj', 3)
+        self.assertCnfEqual(lift,cnfgen.CNF([
+                    [(True,'{x}^0'),(True,'{x}^1'),(False,'{y}^0'),(False,'{y}^1')],
+                    [(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^0'),(False,'{y}^1')],
+                    [(True,'{x}^2'),(True,'{x}^0'),(False,'{y}^0'),(False,'{y}^1')],
+                    [(True,'{x}^0'),(True,'{x}^1'),(False,'{y}^1'),(False,'{y}^2')],
+                    [(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^1'),(False,'{y}^2')],
+                    [(True,'{x}^2'),(True,'{x}^0'),(False,'{y}^1'),(False,'{y}^2')],
+                    [(True,'{x}^0'),(True,'{x}^1'),(False,'{y}^2'),(False,'{y}^0')],
+                    [(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^2'),(False,'{y}^0')],
+                    [(True,'{x}^2'),(True,'{x}^0'),(False,'{y}^2'),(False,'{y}^0')],
+                    ]))
+        lift2 = cnfgen.LiftFormula(cnf, 'maj', 3)
+        self.assertCnfEqual(lift,lift2)
+        
+    def test_equality(self) :
+        cnf = cnfgen.CNF([[(False,'x'),(True,'y')]])
+        lift = cnfgen.LiftFormula(cnf, 'eq', 2)
+        self.assertCnfEqual(lift,cnfgen.CNF([
+                    [(True,'{x}^0'),(True,'{x}^1'),(True,'{y}^0'),(False,'{y}^1')],
+                    [(False,'{x}^0'),(False,'{x}^1'),(True,'{y}^0'),(False,'{y}^1')],
+                    [(True,'{x}^0'),(True,'{x}^1'),(False,'{y}^0'),(True,'{y}^1')],
+                    [(False,'{x}^0'),(False,'{x}^1'),(False,'{y}^0'),(True,'{y}^1')],
+                    ]))
+        lift2 = cnfgen.LiftFormula(cnf, 'eq', 2)
+        self.assertCnfEqual(lift,lift2)
+
+    def test_if_then_else(self) :
+        cnf = cnfgen.CNF([[(True,'x'),(False,'y')]])
+        lift = cnfgen.LiftFormula(cnf, 'ite')
+        self.assertCnfEqual(lift,cnfgen.CNF([
+                    [(False,'{x}^0'),(True,'{x}^1'),(False,'{y}^0'),(False,'{y}^1')],
+                    [(False,'{x}^0'),(True,'{x}^1'),(True,'{y}^0'),(False,'{y}^2')],
+                    [(True,'{x}^0'),(True,'{x}^2'),(False,'{y}^0'),(False,'{y}^1')],
+                    [(True,'{x}^0'),(True,'{x}^2'),(True,'{y}^0'),(False,'{y}^2')],
+        ]))
+        lift2 = cnfgen.LiftFormula(cnf, 'ite', 42)
+        self.assertCnfEqual(lift,lift2)
+
+
+    def test_exactly_one(self) :
+        cnf = cnfgen.CNF([[(True,'x'),(False,'y')]])
+        lift = cnfgen.LiftFormula(cnf, 'one', 2)
+
+        lift2 = cnfgen.LiftFormula(cnf, 'one', 2)
+        self.assertCnfEqual(lift,lift2)
 
 if __name__ == '__main__':
     unittest.main()

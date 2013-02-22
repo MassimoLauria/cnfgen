@@ -738,9 +738,9 @@ class IfThenElse(Lift):
 
         Returns: a list of clauses
         """
-        X = "{{{}}}^{{x}}".format(varname)
-        Y = "{{{}}}^{{y}}".format(varname)
-        Z = "{{{}}}^{{z}}".format(varname)
+        X = "{{{}}}^0".format(varname)
+        Y = "{{{}}}^1".format(varname)
+        Z = "{{{}}}^2".format(varname)
 
         return [ [ (False,X) , (polarity,Y) ] , [ (True, X) , (polarity,Z) ] ]
 
