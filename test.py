@@ -153,29 +153,30 @@ class TestReshuffler(TestCNF) :
 class TestSubstitution(TestCNF) :
     def test_or(self) :
         cnf = cnfgen.CNF([[(True,'x'),(False,'y')]])
-        Lift = cnfgen.implemented_lifting['or'][1]
-        lift = Lift(cnf,3)
+        lift = cnfgen.LiftFormula(cnf, 'or', 3)
         self.assertCnfEqual(lift,cnfgen.CNF([
                     [(True,'{x}^0'),(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^0')],
                     [(True,'{x}^0'),(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^1')],
                     [(True,'{x}^0'),(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^2')],
                     ]))
+        lift2 = cnfgen.LiftFormula(cnf, 'or', 3)
+        self.assertCnfEqual(lift,lift2)
 
     def test_xor(self) :
         cnf = cnfgen.CNF([[(True,'x'),(False,'y')]])
-        Lift = cnfgen.implemented_lifting['xor'][1]
-        lift = Lift(cnf,2)
+        lift = cnfgen.LiftFormula(cnf, 'xor', 2)
         self.assertCnfEqual(lift,cnfgen.CNF([
                     [(True,'{x}^0'),(True,'{x}^1'),(True,'{y}^0'),(False,'{y}^1')],
                     [(False,'{x}^0'),(False,'{x}^1'),(True,'{y}^0'),(False,'{y}^1')],
                     [(True,'{x}^0'),(True,'{x}^1'),(False,'{y}^0'),(True,'{y}^1')],
                     [(False,'{x}^0'),(False,'{x}^1'),(False,'{y}^0'),(True,'{y}^1')],
                     ]))
+        lift2 = cnfgen.LiftFormula(cnf, 'xor', 2)
+        self.assertCnfEqual(lift,lift2)
 
     def test_majority(self) :
         cnf = cnfgen.CNF([[(True,'x'),(False,'y')]])
-        Lift = cnfgen.implemented_lifting['maj'][1]
-        lift = Lift(cnf,3)
+        lift = LiftFormula(cnf, 'maj', 3)
         self.assertCnfEqual(lift,cnfgen.CNF([
                     [(True,'{x}^0'),(True,'{x}^1'),(False,'{y}^0'),(False,'{y}^1')],
                     [(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^0'),(False,'{y}^1')],
@@ -187,33 +188,40 @@ class TestSubstitution(TestCNF) :
                     [(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^2'),(False,'{y}^0')],
                     [(True,'{x}^2'),(True,'{x}^0'),(False,'{y}^2'),(False,'{y}^0')],
                     ]))
+        lift2 = cnfgen.LiftFormula(cnf, 'maj', 3)
+        self.assertCnfEqual(lift,lift2)
         
     def test_equality(self) :
         cnf = cnfgen.CNF([[(False,'x'),(True,'y')]])
-        Lift = cnfgen.implemented_lifting['eq'][1]
-        lift = Lift(cnf,2)
+        lift = cnfgen.LiftFormula(cnf, 'eq', 2)
         self.assertCnfEqual(lift,cnfgen.CNF([
                     [(True,'{x}^0'),(True,'{x}^1'),(True,'{y}^0'),(False,'{y}^1')],
                     [(False,'{x}^0'),(False,'{x}^1'),(True,'{y}^0'),(False,'{y}^1')],
                     [(True,'{x}^0'),(True,'{x}^1'),(False,'{y}^0'),(True,'{y}^1')],
                     [(False,'{x}^0'),(False,'{x}^1'),(False,'{y}^0'),(True,'{y}^1')],
                     ]))
+        lift2 = cnfgen.LiftFormula(cnf, 'eq', 2)
+        self.assertCnfEqual(lift,lift2)
 
     def test_if_then_else(self) :
         cnf = cnfgen.CNF([[(True,'x'),(False,'y')]])
-        Lift = cnfgen.implemented_lifting['ite'][1]
-        lift = Lift(cnf)
+        lift = cnfgen.LiftFormula(cnf, 'ite')
         self.assertCnfEqual(lift,cnfgen.CNF([
                     [(False,'{x}^0'),(True,'{x}^1'),(False,'{y}^0'),(False,'{y}^1')],
                     [(False,'{x}^0'),(True,'{x}^1'),(True,'{y}^0'),(False,'{y}^2')],
                     [(True,'{x}^0'),(True,'{x}^2'),(False,'{y}^0'),(False,'{y}^1')],
                     [(True,'{x}^0'),(True,'{x}^2'),(True,'{y}^0'),(False,'{y}^2')],
         ]))
+        lift2 = cnfgen.LiftFormula(cnf, 'ite', 42)
+        self.assertCnfEqual(lift,lift2)
+
 
     def test_exactly_one(self) :
         cnf = cnfgen.CNF([[(True,'x'),(False,'y')]])
-        Lift = cnfgen.implemented_lifting['e1'][1]
-        lift = Lift(cnf,2)
+        lift = cnfgen.LiftFormula(cnf, 'one', 2)
+
+        lift2 = cnfgen.LiftFormula(cnf, 'one', 2)
+        self.assertCnfEqual(lift,lift2)
 
 if __name__ == '__main__':
     unittest.main()
