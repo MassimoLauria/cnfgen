@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 
 from __future__ import print_function
+from itertools import product
 
 __docstring__ =\
 """Utilities to build CNF formulas interesting for proof complexity.
@@ -600,3 +601,37 @@ class CNF(object):
         output.write(" }")
         return output.getvalue()
 
+
+
+###
+### Various utility function for CNFs
+###
+def parity_constraint( vars, b ):
+    """Output the CNF encoding of a parity constraint
+
+    E.g. X1 + X2 + X3 = 1 (mod 2) is encoded as
+
+    ( X1 v  X2 v  X3)
+    (~X1 v ~X2 v  X3)
+    (~X1 v  X2 v ~X3)
+    ( X1 v ~X2 v ~X3)
+
+    Arguments:
+    - `vars`: variables in the constraint
+    - `b`   : the requested parity
+
+    Returns: a list of clauses
+    >>> parity_constraint(['a','b'],1)
+    [[(True, 'a'), (True, 'b')], [(False, 'a'), (False, 'b')]]
+    >>> parity_constraint(['a','b'],0)
+    [[(True, 'a'), (False, 'b')], [(False, 'a'), (True, 'b')]]
+    >>> parity_constraint(['a'],0)
+    [[(False, 'a')]]
+    """
+    domains = tuple([ ((True,var),(False,var)) for var in vars] )
+    clauses=[]
+    for c in product(*domains):
+        # Save only the clauses with the right polarity
+        parity = sum(1-l[0] for l in c) % 2
+        if parity != b : clauses.append(list(c))
+    return clauses
