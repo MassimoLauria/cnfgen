@@ -51,7 +51,7 @@ def read_dimacs_file(file_handle):
             n = int(nstr)
             m = int(mstr)
             for i in range(1,n+1):
-                cnf.add_variable(str(i))
+                cnf.add_variable(i)
             continue
 
 
