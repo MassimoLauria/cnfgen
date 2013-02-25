@@ -2,7 +2,6 @@
 
 
 import cnfformula
-
 import cnfgen
 import reshuffle
 
@@ -10,6 +9,7 @@ import unittest
 import networkx as nx
 import StringIO
 import random
+import itertools
 
 class TestCNF(unittest.TestCase) :
     def assertCnfEqual(self,cnf1,cnf2) :
@@ -22,8 +22,18 @@ class TestCNF(unittest.TestCase) :
         self.assertSetEqual(set1,set2)
 
     @staticmethod
-    def randomCnf(width, num_variables, num_clauses) :
-        return cnfformula.CNF([
+    def sorted_cnf(clauses) :
+        cnf = cnfformula.CNF()
+        variables = set(variable for polarity,variable in itertools.chain(*clauses));
+        for variable in sorted(variables) :
+            cnf.add_variable(variable)
+        for clause in clauses :
+            cnf.add_clause(clause)
+        return cnf
+
+    @staticmethod
+    def random_cnf(width, num_variables, num_clauses) :
+        return TestCNF.sorted_cnf([
                 [(random.choice([True,False]),x+1)
                  for x in random.sample(xrange(num_variables),width)]
                 for C in xrange(num_clauses)])
@@ -117,7 +127,13 @@ class TestDimacsParser(TestCNF) :
         self.assertCnfEqual(cnf,cnfformula.CNF([[(True, 1)],[(False, 1)]]))
     
     def test_inverse(self) :
-        cnf = self.randomCnf(4,10,100)
+        cnf = TestCNF.sorted_cnf([[(True,2),(False,1)]])
+        dimacs = StringIO.StringIO(cnf.dimacs())
+        cnf2 = reshuffle.read_dimacs_file(dimacs)
+        self.assertCnfEqual(cnf2,cnf)
+
+    def test_inverse_random(self) :
+        cnf = self.random_cnf(4,10,100)
         dimacs = StringIO.StringIO(cnf.dimacs())
         cnf2 = reshuffle.read_dimacs_file(dimacs)
         self.assertCnfEqual(cnf2,cnf)
@@ -131,15 +147,24 @@ class TestReshuffler(TestCNF) :
         return inverse
 
     def test_identity(self) :
-        cnf = self.randomCnf(4,10,100)
+        cnf = self.random_cnf(4,10,100)
         variable_permutation = range(1,11)
         clause_permutation = range(100)
         polarity_flip = [1]*10
         shuffle = reshuffle.reshuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
         self.assertCnfEqual(cnf,shuffle)
 
+    def test_variable_permutation(self) :
+        cnf = cnfformula.CNF([[(True,'x'),(True,'y'),(False,'z')]])
+        variable_permutation = ['y','z','x']
+        clause_permutation = range(1)
+        polarity_flip = [1]*3
+        shuffle = reshuffle.reshuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
+        self.assertSequenceEqual(list(shuffle.variables()),variable_permutation)
+        self.assertSequenceEqual(list(shuffle.clauses()),list(cnf.clauses()))
+
     def test_inverse(self) :
-        cnf = self.randomCnf(4,10,100)
+        cnf = self.random_cnf(4,10,100)
         variable_permutation = range(10)
         random.shuffle(variable_permutation)
         clause_permutation = range(100)
