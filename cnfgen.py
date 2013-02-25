@@ -2,8 +2,8 @@
 # -*- coding:utf-8 -*-
 
 from __future__ import print_function
-from cnf import CNF
-from cnf import LiftFormula,available_lifting
+from cnfformula import CNF
+from cnfformula import LiftFormula,available_lifting
 
 __docstring__ =\
 """Utilities to build CNF formulas interesting for proof complexity.

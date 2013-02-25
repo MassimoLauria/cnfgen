@@ -16,7 +16,7 @@ https://github.com/MassimoLauria/cnfgen.git
 
 import sys
 import random
-from cnfgen import CNF
+from cnfformula import CNF
 
 def read_dimacs_file(file_handle):
     """Load dimacs file into a CNF object
