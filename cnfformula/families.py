@@ -2,11 +2,11 @@
 # -*- coding:utf-8 -*-
 
 from __future__ import print_function
-from cnfformula import CNF
+from .cnf import CNF
 
 # internal methods
-from cnfformula.graphs import enumerate_vertices
-from cnfformula.cnf    import parity_constraint
+from .graphs import enumerate_vertices
+from .cnf    import parity_constraint
 
 
 __docstring__ =\
