@@ -5,7 +5,7 @@ from __future__ import print_function
 from .cnf import CNF
 
 # internal methods
-from .graphs import enumerate_vertices
+from .graphs import enumerate_vertices,is_dag
 from .cnf    import parity_constraint
 
 
@@ -30,7 +30,6 @@ from itertools import combinations,combinations_with_replacement
 # Network X is used to produce graph based formulas
 try:
     import networkx
-    import networkx.algorithms
 except ImportError:
     print("ERROR: Missing 'networkx' library: no support for graph based formulas.",
           file=sys.stderr)
@@ -153,7 +152,7 @@ def PebblingFormula(digraph):
     Arguments:
     - `digraph`: directed acyclic graph.
     """
-    if not networkx.algorithms.is_directed_acyclic_graph(digraph):
+    if not is_dag(digraph):
         raise RuntimeError("Pebbling formula is defined only for directed acyclic graphs")
 
     peb=CNF()

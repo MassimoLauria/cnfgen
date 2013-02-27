@@ -251,9 +251,10 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
                 D.add_node(w)
                 D.ordered_vertices.append(w)
             # edges
+            N=len(vert)-1
             for i in range(len(vert)//2):
-                D.add_edge(vert[2*i+1],vert[i])
-                D.add_edge(vert[2*i+2],vert[i])
+                D.add_edge(vert[N-2*i-1],vert[N-i])
+                D.add_edge(vert[N-2*i-2],vert[N-i])
 
         elif hasattr(args,'pyramid') and args.pyramid>0:
 
@@ -280,7 +281,7 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
 
         elif args.graphformat:
 
-            D=readDigraph(args.input,args.graphformat,force_dag=True)
+            D=readDigraph(args.input,args.graphformat)
 
         else:
             raise RuntimeError("Invalid graph specification on command line")
@@ -720,9 +721,12 @@ class _PEB(_FormulaFamilyHelper,_CMDLineHelper):
         - `args`: command line options
         """
         D=_DAGHelper.obtain_graph(args)
-        return PebblingFormula(D)
-
-
+        try:
+            return PebblingFormula(D)
+        except RuntimeError:
+            print("\nError: input graph must be directed and acyclic.",file=sys.stderr)
+            sys.exit(-1)
+            
 class _AND(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for a single clause formula
     """

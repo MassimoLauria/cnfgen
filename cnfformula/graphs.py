@@ -12,7 +12,7 @@ https://github.com/MassimoLauria/cnfgen.git
 
 """
 
-__all__ = ["supported_formats","readGraph","readDigraph","writeGraph"]
+__all__ = ["supported_formats","readGraph","readDigraph","writeGraph","is_dag"]
 
 #################################################################
 #          Graph Decoders (first is default)
@@ -91,7 +91,7 @@ def readDigraph(file,format,force_dag=False,multi=False):
 
     elif format=='kth':
 
-        D=_read_ordered_graph_kth_format(file,grtype)
+        D=_read_graph_kth_format(file,grtype)
 
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(format))
@@ -130,7 +130,7 @@ def readGraph(file,format,multi=False):
 
     elif format=='kth':
 
-        G=_read_ordered_graph_kth_format(file,grtype)
+        G=_read_graph_kth_format(file,grtype)
 
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(format))
@@ -202,6 +202,33 @@ def writeGraph(G,output_file,format,graph_type='simple'):
 
     return G
 
+#
+# test for dag / with caching
+#
+def is_dag(digraph):
+    """Test is a directed graph is acyclic
+
+    if the input graph has a member `topologically_sorted' then assumed that
+    there is a member `ordered_vertices' and that it is a topological order.
+    
+    Arguments:
+    - `digraph`: input graph
+    """
+
+    if hasattr(digraph,"topologically_sorted"):
+
+        assert isinstance(digraph,(networkx.MultiDiGraph,networkx.DiGraph))
+        assert hasattr(digraph,"ordered_vertices")
+        assert digraph.order()==len(digraph.ordered_vertices)
+        assert set(digraph.nodes())==set(digraph.ordered_vertices)
+        assert networkx.algorithms.is_directed_acyclic_graph(digraph)
+        return True
+
+    elif not isinstance(digraph,(networkx.MultiDiGraph,networkx.DiGraph)):
+        return False
+
+    else:
+        return networkx.algorithms.is_directed_acyclic_graph(digraph)
 
 
 #
@@ -228,8 +255,13 @@ def enumerate_vertices(graph):
 #
 
 # kth reader
-def _read_ordered_graph_kth_format(inputfile,graph_type):
+def _read_graph_kth_format(inputfile,graph_type):
     """Read a graph from file, in the KTH format.
+
+    If the vertices are listed from to sources to the sinks, then the
+    graph is marked as topologically sorted, and any DAG test will be
+    answered without running any visit to the graph. Otherwise no
+    assumption is made.
     
     Arguments:
     - `inputfile`:  file handle of the input
@@ -250,7 +282,10 @@ def _read_ordered_graph_kth_format(inputfile,graph_type):
     G.name=''
     G.ordered_vertices=[]
 
-    for l in file.readlines():
+    # is the input topologically sorted?
+    topologically_sorted_input=True
+
+    for l in inputfile.readlines():
         
         # add the comment to the header
         if l[0]=='c':
@@ -264,13 +299,22 @@ def _read_ordered_graph_kth_format(inputfile,graph_type):
         target=target.strip()
         sources=sources.split()
 
-        # Load all vertices in this line
-        for vertex in [target]+sources:
+        # Load vertices in the graph
+        if target not in G:
+            G.add_node(target)
+            G.ordered_vertices.append(target)
+
+        for vertex in sources:
             if vertex not in G:
+                topologically_sorted_input = False
                 G.add_node(vertex)
                 G.ordered_vertices.append(vertex)
-
+              
+        # after vertices, add the edges
         for s in sources:
             G.add_edge(s,target)
 
+    # cache the information that the graph is topologically sorted.
+    if topologically_sorted_input:
+        G.topologically_sorted = True
     return G
