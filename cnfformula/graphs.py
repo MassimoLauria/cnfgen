@@ -91,32 +91,7 @@ def readDigraph(file,format,force_dag=False,multi=False):
 
     elif format=='kth':
 
-        D=grtype()
-        D.name=''
-        D.ordered_vertices=[]
-
-        for l in file.readlines():
-
-            # add the comment to the header
-            if l[0]=='c':
-                D.name+=l[2:]
-                continue
-
-            if ':' not in l:
-                continue # vertex number spec (we ignore it)
-
-            target,sources=l.split(':')
-            target=target.strip()
-            sources=sources.split()
-
-            # Load all vertices in this line
-            for vertex in [target]+sources:
-                if vertex not in D:
-                    D.add_node(vertex)
-                    D.ordered_vertices.append(vertex)
-
-            for s in sources:
-                D.add_edge(s,target)
+        D=_read_ordered_graph_kth_format(file,grtype)
 
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(format))
@@ -155,32 +130,7 @@ def readGraph(file,format,multi=False):
 
     elif format=='kth':
 
-        G=grtype()
-        G.name=''
-        G.ordered_vertices=[]
-
-        for l in file.readlines():
-
-            # add the comment to the header
-            if l[0]=='c':
-                G.name+=l[2:]
-                continue
-
-            if ':' not in l:
-                continue # vertex number spec
-
-            target,sources=l.split(':')
-            target=target.strip()
-            sources=sources.split()
-
-            # Load all vertices in this line
-            for vertex in [target]+sources:
-                if vertex not in G:
-                    G.add_node(vertex)
-                    G.ordered_vertices.append(vertex)
-
-            for s in sources:
-                G.add_edge(s,target)
+        G=_read_ordered_graph_kth_format(file,grtype)
 
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(format))
@@ -273,3 +223,54 @@ def enumerate_vertices(graph):
     else:
         return graph.nodes()
 
+#
+# In house parsers
+#
+
+# kth reader
+def _read_ordered_graph_kth_format(inputfile,graph_type):
+    """Read a graph from file, in the KTH format.
+    
+    Arguments:
+    - `inputfile`:  file handle of the input
+    - `graph_type`: the graph class to read, one of
+                    networkx.DiGraph
+                    networkx.MultiDiGraph
+                    networkx.Graph
+                    networkx.MultiGraph    
+    """
+    if not graph_type in [networkx.DiGraph,
+                          networkx.MultiDiGraph,
+                          networkx.Graph,
+                          networkx.MultiGraph]:
+        raise ValueError("We are asked to read an invalid graph type from input.")
+
+    
+    G=graph_type()
+    G.name=''
+    G.ordered_vertices=[]
+
+    for l in file.readlines():
+        
+        # add the comment to the header
+        if l[0]=='c':
+            G.name+=l[2:]
+            continue
+
+        if ':' not in l:
+            continue # vertex number spec
+
+        target,sources=l.split(':')
+        target=target.strip()
+        sources=sources.split()
+
+        # Load all vertices in this line
+        for vertex in [target]+sources:
+            if vertex not in G:
+                G.add_node(vertex)
+                G.ordered_vertices.append(vertex)
+
+        for s in sources:
+            G.add_edge(s,target)
+
+    return G
