@@ -87,9 +87,11 @@ class Lift(CNF):
 
         # lifting may need additional clauses per variables
         # added here so that the comment order is coherent
-        for i in range(1,len(varadditional)):
-            self._comments.append((len(self._clauses),"Clauses for lifted variable {}".format(variablenames[i])))
-            self._add_compressed_clauses(varadditional[i])
+        for i,block in enumerate(varadditional[1:],1):
+            if block:
+                self._comments.append((len(self._clauses),
+                                       "Clauses for lifted variable {}".format(variablenames[i])))
+                self._add_compressed_clauses(block)
          
         # add trailing comments
         if len(clauses) in commentlines:
