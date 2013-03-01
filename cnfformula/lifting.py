@@ -17,7 +17,7 @@ class Lift(CNF):
     A formula is made harder by the process of lifting.
     """
 
-    def __init__(self, cnf):
+    def __init__(self, cnf,rank=1):
         """Build a new CNF with by lifing the old CNF
 
         Arguments:
@@ -86,6 +86,18 @@ class Lift(CNF):
         assert self._orig_cnf._check_coherence()
         assert self._check_coherence()
 
+    def lift_variable_preamble(self, name):
+        """Substitute a literal with the lifting function
+
+        Arguments:
+        - `polarity`: polarity of the literal
+        - `name`:     variable to be substituted
+
+        Returns: a list of clauses
+        """
+        return []
+
+
     def lift_a_literal(self, polarity, name):
         """Substitute a literal with the lifting function
 
@@ -95,7 +107,7 @@ class Lift(CNF):
 
         Returns: a list of clauses
         """
-        raise NotImplementedError("Specialize this class to implement some type of lifting")
+        return [ [ (polarity,name) ] ]
 
 
 
@@ -379,7 +391,7 @@ def available():
 
     # lifting name : ("help description", function, default rank)
 
-    'none': ("leaves the formula alone", (lambda c,r:c),1),
+    'none': ("leaves the formula alone", Lift,1),
     'or'  : ("OR substitution     (default rank: 2)", InnerOr,2),
     'xor' : ("XOR substitution    (default rank: 2)", InnerXor,2),
     'sel' : ("selection lifting   (default rank: 3)", Selection,3),

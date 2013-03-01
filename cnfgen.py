@@ -63,8 +63,7 @@ try:
     import networkx
     import networkx.algorithms
 except ImportError:
-    print("ERROR: Missing 'networkx' library: no support for graph based formulas.",
-          file=sys.stderr)
+    print("ERROR: Missing 'networkx' library: no support for graph based formulas.",file=sys.stderr)
     exit(-1)
 
 #################################################################
@@ -81,7 +80,7 @@ class HelpLiftingAction(argparse.Action):
         Liftings/Substitutions available
         """)
         for k,entry in available_lifting().iteritems():
-            print("{}\t:  {}".format(k,entry[k][0]))
+            print("{}\t:  {}".format(k,entry[0]))
         print("\n")
         sys.exit(0)
 
