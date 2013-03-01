@@ -1,4 +1,5 @@
 *.cnf
 *.pyc
+*.pyo
 .ropeproject/
 !./ropeproject/config.py
