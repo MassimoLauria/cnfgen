@@ -30,22 +30,31 @@ class Lift(CNF):
         # Load original variable names
         variablenames = [None]+list(self._orig_cnf.variables())
         substitutions = [None]*(2*len(variablenames)-1)
-
+        varadditional = [None]*(len(variablenames))
 
         # Lift all possible literals
         for i in range(1,len(variablenames)):
+            varadditional[i] =self.lift_variable_preamble(variablenames[i])
             substitutions[i] =self.lift_a_literal(True, variablenames[i])
             substitutions[-i]=self.lift_a_literal(False,variablenames[i])
 
 
         # Collect new variable names from the CNFs:
         # clause compression needs the variable names
-        for i in range(1,len(substitutions)):
-            for clause in substitutions[i]:
+        for i in range(1,len(variablenames)):
+            for clause in varadditional[i]+\
+                          substitutions[i]+\
+                          substitutions[-i]:
                 for _,varname in clause:
                     self.add_variable(varname)
 
+         
+
         # Compress substitution cnfs
+        for i in range(1,len(varadditional)):
+            varadditional[i] =[list(self._compress_clause(cls))
+                               for cls in varadditional[i] ]
+
         for i in range(1,len(substitutions)):
             substitutions[i] =[list(self._compress_clause(cls))
                                for cls in substitutions[i] ]
@@ -58,7 +67,6 @@ class Lift(CNF):
         for (i,c) in self._orig_cnf._comments:
             commentlines.setdefault(i,[]).append(c)
 
-        assert self._orig_cnf._check_coherence(True)
 
         for i in xrange(len(clauses)):
 
@@ -77,7 +85,12 @@ class Lift(CNF):
 
             self._add_compressed_clauses(block)
 
-          
+        # lifting may need additional clauses per variables
+        # added here so that the comment order is coherent
+        for i in range(1,len(varadditional)):
+            self._comments.append((len(self._clauses),"Clauses for lifted variable {}".format(variablenames[i])))
+            self._add_compressed_clauses(varadditional[i])
+         
         # add trailing comments
         if len(clauses) in commentlines:
             for comment in commentlines[len(clauses)]:
@@ -87,10 +100,9 @@ class Lift(CNF):
         assert self._check_coherence()
 
     def lift_variable_preamble(self, name):
-        """Substitute a literal with the lifting function
+        """Additional clauses for each lifted variable
 
         Arguments:
-        - `polarity`: polarity of the literal
         - `name`:     variable to be substituted
 
         Returns: a list of clauses
@@ -308,20 +320,23 @@ class Selection(Lift):
         self._header="Formula lifted by selectors over {} values\n\n".format(self._rank) \
             +self._header
 
-        # Each selector must select!
-        self.add_comment("Selections must be defined")
-        for v in cnf.variables():
-            self.add_clause([ (True,   "Y_{{{}}}^{}".format(v,i))
-                               for i in range(self._rank)])
-        # Selection must be unique
-        self.add_comment("Selections must be unique")
-        for v in cnf.variables():
-            for s1,s2 in combinations(["Y_{{{}}}^{}".format(v,i)
-                                                 for i in range(self._rank)],2):
-                self.add_clause([(False,s1),(False,s2)])
 
-        self._header="Rank {} lifted formula\n".format(self._rank) \
-            +self._header
+    def lift_variable_preamble(self, name):
+        """Additional clauses for each lifted variable
+
+        Arguments:
+        - `name`:     variable to be substituted
+
+        Returns: a list of clauses
+        """
+        selector_clauses=[]
+        selector_clauses.append([ (True,   "Y_{{{}}}^{}".format(name,i)) for i in range(self._rank)])
+        
+        for s1,s2 in combinations(["Y_{{{}}}^{}".format(name,i) for i in range(self._rank)],2):
+                selector_clauses.append([(False,s1),(False,s2)])
+
+        return selector_clauses
+
 
     def lift_a_literal(self, polarity,varname):
         """Substitute a literal with a (negated) XOR
