@@ -123,7 +123,7 @@ def pebbling_formula_clauses(kthfile):
 
         target,sources=l.split(':')
         target=int(target.strip())
-        yield [target]+[ -int(i) for i in sources.split() ]
+        yield [ -int(i) for i in sources.split() ]+[target]
 
     yield [-target]
 
@@ -212,7 +212,7 @@ def lift(clauses,lift_method='none',lift_rank=None):
     raise StopClauses(output_variables,output_clauses)
     
 
-def kth2dimacs(input, liftname, liftrank, output, header=True) :
+def kth2dimacs(input, liftname, liftrank, output, header=True, comments=True) :
     # Build the lifting mechanism
 
     # Generate the basic formula
@@ -234,13 +234,15 @@ def kth2dimacs(input, liftname, liftrank, output, header=True) :
             
     except StopClauses as cnfinfo:
 
+        if comments:
+            print("c Pebbling CNF with lifting \'{}\' of rank {}".format(liftname,liftrank),
+                  file=output)
+
         if header:
             # clauses cached in memory
-            print("c Pebbling CNF with lifting \'{}\' of rank {}".format(lift,liftrank),
-                  file=output)
             print("p cnf {} {}".format(cnfinfo.variables,cnfinfo.clauses),
                   file=output)
-            print(output_cache.getvalue(),file=output)
+            output.write(output_cache.getvalue())
 
         else:
             # clauses have been already sent to output
