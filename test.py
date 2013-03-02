@@ -6,6 +6,7 @@ import cnfformula.utils as cnfutils
 
 import cnfgen
 import reshuffle
+import kth2dimacs
 
 import unittest
 import networkx as nx
@@ -253,6 +254,34 @@ class TestSubstitution(TestCNF) :
 
         lift2 = cnfformula.LiftFormula(cnf, 'one', 2)
         self.assertCnfEqual(lift,lift2)
+
+class TestKth2Dimacs(TestCNF) :
+    def identity_test_helper(self, input, liftname, liftrank) :
+        G = cnfgen.readDigraph(input,'kth')
+        input.seek(0)
+        peb = cnfgen.PebblingFormula(G)
+        lift = cnfgen.LiftFormula(peb, liftname, liftrank)
+        reference_output = lift.dimacs(add_header=False, add_comments=False)+"\n"
+        
+        kth2dimacs_output=StringIO.StringIO()
+        kth2dimacs.kth2dimacs(input, liftname, liftrank, kth2dimacs_output, header=True, comments=False)
+        self.assertMultiLineEqual(kth2dimacs_output.getvalue(), reference_output)
+
+    def test_unit_graph(self) :
+        input = StringIO.StringIO("1\n1 :\n")
+        self.identity_test_helper(input, 'none', 0)
+
+    def test_small_line(self) :
+        input = StringIO.StringIO("3\n1 :\n2 : 1\n3 : 2\n")
+        self.identity_test_helper(input, 'none', 0)
+
+    def test_small_pyramid(self) :
+        input = StringIO.StringIO("3\n1 : \n2 : \n3 : 1 2\n")
+        self.identity_test_helper(input, 'none', 0)        
+        
+    def test_substitution(self) :
+        input = StringIO.StringIO("3\n1 : \n2 : \n3 : 1 2\n")
+        self.identity_test_helper(input, 'or', 2)
 
 if __name__ == '__main__':
     unittest.main()

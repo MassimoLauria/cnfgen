@@ -123,7 +123,7 @@ def pebbling_formula_clauses(kthfile):
 
         target,sources=l.split(':')
         target=int(target.strip())
-        yield [target]+[ -int(i) for i in sources.split() ]
+        yield [ -int(i) for i in sources.split() ]+[target]
 
     yield [-target]
 
@@ -212,6 +212,43 @@ def lift(clauses,lift_method='none',lift_rank=None):
     raise StopClauses(output_variables,output_clauses)
     
 
+def kth2dimacs(input, liftname, liftrank, output, header=True, comments=True) :
+    # Build the lifting mechanism
+
+    # Generate the basic formula
+    if header:
+        
+        from cStringIO import StringIO
+        output_cache=StringIO()
+
+    else:
+        output_cache=output
+        
+    cls_iter=lift(pebbling_formula_clauses(input),liftname,liftrank)
+
+    try:
+
+        while True:
+            cls = cls_iter.next()
+            print(" ".join([str(l) for l in cls])+" 0",file=output_cache)
+            
+    except StopClauses as cnfinfo:
+
+        if comments:
+            print("c Pebbling CNF with lifting \'{}\' of rank {}".format(liftname,liftrank),
+                  file=output)
+
+        if header:
+            # clauses cached in memory
+            print("p cnf {} {}".format(cnfinfo.variables,cnfinfo.clauses),
+                  file=output)
+            output.write(output_cache.getvalue())
+
+        else:
+            # clauses have been already sent to output
+            pass    
+        return cnfinfo
+
 ###
 ### Register signals
 ###
@@ -248,38 +285,7 @@ def command_line_utility(argv):
     # Process the options
     args=parser.parse_args(argv)
 
-    # Build the lifting mechanism
-
-    # Generate the basic formula
-    if args.header:
-        
-        from cStringIO import StringIO
-        output_cache=StringIO()
-
-    else:
-        output_cache=args.output
-        
-    cls_iter=lift(pebbling_formula_clauses(args.input),args.lift,args.liftrank)
-
-    try:
-
-        while True:
-            cls = cls_iter.next()
-            print(" ".join([str(l) for l in cls])+" 0",file=output_cache)
-            
-    except StopClauses as cnfinfo:
-
-        if args.header:
-            # clauses cached in memory
-            print("c Pebbling CNF with lifting \'{}\' of rank {}".format(args.lift,args.liftrank),
-                  file=args.output)
-            print("p cnf {} {}".format(cnfinfo.variables,cnfinfo.clauses),
-                  file=args.output)
-            print(output_cache.getvalue(),file=args.output)
-
-        else:
-            # clauses have been already sent to output
-            pass
+    kth2dimacs(args.input, args.lift, args.liftrank, args.output, args.header)
 
 ### Launcher
 if __name__ == '__main__':
