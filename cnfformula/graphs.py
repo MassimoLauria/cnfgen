@@ -21,8 +21,8 @@ __all__ = ["supported_formats","readGraph","readDigraph","writeGraph","is_dag"]
 _graphformats = {
     'dag':   ['kth','gml','dot'],
     'bipartite':   ['kth','gml','dot'],
-    'digraph': ['kth','gml','dot'],
-    'simple': ['kth','gml','dot']
+    'digraph': ['kth','gml','dot','dimacs'],
+    'simple': ['kth','gml','dot','dimacs']
     }
 
 def supported_formats():
@@ -93,6 +93,10 @@ def readDigraph(file,format,force_dag=False,multi=False):
 
         D=_read_graph_kth_format(file,grtype)
 
+    elif format=='dimacs':
+
+        D=_read_graph_dimacs_format(file,grtype)
+
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(format))
 
@@ -132,6 +136,10 @@ def readGraph(file,format,multi=False):
 
         G=_read_graph_kth_format(file,grtype)
 
+    elif format=='dimacs':
+
+        G=_read_graph_dimacs_format(file,grtype)
+
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(format))
 
@@ -148,7 +156,7 @@ def writeGraph(G,output_file,format,graph_type='simple'):
     - `G`: graph object
     - `output_file`: file name or file handle to write on
     - `output_format`: graph format (e.g. dot, gml)
-    - `graph_type`: one among {graph,digraph,dag,bipartite}
+    - `graph_type`: one among {simple,digraph,dag,bipartite}
 
     Return: none.
     """
@@ -197,10 +205,19 @@ def writeGraph(G,output_file,format,graph_type='simple'):
 
         print(output.getvalue(),file=output_file)
 
+    elif format=='dimacs':
+
+        print("c {}".format(G.name).strip(),file=output_file)
+        vertices=dict((name,index)
+                      for index,name in enumerate(G.nodes(),1))
+        edges   =G.edges()
+        print("p edge {} {}".format(len(vertices),len(edges)),file=output_file)
+
+        for v,w in edges:
+            print("e {} {}".format(vertices[v],vertices[w]),file=output_file)
+
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(format))
-
-    return G
 
 #
 # test for dag / with caching
@@ -251,11 +268,11 @@ def enumerate_vertices(graph):
         return graph.nodes()
 
 #
-# In house parsers
+# In-house parsers
 #
 
 # kth reader
-def _read_graph_kth_format(inputfile,graph_type):
+def _read_graph_kth_format(inputfile,graph_type=networkx.DiGraph):
     """Read a graph from file, in the KTH format.
 
     If the vertices are listed from to sources to the sinks, then the
@@ -266,7 +283,7 @@ def _read_graph_kth_format(inputfile,graph_type):
     Arguments:
     - `inputfile`:  file handle of the input
     - `graph_type`: the graph class to read, one of
-                    networkx.DiGraph
+                    networkx.DiGraph (default)
                     networkx.MultiDiGraph
                     networkx.Graph
                     networkx.MultiGraph    
@@ -317,4 +334,86 @@ def _read_graph_kth_format(inputfile,graph_type):
     # cache the information that the graph is topologically sorted.
     if topologically_sorted_input:
         G.topologically_sorted = True
+    return G
+
+def _read_graph_dimacs_format(inputfile,graph_type=networkx.Graph):
+    """Read a graph simple from file, in the DIMACS edge format.
+
+    Arguments:
+    - `inputfile`:  file handle of the input
+    - `graph_type`: the graph class to read, one of
+                    networkx.DiGraph
+                    networkx.MultiDiGraph
+                    networkx.Graph   (default)
+                    networkx.MultiGraph    
+    """
+    if not graph_type in [networkx.Graph,
+                          networkx.MultiGraph,
+                          networkx.DiGraph,
+                          networkx.MultiDiGraph]:
+        raise ValueError("We are asked to read an invalid graph type from input.")
+    
+    G=graph_type()
+    G.name=''
+
+    n = -1
+    m = -1
+    m_cnt = 0
+    
+    # is the input topologically sorted?
+    for i,l in enumerate(inputfile.readlines()):
+        
+        # add the comment to the header
+        if l[0]=='c':
+            G.name+=l[2:]
+            continue
+
+        # parse spec line
+        if l[0]=='p':
+            if n>=0:
+                raise ValueError("Syntax error: "+
+                                 "line {} contains a second spec line.".format(i))
+            _,fmt,nstr,mstr = l.split()
+            if fmt!='edge':
+                raise ValueError("Input error: "+
+                                 "Dimacs \'edge\' format expected.".format(i))
+            n = int(nstr)
+            m = int(mstr)
+            G.add_nodes_from(xrange(1,n+1))
+            continue
+
+        # parse spec line
+        if l[0]=='e':
+            m_cnt +=1
+            _,v,w=l.split()
+            G.add_edge(int(v),int(w))
+
+    if m!=m_cnt:
+        raise ValueError("Syntax error: "+
+                         "{} edges were expected.".format(m))
+       
+    return G
+
+
+#
+# Obtain the variable,literal,clause graph from a CNF.
+#
+
+def vlcgraph(cnf):
+    G=networkx.Graph()
+
+    # adding variables
+    for v in cnf.variables():
+        G.add_nodes_from([v,
+                          "+"+str(v),
+                          "-"+str(v)])
+        # each variable is conneted to its two literals
+        G.add_edge(v,"+"+str(v))
+        G.add_edge(v,"-"+str(v))
+        
+    # adding clauses
+    for i,clause in enumerate(cnf.clauses()):
+        G.add_node("C_{}".format(i))
+        for (sign,var) in clause:
+            G.add_edge(("+" if sign else "-")+str(var),"C_{}".format(i))
     return G
