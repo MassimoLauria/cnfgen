@@ -162,9 +162,9 @@ def command_line_reshuffle(argv):
     output_comments=args.verbose >= 2
     output_header  =args.verbose >= 1
 
-    output = output_cnf.dimacs(add_header=output_header,
-                           add_comments=output_comments)
-    print(output,file=args.output)
+    output_cnf.dimacs_dump(add_header=output_header,
+                           add_comments=output_comments,
+                           output=args.output)
 
     if args.output!=sys.stdout:
         args.output.close()

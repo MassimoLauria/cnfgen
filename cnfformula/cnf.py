@@ -469,10 +469,15 @@ class CNF(object):
         >>> print(c.dimacs(add_header=False))
         p cnf 0 0
         """
-        assert self._coherent
-
         from cStringIO import StringIO
         output = StringIO()
+        self.dimacs_dump(add_header,add_comments,output)
+        return output.getvalue()
+
+    def dimacs_dump(self,add_header=True,add_comments=False,output=None):
+        """Dump the dimacs encoding of the formula to the file-like output
+        """
+        assert self._coherent
 
         # Count the number of variables and clauses
         n = len(self._index2name)-1
@@ -489,8 +494,7 @@ class CNF(object):
         if not add_comments:
             for c in self._clauses:
                 output.write("\n" +  " ".join([str(l) for l in c])  + " 0")
-            return output.getvalue()
-
+            return
 
         # with comments
         assert add_comments
@@ -511,8 +515,6 @@ class CNF(object):
                 output.write("\n" +  " ".join([str(l) for l in clause])  + " 0")
                 index_clause,clause   = clauseidx.next()
 
-        # final formula
-        return output.getvalue()
 
     def latex(self,add_header=True,add_comments=True):
         """Produce the LaTeX version of the formula
