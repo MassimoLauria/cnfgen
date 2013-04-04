@@ -257,6 +257,7 @@ class TestSubstitution(TestCNF) :
 
 class TestKth2Dimacs(TestCNF) :
     def identity_test_helper(self, input, liftname, liftrank) :
+        input.seek(0)
         G = cnfgen.readDigraph(input,'kth')
         input.seek(0)
         peb = cnfgen.PebblingFormula(G)
@@ -282,6 +283,28 @@ class TestKth2Dimacs(TestCNF) :
     def test_substitution(self) :
         input = StringIO.StringIO("3\n1 : \n2 : \n3 : 1 2\n")
         self.identity_test_helper(input, 'or', 2)
+
+
+class TestNoise(TestCNF) :
+    def test_noise(self) :
+        input = StringIO.StringIO()
+        print >>input, "60"
+        print >>input, "1 : "
+        for i in xrange(1,60) :print >>input, i+1, ":", i
+        output = StringIO.StringIO()
+        output_noise = StringIO.StringIO()
+        input.seek(0) 
+        kth2dimacs.kth2dimacs(input, 'or', 3, output, header=True, comments=False)
+        output=output.getvalue()
+        output_clauses='\n'.join(output.split('\n')[1:])
+        input.seek(0)
+        kth2dimacs.kth2dimacs(input, 'or', 3, output_noise, header=True, comments=False, noise=2)
+        output_noise=output_noise.getvalue()
+        output_noise_clauses='\n'.join(output_noise.split('\n')[1:])
+        assert(output_noise_clauses.startswith(output_clauses))
+        noise=output_noise_clauses[len(output_clauses):]
+        variables = sorted(abs(int(v)) for v in noise.split())
+        self.assertListEqual([0]*(60*3/2) + range(1,60*3+1), variables)
 
 if __name__ == '__main__':
     unittest.main()

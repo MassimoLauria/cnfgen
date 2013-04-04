@@ -6,7 +6,7 @@ from __future__ import print_function
 from cnfformula import CNF
 from cnfformula import available_lifting,LiftFormula
 from itertools  import product
-
+import random
 
 __docstring__ =\
 """Utilities to build dimacs encoding of pebbling formulas
@@ -85,6 +85,12 @@ def setup_command_line(parser):
                         Hardness parameter for the lifting procedure.
                         See `--help-lifting` for more informations
                         """)
+    parser.add_argument('--noise',
+                        type=int,
+                        default=None,
+                        help="""
+                        Add noise clauses that propagate truthness from top to bottom
+                        """)
     parser.add_argument('--help-lifting',nargs=0,action=HelpLiftingAction,help="""
                          Formula can be made harder applying some
                          so called "lifting procedures".
@@ -143,12 +149,24 @@ class StopClauses(StopIteration):
         self.clauses = clauses
 
     
-def lift(clauses,lift_method='none',lift_rank=None):
+def lift(clauses,lift_method='none',lift_rank=None, noise=None):
     """Build a new CNF with by lifing the old CNF
 
     Arguments:
     - `clauses`: a sequence of clause in DIMACS format
     
+    A positive value of `noise` adds random "noise clauses" to the end
+    of the formula. The noise clauses will have width `noise`.
+
+    The idea behind these noise clauses is that, although we cannot
+    formally prove it, the intuition is that these clauses should not
+    change the space complexity in any meaningful way. However, if
+    these clauses are smaller than most of the original relevant
+    clauses of the formula, then maybe, just maybe, we can hope to
+    fool the preprocessor into focusing mostly on these noise clauses
+    and ignore the original clauses that it should work on in order to
+    make progress. But whether this actually happens is an entirely
+    open question and remains to be determined by experiments.
     """
 
     # Use a dummy lifting operation to get information about the
@@ -209,10 +227,25 @@ def lift(clauses,lift_method='none',lift_rank=None):
             output_clauses += 1
             yield [ (l/abs(l))*offset*i+l for l in cls ]
 
+    # partition the input variables into groups of size `noise`
+    # randomly, sort them in decreasing order and then add clauses of
+    # the form
+    # 
+    # ¬ x_{i_1}^j v ¬ x_{i_2}^j v ... v ¬ x_{i_(noise-1)}^j v x_{i_noise}^j
+    # 
+    # for j in [1..rank]
+    if (noise) :
+        vertices=range(input_variables)
+        random.shuffle(vertices)
+        for edge in zip(*[iter(vertices)]*noise) :
+            for l in xrange(offset) :
+                output_clauses += 1
+                yield [(1 if i else -1)*(offset*var+l+1) for i,var in enumerate(sorted(edge))]
+
     raise StopClauses(output_variables,output_clauses)
     
 
-def kth2dimacs(input, liftname, liftrank, output, header=True, comments=True) :
+def kth2dimacs(input, liftname, liftrank, output, header=True, comments=True, noise=None) :
     # Build the lifting mechanism
 
     # Generate the basic formula
@@ -224,7 +257,7 @@ def kth2dimacs(input, liftname, liftrank, output, header=True, comments=True) :
     else:
         output_cache=output
         
-    cls_iter=lift(pebbling_formula_clauses(input),liftname,liftrank)
+    cls_iter=lift(pebbling_formula_clauses(input),liftname,liftrank, noise)
 
     try:
 
@@ -285,7 +318,7 @@ def command_line_utility(argv):
     # Process the options
     args=parser.parse_args(argv)
 
-    kth2dimacs(args.input, args.lift, args.liftrank, args.output, args.header)
+    kth2dimacs(args.input, args.lift, args.liftrank, args.output, header = args.header, noise = args.noise)
 
 ### Launcher
 if __name__ == '__main__':
