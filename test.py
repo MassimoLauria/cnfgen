@@ -296,11 +296,13 @@ class TestNoise(TestCNF) :
         input.seek(0) 
         kth2dimacs.kth2dimacs(input, 'or', 3, output, header=True, comments=False)
         output=output.getvalue()
+        output_clauses='\n'.join(output.split('\n')[1:])
         input.seek(0)
         kth2dimacs.kth2dimacs(input, 'or', 3, output_noise, header=True, comments=False, noise=2)
         output_noise=output_noise.getvalue()
-        assert(output_noise.startswith(output))
-        noise=output_noise[len(output):]
+        output_noise_clauses='\n'.join(output_noise.split('\n')[1:])
+        assert(output_noise_clauses.startswith(output_clauses))
+        noise=output_noise_clauses[len(output_clauses):]
         variables = sorted(abs(int(v)) for v in noise.split())
         self.assertListEqual([0]*(60*3/2) + range(1,60*3+1), variables)
 

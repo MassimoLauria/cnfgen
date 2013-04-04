@@ -239,6 +239,7 @@ def lift(clauses,lift_method='none',lift_rank=None, noise=None):
         random.shuffle(vertices)
         for edge in zip(*[iter(vertices)]*noise) :
             for l in xrange(offset) :
+                output_clauses += 1
                 yield [(1 if i else -1)*(offset*var+l+1) for i,var in enumerate(sorted(edge))]
 
     raise StopClauses(output_variables,output_clauses)
