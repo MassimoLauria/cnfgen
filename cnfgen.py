@@ -801,7 +801,7 @@ def command_line_utility(argv):
         p.set_defaults(subcommand=sc)
 
     # Process the options
-    args=parser.parse_args()
+    args=parser.parse_args(argv)
     cmdline.additional_options_check(args)
     args.subcommand.additional_options_check(args)
 
