@@ -302,7 +302,11 @@ def _read_graph_kth_format(inputfile,graph_type=networkx.DiGraph):
     # is the input topologically sorted?
     topologically_sorted_input=True
 
-    for l in inputfile.readlines():
+    # vertex number
+    nvertex=-1
+    vertex_cnt=-1
+
+    for i,l in enumerate(inputfile.readlines()):
         
         # add the comment to the header
         if l[0]=='c':
@@ -310,11 +314,19 @@ def _read_graph_kth_format(inputfile,graph_type=networkx.DiGraph):
             continue
 
         if ':' not in l:
-            continue # vertex number spec
-
+            # vertex number spec
+            if nvertex>=0:
+                raise ValueError("Syntax error: "+
+                                 "line {} contains a second spec line.".format(i))
+            nvertex = int(l.strip())
+            if nvertex<0:
+                raise ValueError("Input error: "+
+                                 "Non negative number of vertices expected at line {}.".format(i))
+            continue
+        
         target,sources=l.split(':')
-        target=target.strip()
-        sources=sources.split()
+        target=int(target.strip())
+        sources=[int(s) for s in sources.split()]
 
         # Load vertices in the graph
         if target not in G:
@@ -334,6 +346,10 @@ def _read_graph_kth_format(inputfile,graph_type=networkx.DiGraph):
     # cache the information that the graph is topologically sorted.
     if topologically_sorted_input:
         G.topologically_sorted = True
+
+    if nvertex!=G.order():
+        raise ValueError("Input error: "+
+                         "{} vertices expected. Got {} instead.".format(nvertex,G.order()))
     return G
 
 def _read_graph_dimacs_format(inputfile,graph_type=networkx.Graph):
