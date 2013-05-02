@@ -148,7 +148,7 @@ def command_line_reshuffle(argv):
 
 
     # Process the options
-    args=parser.parse_args(argv)
+    args=parser.parse_args(argv[1:])
 
     # If necessary, init the random generator
     if hasattr(args,'seed') and args.seed:
