@@ -4,7 +4,7 @@
 from __future__ import print_function
 
 from cnfformula import CNF
-from cnfformula import LiftFormula,available_lifting
+from cnfformula import TransformFormula,available_transform
 
 from cnfformula.graphs import supported_formats as graph_formats
 from cnfformula.graphs import readDigraph,readGraph,writeGraph
@@ -71,15 +71,15 @@ except ImportError:
 #################################################################
 
 
-class HelpLiftingAction(argparse.Action):
+class HelpTransformAction(argparse.Action):
     def __init__(self, **kwargs):
-        super(HelpLiftingAction, self).__init__(**kwargs)
+        super(HelpTransformAction, self).__init__(**kwargs)
 
     def __call__(self, parser, namespace, value, option_string=None):
         print("""
-        Liftings/Substitutions available
+        Formula transformations available
         """)
-        for k,entry in available_lifting().iteritems():
+        for k,entry in available_transform().iteritems():
             print("{}\t:  {}".format(k,entry[0]))
         print("\n")
         sys.exit(0)
@@ -157,26 +157,26 @@ class _GeneralCommandLine(_CMDLineHelper):
         g.add_argument('--quiet', '-q',action='store_const',const=0,dest='verbose',
                        help="""Output just the formula with not header
                             or comment.""")
-        parser.add_argument('--lift','-l',
-                            metavar="<lifting method>",
-                            choices=available_lifting().keys(),
+        parser.add_argument('--Transform','-T',
+                            metavar="<transformation method>",
+                            choices=available_transform().keys(),
                             default='none',
                             help="""
-                            Apply a lifting procedure to make the CNF harder.
-                            See `--help-lifting` for more informations
+                            Transform the CNF formula to make it harder.
+                            See `--help-transformation` for more informations
                             """)
-        parser.add_argument('--liftrank','-lr',
-                            metavar="<lifting rank>",
+        parser.add_argument('--Tarity','-Ta',
+                            metavar="<transformation arity>",
                             type=int,
                             default=None,
                             help="""
-                            Hardness parameter for the lifting procedure.
-                            See `--help-lifting` for more informations
+                            Hardness parameter for the transformation procedure.
+                            See `--help-transform` for more informations
                             """)
-        parser.add_argument('--help-lifting',nargs=0,action=HelpLiftingAction,help="""
+        parser.add_argument('--help-transform',nargs=0,action=HelpTransformAction,help="""
                              Formula can be made harder applying some
-                             so called "lifting procedures".
-                             This gives information about the implemented lifting.
+                             so called "transformation procedures".
+                             This gives information about the implemented transformation.
                              """)
 
 
@@ -812,8 +812,8 @@ def command_line_utility(argv):
     # Generate the basic formula
     cnf=args.subcommand.build_cnf(args)
 
-    # Apply the lifting
-    lcnf=LiftFormula(cnf,args.lift,args.liftrank)
+    # Apply a formula transformation
+    lcnf=TransformFormula(cnf,args.Transform,args.Tarity)
 
 
     # Do we wnat comments or not

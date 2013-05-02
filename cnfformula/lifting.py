@@ -319,7 +319,7 @@ class Selection(Lift):
 
         Lift.__init__(self,cnf)
 
-        self._header="Formula lifted by selectors over {} values\n\n".format(self._rank) \
+        self._header="Formula with lifting with selectors over {} values\n\n".format(self._rank) \
             +self._header
 
 
@@ -369,7 +369,7 @@ class One(Lift):
 
         Lift.__init__(self,cnf)
 
-        self._header="Formula lifted by \"exactly one\""+ \
+        self._header="Formula transformed by \"exactly one\""+ \
                      " substitution over {} values\n\n".format(self._rank) \
                      +self._header
 
@@ -406,12 +406,12 @@ class One(Lift):
 def available():
     return {
 
-    # lifting name : ("help description", function, default rank)
+    # transformation name : ("help description", function, default rank)
 
     'none': ("leaves the formula alone", Lift,1),
     'or'  : ("OR substitution     (default rank: 2)", InnerOr,2),
     'xor' : ("XOR substitution    (default rank: 2)", InnerXor,2),
-    'sel' : ("selection lifting   (default rank: 3)", Selection,3),
+    'lift': ("lifting             (default rank: 3)", Selection,3),
     'eq'  : ("all variables equal (default rank: 3)", Equality,3),
     'ite' : ("if x then y else z  (rank ignored)",    IfThenElse,3),
     'maj' : ("Loose majority      (default rank: 3)", Majority,3),
@@ -419,21 +419,21 @@ def available():
     }
 
 
-def LiftFormula(cnf,lift_method,lift_rank=None):
-    """Lift a formula using one of the known methods
+def TransformFormula(cnf,t_method,t_arity=None):
+    """Transform a formula using one of the known methods
     
     Arguments:
     - `cnf`: the formula to be lifted
-    - `lift_method`: a string naming the lift method
-    - `lift_rank`: the rank of the lift method
+    - `t_method`: a string naming the transformation method
+    - `t_rank`: the arity of the transformation method
     """
-    implemented_lifting=available()
-    if not lift_method in implemented_lifting:
-        raise ValueError("There is no implementation for lifting method {}".format(lift_method))
+    implemented_transformations=available()
+    if not t_method in implemented_transformations:
+        raise ValueError("There is no implementation for transformation {}".format(t_method))
     
-    method=implemented_lifting[lift_method][1]
-    rank=lift_rank or implemented_lifting[lift_method][2]
+    method=implemented_transformations[t_method][1]
+    arity=t_arity or implemented_transformations[t_method][2]
 
-    return method(cnf,rank)
+    return method(cnf,arity)
 
 

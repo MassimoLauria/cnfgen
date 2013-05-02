@@ -224,30 +224,30 @@ class TestReshuffler(TestCNF) :
 class TestSubstitution(TestCNF) :
     def test_or(self) :
         cnf = cnfformula.CNF([[(True,'x'),(False,'y')]])
-        lift = cnfformula.LiftFormula(cnf, 'or', 3)
+        lift = cnfformula.TransformFormula(cnf, 'or', 3)
         self.assertCnfEqual(lift,cnfformula.CNF([
                     [(True,'{x}^0'),(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^0')],
                     [(True,'{x}^0'),(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^1')],
                     [(True,'{x}^0'),(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^2')],
                     ]))
-        lift2 = cnfformula.LiftFormula(cnf, 'or', 3)
+        lift2 = cnfformula.TransformFormula(cnf, 'or', 3)
         self.assertCnfEqual(lift,lift2)
 
     def test_xor(self) :
         cnf = cnfformula.CNF([[(True,'x'),(False,'y')]])
-        lift = cnfformula.LiftFormula(cnf, 'xor', 2)
+        lift = cnfformula.TransformFormula(cnf, 'xor', 2)
         self.assertCnfEqual(lift,cnfformula.CNF([
                     [(True,'{x}^0'),(True,'{x}^1'),(True,'{y}^0'),(False,'{y}^1')],
                     [(False,'{x}^0'),(False,'{x}^1'),(True,'{y}^0'),(False,'{y}^1')],
                     [(True,'{x}^0'),(True,'{x}^1'),(False,'{y}^0'),(True,'{y}^1')],
                     [(False,'{x}^0'),(False,'{x}^1'),(False,'{y}^0'),(True,'{y}^1')],
                     ]))
-        lift2 = cnfformula.LiftFormula(cnf, 'xor', 2)
+        lift2 = cnfformula.TransformFormula(cnf, 'xor', 2)
         self.assertCnfEqual(lift,lift2)
 
     def test_majority(self) :
         cnf = cnfformula.CNF([[(True,'x'),(False,'y')]])
-        lift = cnfformula.LiftFormula(cnf, 'maj', 3)
+        lift = cnfformula.TransformFormula(cnf, 'maj', 3)
         self.assertCnfEqual(lift,cnfformula.CNF([
                     [(True,'{x}^0'),(True,'{x}^1'),(False,'{y}^0'),(False,'{y}^1')],
                     [(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^0'),(False,'{y}^1')],
@@ -259,39 +259,39 @@ class TestSubstitution(TestCNF) :
                     [(True,'{x}^1'),(True,'{x}^2'),(False,'{y}^2'),(False,'{y}^0')],
                     [(True,'{x}^2'),(True,'{x}^0'),(False,'{y}^2'),(False,'{y}^0')],
                     ]))
-        lift2 = cnfformula.LiftFormula(cnf, 'maj', 3)
+        lift2 = cnfformula.TransformFormula(cnf, 'maj', 3)
         self.assertCnfEqual(lift,lift2)
         
     def test_equality(self) :
         cnf = cnfformula.CNF([[(False,'x'),(True,'y')]])
-        lift = cnfformula.LiftFormula(cnf, 'eq', 2)
+        lift = cnfformula.TransformFormula(cnf, 'eq', 2)
         self.assertCnfEqual(lift,cnfformula.CNF([
                     [(True,'{x}^0'),(True,'{x}^1'),(True,'{y}^0'),(False,'{y}^1')],
                     [(False,'{x}^0'),(False,'{x}^1'),(True,'{y}^0'),(False,'{y}^1')],
                     [(True,'{x}^0'),(True,'{x}^1'),(False,'{y}^0'),(True,'{y}^1')],
                     [(False,'{x}^0'),(False,'{x}^1'),(False,'{y}^0'),(True,'{y}^1')],
                     ]))
-        lift2 = cnfformula.LiftFormula(cnf, 'eq', 2)
+        lift2 = cnfformula.TransformFormula(cnf, 'eq', 2)
         self.assertCnfEqual(lift,lift2)
 
     def test_if_then_else(self) :
         cnf = cnfformula.CNF([[(True,'x'),(False,'y')]])
-        lift = cnfformula.LiftFormula(cnf, 'ite')
+        lift = cnfformula.TransformFormula(cnf, 'ite')
         self.assertCnfEqual(lift,cnfformula.CNF([
                     [(False,'{x}^0'),(True,'{x}^1'),(False,'{y}^0'),(False,'{y}^1')],
                     [(False,'{x}^0'),(True,'{x}^1'),(True,'{y}^0'),(False,'{y}^2')],
                     [(True,'{x}^0'),(True,'{x}^2'),(False,'{y}^0'),(False,'{y}^1')],
                     [(True,'{x}^0'),(True,'{x}^2'),(True,'{y}^0'),(False,'{y}^2')],
         ]))
-        lift2 = cnfformula.LiftFormula(cnf, 'ite', 42)
+        lift2 = cnfformula.TransformFormula(cnf, 'ite', 42)
         self.assertCnfEqual(lift,lift2)
 
 
     def test_exactly_one(self) :
         cnf = cnfformula.CNF([[(True,'x'),(False,'y')]])
-        lift = cnfformula.LiftFormula(cnf, 'one', 2)
+        lift = cnfformula.TransformFormula(cnf, 'one', 2)
 
-        lift2 = cnfformula.LiftFormula(cnf, 'one', 2)
+        lift2 = cnfformula.TransformFormula(cnf, 'one', 2)
         self.assertCnfEqual(lift,lift2)
 
 class TestKth2Dimacs(TestCNF) :
@@ -299,7 +299,7 @@ class TestKth2Dimacs(TestCNF) :
         G = cnfgen.readDigraph(input,'kth')
         input.seek(0)
         peb = cnfgen.PebblingFormula(G)
-        lift = cnfgen.LiftFormula(peb, liftname, liftrank)
+        lift = cnfformula.TransformFormula(peb, liftname, liftrank)
         reference_output = lift.dimacs(add_header=False, add_comments=False)+"\n"
         
         kth2dimacs_output=StringIO.StringIO()
