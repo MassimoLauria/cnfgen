@@ -25,6 +25,22 @@ def reshuffle(cnf,
               clause_permutation=None,
               polarity_flip=None
               ):
+    """ Reshuffle the given cnf. Returns a formula logically
+    equivalent to the input with the following transformations
+    applied in order:
+
+    1. Polarity flips. polarity_flip is a {-1,1}^n vector. If the i-th
+    entry is -1, all the literals with the i-th variable change its
+    sign.
+
+    2. Variable permutations. variable_permutation is a permutation of
+    [vars(cnf)]. All the literals with the old i-th variable are
+    replaced with the new i-th variable.
+
+    3. Clause permutations. clause_permutation is a permutation of
+    [0..m-1]. The resulting clauses are reordered according to the
+    permutation.
+"""
 
     # empty cnf
     out=CNF(header='')
