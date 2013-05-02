@@ -234,14 +234,14 @@ def GraphOrderingPrinciple(graph,total=False,smart=False):
         clause = []
         for lo in xrange(med):
             if graph.has_edge(V[med],V[lo]):
-                clause += [(True,'x_{{{0},{1}}}'.format(lo,med))]
+                clause += [(True,'x_{{{0},{1}}}'.format(V[lo],V[med]))]
         for hi in xrange(med+1,len(V)):
             if not graph.has_edge(V[med],V[hi]):
                 continue
             elif smart:
-                clause += [(False,'x_{{{0},{1}}}'.format(med,hi))]
+                clause += [(False,'x_{{{0},{1}}}'.format(V[med],V[hi]))]
             else:
-                clause += [(True,'x_{{{0},{1}}}'.format(hi,med))]
+                clause += [(True,'x_{{{0},{1}}}'.format(V[hi],V[med]))]
         gop.add_clause(clause)
 
     # Transitivity axiom

@@ -25,6 +25,22 @@ def reshuffle(cnf,
               clause_permutation=None,
               polarity_flip=None
               ):
+    """ Reshuffle the given cnf. Returns a formula logically
+    equivalent to the input with the following transformations
+    applied in order:
+
+    1. Polarity flips. polarity_flip is a {-1,1}^n vector. If the i-th
+    entry is -1, all the literals with the i-th variable change its
+    sign.
+
+    2. Variable permutations. variable_permutation is a permutation of
+    [vars(cnf)]. All the literals with the old i-th variable are
+    replaced with the new i-th variable.
+
+    3. Clause permutations. clause_permutation is a permutation of
+    [0..m-1]. The resulting clauses are reordered according to the
+    permutation.
+"""
 
     # empty cnf
     out=CNF(header='')
@@ -148,7 +164,7 @@ def command_line_reshuffle(argv):
 
 
     # Process the options
-    args=parser.parse_args(argv)
+    args=parser.parse_args(argv[1:])
 
     # If necessary, init the random generator
     if hasattr(args,'seed') and args.seed:
@@ -162,9 +178,9 @@ def command_line_reshuffle(argv):
     output_comments=args.verbose >= 2
     output_header  =args.verbose >= 1
 
-    output = output_cnf.dimacs(add_header=output_header,
-                           add_comments=output_comments)
-    print(output,file=args.output)
+    output_cnf.dimacs_dump(add_header=output_header,
+                           add_comments=output_comments,
+                           output=args.output)
 
     if args.output!=sys.stdout:
         args.output.close()
