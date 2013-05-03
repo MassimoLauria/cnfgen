@@ -8,17 +8,17 @@ from itertools import product,combinations,permutations
 
 
 ###
-### Lifted CNFs
+### Transformation of CNFs
 ###
 
-class Lift(CNF):
-    """Lifted formula
+class TransformedCNF(CNF):
+    """Transformed formula
 
-    A formula is made harder by the process of lifting.
+    A formula is modified (usually made harder).
     """
 
     def __init__(self, cnf,rank=1):
-        """Build a new CNF with by lifing the old CNF
+        """Build a new CNF with by maniputation of the old CNF
 
         Arguments:
         - `cnf`: the original cnf
@@ -34,9 +34,9 @@ class Lift(CNF):
 
         # Lift all possible literals
         for i in range(1,len(variablenames)):
-            varadditional[i] =self.lift_variable_preamble(variablenames[i])
-            substitutions[i] =self.lift_a_literal(True, variablenames[i])
-            substitutions[-i]=self.lift_a_literal(False,variablenames[i])
+            varadditional[i] =self.transform_variable_preamble(variablenames[i])
+            substitutions[i] =self.transform_a_literal(True, variablenames[i])
+            substitutions[-i]=self.transform_a_literal(False,variablenames[i])
 
 
         # Collect new variable names from the CNFs:
@@ -85,12 +85,12 @@ class Lift(CNF):
 
             self._add_compressed_clauses(block)
 
-        # lifting may need additional clauses per variables
+        # transformation may need additional clauses per variables
         # added here so that the comment order is coherent
         for i,block in enumerate(varadditional[1:],1):
             if block:
                 self._comments.append((len(self._clauses),
-                                       "Clauses for lifted variable {}".format(variablenames[i])))
+                                       "Clauses due to transformation {}".format(variablenames[i])))
                 self._add_compressed_clauses(block)
          
         # add trailing comments
@@ -101,18 +101,18 @@ class Lift(CNF):
         assert self._orig_cnf._check_coherence()
         assert self._check_coherence()
 
-    def lift_variable_preamble(self, name):
-        """Additional clauses for each lifted variable
+    def transform_variable_preamble(self, name):
+        """Additional clauses for each variable
 
         Arguments:
-        - `name`:     variable to be substituted
+        - `name`:     variable to add clauses for
 
         Returns: a list of clauses
         """
         return []
 
 
-    def lift_a_literal(self, polarity, name):
+    def transform_a_literal(self, polarity, name):
         """Substitute a literal with the lifting function
 
         Arguments:
@@ -125,7 +125,7 @@ class Lift(CNF):
 
 
 
-class IfThenElse(Lift):
+class IfThenElse(TransformedCNF):
     """Lifted formula: substitutes variable with a three variables
     if-then-else
     """
@@ -139,12 +139,12 @@ class IfThenElse(Lift):
         """
         self._rank = rank
 
-        Lift.__init__(self,cnf)
+        TransformedCNF.__init__(self,cnf)
 
         self._header="If-Then-Else substituted formula\n\n".format(self._rank) \
             +self._header
 
-    def lift_a_literal(self, polarity,varname):
+    def transform_a_literal(self, polarity,varname):
         """Substitute a positive literal with an if then else statement,
 
         Arguments:
@@ -160,7 +160,7 @@ class IfThenElse(Lift):
         return [ [ (False,X) , (polarity,Y) ] , [ (True, X) , (polarity,Z) ] ]
 
 
-class Majority(Lift):
+class Majority(TransformedCNF):
     """Lifted formula: substitutes variable with a Majority
     """
     def __init__(self, cnf, rank):
@@ -173,12 +173,12 @@ class Majority(Lift):
         """
         self._rank = rank
 
-        Lift.__init__(self,cnf)
+        TransformedCNF.__init__(self,cnf)
 
         self._header="Majority {} substituted formula\n\n".format(self._rank) \
             +self._header
 
-    def lift_a_literal(self, polarity,varname):
+    def transform_a_literal(self, polarity,varname):
         """Substitute a positive literal with Loose Majority,
         and negative literals with Strict Minority.
 
@@ -203,7 +203,7 @@ class Majority(Lift):
         return [ s for s in binom(lit,witness) ]
 
 
-class InnerOr(Lift):
+class InnerOr(TransformedCNF):
     """Lifted formula: substitutes variable with a OR
     """
     def __init__(self, cnf, rank):
@@ -216,12 +216,12 @@ class InnerOr(Lift):
         """
         self._rank = rank
 
-        Lift.__init__(self,cnf)
+        TransformedCNF.__init__(self,cnf)
 
         self._header="OR {} substituted formula\n\n".format(self._rank) \
             +self._header
 
-    def lift_a_literal(self, polarity,varname):
+    def transform_a_literal(self, polarity,varname):
         """Substitute a positive literal with an OR,
         and negative literals with its negation.
 
@@ -238,7 +238,7 @@ class InnerOr(Lift):
             return [ [(False,name)] for name in names ]
 
 
-class Equality(Lift):
+class Equality(TransformedCNF):
     """Lifted formula: substitutes variable with 'all equals'
     """
     def __init__(self, cnf, rank):
@@ -251,12 +251,12 @@ class Equality(Lift):
         """
         self._rank = rank
 
-        Lift.__init__(self,cnf)
+        TransformedCNF.__init__(self,cnf)
 
         self._header="EQ {} substituted formula\n\n".format(self._rank) \
             +self._header
 
-    def lift_a_literal(self, polarity,varname):
+    def transform_a_literal(self, polarity,varname):
         """Substitute a positive literal with an 'all equal' statement,
 
         Arguments:
@@ -274,7 +274,7 @@ class Equality(Lift):
             return [[ (False,a) for a in names ] , [ (True,a) for a in names ] ] # at least a true and a false variable.
 
 
-class InnerXor(Lift):
+class InnerXor(TransformedCNF):
     """Lifted formula: substitutes variable with a XOR
     """
     def __init__(self, cnf, rank):
@@ -287,12 +287,12 @@ class InnerXor(Lift):
         """
         self._rank = rank
 
-        Lift.__init__(self,cnf)
+        TransformedCNF.__init__(self,cnf)
 
         self._header="XOR {} substituted formula\n\n".format(self._rank) \
             +self._header
 
-    def lift_a_literal(self, polarity,varname):
+    def transform_a_literal(self, polarity,varname):
         """Substitute a literal with a (negated) XOR
 
         Arguments:
@@ -305,7 +305,7 @@ class InnerXor(Lift):
         return parity_constraint(names,polarity)
 
 
-class Selection(Lift):
+class Selection(TransformedCNF):
     """Lifted formula: Y variable select X values
     """
     def __init__(self, cnf, rank):
@@ -317,7 +317,7 @@ class Selection(Lift):
         """
         self._rank = rank
 
-        Lift.__init__(self,cnf)
+        TransformedCNF.__init__(self,cnf)
 
         self._header="Formula with lifting with selectors over {} values\n\n".format(self._rank) \
             +self._header
@@ -340,7 +340,7 @@ class Selection(Lift):
         return selector_clauses
 
 
-    def lift_a_literal(self, polarity,varname):
+    def transform_a_literal(self, polarity,varname):
         """Substitute a literal with a (negated) XOR
 
         Arguments:
@@ -355,7 +355,7 @@ class Selection(Lift):
                              (polarity,"X_{{{}}}^{}".format(varname,i)) ])
         return clauses
 
-class One(Lift):
+class One(TransformedCNF):
     """Lifted formula: exactly one variable is true
     """
     def __init__(self, cnf, rank):
@@ -367,13 +367,13 @@ class One(Lift):
         """
         self._rank = rank
 
-        Lift.__init__(self,cnf)
+        TransformedCNF.__init__(self,cnf)
 
         self._header="Formula transformed by \"exactly one\""+ \
                      " substitution over {} values\n\n".format(self._rank) \
                      +self._header
 
-    def lift_a_literal(self, polarity,varname):
+    def transform_a_literal(self, polarity,varname):
         """Substitute a literal with a (negated) XOR
 
         Arguments:
@@ -408,7 +408,7 @@ def available():
 
     # transformation name : ("help description", function, default rank)
 
-    'none': ("leaves the formula alone", Lift,1),
+    'none': ("leaves the formula alone", TransformedCNF,1),
     'or'  : ("OR substitution     (default rank: 2)", InnerOr,2),
     'xor' : ("XOR substitution    (default rank: 2)", InnerXor,2),
     'lift': ("lifting             (default rank: 3)", Selection,3),

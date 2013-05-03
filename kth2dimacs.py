@@ -37,7 +37,7 @@ class HelpTransformAction(argparse.Action):
 
     def __call__(self, parser, namespace, value, option_string=None):
         print("""
-        Liftings/Substitutions available
+        Formula transformations available
         """)
         for k,entry in available_transform().iteritems():
             print("{}\t:  {}".format(k,entry[0]))
@@ -159,9 +159,9 @@ def lift(clauses,lift_method='none',lift_rank=None):
     dummycnf=CNF([[(True, "x")]])
     dummycnf=TransformFormula(dummycnf,lift_method,lift_rank)
 
-    varlift    =dummycnf.lift_variable_preamble("x")
-    poslift    =dummycnf.lift_a_literal(True,"x")
-    neglift    =dummycnf.lift_a_literal(False,"x")
+    varlift    =dummycnf.transform_variable_preamble("x")
+    poslift    =dummycnf.transform_a_literal(True,"x")
+    neglift    =dummycnf.transform_a_literal(False,"x")
 
     varlift    = [list(dummycnf._compress_clause(cls)) for cls in varlift ]
     poslift    = [list(dummycnf._compress_clause(cls)) for cls in poslift ]

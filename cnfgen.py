@@ -813,7 +813,7 @@ def command_line_utility(argv):
     cnf=args.subcommand.build_cnf(args)
 
     # Apply a formula transformation
-    lcnf=TransformFormula(cnf,args.Transform,args.Tarity)
+    tcnf=TransformFormula(cnf,args.Transform,args.Tarity)
 
 
     # Do we wnat comments or not
@@ -821,14 +821,14 @@ def command_line_utility(argv):
     output_header  =args.verbose >= 1
 
     if args.output_format == 'latex':
-        output = lcnf.latex(add_header=output_header,
+        output = tcnf.latex(add_header=output_header,
                             add_comments=output_comments)
 
     elif args.output_format == 'dimacs':
-        output = lcnf.dimacs(add_header=output_header,
+        output = tcnf.dimacs(add_header=output_header,
                            add_comments=output_comments)
     else:
-        output = lcnf.dimacs(add_header=output_header,
+        output = tcnf.dimacs(add_header=output_header,
                            add_comments=output_comments)
 
     print(output,file=args.output)
