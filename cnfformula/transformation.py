@@ -32,7 +32,7 @@ class TransformedCNF(CNF):
         substitutions = [None]*(2*len(variablenames)-1)
         varadditional = [None]*(len(variablenames))
 
-        # Lift all possible literals
+        # Transform all possible literals
         for i in range(1,len(variablenames)):
             varadditional[i] =self.transform_variable_preamble(variablenames[i])
             substitutions[i] =self.transform_a_literal(True, variablenames[i])
@@ -113,7 +113,7 @@ class TransformedCNF(CNF):
 
 
     def transform_a_literal(self, polarity, name):
-        """Substitute a literal with the lifting function
+        """Substitute a literal with the transformation function
 
         Arguments:
         - `polarity`: polarity of the literal
@@ -126,7 +126,7 @@ class TransformedCNF(CNF):
 
 
 class IfThenElse(TransformedCNF):
-    """Lifted formula: substitutes variable with a three variables
+    """Transformed formula: substitutes variable with a three variables
     if-then-else
     """
     def __init__(self, cnf, rank=1):
@@ -161,7 +161,7 @@ class IfThenElse(TransformedCNF):
 
 
 class Majority(TransformedCNF):
-    """Lifted formula: substitutes variable with a Majority
+    """Transformed formula: substitutes variable with a Majority
     """
     def __init__(self, cnf, rank):
         """Build a new CNF obtained by substituting a Majority to the
@@ -204,7 +204,7 @@ class Majority(TransformedCNF):
 
 
 class InnerOr(TransformedCNF):
-    """Lifted formula: substitutes variable with a OR
+    """Transformed formula: substitutes variable with a OR
     """
     def __init__(self, cnf, rank):
         """Build a new CNF obtained by substituting a OR to the
@@ -239,7 +239,7 @@ class InnerOr(TransformedCNF):
 
 
 class Equality(TransformedCNF):
-    """Lifted formula: substitutes variable with 'all equals'
+    """Transformed formula: substitutes variable with 'all equals'
     """
     def __init__(self, cnf, rank):
         """Build a new CNF obtained by substituting 'all equals' to the
@@ -275,7 +275,7 @@ class Equality(TransformedCNF):
 
 
 class InnerXor(TransformedCNF):
-    """Lifted formula: substitutes variable with a XOR
+    """Transformed formula: substitutes variable with a XOR
     """
     def __init__(self, cnf, rank):
         """Build a new CNF obtained by substituting a XOR to the
@@ -305,8 +305,8 @@ class InnerXor(TransformedCNF):
         return parity_constraint(names,polarity)
 
 
-class Selection(TransformedCNF):
-    """Lifted formula: Y variable select X values
+class Lifting(TransformedCNF):
+    """Formula lifting: Y variable select X values
     """
     def __init__(self, cnf, rank):
         """Build a new CNF obtained by lifting procedures
@@ -323,7 +323,7 @@ class Selection(TransformedCNF):
             +self._header
 
 
-    def lift_variable_preamble(self, name):
+    def transform_variable_preamble(self, name):
         """Additional clauses for each lifted variable
 
         Arguments:
@@ -356,10 +356,11 @@ class Selection(TransformedCNF):
         return clauses
 
 class One(TransformedCNF):
-    """Lifted formula: exactly one variable is true
+    """Transformed formula: exactly one variable is true
     """
     def __init__(self, cnf, rank):
-        """Build a new CNF obtained by lifting procedures
+        """Build a new CNF obtained substituting all variables with
+        'exactly one' function.
 
         Arguments:
         - `cnf`: the original cnf
@@ -411,7 +412,7 @@ def available():
     'none': ("leaves the formula alone", TransformedCNF,1),
     'or'  : ("OR substitution     (default rank: 2)", InnerOr,2),
     'xor' : ("XOR substitution    (default rank: 2)", InnerXor,2),
-    'lift': ("lifting             (default rank: 3)", Selection,3),
+    'lift': ("lifting             (default rank: 3)", Lifting,3),
     'eq'  : ("all variables equal (default rank: 3)", Equality,3),
     'ite' : ("if x then y else z  (rank ignored)",    IfThenElse,3),
     'maj' : ("Loose majority      (default rank: 3)", Majority,3),
@@ -423,7 +424,7 @@ def TransformFormula(cnf,t_method,t_arity=None):
     """Transform a formula using one of the known methods
     
     Arguments:
-    - `cnf`: the formula to be lifted
+    - `cnf`: the formula to be transformed
     - `t_method`: a string naming the transformation method
     - `t_rank`: the arity of the transformation method
     """
