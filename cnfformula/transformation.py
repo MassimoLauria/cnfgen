@@ -273,7 +273,33 @@ class Equality(TransformedCNF):
         else:
             return [[ (False,a) for a in names ] , [ (True,a) for a in names ] ] # at least a true and a false variable.
 
+class NonEquality(Equality):
+    """Transformed formula: substitutes variable with 'not all equals'
+    """
+    def __init__(self, cnf, rank):
+        """Build a new CNF obtained by substituting 'not all equals' to the
+        variables of the original CNF
 
+        Arguments:
+        - `cnf`: the original cnf
+        - `rank`: how many variables in each or
+        """
+        Equality.__init__(self,cnf,rank)
+
+        self._header="N"+self._header
+
+    def transform_a_literal(self, polarity,varname):
+        """Substitute a positive literal with an 'not all equal' statement,
+
+        Arguments:
+        - `polarity`: polarity of the literal
+        - `varname`: fariable to be substituted
+
+        Returns: a list of clauses
+        """
+        return Equality.transform_a_literal(self,not polarity,varname)
+
+        
 class InnerXor(TransformedCNF):
     """Transformed formula: substitutes variable with a XOR
     """
@@ -414,6 +440,7 @@ def available():
     'xor' : ("XOR substitution    (default rank: 2)", InnerXor,2),
     'lift': ("lifting             (default rank: 3)", Lifting,3),
     'eq'  : ("all variables equal (default rank: 3)", Equality,3),
+    'neq' : ("not all vars  equal (default rank: 3)", NonEquality,3),
     'ite' : ("if x then y else z  (rank ignored)",    IfThenElse,3),
     'maj' : ("Loose majority      (default rank: 3)", Majority,3),
     'one' : ("Exactly one         (default rank: 3)", One,3)    
