@@ -4,19 +4,16 @@
 from __future__ import print_function
 
 from cnfformula import CNF
+from cnfformula.utils import dimacs2cnf
 from cnfformula import available_transform,TransformFormula
 from itertools  import product
 
 
 __docstring__ =\
-"""Utilities to build dimacs encoding of pebbling formulas
+"""Utilities to apply lifting and substitution to dimacs formulas.
 
-Accept a KTH specific graph format:
-
-ASSUMPTIONS: the graph is given with a line for each vertex, from
-sources to a *single sink*.
-
-CNF formulas interesting for proof complexity.
+Accept a dimacs formula in input, and output the formula obtained
+aplying the corresponding substitution.
 
 Copyright (C) 2012, 2013  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
@@ -95,35 +92,23 @@ def setup_command_line(parser):
                         type=argparse.FileType('r',0),
                         metavar="<input>",
                         default='-',
-                        help="""Input file. The DAG is read from a file instead of being read from
-                        standard output. Setting '<input>' to '-' is
+                        help="""A cnf in dimacs file format.
+                        Setting '<input>' to '-' is
                         another way to read from standard
                         input.  (default: -)
                         """)
 
 
-def pebbling_formula_clauses(kthfile):
-    """Read a graph from file, in the KTH format.
+def read_formula_clauses(input_file):
+    """Read the CNF from file, in dimacs format, then output its clauses
+    in the internal format directly.
 
-    The vertices MUST be listed from to sources to the *A SINGLE
-    SINK*.  In a topologically sorted fashion.
-    
     Arguments:
     - `inputfile`:  file handle of the input
+
     """
 
-    for l in kthfile.readlines():
-        
-        # add the comment to the header
-        if l[0]=='c':
-            continue
-
-        if ':' not in l:
-            continue # vertex number spec
-
-        target,sources=l.split(':')
-        target=int(target.strip())
-        yield [ -int(i) for i in sources.split() ]+[target]
+    cnf = dimacs_parse(input_file)
 
     yield [-target]
 
@@ -146,9 +131,9 @@ class StopClauses(StopIteration):
 def lift(clauses,lift_method='none',lift_rank=None):
     """Build a new CNF with by lifing the old CNF
 
-    Arguments:
-    - `clauses`: a sequence of clause in DIMACS format
-    
+    Arguments:  - `clauses`: a sequence of clause *already* in DIMACS
+                             format (i.e. list of integers).
+
     """
 
     # Use a dummy lifting operation to get information about the
@@ -212,8 +197,7 @@ def lift(clauses,lift_method='none',lift_rank=None):
     raise StopClauses(output_variables,output_clauses)
     
 
-def kth2dimacs(input, liftname, liftrank, output, header=True, comments=True) :
-    # Build the lifting mechanism
+def dimacstransform(inputfile, liftname, liftrank, output, header=True, comments=True) :
 
     # Generate the basic formula
     if header:
@@ -224,7 +208,7 @@ def kth2dimacs(input, liftname, liftrank, output, header=True, comments=True) :
     else:
         output_cache=output
         
-    cls_iter=lift(pebbling_formula_clauses(input),liftname,liftrank)
+    cls_iter=lift(read_formula_clauses(inputfile),liftname,liftrank)
 
     try:
 
@@ -235,7 +219,7 @@ def kth2dimacs(input, liftname, liftrank, output, header=True, comments=True) :
     except StopClauses as cnfinfo:
 
         if comments:
-            print("c Pebbling CNF with transformation \'{}\' of arity {}".format(liftname,liftrank),
+            print("c CNF with transformation \'{}\' of arity {}".format(liftname,liftrank),
                   file=output)
 
         if header:
@@ -276,13 +260,13 @@ def command_line_utility(argv):
         exit(-1)
 
     # Parse the command line arguments
-    parser=argparse.ArgumentParser(prog='kth2dimacs')
+    parser=argparse.ArgumentParser(prog='dimacstransform')
     setup_command_line(parser)
 
     # Process the options
     args=parser.parse_args(argv)
 
-    kth2dimacs(args.input, args.Transform, args.Tarity, args.output, args.header)
+    dimacstransform(args.input, args.Transform, args.Tarity, args.output, args.header)
 
 ### Launcher
 if __name__ == '__main__':
