@@ -14,7 +14,7 @@ increase formula hardness.
 
 Accept a cnf in dimacs format in input
 
-Copyright (C) 2012, 2013  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2013  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -104,8 +104,8 @@ def setup_command_line(parser):
                         type=argparse.FileType('r',0),
                         metavar="<input>",
                         default='-',
-                        help="""Input file. The DAG is read from a file instead of being read from
-                        standard output. Setting '<input>' to '-' is
+                        help="""Input file. The input formula is read as a dimacs CNF file file instead of
+                        standard input. Setting '<input>' to '-' is
                         another way to read from standard
                         input.  (default: -)
                         """)
