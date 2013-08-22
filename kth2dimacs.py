@@ -5,6 +5,8 @@ from __future__ import print_function
 
 from cnfformula import CNF
 from cnfformula import available_transform,TransformFormula
+from cnfformula.transformation import transform_compressed_clauses,StopClauses
+
 from itertools  import product
 
 
@@ -102,19 +104,22 @@ def setup_command_line(parser):
                         """)
 
 
-def pebbling_formula_clauses(kthfile):
-    """Read a graph from file, in the KTH format.
+def pebbling_formula_compressed_clauses(kthfile):
+    """
+    Read a graph from file, in the KTH format. And output the list of
+    compressed clauses representing the pebbling formula.
 
     The vertices MUST be listed from to sources to the *A SINGLE
     SINK*.  In a topologically sorted fashion.
     
     Arguments:
     - `inputfile`:  file handle of the input
+
     """
 
     for l in kthfile.readlines():
         
-        # add the comment to the header
+        # ignore comments
         if l[0]=='c':
             continue
 
@@ -128,91 +133,8 @@ def pebbling_formula_clauses(kthfile):
     yield [-target]
 
 
-### Transform clauses
-
-class StopClauses(StopIteration):
-    """Exception raised when an iterator of clauses finish.
-
-    Attributes:
-        variables -- number of variables in the clause stream
-        clauses   -- number of clauses streamed
-    """
-
-    def __init__(self, variables, clauses):
-        self.variables = variables
-        self.clauses = clauses
-
-    
-def lift(clauses,lift_method='none',lift_rank=None):
-    """Build a new CNF with by lifing the old CNF
-
-    Arguments:
-    - `clauses`: a sequence of clause in DIMACS format
-    
-    """
-
-    # Use a dummy lifting operation to get information about the
-    # lifting structure.
-    poslift=None
-    neglift=None
-    
-    dummycnf=CNF([[(True, "x")]])
-    dummycnf=TransformFormula(dummycnf,lift_method,lift_rank)
-
-    varlift    =dummycnf.transform_variable_preamble("x")
-    poslift    =dummycnf.transform_a_literal(True,"x")
-    neglift    =dummycnf.transform_a_literal(False,"x")
-
-    varlift    = [list(dummycnf._compress_clause(cls)) for cls in varlift ]
-    poslift    = [list(dummycnf._compress_clause(cls)) for cls in poslift ]
-    neglift    = [list(dummycnf._compress_clause(cls)) for cls in neglift ]
-    offset     = len(list(dummycnf.variables()))
-
-    # information about the input formula
-    input_clauses   = 0
-    input_variables = 0
-
-    output_clauses   = 0
-    output_variables = 0
-   
-    def substitute(literal):
-        if literal>0:
-            var=literal
-            lift=poslift
-        else:
-            var=-literal
-            lift=neglift
-
-        substitute.max=max(var,substitute.max)
-        return [[ (l/abs(l))*offset*(var-1)+l for l in cls ] for cls in lift]
-
-    substitute.max=0
-        
-    for cls in clauses:
-
-        input_clauses +=1
-
-        # a substituted clause is the OR of the substituted literals
-        domains=[ substitute(lit) for lit in cls ]
-        domains=tuple(domains)
-
-        for clause_tuple in product(*domains):
-            output_clauses +=1
-            yield [lit for clause in clause_tuple for lit in clause ]
-
-    # count the variables
-    input_variables  = substitute.max
-    output_variables = input_variables*offset
-
-    for i in xrange(input_variables):
-        for cls in varlift:
-            output_clauses += 1
-            yield [ (l/abs(l))*offset*i+l for l in cls ]
-
-    raise StopClauses(output_variables,output_clauses)
-    
-
-def kth2dimacs(input, liftname, liftrank, output, header=True, comments=True) :
+### Produce the dimacs output from the data
+def kth2dimacs(inputfile, method, rank, output, header=True):
     # Build the lifting mechanism
 
     # Generate the basic formula
@@ -224,7 +146,9 @@ def kth2dimacs(input, liftname, liftrank, output, header=True, comments=True) :
     else:
         output_cache=output
         
-    cls_iter=lift(pebbling_formula_clauses(input),liftname,liftrank)
+    cls_iter=transform_compressed_clauses(
+                    pebbling_formula_compressed_clauses(inputfile),
+                    method,rank)
 
     try:
 
@@ -233,10 +157,6 @@ def kth2dimacs(input, liftname, liftrank, output, header=True, comments=True) :
             print(" ".join([str(l) for l in cls])+" 0",file=output_cache)
             
     except StopClauses as cnfinfo:
-
-        if comments:
-            print("c Pebbling CNF with transformation \'{}\' of arity {}".format(liftname,liftrank),
-                  file=output)
 
         if header:
             # clauses cached in memory

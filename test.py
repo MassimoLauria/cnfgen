@@ -335,7 +335,7 @@ class TestKth2Dimacs(TestCNF) :
         reference_output = lift.dimacs(export_header=False)+"\n"
         
         kth2dimacs_output=StringIO.StringIO()
-        kth2dimacs.kth2dimacs(input, liftname, liftrank, kth2dimacs_output, header=True, comments=False)
+        kth2dimacs.kth2dimacs(input, liftname, liftrank, kth2dimacs_output, header=True)
         self.assertMultiLineEqual(kth2dimacs_output.getvalue(), reference_output)
 
     def test_unit_graph(self) :
