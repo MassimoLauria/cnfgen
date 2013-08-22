@@ -3,25 +3,37 @@
 
 from __future__ import print_function
 
-from cnfformula import CNF
-from cnfformula.utils import dimacs2cnf
-from cnfformula import available_transform,TransformFormula
-from itertools  import product
+from cnfformula import available_transform
+from cnfformula.transformation import transform_compressed_clauses,StopClauses
+from cnfformula.utils import dimacs2compressed_clauses
 
 
 __docstring__ =\
-"""Utilities to apply lifting and substitution to dimacs formulas.
+"""Utilities to apply to a dimacs CNF file, a transformation which
+increase formula hardness.
 
-Accept a dimacs formula in input, and output the formula obtained
-aplying the corresponding substitution.
+Accept a cnf in dimacs format in input
 
 Copyright (C) 2012, 2013  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
 
+__progname__ = "dimacstransform"
+
 import sys
-import argparse
+
+# Python 2.6 does not have argparse library
+try:
+    import argparse
+except ImportError:
+    print("Sorry: %s requires `argparse` library, which is missing.\n"%__progname__,file=sys.stderr)
+    print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
+    print(" * http://pypi.python.org/pypi/argparse",file=sys.stderr)
+    print(" * http://code.google.com/p/argparse",file=sys.stderr)
+    print("",file=sys.stderr)
+    exit(-1)
+
 
 #################################################################
 #          Command line tool follows
@@ -92,112 +104,15 @@ def setup_command_line(parser):
                         type=argparse.FileType('r',0),
                         metavar="<input>",
                         default='-',
-                        help="""A cnf in dimacs file format.
-                        Setting '<input>' to '-' is
+                        help="""Input file. The DAG is read from a file instead of being read from
+                        standard output. Setting '<input>' to '-' is
                         another way to read from standard
                         input.  (default: -)
                         """)
 
 
-def read_formula_clauses(input_file):
-    """Read the CNF from file, in dimacs format, then output its clauses
-    in the internal format directly.
-
-    Arguments:
-    - `inputfile`:  file handle of the input
-
-    """
-
-    cnf = dimacs_parse(input_file)
-
-    yield [-target]
-
-
-### Transform clauses
-
-class StopClauses(StopIteration):
-    """Exception raised when an iterator of clauses finish.
-
-    Attributes:
-        variables -- number of variables in the clause stream
-        clauses   -- number of clauses streamed
-    """
-
-    def __init__(self, variables, clauses):
-        self.variables = variables
-        self.clauses = clauses
-
-    
-def lift(clauses,lift_method='none',lift_rank=None):
-    """Build a new CNF with by lifing the old CNF
-
-    Arguments:  - `clauses`: a sequence of clause *already* in DIMACS
-                             format (i.e. list of integers).
-
-    """
-
-    # Use a dummy lifting operation to get information about the
-    # lifting structure.
-    poslift=None
-    neglift=None
-    
-    dummycnf=CNF([[(True, "x")]])
-    dummycnf=TransformFormula(dummycnf,lift_method,lift_rank)
-
-    varlift    =dummycnf.transform_variable_preamble("x")
-    poslift    =dummycnf.transform_a_literal(True,"x")
-    neglift    =dummycnf.transform_a_literal(False,"x")
-
-    varlift    = [list(dummycnf._compress_clause(cls)) for cls in varlift ]
-    poslift    = [list(dummycnf._compress_clause(cls)) for cls in poslift ]
-    neglift    = [list(dummycnf._compress_clause(cls)) for cls in neglift ]
-    offset     = len(list(dummycnf.variables()))
-
-    # information about the input formula
-    input_clauses   = 0
-    input_variables = 0
-
-    output_clauses   = 0
-    output_variables = 0
-   
-    def substitute(literal):
-        if literal>0:
-            var=literal
-            lift=poslift
-        else:
-            var=-literal
-            lift=neglift
-
-        substitute.max=max(var,substitute.max)
-        return [[ (l/abs(l))*offset*(var-1)+l for l in cls ] for cls in lift]
-
-    substitute.max=0
-        
-    for cls in clauses:
-
-        input_clauses +=1
-
-        # a substituted clause is the OR of the substituted literals
-        domains=[ substitute(lit) for lit in cls ]
-        domains=tuple(domains)
-
-        for clause_tuple in product(*domains):
-            output_clauses +=1
-            yield [lit for clause in clause_tuple for lit in clause ]
-
-    # count the variables
-    input_variables  = substitute.max
-    output_variables = input_variables*offset
-
-    for i in xrange(input_variables):
-        for cls in varlift:
-            output_clauses += 1
-            yield [ (l/abs(l))*offset*i+l for l in cls ]
-
-    raise StopClauses(output_variables,output_clauses)
-    
-
-def dimacstransform(inputfile, liftname, liftrank, output, header=True, comments=True) :
+### Produce the dimacs output from the data
+def dimacstransform(inputfile, method, rank, output, header=True):
 
     # Generate the basic formula
     if header:
@@ -207,8 +122,10 @@ def dimacstransform(inputfile, liftname, liftrank, output, header=True, comments
 
     else:
         output_cache=output
-        
-    cls_iter=lift(read_formula_clauses(inputfile),liftname,liftrank)
+
+    o_header,_,o_clauses = dimacs2compressed_clauses(inputfile)
+
+    cls_iter=transform_compressed_clauses(o_clauses,method,rank)
 
     try:
 
@@ -218,12 +135,12 @@ def dimacstransform(inputfile, liftname, liftrank, output, header=True, comments
             
     except StopClauses as cnfinfo:
 
-        if comments:
-            print("c CNF with transformation \'{}\' of arity {}".format(liftname,liftrank),
-                  file=output)
-
         if header:
             # clauses cached in memory
+            print("c Formula transformed with method '{}' or rank {}\nc".format(method,rank),
+                  file=output)
+            print("\n".join("c"+line for line in o_header.split('\n')),
+                  file=output)
             print("p cnf {} {}".format(cnfinfo.variables,cnfinfo.clauses),
                   file=output)
             output.write(output_cache.getvalue())
@@ -238,6 +155,8 @@ def dimacstransform(inputfile, liftname, liftrank, output, header=True, comments
 ###
 import signal
 def signal_handler(insignal, frame):
+    assert(insignal!=None)
+    assert(frame!=None)
     print('Program interrupted',file=sys.stderr)
     sys.exit(-1)
 
@@ -247,17 +166,6 @@ signal.signal(signal.SIGINT, signal_handler)
 ### Main program
 ###
 def command_line_utility(argv):
-
-    # Python 2.6 does not have argparse library
-    try:
-        import argparse
-    except ImportError:
-        print("Sorry: %s requires `argparse` library, which is missing.\n"%argv[0],file=sys.stderr)
-        print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
-        print(" * http://pypi.python.org/pypi/argparse",file=sys.stderr)
-        print(" * http://code.google.com/p/argparse",file=sys.stderr)
-        print("",file=sys.stderr)
-        exit(-1)
 
     # Parse the command line arguments
     parser=argparse.ArgumentParser(prog='dimacstransform')

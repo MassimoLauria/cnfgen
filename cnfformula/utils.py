@@ -44,7 +44,7 @@ def dimacs2compressed_clauses(file_handle):
         # inside the formula, add it to the header as well. Comments
         # interleaving clauses are not allowed in dimacs format.
         if l[0]=='c':
-            my_header += l[2:] or '\n'
+            my_header += l[1:] or '\n'
             continue
 
         # parse spec line

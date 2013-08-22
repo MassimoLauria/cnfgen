@@ -3,11 +3,8 @@
 
 from __future__ import print_function
 
-from cnfformula import CNF
-from cnfformula import available_transform,TransformFormula
+from cnfformula import available_transform
 from cnfformula.transformation import transform_compressed_clauses,StopClauses
-
-from itertools  import product
 
 
 __docstring__ =\
@@ -174,6 +171,8 @@ def kth2dimacs(inputfile, method, rank, output, header=True):
 ###
 import signal
 def signal_handler(insignal, frame):
+    assert(insignal!=None)
+    assert(frame!=None)
     print('Program interrupted',file=sys.stderr)
     sys.exit(-1)
 
