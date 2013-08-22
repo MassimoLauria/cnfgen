@@ -60,23 +60,10 @@ class TransformedCNF(CNF):
                                for cls in substitutions[i] ]
 
         # build and add new clauses
-        clauses=self._orig_cnf._clauses
-
-        # dictionary of comments
-        commentlines=dict()
-        for (i,c) in self._orig_cnf._comments:
-            commentlines.setdefault(i,[]).append(c)
-
-
-        for i in xrange(len(clauses)):
-
-            # add comments if necessary
-            if i in commentlines:
-                for comment in commentlines[i]:
-                    self._comments.append((len(self._clauses),comment))
+        for orig_cls in self._orig_cnf._clauses:
 
             # a substituted clause is the OR of the substituted literals
-            domains=[ substitutions[lit] for lit in clauses[i] ]
+            domains=[ substitutions[lit] for lit in orig_cls ]
             domains=tuple(domains)
 
             block = [ tuple([lit for clause in clause_tuple
@@ -86,18 +73,10 @@ class TransformedCNF(CNF):
             self._add_compressed_clauses(block)
 
         # transformation may need additional clauses per variables
-        # added here so that the comment order is coherent
-        for i,block in enumerate(varadditional[1:],1):
+        for block in varadditional[1:]:
             if block:
-                self._comments.append((len(self._clauses),
-                                       "Clauses due to transformation {}".format(variablenames[i])))
                 self._add_compressed_clauses(block)
          
-        # add trailing comments
-        if len(clauses) in commentlines:
-            for comment in commentlines[len(clauses)]:
-                self._comments.append((len(self._clauses),comment))
-
         assert self._orig_cnf._check_coherence()
         assert self._check_coherence()
 

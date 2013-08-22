@@ -48,13 +48,13 @@ def reshuffle(cnf,
     out.header="Reshuffling of:\n\n"+cnf.header
 
 
-    vars=list(cnf.variables())
-    N=len(vars)
+    variables=list(cnf.variables())
+    N=len(variables)
     M=len(cnf)
 
     # variable permutation
     if variable_permutation==None:
-        variable_permutation=vars
+        variable_permutation=variables
         random.shuffle(variable_permutation)
     else:
         assert len(variable_permutation)==N
@@ -91,16 +91,6 @@ def reshuffle(cnf,
     out._clauses = [None]*M
     for (old,new) in enumerate(clause_permutation):
         out._clauses[new]=tuple( substitution[l] for l in cnf._clauses[old])
-
-    # load comments
-    assert len(out._comments)==0
-    clause_permutation.append((M,M)) # comments after last clause do not move
-    for (pos,text) in cnf._comments:
-        out._comments.append((clause_permutation[pos],text))
-    clause_permutation.pop()
-    def key(t): return t[0]
-    out._comments.sort(key=key)
-
 
     # return the formula
     assert out._check_coherence(force=True)
@@ -154,13 +144,10 @@ def command_line_reshuffle(argv):
                         """)
 
     g=parser.add_mutually_exclusive_group()
-    g.add_argument('--verbose', '-v',action='count',default=1,
-                   help="""Include comments inside the formula. It may
-                   not be supported by very old sat solvers.
-                   """)
-    g.add_argument('--quiet', '-q',action='store_const',const=0,dest='verbose',
-                   help="""Output just the formula with not header
-                   or comment.""")
+    g.add_argument('--verbose', '-v',action='store_true',default=True,
+                   help="""Output formula header and comments.""")
+    g.add_argument('--quiet', '-q',action='store_false',dest='verbose',
+                   help="""Output just the formula with no header.""")
 
 
     # Process the options
@@ -171,16 +158,9 @@ def command_line_reshuffle(argv):
         random.seed(args.seed)
 
     input_cnf=dimacs2cnf(args.input)
-
     output_cnf=reshuffle(input_cnf)
-
-    # Do we wnat comments or not
-    output_comments=args.verbose >= 2
-    output_header  =args.verbose >= 1
-
-    output_cnf.dimacs_dump(add_header=output_header,
-                           add_comments=output_comments,
-                           output=args.output)
+    output_cnf.dimacs_dump(output=args.output,
+                           export_header=args.verbose)
 
     if args.output!=sys.stdout:
         args.output.close()

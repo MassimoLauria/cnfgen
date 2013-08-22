@@ -56,7 +56,17 @@ import sys
 
 from itertools import combinations
 
-import argparse
+# Python 2.6 does not have argparse library
+try:
+    import argparse
+except ImportError:
+    print("Sorry: %s requires `argparse` library, which is missing.\n"%argv[0],file=sys.stderr)
+    print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
+    print(" * http://pypi.python.org/pypi/argparse",file=sys.stderr)
+    print(" * http://code.google.com/p/argparse",file=sys.stderr)
+    print("",file=sys.stderr)
+    exit(-1)
+
 import random
 
 try:
@@ -150,13 +160,10 @@ class _GeneralCommandLine(_CMDLineHelper):
                             be fine.  (default: current time)
                             """)
         g=parser.add_mutually_exclusive_group()
-        g.add_argument('--verbose', '-v',action='count',default=1,
-                       help="""Add comments inside the formula. It may
-                            not be supported by very old sat solvers.
-                            """)
-        g.add_argument('--quiet', '-q',action='store_const',const=0,dest='verbose',
-                       help="""Output just the formula with not header
-                            or comment.""")
+        g.add_argument('--verbose', '-v',action='store_true',default=True,
+                       help="""Output formula header and comments.""")
+        g.add_argument('--quiet', '-q',action='store_false',dest='verbose',
+                       help="""Output just the formula with no header.""")
         parser.add_argument('--Transform','-T',
                             metavar="<transformation method>",
                             choices=available_transform().keys(),
@@ -775,17 +782,6 @@ def command_line_utility(argv):
     cmdline = _GeneralCommandLine
     subcommands=[_PHP,_TSE,_OP,_GOP,_PEB,_RAM,_RAMLB,_KClique,_OR,_AND]
 
-    # Python 2.6 does not have argparse library
-    try:
-        import argparse
-    except ImportError:
-        print("Sorry: %s requires `argparse` library, which is missing.\n"%argv[0],file=sys.stderr)
-        print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
-        print(" * http://pypi.python.org/pypi/argparse",file=sys.stderr)
-        print(" * http://code.google.com/p/argparse",file=sys.stderr)
-        print("",file=sys.stderr)
-        exit(-1)
-
     # Parse the command line arguments
     parser=argparse.ArgumentParser(prog='cnfgen',epilog="""
     Each <formula type> has its own command line arguments and options.
@@ -817,19 +813,14 @@ def command_line_utility(argv):
 
 
     # Do we wnat comments or not
-    output_comments=args.verbose >= 2
-    output_header  =args.verbose >= 1
 
     if args.output_format == 'latex':
-        output = tcnf.latex(add_header=output_header,
-                            add_comments=output_comments)
+        output = tcnf.latex()
 
     elif args.output_format == 'dimacs':
-        output = tcnf.dimacs(add_header=output_header,
-                           add_comments=output_comments)
+        output = tcnf.dimacs(export_header=args.verbose)
     else:
-        output = tcnf.dimacs(add_header=output_header,
-                           add_comments=output_comments)
+        output = tcnf.dimacs(export_header=args.verbose)
 
     print(output,file=args.output)
 

@@ -108,23 +108,19 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     def _PHP_clause_generator(pigeons,holes,functional,onto):
         # Pigeon axioms
         for p in xrange(1,pigeons+1):
-            yield "Pigeon axiom: pigeon {0} sits in a hole".format(p)
             yield [ (True,'p_{{{0},{1}}}'.format(p,h)) for h in xrange(1,holes+1)]
         # Onto axioms
         if onto:
             for h in xrange(1,holes+1):
-                yield "Onto hole axiom: hole {0} hosts a pigeon".format(h)
                 yield [ (True,'p_{{{0},{1}}}'.format(p,h)) for p in xrange(1,pigeons+1)]
         # No conflicts axioms
         for h in xrange(1,holes+1):
-            yield "No collision in hole {0}".format(h)
             for (p1,p2) in combinations(range(1,pigeons+1),2):
                 yield [ (False,'p_{{{0},{1}}}'.format(p1,h)),
                         (False,'p_{{{0},{1}}}'.format(p2,h)) ]
         # Function axioms
         if functional:
             for p in xrange(1,pigeons+1):
-                yield "No multiple images for pigeon {0}".format(p)
                 for (h1,h2) in combinations(range(1,holes+1),2):
                     yield [ (False,'p_{{{0},{1}}}'.format(p,h1)),
                             (False,'p_{{{0},{1}}}'.format(p,h2)) ]
@@ -134,7 +130,7 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
 
     clauses=_PHP_clause_generator(pigeons,holes,functional,onto)
     for c in clauses:
-        php.add_clause_or_comment(c)
+        php.add_clause(c)
 
     return php
 
@@ -171,16 +167,10 @@ def PebblingFormula(digraph):
     # add the clauses
     for v in vertices:
 
-        # If predecessors are pebbled it must be pebbles
-        if digraph.in_degree(v)!=0:
-            peb.add_comment("Pebbling propagates on vertex {}".format(v))
-        else:
-            peb.add_comment("Source vertex {}".format(v))
-
+        # If predecessors are pebbled the vertex must be pebbled
         peb.add_clause([(False,p) for p in digraph.predecessors(v)]+[(True,v)])
 
         if digraph.out_degree(v)==0: #the sink
-            peb.add_comment("Sink vertex {}".format(v))
             peb.add_clause([(False,v)])
 
     return peb
@@ -222,8 +212,9 @@ def GraphOrderingPrinciple(graph,total=False,smart=False):
     else:
         gop.header=name+".\n"+gop.header
 
+    #
     # Non minimality axioms
-    gop.add_comment("Each vertex has a predecessor")
+    #
 
     # Fix the vertex order
     V=graph.nodes()
@@ -244,9 +235,10 @@ def GraphOrderingPrinciple(graph,total=False,smart=False):
                 clause += [(True,'x_{{{0},{1}}}'.format(V[hi],V[med]))]
         gop.add_clause(clause)
 
+    #
     # Transitivity axiom
-    gop.add_comment("Relation must be transitive")
-
+    #
+    
     if len(V)>=3:
         if smart:
             # Optimized version if smart representation of totality is used
@@ -265,14 +257,12 @@ def GraphOrderingPrinciple(graph,total=False,smart=False):
 
     if not smart:
         # Antisymmetry axioms (useless for 'smart' representation)
-        gop.add_comment("Relation must be anti-symmetric")
         for (v1,v2) in combinations(V,2):
             gop.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
                             (False,'x_{{{0},{1}}}'.format(v2,v1))])
 
         # Totality axioms (useless for 'smart' representation)
         if total:
-            gop.add_comment("Relation must be total")
             for (v1,v2) in combinations(V,2):
                 gop.add_clause([ (True,'x_{{{0},{1}}}'.format(v1,v2)),
                                  (True,'x_{{{0},{1}}}'.format(v2,v1))])
@@ -296,18 +286,18 @@ def RamseyNumber(s,k,N):
         with no indipendent set of size %d and no clique of size %d
         """ % (s,k,N)) + ram.header
 
+    #
     # No independent set of size s
-    ram.add_comment("No independent set of size %d" % s)
-
+    #
     for vertex_set in combinations(xrange(1,N+1),s):
         clause=[]
         for edge in combinations(vertex_set,2):
             clause += [(True,'e_{{{0},{1}}}'.format(*edge))]
         ram.add_clause(clause)
 
+    #
     # No clique of size k
-    ram.add_comment("No clique of size %d"%k)
-
+    #
     for vertex_set in combinations(xrange(1,N+1),k):
         clause=[]
         for edge in combinations(vertex_set,2):
@@ -346,8 +336,7 @@ vertices are is specified in input.
     # add constraints
     ordered_edges=graph.edges()
     for v,c in zip(V,charges):
-        tse.add_comment("Vertex {} must have {} charge".format(v," odd" if c else "even"))
-
+        
         edges=filter(lambda e: v in e, ordered_edges)
 
         # produce all clauses and save half of them
@@ -380,7 +369,7 @@ def SubgraphFormula(graph,templates):
 
     if len(selectors)>1:
 
-        F.add_comment("Exactly of the graphs must be a subgraph")
+        # Exactly one of the graphs must be selected as subgraph
         F.add_clause([(True,v) for v in selectors])
 
         for (a,b) in combinations(selectors):
@@ -405,24 +394,17 @@ def SubgraphFormula(graph,templates):
     for i,j in product(range(k),range(N)):
         F.add_variable("S_{{{0}}}{{{1}}}".format(i,j))
 
-    # each vertex has an image
-    F.add_comment("A subgraph is chosen")
+    # each vertex has an image...
     for i in range(k):
         F.add_clause([(True,"S_{{{0}}}{{{1}}}".format(i,j)) for j in range(N)])
 
-    # and exactly one
-    F.add_comment("The mapping is a function")
+    # ...and exactly one
     for i,(a,b) in product(range(k),combinations(range(N),2)):
         F.add_clause([(False,"S_{{{0}}}{{{1}}}".format(i,a)),
                       (False,"S_{{{0}}}{{{1}}}".format(i,b))  ])
 
-    # # and there are no collision
-    # F.add_comment("The function is injective")
-    # for (a,b),j in product(combinations(range(k),2),range(N)):
-    #     F.add_clause([(False,"S_{{{0}}}{{{1}}}".format(a,j)),
-    #                   (False,"S_{{{0}}}{{{1}}}".format(b,j))  ])
-
-    F.add_comment("Mapping is strictly monotone increasing (so it is also injective)")
+ 
+    # Mapping is strictly monotone increasing (so it is also injective)
     localmaps = product(combinations(range(k),2),
                         combinations_with_replacement(range(N),2))
 
@@ -437,7 +419,7 @@ def SubgraphFormula(graph,templates):
 
     if len(templates)==1:
 
-        activation_prefixes=[[]]
+        activation_prefixes = [[]]
 
     elif len(templates)==2:
 
@@ -459,7 +441,6 @@ def SubgraphFormula(graph,templates):
         localmaps = product(combinations(range(k),2),
                             combinations(range(N),2))
 
-        F.add_comment("structure constraints for subgraph {}".format(i))
 
         for (i1,i2),(j1,j2) in localmaps:
 

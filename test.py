@@ -332,7 +332,7 @@ class TestKth2Dimacs(TestCNF) :
         input.seek(0)
         peb = cnfgen.PebblingFormula(G)
         lift = cnfformula.TransformFormula(peb, liftname, liftrank)
-        reference_output = lift.dimacs(add_header=False, add_comments=False)+"\n"
+        reference_output = lift.dimacs(export_header=False)+"\n"
         
         kth2dimacs_output=StringIO.StringIO()
         kth2dimacs.kth2dimacs(input, liftname, liftrank, kth2dimacs_output, header=True, comments=False)

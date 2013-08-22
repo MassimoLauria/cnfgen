@@ -41,20 +41,20 @@ https://github.com/MassimoLauria/cnfgen.git
 """
 
 
-## implementation of lookahead iterator
-class _ClosedIterator:
-    def __init__(self, iter,endToken=None):
-        self.iter = iter
-        self.endToken = endToken
+# ## implementation of lookahead iterator
+# class _ClosedIterator:
+#     def __init__(self, iter,endToken=None):
+#         self.iter = iter
+#         self.endToken = endToken
 
-    def __iter__(self):
-        return self
+#     def __iter__(self):
+#         return self
 
-    def next(self):
-        try:
-            return self.iter.next()
-        except StopIteration:
-            return self.endToken
+#     def next(self):
+#         try:
+#             return self.iter.next()
+#         except StopIteration:
+#             return self.endToken
 
 ###
 ### Basic CNF class
@@ -73,30 +73,26 @@ class CNF(object):
     Use `add_clause` to add new clauses to CNF. Clauses will be added
     multiple times in case of multiple insertion of the same clauses.
 
-    For  documentation purpose  it  is possible  use `add_comment`  to
-    interleave  clauses   with  documentation  text,  which   will  be
-    *optionally* exported to LaTeX or dimacs.  Note that strict dimacs
-    format   do   not   allow   comments   except   for   an   initial
-    header.  Nevertheless  most of  SAT  solver  allows such  comments
-    anyway.
+    For documentation purpose it is possible use have an additional
+    comment header at the top of the formula, which will be
+    *optionally* exported to LaTeX or dimacs. 
 
     Implementation:  for  efficiency reason  clauses and  variable can
     only be added,  and not deleted. Furthermore order  matters in the
     representation.
+
     """
 
-    def __init__(self, clauses_and_comments=None, header=None):
+    def __init__(self, clauses=None, header=None):
         """Propositional formulas in conjunctive normal form.
 
         Arguments:
-        - `clauses_and_comments`: ordered list of clauses or comments;
-                            a clause with k literals list containing k
-                            pairs, each representing a literal (see
-                            `add_clause`).  First element is the
-                            polarity and the second is the variable,
-                            which must be an hashable object. A
-                            comment is just a string of text (see
-                            `add_comment`)
+        - `clauses`: ordered list of clauses;
+                     a clause with k literals list containing k
+                     pairs, each representing a literal (see
+                     `add_clause`).  First element is the
+                     polarity and the second is the variable,
+                     which must be an hashable object.
 
                      E.g. (not x3) or x4 or (not x2) is encoded as
                      [(False,"x3"),(True,"x4"),False,"x2")]
@@ -108,7 +104,6 @@ class CNF(object):
 
         # Initial empty formula
         self._clauses         = []
-        self._comments        = []
 
         # Variable indexes <--> Variable names correspondence
         # first variable is indexed with 1.
@@ -120,8 +115,8 @@ class CNF(object):
         self._coherent        = True
 
         # Load the initial data into the CNF
-        for c in (clauses_and_comments or []):
-            self.add_clause_or_comment(c)
+        for c in (clauses or []):
+            self.add_clause(c)
 
 
     # Formula contains an header property
@@ -228,7 +223,7 @@ class CNF(object):
         >>> c._add_compressed_clauses([[-1,2,3],[-2,1],[1,-3]])
         >>> c._check_coherence()
         True
-        >>> print(c.dimacs(add_header=False,add_comments=False))
+        >>> print(c.dimacs(export_header=False))
         p cnf 3 3
         -1 2 3 0
         -2 1 0
@@ -241,7 +236,7 @@ class CNF(object):
         >>> c._add_compressed_clauses([[-1, 2]])
         >>> c._check_coherence()
         True
-        >>> print(c.dimacs(add_header=False,add_comments=False))
+        >>> print(c.dimacs(export_header=False))
         p cnf 3 5
         -1 2 3 0
         -2 1 0
@@ -300,12 +295,6 @@ class CNF(object):
         for clause in self._clauses:
             for literal in clause:
                 if not 0 < abs(literal) <= N: return False
-
-        # Check that comments refer to actual clauses (or one more)
-        oldpos=0
-        for pos,text in self._comments:
-            if not oldpos <= pos <= M: return False
-            oldpos = pos
 
         # formula passed all tests
         self._coherent = True
@@ -371,61 +360,6 @@ class CNF(object):
         except TypeError:
             raise TypeError("%s is not a legal variable name" %var)
 
-    def add_comment(self,comment):
-        """Add a comment to the formula.
-
-        This is useful for documenting cnfs in DIMACS format which may
-        be quite cryptic.  Notice that you have the option to
-        intersperse comments among the clauses, but that may not be
-        supported by your SAT solver. Anyway comments can be removed
-        from you Dimacs/LaTeX output.
-
-        Arguments:
-        - `comment`: an unicode string of text.
-
-        >>> c=CNF()
-        >>> c.add_comment("First clause")
-        >>> c.add_clause([(True,"x"),(False,"y")])
-        >>> c.add_comment("Second clause")
-        >>> c.add_clause([(True,"y"),(False,"z")])
-        >>> print( c.dimacs(False,True) )
-        p cnf 3 2
-        c First clause
-        1 -2 0
-        c Second clause
-        2 -3 0
-        >>> print(c.dimacs(add_header=False,add_comments=False))
-        p cnf 3 2
-        1 -2 0
-        2 -3 0
-        """
-        self._comments.append((len(self),comment[:]))
-
-    def add_clause_or_comment(self, data):
-        """Add a clause or a comment to the formula
-
-        Call either `add_comment` or `add_clause`, depending on the
-        type of the input value. If it is a string then it is a
-        comment.
-
-        Arguments:
-        - `data`: either a clause or a comment.
-
-        >>> c=CNF()
-        >>> data=["Hej",[(False,"x"),(True,"y")],"Hej da"]
-        >>> for d in data: c.add_clause_or_comment(d)
-        >>> print(c.dimacs(add_header=False,add_comments=True))
-        p cnf 2 1
-        c Hej
-        -1 2 0
-        c Hej da
-        """
-        assert self._coherent
-        if isinstance(data,basestring):
-            self.add_comment(data)
-        else:
-            self.add_clause(data)
-
     #
     # High level API: read the CNF
     #
@@ -434,9 +368,9 @@ class CNF(object):
         """Returns (a copy of) the list of variable names.
         """
         assert self._coherent
-        vars=iter(self._index2name)
-        vars.next()
-        return vars
+        vars_iterator=iter(self._index2name)
+        vars_iterator.next()
+        return vars_iterator
 
     def clauses(self):
         """Return the list of clauses
@@ -448,7 +382,7 @@ class CNF(object):
     #  Export to useful output format
     #
 
-    def dimacs(self,add_header=True,add_comments=False):
+    def dimacs(self,export_header=True):
         """Produce the dimacs encoding of the formula
 
         >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],\
@@ -466,15 +400,15 @@ class CNF(object):
         The empty formula
 
         >>> c=CNF()
-        >>> print(c.dimacs(add_header=False))
+        >>> print(c.dimacs(export_header=False))
         p cnf 0 0
         """
         from cStringIO import StringIO
         output = StringIO()
-        self.dimacs_dump(add_header,add_comments,output)
+        self.dimacs_dump(output,export_header)
         return output.getvalue()
 
-    def dimacs_dump(self,add_header=True,add_comments=False,output=None):
+    def dimacs_dump(self,output=None,export_header=True):
         """Dump the dimacs encoding of the formula to the file-like output
         """
         assert self._coherent
@@ -484,39 +418,19 @@ class CNF(object):
         m = len(self)
 
         # A nice header
-        if add_header:
+        if export_header:
             for s in self.header.split("\n"): output.write( ("c "+s).rstrip()+"\n")
 
         # Formula specification
         output.write( "p cnf {0} {1}".format(n,m) )
 
-        # No comments
-        if not add_comments:
-            for c in self._clauses:
-                output.write("\n" +  " ".join([str(l) for l in c])  + " 0")
-            return
+        # Clauses
+        for c in self._clauses:
+            output.write("\n" +  " ".join([str(l) for l in c])  + " 0")
+        
+        
 
-        # with comments
-        assert add_comments
-        clauseidx=_ClosedIterator(enumerate(self._clauses),(m+1,None))
-        comments =_ClosedIterator(iter(self._comments),(m+1,None))
-
-        index_clause,clause   = clauseidx.next()
-        index_comment,comment = comments.next()
-
-        while True:
-
-            if index_clause==index_comment==m+1: break
-
-            if index_comment <= index_clause:
-                for s in comment.split("\n"): output.write( ("\nc "+s).rstrip())
-                index_comment,comment = comments.next()
-            else:
-                output.write("\n" +  " ".join([str(l) for l in clause])  + " 0")
-                index_clause,clause   = clauseidx.next()
-
-
-    def latex(self,add_header=True,add_comments=True):
+    def latex(self,export_header=True):
         """Produce the LaTeX version of the formula
 
         >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],\
@@ -531,7 +445,7 @@ class CNF(object):
         \\land \\left( \\neg{x_2} \\lor \\neg{x_4} \\right)
         \\land \\left(     {x_2} \\lor     {x_3} \\lor \\neg{x_4} \\right) }
         >>> c=CNF()
-        >>> print(c.latex(add_header=False))
+        >>> print(c.latex(export_header=False))
         \\ensuremath{%
            \\top }
 
@@ -542,7 +456,7 @@ class CNF(object):
         output = StringIO()
 
         # A nice header
-        if add_header:
+        if export_header:
             for s in self.header.split("\n"): output.write( ("% "+s).rstrip()+"\n" )
 
         # map literals to latex formulas
@@ -553,7 +467,7 @@ class CNF(object):
                 return "\\neg{"+self._index2name[-l]+"}"
 
 
-       # We produce clauses and comments
+        # We produce clauses and comments
         output.write( "\\ensuremath{%" )
         empty_cnf=True
 
@@ -573,33 +487,15 @@ class CNF(object):
                              " \\lor ".join(map_literals(l) for l in cls) + \
                              " \\right)")
 
-        # with comments
-        m = len(self._clauses)
-        clauseidx=_ClosedIterator(enumerate(self._clauses),(m+1,None))
-        if add_comments:
-            comments =_ClosedIterator(iter(self._comments),(m+1,None))
-        else:
-            comments =_ClosedIterator(iter([]),(m+1,None))
+        # print all clauses
+        for clause in self._clauses:
+            write_clause(clause,empty_cnf)
+            empty_cnf=False
 
-        index_clause,clause   = clauseidx.next()
-        index_comment,comment = comments.next()
-
-        while True:
-
-            if index_clause==index_comment==m+1: break
-
-            if index_comment <= index_clause:
-                for s in comment.split("\n"): output.write( ("\n% "+s).rstrip(' ') )
-                index_comment,comment = comments.next()
-            else:
-                write_clause(clause,empty_cnf)
-                index_clause,clause   = clauseidx.next()
-                empty_cnf=False
-
-        # No clause in the CNF
+        # no clause in the CNF
         if empty_cnf: output.write("\n   \\top")
 
-        # final formula
+        # close the  formula
         output.write(" }")
         return output.getvalue()
 
@@ -608,7 +504,7 @@ class CNF(object):
 ###
 ### Various utility function for CNFs
 ###
-def parity_constraint( vars, b ):
+def parity_constraint( variables, b ):
     """Output the CNF encoding of a parity constraint
 
     E.g. X1 + X2 + X3 = 1 (mod 2) is encoded as
@@ -630,7 +526,7 @@ def parity_constraint( vars, b ):
     >>> parity_constraint(['a'],0)
     [[(False, 'a')]]
     """
-    domains = tuple([ ((True,var),(False,var)) for var in vars] )
+    domains = tuple([ ((True,var),(False,var)) for var in variables] )
     clauses=[]
     for c in product(*domains):
         # Save only the clauses with the right polarity

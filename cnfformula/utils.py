@@ -30,12 +30,11 @@ def dimacs2cnf(file_handle):
 
         line_counter+=1
 
-        # add the comment to the header or in the middle
+        # Add all the comments to the header. If a comment is found
+        # inside the formula, add it to the header as well. Comments
+        # interleaving clauses are not allowed in dimacs format.
         if l[0]=='c':
-            if n<0:
-                cnf.header = cnf.header+(l[2:] or '\n')
-            else:
-                cnf.add_comment(l[2:].rstrip('\n') or '\n')
+            cnf.header = cnf.header+(l[2:] or '\n')
             continue
 
         # parse spec line
