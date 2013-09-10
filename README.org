@@ -4,13 +4,16 @@
 
 * CNF formula generator and tools
 
-  This repository provides the python scripts
+  This repository provides the python programs
 
   =cnfgen.py=
   =reshuffle.py=
   =dimacstransform.py=
   =kth2dimacs.py=
-  
+
+  You  can get  a brief  help on  how to  use these  tools by  running
+  =<program_name> --help= from the command line.
+ 
   Tool =cnfgen= is CNF formulas generator (i.e. propositional formulas
   in conjunctive normal form). It produce formulas of interest for the
   proof  complexity  community  (e.g. pigeonhole  principle,  ordering
@@ -29,11 +32,17 @@
   afterward.   These transformations  systematically make  the formula
   harder for SAT solver, so they are of interest for proof complexity. 
   
-  : cnfgen.py -o <output_file> [transformation options] <formula_type> <formula_parameters>
+  : cnfgen.py -o <ofile> --Transform <type> --Tarity <N> <ftype> <fparameters>
 
-  To get more information about the available transformations type
+  To get more information about the available transformation types
   
   : cnfgen.py --help-transformation
+
+  Here's how to get a pigeonhole  principle formula from 10 pigeons to
+  7 holes into file =pigeon.cnf=:
+
+  : cnfgen.py -o pigeon.cnf php 10 7 
+
 
   =reshuffle=  takes a  CNF in  input and  outputs the  same CNF  with
   a  random  variables  order,  clauses order  and  variable  polarity
@@ -47,7 +56,7 @@
   : dimacstransform.py --Transform <type> --Tarity <N> -i <input_cnf> -o <output_cnf>
   
   applies transformation =<type>= of arity N to the input CNF. To see the
-  available types of transformations type
+  available types of transformation.
 
   : dimacstransform.py --help-transformation
 
@@ -55,19 +64,48 @@
   format  (see  below),  and   produces  the  corresponding  *pebbling
   formula*. Optionally can apply formula transformation afterward.
 
+  : kyh2dimacs.py [--Transform <type> --Tarity <N>] -i <input_graph>
+ 
+*** KTH graph format
+   
+    Graphs must be  given in the following format: the  file can start
+    with some comments line, each of them starting with character =c=.
+    The next non  black line must contain the number  n of vertices in
+    the graph.  Then  there must be $n$ non black  lines, one for each
+    vertex 1 ≤ i ≤ n. The lines have the format:
+
+    : i : <pred 1> <pred 2> <pred 3> ... <pred k>
+    
+    where =<pred  1> <pred 2>  <pred 3> ...  <pred k>= is  the ordered
+    list  of  all vertices  which  have  an  outgoing edge  to  vertex
+    i. Here’s an example
+
+    : c
+    : c This is a DAG of 5 vertices
+    : c
+    : 5
+    : 1  :
+    : 2  : 
+    : 3  : 1  
+    : 4  : 3  
+    : 5  : 2  4
+   
+
+
+  *Performance*: the code contains a lot of sanity checks and internal
+  safe nets.   They take  a toll  on the running  time and  memory: to
+  avoid that you can use the  python optimization flag =-O= which will
+  (among other thing) suppress these checks.
+
+  : python -O <program_name> [command line options for <program_name>]
+
+
 ** Target of the software
 
    Anyone can use this software of  course! But the main target is the
    community  of SAT  solver programmers,  who may  want to  test they
    solvers  on  canonical  families  of  formulas.   Proof  complexity
    researcher may be interested to, since they study the computational
-
-** Usage
-
-   
-
- 
-   complexity of proving that a CNF formula is unsatisfiable.
 
 ** Requirements
 
@@ -138,28 +176,4 @@
    For example if the formula is defined  on n variables x₁, x₂, …, xₙ
    then the line =3 -1 5 6 -4 0= encodes the clause x3 v ¬x₁ v x₅ v x₆ v ¬x₄.
 
-** KTH graph format
-  
-   Graph must  be given in the  following format: the file  can start
-   with some comments line, each of them starting with character =c=.
-   The next non  black line must contain the number  n of vertices in
-   the graph.  Then there must be  $n$ non black lines,  one for each
-   vertex 1 ≤ i ≤ n. The lines have the format:
-
-   : i : <pred 1> <pred 2> <pred 3> ... <pred k>
-   
-   where =<pred  1> <pred 2>  <pred 3> ...  <pred k>= is  the ordered
-   list  of  all vertices  which  have  an  outgoing edge  to  vertex
-   i. Here’s an example
-
-   : c
-   : c This is a DAG of 5 vertices
-   : c
-   : 5
-   : 1  :
-   : 2  : 
-   : 3  : 1  
-   : 4  : 3  
-   : 5  : 2  4
-  
 
