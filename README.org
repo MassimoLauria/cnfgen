@@ -2,70 +2,72 @@
 #+OPTIONS:     H:2 num:nil toc:nil \n:nil @:t ::t |:t ^:t f:t TeX:t
 
 
-* Generator of propositional formulas in CNF form
+* CNF formula generator and tools
 
+  This repository provides the python scripts
+
+  =cnfgen.py=
+  =reshuffle.py=
+  =dimacstransform.py=
+  =kth2dimacs.py=
+  
   Tool =cnfgen= is CNF formulas generator (i.e. propositional formulas
-  in  conjunctive normal form).  It is  still in  its infancy,  so you
-  cannot use it.
+  in conjunctive normal form). It produce formulas of interest for the
+  proof  complexity  community  (e.g. pigeonhole  principle,  ordering
+  principle, …)  both in  dimacs and LaTeX  format. The  basic command
+  line to get the dimacs version of a formula is 
 
-** What is a CNF?
+  : cnfgen.py -o <output_file> <formula_type> <formula_parameters>
 
-   A propositional formula a  representation of a function oven ${0,1}$
-   variables. Consider such a variable  $x$, then $\neg x$ is a formula
-   which  has  value $1-x$.  This  is  called  the /negation/  of  $x$.
-   Expressions of the form $x$  and $\neg x$ are called \literals/, and
-   a /clause/ is a disjunction
-   $$
-   l_1 \vee l_2 \vee \ldots \vee l_k
-   $$
-   where each $l_i$ is a literal. A clause evaluates to one if and only
-   if *at  least* one of the  literals evaluates to  one. Otherwise the
-   clause evaluates to zero.
-   A CNF is a conjunction of clauses
-   $$
-   C_1 \vee C_2 \vee \ldots \vee C_m
-   $$
-   and the CNF evaluates to one if *all* clauses evaluates to one.
+  Each  formula family  has its  own parameters  and options.  Some of
+  them even  require further input.  To get more  specific information
+  on each formula family type
 
-   To *falsify* a  formula we need to find a value  of inputs for which
-   the formula evaluates  to $0$. In order to  *satisfy* the formula we
-   need an  input to make it evaluate  to 1. Observe that  to falsify a
-   CNF it is sufficient to pick  a clause and set the variables in such
-   a way that all literals in the clause evaluate to zero. No efficient
-   way it  is known, in general,  to discover whether a  formula in CNF
-   form has a satisfying input or not.
+  : cnfgen.py <formula_type> --help
 
-** Target for the sofware
+  =cnfgen= allows  to apply  transformations on the  generated formula
+  afterward.   These transformations  systematically make  the formula
+  harder for SAT solver, so they are of interest for proof complexity. 
+  
+  : cnfgen.py -o <output_file> [transformation options] <formula_type> <formula_parameters>
+
+  To get more information about the available transformations type
+  
+  : cnfgen.py --help-transformation
+
+  =reshuffle=  takes a  CNF in  input and  outputs the  same CNF  with
+  a  random  variables  order,  clauses order  and  variable  polarity
+  flips.
+
+  : reshuffle.py -i <input_cnf> -o <output_cnf> [-S random_seed]
+
+  =dimacstransform= applies  formula transformations to any  CNF given
+  in input. The command line
+
+  : dimacstransform.py --Transform <type> --Tarity <N> -i <input_cnf> -o <output_cnf>
+  
+  applies transformation =<type>= of arity N to the input CNF. To see the
+  available types of transformations type
+
+  : dimacstransform.py --help-transformation
+
+  =kth2dimacs= gets  a directed  acyclic graph in  input in  KTH graph
+  format  (see  below),  and   produces  the  corresponding  *pebbling
+  formula*. Optionally can apply formula transformation afterward.
+
+** Target of the software
 
    Anyone can use this software of  course! But the main target is the
-   community of  SAT solver  programmers, who may  want top  test they
-   solvers on canonical families  of formulas. Another community which
-   may be interested is the  one of proof complexity researcher, which
-   are interested  in the computational  complexity of proving  that a
-   CNF formula is unsatisfiable.
+   community  of SAT  solver programmers,  who may  want to  test they
+   solvers  on  canonical  families  of  formulas.   Proof  complexity
+   researcher may be interested to, since they study the computational
 
+** Usage
 
-** DIMACS encoding of CNFs
+   
 
-   The program outputs CNF  formulas encoded in /dimacs/ format, which
-   is a very simple format which can be parse easily with =scanf= from
-   the standard C library. Basically has the following structure:
-
-   The  first line  specifies how  many  variables and how  many
-   clauses are  in the  CNF formulas. The  next lines are  sequence of
-   non zero integers followed by zero.
-   : p cnf <N> <M>
-   : <i> <i> <i> <i> 0
-   : <i> <i> <i> 0
-   : ...
-   Each  line except  for the  first one  represents a  clause  in the
-   following way:   a positive number  $t$ is the positive  literal on
-   the  variable indexed  by $t$.  A  negative number  is the  negated
-   literal  on the  variable  indexed  by $-t$.   For  example if  the
-   formula is  defined on $n$  variables $x_1, x_2, \ldots,  x_n$ then
-   the line =3 -1 5 6 -4 0= encodes clause $x_3 \vee \neg x_1 \vee x_5
-   \vee x_6 \vee \neg x_4$.
-
+ 
+   complexity of proving that a CNF formula is unsatisfiable.
 
 ** Requirements
 
@@ -75,10 +77,89 @@
    Optionals requirements are
 
    - =networkx= library, which is used to parse some input formats for
-     specifying graphs (Not implemented yet).
+     specifying graphs.
 
-   - =pygraphviz= which  is also used to read  some graph formats (Not
-     implemented yet).
+   - =pygraphviz= which  is also used to read  some graph formats.
 
    If any  optional requirement is missing, the  relative features are
-   disactivated.
+   not activated.
+
+* Formula Families
+
+* Formula Transformations
+
+* Background
+
+** What is a CNF?
+
+   A propositional formula a  representation of a function oven {0,1}
+   variables. Consider such a variable  x, then ¬x is a formula
+   which  has  value 1-x.  This  is  called  the /negation/  of  x.
+   Expressions of the form x  and ¬x are called \literals/, and
+   a /clause/ is a disjunction
+
+   l₁ v l₂ v … v lₖ
+
+   where each lᵢ is a literal. A clause evaluates to one if and only
+   if *at  least* one of the  literals evaluates to  one. Otherwise the
+   clause evaluates to zero.
+   A CNF is a conjunction of clauses
+
+   C₁ ∧ C₂ ∧ … ∧ Cₘ
+
+   and the CNF evaluates to one if *all* clauses evaluates to one.
+
+   To  *falsify* a  formula we  need an  input for  which the  formula
+   evaluates to 0;  to *satisfy* a formula we need  an input for which
+   it evaluates to 1.  Observe that  to falsify a CNF it is sufficient
+   to pick  a clause  and set  the variables  in such  a way  that all
+   literals in  the clause  evaluate to zero.   There is  no efficient
+   algorithm that decides whether a CNF is satisfiable or not.
+
+** DIMACS encoding of CNFs
+
+   The program outputs CNF formulas  encoded in /dimacs/ format, which
+   has the following structure:
+
+   at the  beginning of the file  there may be an  arbitrary number of
+   comment lines, which  must start with character =c=.  The first non
+   comment line specifies how many  variables and how many clauses are
+   in  the CNF  formulas.  The next  lines are  sequence  of non  zero
+   integers followed by zero.
+   : p cnf <N> <M>
+   : <i> <i> <i> <i> 0
+   : <i> <i> <i> 0
+   : ...
+   Each  line  after the  specification  represents  a clause  in  the
+   following way:  a positive number t  is the positive literal on the
+   variable indexed by t.  A negative  number t is the negated literal
+   on  the variable  indexed by  -t.  
+
+   For example if the formula is defined  on n variables x₁, x₂, …, xₙ
+   then the line =3 -1 5 6 -4 0= encodes the clause x3 v ¬x₁ v x₅ v x₆ v ¬x₄.
+
+** KTH graph format
+  
+   Graph must  be given in the  following format: the file  can start
+   with some comments line, each of them starting with character =c=.
+   The next non  black line must contain the number  n of vertices in
+   the graph.  Then there must be  $n$ non black lines,  one for each
+   vertex 1 ≤ i ≤ n. The lines have the format:
+
+   : i : <pred 1> <pred 2> <pred 3> ... <pred k>
+   
+   where =<pred  1> <pred 2>  <pred 3> ...  <pred k>= is  the ordered
+   list  of  all vertices  which  have  an  outgoing edge  to  vertex
+   i. Here’s an example
+
+   : c
+   : c This is a DAG of 5 vertices
+   : c
+   : 5
+   : 1  :
+   : 2  : 
+   : 3  : 1  
+   : 4  : 3  
+   : 5  : 2  4
+  
+
