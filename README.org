@@ -266,7 +266,7 @@
     Notice that this  formula is equivalent to  the ordering principle
     if the underlying graph is the complete one.
     
-*** Pebbling formula
+*** Pebbling formula (=peb=)
 
     A directed acyclic graph G has some vertices with no incoming arcs
     (*sources*) and  vertices with no  outgoing arcs (*sinks*).  For a
@@ -280,7 +280,7 @@
 
     : cnfgen.py peb -i <inputDAG>
     
-*** K-clique formula
+*** K-clique formula (=kclique=)
 
     If given a graph G, the formula  claims that there is no clique of
     size at least k in the graph G. 
@@ -293,11 +293,31 @@
 
     : cnfgen.py kclique <k> -i <input_graph> --plantclique <k>
 
-*** Ramsey number formula (upper bound)
+*** Ramsey number formula (=ram=)
+   
+    The simplest  version of the  famous /Ramsey theorem/ says  that for
+    every s and  k there is a  number r(s,k) such that  every graph of
+    r(s,k)  vertices has  either an  independent set  of size  s or  a
+    clique of size k. Command line
 
-    
+    : cnfgen.py ram <s> <k> <N>
 
-*** Ramsey number witness of lower bound
+    produces  a formula  that claims  that r(s,k)>N.  If a  SAT solver
+    claims that  the formula is  unsatisfiable, then it also  prove an
+    upper  bound r(s,k)≤N,  otherwise it  would  give a  witness of  a
+    Ramsey number lower bound.
+
+*** Ramsey number witness of lower bound (=ramlb=)
+
+    If given  a graph G,  the formula claims  that there is  either an
+    independent set of size s or a clique of size k.
+
+    : cnfgen.py ramlb <k> <s> -i <input_graph> 
+
+    If the  formula is  unsatisfiable, it  means that  the graph  is a
+    witness  of   the  lower   bound  r(s,k)>|V(G)|  for   the  Ramsey
+    numbers. While the  =ram= formula allows to find a  witness with a
+    SAT solver, this formula allow the *verification*.
 
 *** OR formula
 
