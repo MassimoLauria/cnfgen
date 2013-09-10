@@ -280,10 +280,22 @@
 
     : cnfgen.py peb -i <inputDAG>
     
-
 *** K-clique formula
 
+    If given a graph G, the formula  claims that there is no clique of
+    size at least k in the graph G. 
+
+    : cnfgen.py kclique <k> -i <input_graph> 
+
+    Notice that there is  the additional option =--plantclique= that
+    plant a random clique in the graph.  In this way it is possible to
+    study the behavior of SAT solver on the /hidden clique problem/.
+
+    : cnfgen.py kclique <k> -i <input_graph> --plantclique <k>
+
 *** Ramsey number formula (upper bound)
+
+    
 
 *** Ramsey number witness of lower bound
 
