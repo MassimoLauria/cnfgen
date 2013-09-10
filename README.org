@@ -237,7 +237,7 @@
     first  vertex is  labelled  1) or  one  of =random=,  =randomodd=,
     =randomeven=.
 
-*** Ordering principle
+*** Ordering principle (=op=)
 
     The formula  claims that there  is partial order  over a set  of N
     elements,   such   that   every   element   has   at   least   one
@@ -251,9 +251,24 @@
     enforce  totality; =-s=  uses xᵢⱼ=0  to  encode i>j  and xᵢⱼ=1  to
     encode i<j. The latter encoding itself enforces totality.
 
-*** Graph ordering principle
+*** Graph ordering principle (=gop=)
 
+    The graph ordering  principle is a variant  of ordering principle:
+    given a graph G  of n vertices, the formula claim  that there is a
+    partial (or total) order on V(G),  such that every vertex there is
+    another one which is
+    
+    - a predecessor in the order;
+    - a neighbor in the graph.
+
+    : cnfgen.py gop [-t|-s] -i <input_graph>
+
+    Notice that this  formula is equivalent to  the ordering principle
+    if the underlying graph is the complete one.
+    
 *** Pebbling formula
+
+    
 
 *** K-clique formula
 
