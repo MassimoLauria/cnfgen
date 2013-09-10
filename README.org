@@ -6,15 +6,18 @@
 
   This repository provides the python programs
 
-  =cnfgen.py=
-  =reshuffle.py=
-  =dimacstransform.py=
-  =kth2dimacs.py=
+  - =cnfgen.py= formula generator;
+
+  - =reshuffle.py= random shuffler;
+
+  - =dimacstransform.py= apply litfing or substitution; 
+
+  - =kth2dimacs.py= make pebbling formula from a DAG.
 
   You  can get  a brief  help on  how to  use these  tools by  running
   =<program_name> --help= from the command line.
 
-** CNF generator =cnfgen.py= 
+** CNF generator =cnfgen= 
 
   Tool =cnfgen= is CNF formulas generator (i.e. propositional formulas
   in conjunctive normal form). It produce formulas of interest for the
@@ -56,7 +59,7 @@
     for some  default graphs from  the command line (e.g  grid graphs,
     random graphs...).
 
-** DIMACS file shuffler =reshuffle.py= 
+** DIMACS file shuffler =reshuffle= 
 
   =reshuffle=  takes a  CNF in  input and  outputs the  same CNF  with
   a  random  variables  order,  clauses order  and  variable  polarity
@@ -64,7 +67,7 @@
 
   : reshuffle.py -i <input_cnf> -o <output_cnf> [-S random_seed]
 
-** DIMACS file transformation =dimacstransform.py= 
+** DIMACS transformation =dimacstransform= 
 
   =dimacstransform= applies  formula transformations to any  CNF given
   in input. The command line
@@ -76,7 +79,7 @@
 
   : dimacstransform.py --help-transform
 
-** From DAGs to pebbling formulas =kth2dimacs.py=
+** From DAGs to pebbling =kth2dimacs=
 
   =kth2dimacs= gets a directed acyclic  graph in input in KTH graph
   format  (see  below),  and   produces  the  corresponding  *pebbling
@@ -319,14 +322,14 @@
     numbers. While the  =ram= formula allows to find a  witness with a
     SAT solver, this formula allow the *verification*.
 
-*** OR formula
+*** OR formula (=or=)
 
     This is a single clause on p+n variables, with p positive literals
     and n negative ones: x₁ v x₂ … xₚ v ¬y₁ v ¬y₁ … ¬yₙ.
 
     : cnfgen or <p> <n>
 
-*** AND formula
+*** AND formula (=and=)
 
     This is a conjunction of  singleton clauses on p+n variables, with
     p positive literals and n negative ones: x₁ ∧ x₂ … xₚ ∧ ¬y₁ ∧ ¬y₁
