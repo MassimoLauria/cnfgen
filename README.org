@@ -268,6 +268,17 @@
     
 *** Pebbling formula
 
+    A directed acyclic graph G has some vertices with no incoming arcs
+    (*sources*) and  vertices with no  outgoing arcs (*sinks*).  For a
+    given directed acyclic graph G,  the pebbling formula for G claims
+    that:
+    
+    - there is a pebble on every source;
+    - if all predecessors  of vertex v are pebbled, then  v is pebbled
+      too;
+    - the sinks are not pebbled.
+
+    : cnfgen.py peb -i <inputDAG>
     
 
 *** K-clique formula
