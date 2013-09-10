@@ -13,7 +13,9 @@
 
   You  can get  a brief  help on  how to  use these  tools by  running
   =<program_name> --help= from the command line.
- 
+
+** CNF generator =cnfgen.py= 
+
   Tool =cnfgen= is CNF formulas generator (i.e. propositional formulas
   in conjunctive normal form). It produce formulas of interest for the
   proof  complexity  community  (e.g. pigeonhole  principle,  ordering
@@ -36,19 +38,33 @@
 
   To get more information about the available transformation types
   
-  : cnfgen.py --help-transformation
+  : cnfgen.py --help-transform
 
   Here's how to get a pigeonhole  principle formula from 10 pigeons to
   7 holes into file =pigeon.cnf=:
 
   : cnfgen.py -o pigeon.cnf php 10 7 
 
+*** A note of =cnfgen= and graphs
+
+    Some of  the formula families are  based on graphs, and  they need
+    some as input.  The =cnfgen= tool accepts graphs in kth, gml, dot,
+    dimacs.  In  =networkx= is not  installed, some of this  formats may
+    not be available.
+
+    Instead of  feeding =cnfgen= with a  graph, it is possible  to ask
+    for some  default graphs from  the command line (e.g  grid graphs,
+    random graphs...).
+
+** DIMACS file shuffler =reshuffle.py= 
 
   =reshuffle=  takes a  CNF in  input and  outputs the  same CNF  with
   a  random  variables  order,  clauses order  and  variable  polarity
   flips.
 
   : reshuffle.py -i <input_cnf> -o <output_cnf> [-S random_seed]
+
+** DIMACS file transformation =dimacstransform.py= 
 
   =dimacstransform= applies  formula transformations to any  CNF given
   in input. The command line
@@ -58,9 +74,11 @@
   applies transformation =<type>= of arity N to the input CNF. To see the
   available types of transformation.
 
-  : dimacstransform.py --help-transformation
+  : dimacstransform.py --help-transform
 
-  =kth2dimacs= gets  a directed  acyclic graph in  input in  KTH graph
+** From DAGs to pebbling formulas =kth2dimacs.py=
+
+  =kth2dimacs= gets a directed acyclic  graph in input in KTH graph
   format  (see  below),  and   produces  the  corresponding  *pebbling
   formula*. Optionally can apply formula transformation afterward.
 
@@ -107,24 +125,21 @@
    solvers  on  canonical  families  of  formulas.   Proof  complexity
    researcher may be interested to, since they study the computational
 
-** Requirements
+** General requirements
 
-   =cnfgen= requires  either Python  2.7 *or* the  =argparse= library,
+   To use the tools you need either Python  2.7 *or* the  =argparse= library,
    which is included in the standard Python library since version 2.7.
 
    Optionals requirements are
 
    - =networkx= library, which is used to parse some input formats for
-     specifying graphs.
+     specifying graphs in =cnfgen.py=.
 
-   - =pygraphviz= which  is also used to read  some graph formats.
+   - =pygraphviz= which  is also  used to read  some graph  formats in
+     =cnfgen.py=.
 
-   If any  optional requirement is missing, the  relative features are
+   If any optional  requirement is missing, the  relative features are
    not activated.
-
-* Formula Families
-
-* Formula Transformations
 
 * Background
 
@@ -175,5 +190,141 @@
 
    For example if the formula is defined  on n variables x₁, x₂, …, xₙ
    then the line =3 -1 5 6 -4 0= encodes the clause x3 v ¬x₁ v x₅ v x₆ v ¬x₄.
+
+
+** Formula Families
+
+   We implement several families of formula in =cnfgen= tool. Here's a
+   brief description of each family  with the principal parameters. To
+   get more info about the parameters of a specific family just type
+
+   : cnfgen <family> –help 
+
+*** Pigeonhole Principle (=php=)
+
+    The formula  claims that  it is  possible to assign  H holes  to P
+    pigeons in such a way that
+
+    - at least one hole is assigned to each pigeon;
+    - no hole is assigned to more than on pigeon.
+
+    : cnfgen.py php <P> <N>
+
+    The   formula    exists   other   variants:    functional,   onto,
+    matching. These formulas have the same clauses of PHP plus more:
+
+    - in  *functional* PHP  every pigeon  is assigned  to exactly  one
+      hole;
+    - in *onto* PHP every hole must contain at least a pigeon;
+    - *matching* PHP has both *functional* and *onto* clauses.
+
+    You can  add functional  and onto clauses  using the  command line
+    options.
+
+    : cnfgen.py php [--functional] [--onto] <P> <N>
+
+*** Tseitin  formula (=tseitin=)
+
+    Tseitin formula  are graph  based formulas. Start  from a  graph G
+    such that each vertex is labelled either 0 or 1. The formula claim
+    that you can put labels 0 or 1 on the edges of G so that the label
+    of each vertex  v is equal to  the sum of the labels  on the edges
+    incident to v (module 2).
+
+    : cnfgen.py tseitin –charge <type> -i <input_graph>
+
+    The initial  charge of  the vertices is  either =first=  (only the
+    first  vertex is  labelled  1) or  one  of =random=,  =randomodd=,
+    =randomeven=.
+
+*** Ordering principle
+
+    The formula  claims that there  is partial order  over a set  of N
+    elements,   such   that   every   element   has   at   least   one
+    predecessor.  If  either the  option =-t= or  =-s= are  used, then
+    the formula will claim the same but within *total orders*.
+
+    : cnfgen.py op [-t|-s] <N>
+
+    The difference between =-t= and =-s= is in the way the totality of
+    the order  is encoded: =-t=  just adds some additional  clauses to
+    enforce  totality; =-s=  uses xᵢⱼ=0  to  encode i>j  and xᵢⱼ=1  to
+    encode i<j. The latter encoding itself enforces totality.
+
+*** Graph ordering principle
+
+*** Pebbling formula
+
+*** K-clique formula
+
+*** Ramsey number formula (upper bound)
+
+*** Ramsey number witness of lower bound
+
+*** OR formula
+
+    This is a single clause on p+n variables, with p positive literals
+    and n negative ones: x₁ v x₂ … xₚ v ¬y₁ v ¬y₁ … ¬yₙ.
+
+    : cnfgen or <p> <n>
+
+*** AND formula
+
+    This is a conjunction of  singleton clauses on p+n variables, with
+    p positive literals and n negative ones: x₁ ∧ x₂ … xₚ ∧ ¬y₁ ∧ ¬y₁
+    … ¬yₙ.
+
+    : cnfgen and <p> <n>
+
+
+** Formula Transformations
+
+   Othen  we  want  to  increase  the hardness  of formulas  in  a
+   controlled way  to study  their proof complexity  or how  SAT solver
+   perform on them. A way to do that is to apply transformations.
+
+   Pick  a  formula  F  on  variables {xᵢ}.  We  can  take  a  function
+   g:{0,1}ˡ→{0,1}  and  substitute  each  variable with  the  value  of
+   function g  on l independent  copies of the variables.   For example
+   if g is XOR and l=2 then the CNF
+
+   x ∧ (y v ¬z)
+
+   becomes
+
+   x₁⊕x₂ ∧ (y₁⊕y₂ v ¬z₁⊕z₂).
+
+   Each of the two original clauses must be represented in CNF form:
+   x₁⊕x₂ becomes (x₁ v x₂)∧( ¬x₁ v ¬x₂); and y₁⊕y₂ v ¬z₁⊕z₂ becomes 
+
+   ( y₁ v  y₂  z₁ v ¬z₂)∧
+   (¬y₁ v ¬y₂  z₁ v ¬z₂)∧
+   ( y₁ v  y₂ ¬z₁ v  z₂)∧
+   (¬y₁ v ¬y₂ ¬z₁ v  z₂)
+
+   As  long  as the  original  CNF  has  only  narrow clauses  and  the
+   parameter l is not too large, the formula does not increase too much
+   in size.
+
+   Our tools =cnfgen.py=,  =kth2dimacs.py=, =dimacstransform.py= allow
+   to  select  a   function  g  and  a  value  l   and  to  apply  the
+   corresponding transformation to the output CNF.  For example:
+
+   : dimacstransform.py --Transform eq --Tarity 5 -i <ifile> -o <ofile>
+   
+   substitutes  every  boolan variable  of  the  input formula  with  a
+   function which  is true  if and only  if its 5  inputs are  all the
+   same.
+
+   Another  transformation  we  implement  is  *lifting*,  and  it  is
+   slightly  different   than  a   variable  substitution.   For  more
+   information  about this  transformation  we suggest  to browse  the
+   proof complexity literature.
+
+   For  a  list  of  all  implemented  transformations  you  can  type
+   (e.g. for =cnfgen.py= tool)
+ 
+   : cnfgen.py --help-transform
+
 
 
