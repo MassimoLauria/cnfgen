@@ -130,19 +130,17 @@
 
 ** General requirements
 
-   To use the tools you need either Python  2.7 *or* the  =argparse= library,
-   which is included in the standard Python library since version 2.7.
-
-   Optionals requirements are
+   - =argparse=  library, which  Python 2.7  includes, but  Python 2.6
+     does not;
 
    - =networkx= library, which is used to parse some input formats for
      specifying graphs in =cnfgen.py=.
 
-   - =pygraphviz= which  is also  used to read  some graph  formats in
-     =cnfgen.py=.
+   Optionally:
 
-   If any optional  requirement is missing, the  relative features are
-   not activated.
+   - =pygraphviz= which  is also  used to read  some graph  formats in
+     =cnfgen.py=.  If it is missing,  operations on such graph formats
+     will not be available.
 
 * Background
 
