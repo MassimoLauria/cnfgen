@@ -465,7 +465,7 @@ class One(TransformedCNF):
                      +self._header
 
     def transform_a_literal(self, polarity,varname):
-        """Substitute a literal with a (negated) XOR
+        """Substitute a literal with an \"Exactly One\"
 
         Arguments:
         - `polarity`: polarity of the literal
