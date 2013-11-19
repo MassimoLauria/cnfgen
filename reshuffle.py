@@ -61,8 +61,7 @@ def reshuffle(cnf,
 
     # polarity flip
     if polarity_flip==None:
-        polarity_flip=[1-2*random.randint(0,1)
-                              for i in xrange(N)]
+        polarity_flip=[random.choice([-1,1]) for x in xrange(N)]
     else:
         assert len(polarity_flip)==N
 
