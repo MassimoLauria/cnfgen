@@ -270,6 +270,52 @@ def GraphOrderingPrinciple(graph,total=False,smart=False):
     return gop
 
 
+def ColoringFormula(graph,colors,functional=True):
+    """Generates the clauses for k-colorability formula
+
+    Arguments:
+    - `graph`  : undirected graph
+    - `colors` : sequence of available colors
+    """
+    kcol=CNF()
+
+    # Describe the formula
+    name="K-Colorabily"
+    
+    if hasattr(graph,'name'):
+        kcol.header=name+" of graph:\n"+graph.name+"\n"+kcol.header
+    else:
+        kcol.header=name+".\n"+kcol.header
+
+    # Fix the vertex order
+    V=graph.nodes()
+
+    # Each vertex has a color
+    for vertex in V:
+        clause = []
+        for color in colors:
+            clause += [(True,'x_{{{0},{1}}}'.format(vertex,color))]
+        kcol.add_clause(clause)
+        
+        # unique color per vertex
+        if functional:
+            for (c1,c2) in combinations(colors,2):
+                kcol.add_clause([
+                    (False,'x_{{{0},{1}}}'.format(vertex,c1)),
+                    (False,'x_{{{0},{1}}}'.format(vertex,c2))])
+
+    # This is a legal coloring
+    for (v1,v2) in combinations(V,2):
+        if graph.has_edge(v1,v2):
+            for c in colors:
+                kcol.add_clause([
+                    (False,'x_{{{0},{1}}}'.format(v1,c)),
+                    (False,'x_{{{0},{1}}}'.format(v2,c))])
+            
+    return kcol
+
+
+
 def RamseyNumber(s,k,N):
     """Formula claiming that Ramsey number r(s,k) > N
 

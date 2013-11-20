@@ -16,7 +16,8 @@ from cnfformula.families import (
     GraphOrderingPrinciple,
     RamseyNumber,
     TseitinFormula,
-    SubgraphFormula)
+    SubgraphFormula,
+    ColoringFormula)
 
 
 
@@ -587,6 +588,34 @@ class _KClique(_FormulaFamilyHelper,_CMDLineHelper):
         return SubgraphFormula(G,[networkx.complete_graph(args.k)])
 
 
+class _KColor(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for k-color formula
+    """
+    name='kcolor'
+    description='k-colorability formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for k-color formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('k',metavar='<k>',type=int,action='store',help="number of available colors")
+        _SimpleGraphHelper.setup_command_line(parser)
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a k-colorability formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        G=_SimpleGraphHelper.obtain_graph(args)
+        return ColoringFormula(G,range(1,args.k+1))
+
+
 class _RAMLB(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for ramsey graph formula
     """
@@ -780,7 +809,7 @@ def command_line_utility(argv):
 
     # Commands and subcommand lines
     cmdline = _GeneralCommandLine
-    subcommands=[_PHP,_TSE,_OP,_GOP,_PEB,_RAM,_RAMLB,_KClique,_OR,_AND]
+    subcommands=[_PHP,_TSE,_OP,_GOP,_PEB,_RAM,_RAMLB,_KClique,_KColor,_OR,_AND]
 
     # Parse the command line arguments
     parser=argparse.ArgumentParser(prog='cnfgen',epilog="""
