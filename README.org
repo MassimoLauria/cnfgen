@@ -243,9 +243,11 @@
     The formula  claims that there  is partial order  over a set  of N
     elements,   such   that   every   element   has   at   least   one
     predecessor.  If  either the  option =-t= or  =-s= are  used, then
-    the formula will claim the same but within *total orders*.
+    the formula will claim the same but within *total orders*. If =-p=
+    is  active,  then a  single  element  is  allowed  not to  have  a
+    predecessor (this makes the formula satisfiable).
 
-    : cnfgen.py op [-t|-s] <N>
+    : cnfgen.py op [-t|-s|-p] <N>
 
     The difference between =-t= and =-s= is in the way the totality of
     the order  is encoded: =-t=  just adds some additional  clauses to
@@ -262,10 +264,13 @@
     - a predecessor in the order;
     - a neighbor in the graph.
 
-    : cnfgen.py gop [-t|-s] -i <input_graph>
-
-    Notice that this  formula is equivalent to  the ordering principle
-    if the underlying graph is the complete one.
+    : cnfgen.py gop [-t|-s|-p] -i <input_graph>
+    
+    If =-p= is active, then a single  element is allowed not to have a
+    predecessor (this  makes the formula  satisfiable if the  graph is
+    connected).   Notice  that  this  formula  is  equivalent  to  the
+    ordering principle if the underlying graph is the complete one.
+    
     
 *** Pebbling formula (=peb=)
 

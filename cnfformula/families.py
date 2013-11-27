@@ -176,25 +176,27 @@ def PebblingFormula(digraph):
     return peb
 
 
-def OrderingPrinciple(size,total=False,smart=False):
+def OrderingPrinciple(size,total=False,smart=False,plant=False):
     """Generates the clauses for ordering principle
 
     Arguments:
     - `size`  : size of the domain
     - `total` : add totality axioms (i.e. "x < y" or "x > y")
     - `smart` : "x < y" and "x > y" are represented by a single variable (implies totality)
+    - `plant` : allow a single element to be minimum (could make the formula SAT)
     """
 
-    return GraphOrderingPrinciple(networkx.complete_graph(size),total,smart)
+    return GraphOrderingPrinciple(networkx.complete_graph(size),total,smart,plant)
 
 
-def GraphOrderingPrinciple(graph,total=False,smart=False):
+def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False):
     """Generates the clauses for graph ordering principle
 
     Arguments:
     - `graph` : undirected graph
     - `total` : add totality axioms (i.e. "x < y" or "x > y")
     - `smart` : "x < y" and "x > y" are represented by a single variable (implies totality)
+    - `plant` : allow a single element to be minimum (could make the formula SAT)
     """
     gop=CNF()
 
@@ -221,7 +223,9 @@ def GraphOrderingPrinciple(graph,total=False,smart=False):
 
     # Clause is generated in such a way that if totality is enforces,
     # every pair occurs with a specific orientation.
-    for med in xrange(len(V)):
+    # Allow minimum on last vertex if 'plant' options.
+
+    for med in xrange(len(V)- (plant and 1) ):
         clause = []
         for lo in xrange(med):
             if graph.has_edge(V[med],V[lo]):

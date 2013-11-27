@@ -520,6 +520,7 @@ class _OP(_FormulaFamilyHelper,_CMDLineHelper):
         parser.add_argument('N',metavar='<N>',type=int,help="domain size")
         parser.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
         parser.add_argument('--smart','-s',default=False,action='store_true',help="encode 'x<y' and 'x>y' in a single variable (implies totality)")
+        parser.add_argument('--plant','-p',default=False,action='store_true',help="allow a minimum element")
 
     @staticmethod
     def build_cnf(args):
@@ -528,7 +529,7 @@ class _OP(_FormulaFamilyHelper,_CMDLineHelper):
         Arguments:
         - `args`: command line options
         """
-        return OrderingPrinciple(args.N,args.total,args.smart)
+        return OrderingPrinciple(args.N,args.total,args.smart,args.plant)
 
 
 class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
@@ -546,6 +547,7 @@ class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
         """
         parser.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
         parser.add_argument('--smart','-s',default=False,action='store_true',help="encode 'x<y' and 'x>y' in a single variable (implies totality)")
+        parser.add_argument('--plant','-p',default=False,action='store_true',help="allow a minimum element")
         _SimpleGraphHelper.setup_command_line(parser)
 
 
@@ -557,7 +559,7 @@ class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
         - `args`: command line options
         """
         G=_SimpleGraphHelper.obtain_graph(args)
-        return GraphOrderingPrinciple(G,args.total,args.smart)
+        return GraphOrderingPrinciple(G,args.total,args.smart,args.plant)
 
 
 class _KClique(_FormulaFamilyHelper,_CMDLineHelper):
