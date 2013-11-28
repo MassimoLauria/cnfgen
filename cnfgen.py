@@ -366,6 +366,9 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
         gr.add_argument('--grid',type=int,nargs='+',action='store',metavar=('d1','d2'),
                         help="n-dimensional grid of dimension d1 x d2 x ... ")
 
+        gr.add_argument('--torus',type=int,nargs='+',action='store',metavar=('d1','d2'),
+                        help="n-dimensional torus grid of dimensions d1 x d2 x ... x dn")
+
         gr.add_argument('--complete',type=int,action='store',metavar="<N>",
                             help="complete graph on N vertices")
 
@@ -402,6 +405,10 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
         elif hasattr(args,'grid') and args.grid:
 
             G=networkx.grid_graph(args.grid)
+
+        elif hasattr(args,'torus') and args.torus:
+            
+            G=networkx.grid_graph(args.torus,periodic=True)
 
         elif hasattr(args,'complete') and args.complete>0:
 
