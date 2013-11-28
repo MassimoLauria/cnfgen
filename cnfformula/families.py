@@ -378,19 +378,15 @@ vertices are is specified in input.
         charges=charges+[0]*(len(V)-len(charges))  # pad with even charges
 
     # init formula
-    ordered_edges=graph.edges()
     tse=CNF()
-    for (v,w) in graph.edges():
-        tse.add_variable("E_{{{0},{1}}}".format(v,w))
+    for e in graph.edges():
+        tse.add_variable("E_{{{0},{1}}}".format(*sorted(e)))
 
     # add constraints
-    ordered_edges=graph.edges()
     for v,c in zip(V,charges):
         
-        edges=filter(lambda e: v in e, ordered_edges)
-
         # produce all clauses and save half of them
-        names = [ "E_{{{0},{1}}}".format(v,w) for (v,w) in edges ]
+        names = [ "E_{{{0},{1}}}".format(*sorted(e)) for e in graph.edges_iter(v) ]
         for cls in parity_constraint(names,c):
             tse.add_clause(list(cls))
 
