@@ -3,3 +3,4 @@
 *.pyo
 .ropeproject/
 !./ropeproject/config.py
+build/
