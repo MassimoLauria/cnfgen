@@ -433,3 +433,31 @@ def vlcgraph(cnf):
         for (sign,var) in clause:
             G.add_edge(("+" if sign else "-")+str(var),"C_{}".format(i))
     return G
+
+def random_regular_bipartite(n,m,d):
+    """Generate a uniformly random bipartite graph.
+
+    The graph is d-regular on the left side and regular on the right
+    size, so it must be that d*n / m is an integer number.
+
+    Arguments:
+    - `n`: number of vertices on the left side
+    - `m`: number of vertices on the right side
+    - `d`: degree of vertices at the left side
+    """
+    assert d>=0
+    assert n>=0
+    
+    from random import shuffle
+
+    A=range(1,n+1)*d
+    B=range(1,m+1)*(n*d / m)
+    assert (len(A)==len(B))
+
+    shuffle(A)   # shuffling B would not be necessary if `shuffle'
+    shuffle(B)   # were really uniform
+
+    G=networkx.Graph()
+    G.add_edges_from(zip(A,B))
+    
+

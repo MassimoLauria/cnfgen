@@ -9,6 +9,8 @@ from cnfformula import TransformFormula,available_transform
 from cnfformula.graphs import supported_formats as graph_formats
 from cnfformula.graphs import readDigraph,readGraph,writeGraph
 
+from cnfformula.graphs import random_regular_bipartite
+
 from cnfformula.families import (
     PigeonholePrinciple,
     PebblingFormula,
@@ -336,7 +338,7 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
                         default=graph_formats()['simple'][0],
                         help="""
                         Format of the graph in input/output, several
-                        formats are supported in networkx is
+                        formats are supported if networkx is
                         installed.  (default:  {})
                         """.format(graph_formats()['simple'][0]))
 
@@ -436,6 +438,155 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
                        graph_type='simple')
 
         return G
+
+
+class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup input options for command lines
+        """
+
+        # gr=parser.add_argument_group("Read/Write the underlying bipartite graph")
+        # gr.add_argument('--input','-i',
+        #                 type=argparse.FileType('r',0),
+        #                 metavar="<input>",
+        #                 default='-',
+        #                 help="""Input file. The graph is read from a file instead of being read from
+        #                 standard output. Setting '<input>' to '-' is
+        #                 another way to read from standard
+        #                 input.  (default: -)
+        #                 """)
+        gr.add_argument('--savegraph','-sg',
+                            type=argparse.FileType('wb',0),
+                            metavar="<graph_file>",
+                            default=None,
+                            help="""Output the graph to a file. The
+                            graph is saved, which is useful if the
+                            graph is randomly generated internally.
+                            Setting '<graph_file>' to '-' is
+                            another way to send the graph to
+                            standard output.  (default:  -)
+                            """)
+        gr.add_argument('--graphformat','-gf',
+                        choices=graph_formats()['simple'],
+                        default=graph_formats()['simple'][0],
+                        help="""
+                        Format of the graph in input/output, several
+                        formats are supported if networkx is
+                        installed.  (default:  {})
+                        """.format(graph_formats()['simple'][0]))
+
+
+        gr=parser.add_argument_group("Generate input graph from a library")
+        gr=gr.add_mutually_exclusive_group()
+
+        class IntIntFloat(argparse.Action):
+            def __call__(self, parser, args, values, option_string = None):
+                l,r,p = int(values[0]),int(values[1]),float(values[2])
+                if not isinstance(l,int):
+                    raise ValueError('l must be an integer')
+                if not isinstance(r,int):
+                    raise ValueError('r must be an integer')
+                if not (isinstance(p,float) and p<=1.0 and p>=0):
+                    raise ValueError('p must be an float between 0 and 1')
+                setattr(args, self.dest, (l,r,p))
+
+        class BipartiteRegular(argparse.Action):
+            def __call__(self, parser, args, values, option_string = None):
+                l,r,d = int(values[0]),int(values[1]),int(values[2])
+                if not isinstance(l,int):
+                    raise ValueError('l must be an integer')
+                if not isinstance(r,int):
+                    raise ValueError('r must be an integer')
+                if not isinstance(d,int):
+                    raise ValueError('d must be an integer')
+                if ((d*l % r) != 0 )
+                    raise ValueError('In a regular bipartite graph, r must divide d*l.')
+                setattr(args, self.dest, (l,r,p))
+
+        # gr.add_argument('--bp',nargs=2,action=IntFloat,metavar=('l','r','p'),
+        #         help="random bipartite graph according with independent edges)")
+
+
+        # gr.add_argument('--bm',type=int,nargs=2,action='store',metavar=('l','r','m'),
+        #         help="random bipartite graph, with m random edges")
+
+        # gr.add_argument('--bleftd',type=int,nargs=2,action='store',metavar=('l','d'),
+        #         help="random bipartite d-left-regular graph, with d random edges per left vertex)")
+
+        gr.add_argument('--bregular',type=int,nargs=3,action='store',metavar=('l','r','d'),
+                help="random (l,r)-bipartite regular graph, with d edges per left vertex.")
+
+        # gr.add_argument('--complete',type=int,action='store',metavar="<N>",
+        #                     help="complete graph on N vertices")
+
+        # gr=parser.add_argument_group("Graph modifications")
+        # gr.add_argument('--plantclique',type=int,action='store',metavar="<k>",
+        #                     help="choose k vertices per side and add all edges among them")
+
+
+    @staticmethod
+    def obtain_graph(args):
+        """Build a Graph according to command line arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        if hasattr(args,'gnd') and args.gnd:
+
+            n,d = args.gnd
+            if (n*d)%2 == 1:
+                raise ValueError("n * d must be even")
+            G=networkx.random_regular_graph(d,n)
+            return G
+
+        elif hasattr(args,'gnp') and args.gnp:
+
+            n,p = args.gnp
+            G=networkx.gnp_random_graph(n,p)
+
+        elif hasattr(args,'gnm') and args.gnm:
+
+            n,m = args.gnm
+            G=networkx.gnm_random_graph(n,m)
+
+        elif hasattr(args,'bregular') and args.bregular:
+
+            l,r,d = args.bregular;
+            G=random_regular_bipartite(l,r,d)
+
+        elif hasattr(args,'torus') and args.torus:
+            
+            G=networkx.grid_graph(args.torus,periodic=True)
+
+        elif hasattr(args,'complete') and args.complete>0:
+
+            G=networkx.complete_graph(args.complete)
+
+        elif args.graphformat:
+
+            G=readGraph(args.input,args.graphformat)
+        else:
+            raise RuntimeError("Invalid graph specification on command line")
+
+        # Graph modifications
+        if hasattr(args,'plantclique') and args.plantclique>1:
+
+            clique=random.sample(G.nodes(),args.plantclique)
+
+            for v,w in combinations(clique,2):
+                G.add_edge(v,w)
+
+        # Output the graph is requested
+        if hasattr(args,'savegraph') and args.savegraph:
+            writeGraph(G,
+                       args.savegraph,
+                       args.graphformat,
+                       graph_type='simple')
+
+        return G
+
 
 ### Formula families
 
