@@ -501,7 +501,7 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
                     raise ValueError('r must be an integer')
                 if not isinstance(d,int):
                     raise ValueError('d must be an integer')
-                if ((d*l % r) != 0 )
+                if (d*l % r) != 0 :
                     raise ValueError('In a regular bipartite graph, r must divide d*l.')
                 setattr(args, self.dest, (l,r,p))
 
@@ -965,7 +965,7 @@ signal.signal(signal.SIGINT, signal_handler)
 ###
 ### Main program
 ###
-def command_line_utility(argv):
+def command_line_utility(argv=sys.argv):
 
     # Commands and subcommand lines
     cmdline = _GeneralCommandLine
