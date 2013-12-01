@@ -444,20 +444,29 @@ def random_regular_bipartite(n,m,d):
     - `n`: number of vertices on the left side
     - `m`: number of vertices on the right side
     - `d`: degree of vertices at the left side
+
+    Return: 
+    - (G,L,R): where G is the graph, and L and R are the left and right vertices.
     """
     assert d>=0
     assert n>=0
     
-    from random import shuffle
+    from random import randint
 
     A=range(1,n+1)*d
-    B=range(1,m+1)*(n*d / m)
+    B=range(n+1,n+m+1)*(n*d / m)
+
     assert (len(A)==len(B))
 
-    shuffle(A)   # shuffling B would not be necessary if `shuffle'
-    shuffle(B)   # were really uniform
-
     G=networkx.Graph()
-    G.add_edges_from(zip(A,B))
-    
 
+    for i in range(n*d-1):
+        # Sample with post selection
+        e=randint(i,n*d-1)
+        while G.has_edge(A[e],B[i]): e=randint(i,n*d-1)
+        
+        A[i],A[e] = A[e],A[i]
+        G.add_edge(A[i],B[i])
+
+    G.add_edge(A[-1],B[-1])
+    return G,range(1,n+1),range(n+1,n+1+m)
