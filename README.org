@@ -4,9 +4,11 @@
 
 * CNF formula generator and tools
 
-  This repository provides the python programs
+  This repository provides the command
 
-  - =cnfgen.py= formula generator;
+  - =cnfgen= formula generator;
+
+  and the following python scripts:
 
   - =reshuffle.py= random shuffler;
 
@@ -17,6 +19,17 @@
   You  can get  a brief  help on  how to  use these  tools by  running
   =<program_name> --help= from the command line.
 
+** Installation
+
+   To install the =cnfgen= and  the =cnfformula= python package, it is
+   sufficient to do
+   
+   : python setup.py install [--user]
+   
+   in the package directory. The =--user= option allows to install the
+   package  in user  space.  In  this latter  case  be  sure that  the
+   corresponding binary path is in your =PATH= environment variable.
+
 ** CNF generator =cnfgen= 
 
   Tool =cnfgen= is CNF formulas generator (i.e. propositional formulas
@@ -25,28 +38,28 @@
   principle, …)  both in  dimacs and LaTeX  format. The  basic command
   line to get the dimacs version of a formula is 
 
-  : cnfgen.py -o <output_file> <formula_type> <formula_parameters>
+  : cnfgen -o <output_file> <formula_type> <formula_parameters>
 
   Each  formula family  has its  own parameters  and options.  Some of
   them even  require further input.  To get more  specific information
   on each formula family type
 
-  : cnfgen.py <formula_type> --help
+  : cnfgen <formula_type> --help
 
   =cnfgen= allows  to apply  transformations on the  generated formula
   afterward.   These transformations  systematically make  the formula
   harder for SAT solver, so they are of interest for proof complexity. 
   
-  : cnfgen.py -o <ofile> --Transform <type> --Tarity <N> <ftype> <fparameters>
+  : cnfgen -o <ofile> --Transform <type> --Tarity <N> <ftype> <fparameters>
 
   To get more information about the available transformation types
   
-  : cnfgen.py --help-transform
+  : cnfgen --help-transform
 
   Here's how to get a pigeonhole  principle formula from 10 pigeons to
   7 holes into file =pigeon.cnf=:
 
-  : cnfgen.py -o pigeon.cnf php 10 7 
+  : cnfgen -o pigeon.cnf php 10 7 
 
 *** A note of =cnfgen= and graphs
 
@@ -134,12 +147,12 @@
      does not;
 
    - =networkx= library, which is used to parse some input formats for
-     specifying graphs in =cnfgen.py=.
+     specifying graphs in =cnfgen=.
 
    Optionally:
 
    - =pygraphviz= which  is also  used to read  some graph  formats in
-     =cnfgen.py=.  If it is missing,  operations on such graph formats
+     =cnfgen=.  If it is missing,  operations on such graph formats
      will not be available.
 
 * Background
@@ -209,7 +222,7 @@
     - at least one hole is assigned to each pigeon;
     - no hole is assigned to more than on pigeon.
 
-    : cnfgen.py php <P> <N>
+    : cnfgen php <P> <N>
 
     The   formula    exists   other   variants:    functional,   onto,
     matching. These formulas have the same clauses of PHP plus more:
@@ -222,7 +235,7 @@
     You can  add functional  and onto clauses  using the  command line
     options.
 
-    : cnfgen.py php [--functional] [--onto] <P> <N>
+    : cnfgen php [--functional] [--onto] <P> <N>
 
 *** Tseitin  formula (=tseitin=)
 
@@ -232,7 +245,7 @@
     of each vertex  v is equal to  the sum of the labels  on the edges
     incident to v (module 2).
 
-    : cnfgen.py tseitin –charge <type> -i <input_graph>
+    : cnfgen tseitin –charge <type> -i <input_graph>
 
     The initial  charge of  the vertices is  either =first=  (only the
     first  vertex is  labelled  1) or  one  of =random=,  =randomodd=,
@@ -247,7 +260,7 @@
     is  active,  then a  single  element  is  allowed  not to  have  a
     predecessor (this makes the formula satisfiable).
 
-    : cnfgen.py op [-t|-s|-p] <N>
+    : cnfgen op [-t|-s|-p] <N>
 
     The difference between =-t= and =-s= is in the way the totality of
     the order  is encoded: =-t=  just adds some additional  clauses to
@@ -264,7 +277,7 @@
     - a predecessor in the order;
     - a neighbor in the graph.
 
-    : cnfgen.py gop [-t|-s|-p] -i <input_graph>
+    : cnfgen gop [-t|-s|-p] -i <input_graph>
     
     If =-p= is active, then a single  element is allowed not to have a
     predecessor (this  makes the formula  satisfiable if the  graph is
@@ -284,20 +297,20 @@
       too;
     - the sinks are not pebbled.
 
-    : cnfgen.py peb -i <inputDAG>
+    : cnfgen peb -i <inputDAG>
     
 *** K-clique formula (=kclique=)
 
     If given a graph G, the formula  claims that there is no clique of
     size at least k in the graph G. 
 
-    : cnfgen.py kclique <k> -i <input_graph> 
+    : cnfgen kclique <k> -i <input_graph> 
 
     Notice that there is  the additional option =--plantclique= that
     plant a random clique in the graph.  In this way it is possible to
     study the behavior of SAT solver on the /hidden clique problem/.
 
-    : cnfgen.py kclique <k> -i <input_graph> --plantclique <k>
+    : cnfgen kclique <k> -i <input_graph> --plantclique <k>
 
 *** Ramsey number formula (=ram=)
    
@@ -306,7 +319,7 @@
     r(s,k)  vertices has  either an  independent set  of size  s or  a
     clique of size k. Command line
 
-    : cnfgen.py ram <s> <k> <N>
+    : cnfgen ram <s> <k> <N>
 
     produces  a formula  that claims  that r(s,k)>N.  If a  SAT solver
     claims that  the formula is  unsatisfiable, then it also  prove an
@@ -318,7 +331,7 @@
     If given  a graph G,  the formula claims  that there is  either an
     independent set of size s or a clique of size k.
 
-    : cnfgen.py ramlb <k> <s> -i <input_graph> 
+    : cnfgen ramlb <k> <s> -i <input_graph> 
 
     If the  formula is  unsatisfiable, it  means that  the graph  is a
     witness  of   the  lower   bound  r(s,k)>|V(G)|  for   the  Ramsey
@@ -370,7 +383,7 @@
    parameter l is not too large, the formula does not increase too much
    in size.
 
-   Our tools =cnfgen.py=,  =kth2dimacs.py=, =dimacstransform.py= allow
+   Our tools =cnfgen=,  =kth2dimacs.py=, =dimacstransform.py= allow
    to  select  a   function  g  and  a  value  l   and  to  apply  the
    corresponding transformation to the output CNF.  For example:
 
@@ -386,7 +399,7 @@
    proof complexity literature.
 
    For  a  list  of  all  implemented  transformations  you  can  type
-   (e.g. for =cnfgen.py= tool)
+   (e.g. for =cnfgen= tool)
  
    : cnfgen.py --help-transform
 
