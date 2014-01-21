@@ -7,7 +7,7 @@ from .cnf import CNF
 __docstring__ =\
 """Various utilities for the manipulation of the CNFs.
 
-Copyright (C) 2012, 2013  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2014  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -44,7 +44,10 @@ def dimacs2compressed_clauses(file_handle):
         # inside the formula, add it to the header as well. Comments
         # interleaving clauses are not allowed in dimacs format.
         if l[0]=='c':
-            my_header += l[1:] or '\n'
+            if l[1]==' ':
+                my_header += l[2:] or '\n'
+            else: 
+                my_header += l[1:] or '\n'
             continue
 
         # parse spec line

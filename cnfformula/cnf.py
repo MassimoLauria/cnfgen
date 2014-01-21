@@ -12,7 +12,7 @@ order to  be printed  in dimacs  or LaTeX  formats. Such  formulas are
 ready to be  fed to sat solvers.  In particular  the module implements
 both a library of CNF generators and a command line utility.
 
-Copyright (C) 2012, 2013  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2014  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 
@@ -419,7 +419,7 @@ class CNF(object):
 
         # A nice header
         if export_header:
-            for s in self.header.split("\n"): output.write( ("c "+s).rstrip()+"\n")
+            for s in self.header.split("\n")[:-1]: output.write( ("c "+s).rstrip()+"\n")
 
         # Formula specification
         output.write( "p cnf {0} {1}".format(n,m) )
