@@ -43,6 +43,16 @@ def dimacs2compressed_clauses(file_handle):
         # Add all the comments to the header. If a comment is found
         # inside the formula, add it to the header as well. Comments
         # interleaving clauses are not allowed in dimacs format.
+        #
+        # Notice the hack in the comment parsing, the dimacs output
+        # will always put a space between the 'c' character and the
+        # header line. If such character is found during parsing, it
+        # is not memorized, and if the CNF is dumped again it is
+        # introduced again.
+        #
+        # It there is no such separator, then a cycle of
+        # reading/writing the cnf will change the header section.
+        #
         if l[0]=='c':
             if l[1]==' ':
                 my_header += l[2:] or '\n'
