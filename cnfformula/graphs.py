@@ -434,3 +434,56 @@ def vlcgraph(cnf):
             G.add_edge(("+" if sign else "-")+str(var),"C_{}".format(i))
     return G
 
+def random_regular_bipartite(n,m,d):
+    """Generate a uniformly random bipartite graph.
+
+    The graph is d-regular on the left side and regular on the right
+    size, so it must be that d*n / m is an integer number.
+
+    Arguments:
+    - `n`: number of vertices on the left side
+    - `m`: number of vertices on the right side
+    - `d`: degree of vertices at the left side
+
+    Return: 
+    - (G,L,R): where G is the graph, and L and R are the left and right vertices.
+    """
+    assert d>=0
+    assert n>=0
+    
+    from random import randint
+
+    A=range(1,n+1)*d
+    B=range(n+1,n+m+1)*(n*d / m)
+
+    assert len(A)==n*d
+    assert len(B)==n*d
+
+    G=networkx.Graph()
+    G.add_nodes_from(range(1,n+m+1))
+
+    for i in range(n*d):
+        # Sample an edge, do not add it if it existed
+        # We expect to sample at most d^2 edges
+        for retries in range(3*d*d):
+            ea=randint(i,n*d-1)
+            eb=randint(i,n*d-1)
+            if not G.has_edge(A[ea],B[eb]):
+                G.add_edge(A[ea],B[eb])
+                A[i],A[ea] = A[ea],A[i]
+                B[i],B[eb] = B[eb],B[i]
+                break
+        else:
+            # Sampling takes too long, maybe no good edge exists
+            failure=True
+            for ea in range(i,n*d):
+                for eb in range(i,n*d):
+                    if not G.has_edge(A[ea],B[eb]):
+                        failure=False
+                        break
+                if not failure:
+                    break
+            if failure:
+                return random_regular_bipartite(n,m,d)
+
+    return G,range(1,n+1),range(n+1,n+1+m)
