@@ -260,12 +260,28 @@
     is  active,  then a  single  element  is  allowed  not to  have  a
     predecessor (this makes the formula satisfiable).
 
-    : cnfgen op [-t|-s|-p] <N>
+    : cnfgen op [-t|-s] [-p]  <N>
 
     The difference between =-t= and =-s= is in the way the totality of
     the order  is encoded: =-t=  just adds some additional  clauses to
     enforce  totality; =-s=  uses xᵢⱼ=0  to  encode i>j  and xᵢⱼ=1  to
     encode i<j. The latter encoding itself enforces totality.
+
+    There  are  two alternative  encoding  of  the ordering  principle
+    inspired by a  question by Donald E. Knuth. It  is possible to use
+    only a  third of the  transitive axioms  and the formula  is still
+    unsatisfiable.  The standard transitivity axioms are
+
+    xᵢⱼ ∧ xⱼₖ → xᵢₖ 
+
+    for every  different i,j,k. The  option =--knuth2= and  the option
+    =--knuth3= are in alternative to =-t= and =-s=. Option =--knuth2= 
+    only adds  transitivity axioms for  j>i and j>k.  Option =--knuth3=
+    only adds transitivity axioms for k>i and k>j.
+
+    Both  such formulas  are unsatisfiable,  but the  short refutation
+    known in  literature for  ordering principle works  for =--knuth2=
+    variant, while it does not for =--knuth3= variant.
 
 *** Graph ordering principle (=gop=)
 
@@ -277,13 +293,14 @@
     - a predecessor in the order;
     - a neighbor in the graph.
 
-    : cnfgen gop [-t|-s|-p] -i <input_graph>
+    : cnfgen gop [-t|-s] [-p]-i <input_graph>
     
     If =-p= is active, then a single  element is allowed not to have a
     predecessor (this  makes the formula  satisfiable if the  graph is
     connected).   Notice  that  this  formula  is  equivalent  to  the
     ordering principle if the underlying graph is the complete one.
     
+    Options =--knuth2= and =--knuth3= work here as well.
     
 *** Pebbling formula (=peb=)
 
