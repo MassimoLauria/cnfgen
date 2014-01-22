@@ -279,9 +279,9 @@
     only adds  transitivity axioms for  j>i and j>k.  Option =--knuth3=
     only adds transitivity axioms for k>i and k>j.
 
-    Both  such formulas  are unsatisfiable,  but the  short refutation
-    known in  literature for  ordering principle works  for =--knuth2=
-    variant, while it does not for =--knuth3= variant.
+    Both such formulas are unsatisfiable, but the short refutation for
+    ordering  principle by  Stålmarck  works  for =--knuth2=  variant,
+    while it does not for =--knuth3= variant.
 
 *** Graph ordering principle (=gop=)
 
