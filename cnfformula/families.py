@@ -176,7 +176,7 @@ def PebblingFormula(digraph):
     return peb
 
 
-def OrderingPrinciple(size,total=False,smart=False,plant=False):
+def OrderingPrinciple(size,total=False,smart=False,plant=False,knuth=0):
     """Generates the clauses for ordering principle
 
     Arguments:
@@ -184,12 +184,13 @@ def OrderingPrinciple(size,total=False,smart=False,plant=False):
     - `total` : add totality axioms (i.e. "x < y" or "x > y")
     - `smart` : "x < y" and "x > y" are represented by a single variable (implies totality)
     - `plant` : allow a single element to be minimum (could make the formula SAT)
+    - `knuth` : Donald Knuth variant of the formula ver. 2 or 3 (anything else suppress it)
     """
 
-    return GraphOrderingPrinciple(networkx.complete_graph(size),total,smart,plant)
+    return GraphOrderingPrinciple(networkx.complete_graph(size),total,smart,plant,knuth)
 
 
-def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False):
+def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
     """Generates the clauses for graph ordering principle
 
     Arguments:
@@ -197,6 +198,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False):
     - `total` : add totality axioms (i.e. "x < y" or "x > y")
     - `smart` : "x < y" and "x > y" are represented by a single variable (implies totality)
     - `plant` : allow a single element to be minimum (could make the formula SAT)
+    - `knuth` : Donald Knuth variant of the formula ver. 2 or 3 (anything else suppress it)
     """
     gop=CNF()
 
@@ -255,6 +257,12 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False):
                                 (True,'x_{{{0},{1}}}'.format(v1,v3))])
         else:
             for (v1,v2,v3) in permutations(V,3):
+
+                # knuth variants will reduce the number of
+                # transitivity axioms
+                if knuth==2 and ((v2<v1) or (v2<v3)): continue
+                if knuth==3 and ((v3<v1) or (v3<v2)): continue
+
                 gop.add_clause([ (False,'x_{{{0},{1}}}'.format(v1,v2)),
                                 (False,'x_{{{0},{1}}}'.format(v2,v3)),
                                 (True, 'x_{{{0},{1}}}'.format(v1,v3))])

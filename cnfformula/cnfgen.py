@@ -658,8 +658,13 @@ class _OP(_FormulaFamilyHelper,_CMDLineHelper):
         - `parser`: parser to load with options.
         """
         parser.add_argument('N',metavar='<N>',type=int,help="domain size")
-        parser.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
-        parser.add_argument('--smart','-s',default=False,action='store_true',help="encode 'x<y' and 'x>y' in a single variable (implies totality)")
+        g=parser.add_mutually_exclusive_group()
+        g.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
+        g.add_argument('--smart','-s',default=False,action='store_true',help="encode 'x<y' and 'x>y' in a single variable (implies totality)")
+        g.add_argument('--knuth2', action='store_const', dest='knuth',const=2,
+                       help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for j>i,k")
+        g.add_argument('--knuth3', action='store_const', dest='knuth',const=3,
+                       help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for k>i,j")
         parser.add_argument('--plant','-p',default=False,action='store_true',help="allow a minimum element")
 
     @staticmethod
@@ -669,7 +674,7 @@ class _OP(_FormulaFamilyHelper,_CMDLineHelper):
         Arguments:
         - `args`: command line options
         """
-        return OrderingPrinciple(args.N,args.total,args.smart,args.plant)
+        return OrderingPrinciple(args.N,args.total,args.smart,args.plant,args.knuth)
 
 
 class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
@@ -685,8 +690,13 @@ class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
-        parser.add_argument('--smart','-s',default=False,action='store_true',help="encode 'x<y' and 'x>y' in a single variable (implies totality)")
+        g=parser.add_mutually_exclusive_group()
+        g.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
+        g.add_argument('--smart','-s',default=False,action='store_true',help="encode 'x<y' and 'x>y' in a single variable (implies totality)")
+        g.add_argument('--knuth2', action='store_const', dest='knuth',const=2,
+                       help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for j>i,k")
+        g.add_argument('--knuth3', action='store_const', dest='knuth',const=3,
+                       help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for k>i,j")
         parser.add_argument('--plant','-p',default=False,action='store_true',help="allow a minimum element")
         _SimpleGraphHelper.setup_command_line(parser)
 
@@ -699,7 +709,7 @@ class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
         - `args`: command line options
         """
         G=_SimpleGraphHelper.obtain_graph(args)
-        return GraphOrderingPrinciple(G,args.total,args.smart,args.plant)
+        return GraphOrderingPrinciple(G,args.total,args.smart,args.plant,args.knuth)
 
 
 class _KClique(_FormulaFamilyHelper,_CMDLineHelper):
