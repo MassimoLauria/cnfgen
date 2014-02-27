@@ -172,7 +172,7 @@ class _GeneralCommandLine(_CMDLineHelper):
                             default='none',
                             help="""
                             Transform the CNF formula to make it harder.
-                            See `--help-transformation` for more informations
+                            See `--help-transform` for more information
                             """)
         parser.add_argument('--Tarity','-Ta',
                             metavar="<transformation arity>",
