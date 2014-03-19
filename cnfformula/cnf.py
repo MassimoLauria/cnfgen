@@ -360,6 +360,36 @@ class CNF(object):
         except TypeError:
             raise TypeError("%s is not a legal variable name" %var)
 
+
+    def rename_variable(self,oldname,newname):
+        """Rename a variable to the formula.
+
+        The new variable name must be `hashable`. I.e. it must be
+        usable as key in a dictionary.  It raises `TypeError` if the
+        variable cannot be hashed. It ignores the operation if the old
+        name does not correpsond to a variable in the formula.
+
+        Arguments:
+        - `var`: the variable to add.
+
+        """
+        assert self._coherent
+        try:
+            if oldname in self._name2index:
+                
+                if newname in self._name2index: 
+                    raise ValueError("Variable renaming clashes. Var %s is already in the formula "%newname)
+                
+                varindex=self._name2index[oldname]
+                self._name2index[newname] = varindex
+                self._index2name[varindex]=newname
+                del self._name2index[oldname]
+            else:
+                pass
+        except TypeError:
+            raise TypeError("%s is not a legal variable name" %var)
+
+
     #
     # High level API: read the CNF
     #
