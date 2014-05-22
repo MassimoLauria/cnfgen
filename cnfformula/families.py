@@ -375,7 +375,7 @@ vertices are is specified in input.
     - `graph`: input graph
     - `charges': odd or even charge for each vertex
     """
-    V=graph.nodes()
+    V=sorted(graph.nodes())
 
     if charges==None:
         charges=[1]+[0]*(len(V)-1)             # odd charge on first vertex
