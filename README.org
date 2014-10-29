@@ -65,7 +65,7 @@
 
     Some of  the formula families are  based on graphs, and  they need
     some as input.  The =cnfgen= tool accepts graphs in kth, gml, dot,
-    dimacs.  In  =networkx= is not  installed, some of this  formats may
+    dimacs.  If  =networkx= is not  installed, some of these formats may
     not be available.
 
     Instead of  feeding =cnfgen= with a  graph, it is possible  to ask
