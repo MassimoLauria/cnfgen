@@ -492,9 +492,9 @@ class CNF(object):
         # map literals to latex formulas
         def map_literals(l):
             if l>0 :
-                return  "    {"+self._index2name[ l]+"}"
+                return  "    {"+str(self._index2name[ l])+"}"
             else:
-                return "\\neg{"+self._index2name[-l]+"}"
+                return "\\neg{"+str(self._index2name[-l])+"}"
 
 
         # We produce clauses and comments
