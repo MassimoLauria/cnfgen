@@ -510,3 +510,29 @@ def SubgraphFormula(graph,templates):
 
     return F
 
+def RandomCNF(k, n, m, seed=None):
+    """Build a random k-CNF: pick m distinct k-clauses over n variables uniformly at random.
+
+    Arguments:
+    - `k`: width of each clause
+    - `n': number of variables to choose from. The resulting cnf will contain n variables even if some are not picked.
+    - `m`: number of clauses to generate
+    - `seed`: hashable object to seed the random generator with
+    """
+
+    import random
+    random.seed(seed)
+    F = CNF()
+
+    for variable in xrange(1,n+1):
+        F.add_variable(variable)
+
+    clauses = set()
+    while len(clauses)<m :
+        clauses.add(tuple((random.choice([True,False]),x+1)
+                      for x in random.sample(xrange(n),k)))
+    for clause in clauses:
+        F.add_clause(list(clause))
+
+    return F
+ 
