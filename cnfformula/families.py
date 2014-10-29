@@ -341,8 +341,8 @@ def RamseyNumber(s,k,N):
 
     ram.header=dedent("""\
         CNF encoding of the claim that there is a graph of %d vertices
-        with no indipendent set of size %d and no clique of size %d
-        """ % (s,k,N)) + ram.header
+        with no independent set of size %d and no clique of size %d
+        """ % (N,s,k)) + ram.header
 
     #
     # No independent set of size s
