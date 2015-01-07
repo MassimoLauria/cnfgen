@@ -3,6 +3,7 @@
 
 import cnfformula
 import cnfformula.utils as cnfutils
+import cnfformula.graphs as cnfgraphs
 
 import cnfgen
 import reshuffle
@@ -430,5 +431,17 @@ class TestKth2Dimacs(TestCNF) :
         input = StringIO.StringIO("3\n1 : \n2 : \n3 : 1 2\n")
         self.identity_test_helper(input, 'or', 2)
 
+class TestRandomBipartiteGraphs(unittest.TestCase):
+    def test_small(self):
+        for x in range(1000):
+            G,U,V = cnfgraphs.random_regular_bipartite(10,15,3)
+            self.assertListEqual(G.degree(U).values(),[3]*10)
+            self.assertListEqual(G.degree(V).values(),[2]*15)
+
+    def test_large(self):
+        G,U,V = cnfgraphs.random_regular_bipartite(10000,20000,4)
+        self.assertListEqual(G.degree(U).values(),[4]*10000)
+        self.assertListEqual(G.degree(V).values(),[2]*20000)
+        
 if __name__ == '__main__':
     unittest.main()
