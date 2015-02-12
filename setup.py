@@ -17,7 +17,8 @@ setup(name='CNFgen',
       entry_points = {
           'console_scripts': ['cnfgen=cnfformula.cnfgen:command_line_utility'],
       },
-      install_requires=[
-          'networkx',
-      ]
+      install_requires=['networkx'],
+      # make some tests
+      test_suite='nose.collector',
+      tests_require=['nose','networkx']
      )
