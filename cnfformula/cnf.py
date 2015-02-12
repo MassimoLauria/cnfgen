@@ -12,7 +12,7 @@ order to  be printed  in dimacs  or LaTeX  formats. Such  formulas are
 ready to be  fed to sat solvers.  In particular  the module implements
 both a library of CNF generators and a command line utility.
 
-Copyright (C) 2012, 2013, 2014  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 
@@ -158,7 +158,7 @@ class CNF(object):
     #
 
     def _uncompress_clause(self, clause):
-        """(INTERNAL USE) Uncompress a clause for the numeric representation.
+        """(INTERNAL USE) Uncompress a clause from the numeric representation.
 
         Arguments:
         - `clause`: clause to be uncompressed
@@ -304,7 +304,7 @@ class CNF(object):
     # High level API: build the CNF
     #
 
-    def add_clause(self,clause):
+    def add_clause(self,clause,strict=False):
         """Add a clause to the CNF.
 
         The clause must be well formatted. Otherwise it raises
@@ -321,6 +321,11 @@ class CNF(object):
         - `clause`: a clause with k literals is a list with k pairs.
                     First coords are the polarities, second coords are
                     utf8 encoded strings with variable names.
+
+        - `strict`: if true the clause must not contain new variables.
+                    By default this is false, and new variables will
+                    be included in the formula. If that is true and a clause
+                    contains an unknow variables, `ValueError` is raised.
         """
         assert self._coherent
 
@@ -332,8 +337,13 @@ class CNF(object):
 
         # Add all missing variables
         try:
-            for _,var in clause:
-                self.add_variable(var)
+            for _, var in clause:
+                if var in self._name2index:
+                    continue
+                if strict:
+                    raise ValueError("The clause contains an illegal variable %s" % var)
+                else:
+                    self.add_variable(var)
         except TypeError:
             raise TypeError("%s is not a well formatted clause" %clause)
 
