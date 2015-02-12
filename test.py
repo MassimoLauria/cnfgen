@@ -53,6 +53,18 @@ class TestCNF(unittest.TestCase) :
         self.assertListEqual(list(F.variables()),[])
         self.assertListEqual(list(F.clauses()),[])
 
+    def test_safe_clause_insetion(self):
+        F=cnfformula.CNF()
+        F.add_variable("S")
+        F.add_variable("U")
+        F.add_clause([(True,"S"),(False,"T")])
+        self.assertTrue(len(list(F.variables())),2)
+        F.add_clause([(True,"T"),(False,"U")],strict=True)
+        self.assertTrue(len(list(F.variables())),3)
+        self.assertRaises(ValueError, F.add_clause,
+                          [(True,"T"),(False,"V")],strict=True)
+
+        
 class TestPebbling(TestCNF) :
     def test_null_graph(self) :
         G=nx.DiGraph()
