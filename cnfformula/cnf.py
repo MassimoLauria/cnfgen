@@ -38,6 +38,7 @@ p cnf 5 3
 
 _default_header=r"""Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
+
 """
 
 
@@ -460,7 +461,7 @@ class CNF(object):
         # A nice header
         if export_header:
             for s in self.header.split("\n")[:-1]: output.write( ("c "+s).rstrip()+"\n")
-
+    
         # Formula specification
         output.write( "p cnf {0} {1}".format(n,m) )
 
@@ -497,7 +498,7 @@ class CNF(object):
 
         # A nice header
         if export_header:
-            for s in self.header.split("\n"): output.write( ("% "+s).rstrip()+"\n" )
+            for s in self.header.split("\n")[:-1]: output.write( ("% "+s).rstrip()+"\n" )
 
         # map literals to latex formulas
         def map_literals(l):

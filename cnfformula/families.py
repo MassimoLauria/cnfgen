@@ -12,7 +12,7 @@ from .cnf    import parity_constraint
 __docstring__ =\
 """Formula families useful in proof complexity
 
-Copyright (C) 2012, 2013  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -61,31 +61,24 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     - `functional`: add clauses to enforce at most one hole per pigeon
     - `onto`: add clauses to enforce that any hole must have a pigeon
 
-    >>> print(PigeonholePrinciple(4,3).dimacs(False,True))
+    >>> print(PigeonholePrinciple(4,3).dimacs(export_header=False))
     p cnf 12 22
-    c Pigeon axiom: pigeon 1 sits in a hole
     1 2 3 0
-    c Pigeon axiom: pigeon 2 sits in a hole
     4 5 6 0
-    c Pigeon axiom: pigeon 3 sits in a hole
     7 8 9 0
-    c Pigeon axiom: pigeon 4 sits in a hole
     10 11 12 0
-    c No collision in hole 1
     -1 -4 0
     -1 -7 0
     -1 -10 0
     -4 -7 0
     -4 -10 0
     -7 -10 0
-    c No collision in hole 2
     -2 -5 0
     -2 -8 0
     -2 -11 0
     -5 -8 0
     -5 -11 0
     -8 -11 0
-    c No collision in hole 3
     -3 -6 0
     -3 -9 0
     -3 -12 0
