@@ -398,7 +398,7 @@ class CNF(object):
             else:
                 pass
         except TypeError:
-            raise TypeError("%s is not a legal variable name" %var)
+            raise TypeError("%s is not a legal variable name" %newname)
 
 
     #
