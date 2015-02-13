@@ -20,5 +20,5 @@ setup(name='CNFgen',
       install_requires=['networkx'],
       # make some tests
       test_suite='nose.collector',
-      tests_require=['nose','networkx']
+      tests_require=['nose']
      )

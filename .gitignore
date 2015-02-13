@@ -5,4 +5,5 @@
 !./ropeproject/config.py
 build/
 dist/
+.eggs/
 *.egg-info/
