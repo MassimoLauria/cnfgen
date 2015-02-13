@@ -4,7 +4,7 @@
 import cnfformula
 import cnfformula.utils as cnfutils
 
-import cnfgen
+import cnfformula.cnfgen as cnfgen
 import reshuffle
 import kth2dimacs
 import shufflereference
@@ -272,7 +272,7 @@ class TestDimacsReshuffler(TestCNF) :
             sys.stdout = sys.__stdout__
         self.assertMultiLineEqual(dimacs_shuffle.getvalue(), reference_output)      
 
-    def equivalence_test_helper(self, cnf, variable_permutation, clause_permutation, polarity_flip) :
+    def equivalence_check_helper(self, cnf, variable_permutation, clause_permutation, polarity_flip) :
         variables = list(cnf.variables())
         massimos_fancy_input = [variables[p] for p in variable_permutation]
         random.seed(43)
@@ -289,7 +289,7 @@ class TestDimacsReshuffler(TestCNF) :
         variable_permutation = range(3)
         clause_permutation = range(2)
         polarity_flip = [1]*3
-        self.equivalence_test_helper(cnf, variable_permutation, clause_permutation, polarity_flip)
+        self.equivalence_check_helper(cnf, variable_permutation, clause_permutation, polarity_flip)
 
     def test_random_equivalence_small(self) :
         cnf = self.random_cnf(4,10,10)
@@ -298,7 +298,7 @@ class TestDimacsReshuffler(TestCNF) :
         clause_permutation = range(10)
         random.shuffle(clause_permutation)
         polarity_flip = [random.choice([-1,1]) for x in xrange(10)]
-        self.equivalence_test_helper(cnf, variable_permutation, clause_permutation, polarity_flip)
+        self.equivalence_check_helper(cnf, variable_permutation, clause_permutation, polarity_flip)
 
     def test_random_equivalence(self) :
         cnf = self.random_cnf(4,10,100)
@@ -307,7 +307,7 @@ class TestDimacsReshuffler(TestCNF) :
         clause_permutation = range(100)
         random.shuffle(clause_permutation)
         polarity_flip = [random.choice([-1,1]) for x in xrange(10)]
-        self.equivalence_test_helper(cnf, variable_permutation, clause_permutation, polarity_flip)
+        self.equivalence_check_helper(cnf, variable_permutation, clause_permutation, polarity_flip)
 
 class TestSubstitution(TestCNF) :
     def test_or(self) :
@@ -415,7 +415,7 @@ class TestSubstitution(TestCNF) :
         self.assertCnfEqual(lift,lift2)
 
 class TestKth2Dimacs(TestCNF) :
-    def identity_test_helper(self, input, liftname, liftrank) :
+    def identity_check_helper(self, input, liftname, liftrank) :
         G = cnfgen.readDigraph(input,'kth')
         input.seek(0)
         peb = cnfgen.PebblingFormula(G)
@@ -428,19 +428,19 @@ class TestKth2Dimacs(TestCNF) :
 
     def test_unit_graph(self) :
         input = StringIO.StringIO("1\n1 :\n")
-        self.identity_test_helper(input, 'none', 0)
+        self.identity_check_helper(input, 'none', 0)
 
     def test_small_line(self) :
         input = StringIO.StringIO("3\n1 :\n2 : 1\n3 : 2\n")
-        self.identity_test_helper(input, 'none', 0)
+        self.identity_check_helper(input, 'none', 0)
 
     def test_small_pyramid(self) :
         input = StringIO.StringIO("3\n1 : \n2 : \n3 : 1 2\n")
-        self.identity_test_helper(input, 'none', 0)        
+        self.identity_check_helper(input, 'none', 0)        
         
     def test_substitution(self) :
         input = StringIO.StringIO("3\n1 : \n2 : \n3 : 1 2\n")
-        self.identity_test_helper(input, 'or', 2)
+        self.identity_check_helper(input, 'or', 2)
 
 if __name__ == '__main__':
     unittest.main()

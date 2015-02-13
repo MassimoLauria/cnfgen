@@ -1,1 +1,0 @@
-cnfformula/cnfgen.py
