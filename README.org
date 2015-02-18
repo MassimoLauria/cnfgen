@@ -8,13 +8,14 @@
 
   - =cnfgen= formula generator;
 
-  and the following python scripts:
+  and  the  following  python  scripts, designed  to  operate  from/to
+  dimacs CNFs:
 
-  - =reshuffle.py= random shuffler;
+  - =cnfshuffle= random shuffler;
 
-  - =dimacstransform.py= apply litfing or substitution; 
+  - =cnftransform= apply litfing or substitution; 
 
-  - =kth2dimacs.py= make pebbling formula from a DAG.
+  - =kthgraph2pebformula= make pebbling formula from a DAG.
 
   You  can get  a brief  help on  how to  use these  tools by  running
   =<program_name> --help= from the command line.
@@ -72,33 +73,33 @@
     for some  default graphs from  the command line (e.g  grid graphs,
     random graphs...).
 
-** DIMACS file shuffler =reshuffle= 
+** DIMACS file shuffler =cnfshuffle= 
 
-  =reshuffle=  takes a  CNF in  input and  outputs the  same CNF  with
+  =cnfshuffle=  takes a  CNF in  input and  outputs the  same CNF  with
   a  random  variables  order,  clauses order  and  variable  polarity
   flips.
 
-  : reshuffle.py -i <input_cnf> -o <output_cnf> [-S random_seed]
+  : cnfshuffle -i <input_cnf> -o <output_cnf> [-S random_seed]
 
-** DIMACS transformation =dimacstransform= 
+** DIMACS file transformation =cnftransform= 
 
-  =dimacstransform= applies  formula transformations to any  CNF given
+  =cnftransform= applies  formula transformations to any  CNF given
   in input. The command line
 
-  : dimacstransform.py --Transform <type> --Tarity <N> -i <input_cnf> -o <output_cnf>
+  : cnftransform --Transform <type> --Tarity <N> -i <input_cnf> -o <output_cnf>
   
   applies transformation =<type>= of arity N to the input CNF. To see the
   available types of transformation.
 
-  : dimacstransform.py --help-transform
+  : cnftransform --help-transform
 
-** From DAGs to pebbling =kth2dimacs=
+** From DAGs to pebbling =kthgraph2pebformula=
 
-  =kth2dimacs= gets a directed acyclic  graph in input in KTH graph
+  =kthgraph2pebformula= gets a directed acyclic  graph in input in KTH graph
   format  (see  below),  and   produces  the  corresponding  *pebbling
   formula*. Optionally can apply formula transformation afterward.
 
-  : kyh2dimacs.py [--Transform <type> --Tarity <N>] -i <input_graph>
+  : kthgraph2pebformula [--Transform <type> --Tarity <N>] -i <input_graph>
  
 *** KTH graph format
    
