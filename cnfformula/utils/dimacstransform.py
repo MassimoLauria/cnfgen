@@ -2,24 +2,23 @@
 # -*- coding:utf-8 -*-
 
 from __future__ import print_function
+import os
 
-from cnfformula import available_transform
-from cnfformula.transformation import transform_compressed_clauses,StopClauses
-from cnfformula.utils import dimacs2compressed_clauses
+from .. import available_transform
+from ..transformation import transform_compressed_clauses,StopClauses
+from . import dimacs2compressed_clauses
 
 
 __docstring__ =\
 """Utilities to apply to a dimacs CNF file, a transformation which
-increase formula hardness.
+increase the hardness of the formula
 
 Accept a cnf in dimacs format in input
 
-Copyright (C) 2013  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2013, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
-
-__progname__ = "dimacstransform"
 
 import sys
 
@@ -165,17 +164,17 @@ signal.signal(signal.SIGINT, signal_handler)
 ###
 ### Main program
 ###
-def command_line_utility(argv):
+def command_line_utility(argv=sys.argv):
 
     # Parse the command line arguments
-    parser=argparse.ArgumentParser(prog='dimacstransform')
+    parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]))
     setup_command_line(parser)
 
     # Process the options
-    args=parser.parse_args(argv)
+    args=parser.parse_args(argv[1:])
 
     dimacstransform(args.input, args.Transform, args.Tarity, args.output, args.header)
 
 ### Launcher
 if __name__ == '__main__':
-    command_line_utility(sys.argv[1:])
+    command_line_utility(sys.argv)

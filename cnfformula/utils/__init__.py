@@ -2,18 +2,16 @@
 # -*- coding:utf-8 -*-
 
 from __future__ import print_function
-from .cnf import CNF
+from ..cnf import CNF
+
 
 __docstring__ =\
 """Various utilities for the manipulation of the CNFs.
 
-Copyright (C) 2012, 2013, 2014  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
-
-__all__ = ["dimacs2cnf","dimacs2compressed_clauses"]
-
 
 def dimacs2compressed_clauses(file_handle):
     """
@@ -100,17 +98,17 @@ def dimacs2cnf(file_handle):
     """Load dimacs file into a CNF object
     """
 
-    header,nvariables,clauses = dimacs2compressed_clauses(file_handle)
+    header, nvariables, clauses = dimacs2compressed_clauses(file_handle)
 
-    cnf=CNF(header=header)
+    cnf = CNF(header=header)
 
     for i in xrange(1,nvariables+1):
         cnf.add_variable(i)
 
     cnf._add_compressed_clauses(clauses)
-    
 
     # return the formula
     cnf._check_coherence(force=True)
     return cnf
+
 

@@ -12,10 +12,14 @@ setup(name='CNFgen',
       author='Massimo Lauria',
       author_email='lauria@kth.se',
       url='https://github.com/MassimoLauria/cnfgen',
-      packages =['cnfformula'],
+      packages =['cnfformula','cnfformula.utils'],
       license = 'GPL-3',
       entry_points = {
-          'console_scripts': ['cnfgen=cnfformula.cnfgen:command_line_utility'],
+          'console_scripts': [
+              'cnfgen=cnfformula.cnfgen:command_line_utility',
+              'cnfshuffle=cnfformula.utils.cnfshuffle:command_line_utility',
+              'cnftransform=cnfformula.utils.dimacstransform:command_line_utility',
+              'kthgraph2pebformula=cnfformula.utils.kthgraph2dimacs:command_line_utility'],
       },
       install_requires=['networkx'],
       # make some tests

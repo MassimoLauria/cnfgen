@@ -3,14 +3,16 @@
 
 from __future__ import print_function
 
-from cnfformula import CNF
-from cnfformula import TransformFormula,available_transform
+import os
 
-from cnfformula.graphs import supported_formats as graph_formats
-from cnfformula.graphs import readDigraph,readGraph,writeGraph
+from . import CNF
+from . import TransformFormula,available_transform
+
+from .graphs import supported_formats as graph_formats
+from .graphs import readDigraph,readGraph,writeGraph
 
 
-from cnfformula.families import (
+from .families import (
     PigeonholePrinciple,
     PebblingFormula,
     OrderingPrinciple,
@@ -20,8 +22,6 @@ from cnfformula.families import (
     SubgraphFormula,
     ColoringFormula)
 
-
-
 __docstring__ =\
 """Utilities to build CNF formulas interesting for proof complexity.
 
@@ -30,7 +30,7 @@ order to  be printed  in dimacs  or LaTeX  formats. Such  formulas are
 ready to be  fed to sat solvers.  In particular  the module implements
 both a library of CNF generators and a command line utility.
 
-Copyright (C) 2012, 2013, 2014  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 
@@ -964,7 +964,8 @@ def command_line_utility(argv=sys.argv):
     subcommands=[_PHP,_TSE,_OP,_GOP,_PEB,_RAM,_RAMLB,_KClique,_KColor,_OR,_AND]
 
     # Parse the command line arguments
-    parser=argparse.ArgumentParser(prog='cnfgen',epilog="""
+    parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),
+                                   epilog="""
     Each <formula type> has its own command line arguments and options.
     For more information type 'cnfgen <formula type> [--help | -h ]'
     """)

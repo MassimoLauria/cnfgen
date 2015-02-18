@@ -3,28 +3,26 @@
 
 from __future__ import print_function
 
+import os
+
 __docstring__ =\
-"""Utilities to build CNF formulas interesting for proof complexity.
+"""Cnf formulas shuffling.
 
-The module `dimacs` contains facilities to generate manipulates dimacs
-CNFs, in particular from command line.
-
-Copyright (C) 2012, 2013  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
 
 import sys
 import random
-from cnfformula import CNF
-from cnfformula.utils import dimacs2cnf
+from .. import CNF
+from .  import dimacs2cnf
 
 
-def reshuffle(cnf,
-              variable_permutation=None,
-              clause_permutation=None,
-              polarity_flip=None
-              ):
+def cnfshuffle(cnf,
+               variable_permutation=None,
+               clause_permutation=None,
+               polarity_flip=None):
     """ Reshuffle the given cnf. Returns a formula logically
     equivalent to the input with the following transformations
     applied in order:
@@ -41,7 +39,7 @@ def reshuffle(cnf,
     [0..m-1]. The resulting clauses are reordered according to the
     permutation.
 """
-
+    
     # empty cnf
     out=CNF(header='')
 
@@ -96,7 +94,7 @@ def reshuffle(cnf,
     return out
 
 
-def command_line_reshuffle(argv):
+def command_line_utility(argv=sys.argv):
 
     # Python 2.6 does not have argparse library
     try:
@@ -110,9 +108,10 @@ def command_line_reshuffle(argv):
         exit(-1)
 
     # Parse the command line arguments
-    parser=argparse.ArgumentParser(prog='shuffle',epilog="""
-    For more information type 'shuffle <formula type> [--help | -h ]'
-    """)
+    progname=os.path.basename(argv[0])
+    parser = argparse.ArgumentParser(prog=progname, epilog="""
+    For more information type '%s <formula type> [--help | -h ]'
+    """ % (progname))
 
     parser.add_argument('--output','-o',
                         type=argparse.FileType('wb',0),
@@ -157,7 +156,7 @@ def command_line_reshuffle(argv):
         random.seed(args.seed)
 
     input_cnf=dimacs2cnf(args.input)
-    output_cnf=reshuffle(input_cnf)
+    output_cnf=cnfshuffle(input_cnf)
     output_cnf.dimacs_dump(output=args.output,
                            export_header=args.verbose)
 
@@ -167,4 +166,4 @@ def command_line_reshuffle(argv):
 
 ### Launcher
 if __name__ == '__main__':
-    command_line_reshuffle(sys.argv)
+    command_line_utility(sys.argv)

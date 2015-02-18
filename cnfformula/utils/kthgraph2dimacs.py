@@ -3,8 +3,10 @@
 
 from __future__ import print_function
 
-from cnfformula import available_transform
-from cnfformula.transformation import transform_compressed_clauses,StopClauses
+import os
+
+from .. import available_transform
+from ..transformation import transform_compressed_clauses,StopClauses
 
 
 __docstring__ =\
@@ -17,7 +19,7 @@ sources to a *single sink*.
 
 CNF formulas interesting for proof complexity.
 
-Copyright (C) 2012, 2013  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -131,7 +133,7 @@ def pebbling_formula_compressed_clauses(kthfile):
 
 
 ### Produce the dimacs output from the data
-def kth2dimacs(inputfile, method, rank, output, header=True):
+def kthgraph2dimacs(inputfile, method, rank, output, header=True):
     # Build the lifting mechanism
 
     # Generate the basic formula
@@ -181,7 +183,7 @@ signal.signal(signal.SIGINT, signal_handler)
 ###
 ### Main program
 ###
-def command_line_utility(argv):
+def command_line_utility(argv=sys.argv):
 
     # Python 2.6 does not have argparse library
     try:
@@ -195,14 +197,14 @@ def command_line_utility(argv):
         exit(-1)
 
     # Parse the command line arguments
-    parser=argparse.ArgumentParser(prog='kth2dimacs')
+    parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]))
     setup_command_line(parser)
 
     # Process the options
-    args=parser.parse_args(argv)
+    args=parser.parse_args(argv[1:])
 
-    kth2dimacs(args.input, args.Transform, args.Tarity, args.output, args.header)
+    kthgraph2dimacs(args.input, args.Transform, args.Tarity, args.output, args.header)
 
 ### Launcher
 if __name__ == '__main__':
-    command_line_utility(sys.argv[1:])
+    command_line_utility(sys.argv)
