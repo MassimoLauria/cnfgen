@@ -7,7 +7,7 @@ __docstring__ =\
 """Utilities to manage graph formats and graph files in order to build
 formulas that are graph based.
 
-Copyright (C) 2012, 2013, 2014  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -50,7 +50,7 @@ except ImportError:
 try:
     import pygraphviz
 except ImportError:
-    print("WARNING: Missing 'dot' library: no support for dot graph format.",
+    print("WARNING: Missing 'pygraphviz' library: no support for 'dot' graph format.",
           file=sys.stderr)
     for k in _graphformats.values():
         try:

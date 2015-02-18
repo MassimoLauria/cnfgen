@@ -4,10 +4,13 @@
 import cnfformula
 import cnfformula.utils as cnfutils
 
+
+
 import cnfformula.cnfgen as cnfgen
-import reshuffle
-import kth2dimacs
-import shufflereference
+import cnfformula.utils.cnfshuffle as cnfshuffle
+import cnfformula.utils.kthgraph2dimacs as kthgraph2dimacs
+
+from . import shufflereference
 
 import unittest
 import networkx as nx
@@ -172,7 +175,7 @@ class TestReshuffler(TestCNF) :
         variable_permutation = range(1,11)
         clause_permutation = range(100)
         polarity_flip = [1]*10
-        shuffle = reshuffle.reshuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
+        shuffle = cnfshuffle.cnfshuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
         self.assertCnfEqual(cnf,shuffle)
 
     def test_variable_permutation(self) :
@@ -180,7 +183,7 @@ class TestReshuffler(TestCNF) :
         variable_permutation = ['y','z','x']
         clause_permutation = range(1)
         polarity_flip = [1]*3
-        shuffle = reshuffle.reshuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
+        shuffle = cnfshuffle.cnfshuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
         self.assertSequenceEqual(list(shuffle.variables()),variable_permutation)
         self.assertSequenceEqual(list(shuffle.clauses()),list(cnf.clauses()))
 
@@ -189,7 +192,7 @@ class TestReshuffler(TestCNF) :
         variable_permutation = list(cnf.variables())
         clause_permutation = range(1)
         polarity_flip = [1,-1,-1]
-        shuffle = reshuffle.reshuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
+        shuffle = cnfshuffle.cnfshuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
         expected = cnfformula.CNF([[(True,'x'),(False,'y'),(True,'z')]])
         self.assertCnfEqual(expected,shuffle)
 
@@ -198,7 +201,7 @@ class TestReshuffler(TestCNF) :
         variable_permutation = ['y','z','x']
         clause_permutation = range(1)
         polarity_flip = [1,-1,-1]
-        shuffle = reshuffle.reshuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
+        shuffle = cnfshuffle.cnfshuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
         expected = cnfformula.CNF([[(False,'y'),(True,'z'),(True,'x')]])
         self.assertCnfEqual(expected,shuffle)
 
@@ -217,7 +220,7 @@ class TestReshuffler(TestCNF) :
         new_variables = [old_variables[sigma_i] for sigma_i in variable_permutation]
 
         # Shuffle
-        shuffle = reshuffle.reshuffle(cnf, new_variables, clause_permutation, polarity_flip)
+        shuffle = cnfshuffle.cnfshuffle(cnf, new_variables, clause_permutation, polarity_flip)
         
         # The inverse variable permutation is the original list, do nothing.
         # The inverse clause permutation is the group inverse permutation.
@@ -228,22 +231,22 @@ class TestReshuffler(TestCNF) :
         i_polarity_flip = [polarity_flip[i] for i in variable_permutation]
 
         # Inverse shuffle.
-        cnf2 = reshuffle.reshuffle(shuffle, old_variables, i_clause_permutation, i_polarity_flip)
+        cnf2 = cnfshuffle.cnfshuffle(shuffle, old_variables, i_clause_permutation, i_polarity_flip)
         self.assertCnfEqual(cnf2,cnf)
 
     def test_deterministic(self) :
         cnf = self.random_cnf(4,10,100)
         random.seed(42)
-        shuffle = reshuffle.reshuffle(cnf)
+        shuffle = cnfshuffle.cnfshuffle(cnf)
         random.seed(42)
-        shuffle2 = reshuffle.reshuffle(cnf)
+        shuffle2 = cnfshuffle.cnfshuffle(cnf)
         self.assertCnfEqual(shuffle2,shuffle)
 
 class TestDimacsReshuffler(TestCNF) :
     def test_backwards_compatible(self) :
         cnf = self.random_cnf(4,10,100)
         random.seed(44)
-        shuffle = reshuffle.reshuffle(cnf)
+        shuffle = cnfshuffle.cnfshuffle(cnf)
         reference_output = shuffle.dimacs()+"\n"
         input = StringIO.StringIO(cnf.dimacs())
         dimacs_shuffle = StringIO.StringIO()
@@ -254,16 +257,16 @@ class TestDimacsReshuffler(TestCNF) :
     def test_cmdline_reshuffler(self) :
         cnf = self.random_cnf(4,10,3)
         random.seed('45')
-        shuffle = reshuffle.reshuffle(cnf)
+        shuffle = cnfshuffle.cnfshuffle(cnf)
         reference_output = shuffle.dimacs()
         input = StringIO.StringIO(cnf.dimacs())
         dimacs_shuffle = StringIO.StringIO()
-        argv=['reshuffle', '--input', '-', '--output', '-', '--seed', '45']
+        argv=['cnfshuffle', '--input', '-', '--output', '-', '--seed', '45']
         try:
             import sys
             sys.stdin = input
             sys.stdout = dimacs_shuffle
-            reshuffle.command_line_reshuffle(argv)
+            cnfshuffle.command_line_utility(argv)
         except Exception as e:
             print e
             self.fail()
@@ -276,7 +279,7 @@ class TestDimacsReshuffler(TestCNF) :
         variables = list(cnf.variables())
         massimos_fancy_input = [variables[p] for p in variable_permutation]
         random.seed(43)
-        shuffle = reshuffle.reshuffle(cnf, massimos_fancy_input, clause_permutation, polarity_flip)
+        shuffle = cnfshuffle.cnfshuffle(cnf, massimos_fancy_input, clause_permutation, polarity_flip)
         reference_output = shuffle.dimacs()+"\n"
         input = StringIO.StringIO(cnf.dimacs())
         dimacs_shuffle = StringIO.StringIO()
@@ -422,9 +425,9 @@ class TestKth2Dimacs(TestCNF) :
         lift = cnfformula.TransformFormula(peb, liftname, liftrank)
         reference_output = lift.dimacs(export_header=False)+"\n"
         
-        kth2dimacs_output=StringIO.StringIO()
-        kth2dimacs.kth2dimacs(input, liftname, liftrank, kth2dimacs_output, header=True)
-        self.assertMultiLineEqual(kth2dimacs_output.getvalue(), reference_output)
+        kthgraph2dimacs_output=StringIO.StringIO()
+        kthgraph2dimacs.kthgraph2dimacs(input, liftname, liftrank, kthgraph2dimacs_output, header=True)
+        self.assertMultiLineEqual(kthgraph2dimacs_output.getvalue(), reference_output)
 
     def test_unit_graph(self) :
         input = StringIO.StringIO("1\n1 :\n")
