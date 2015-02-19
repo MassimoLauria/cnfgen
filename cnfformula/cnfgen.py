@@ -391,7 +391,6 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
             if (n*d)%2 == 1:
                 raise ValueError("n * d must be even")
             G=networkx.random_regular_graph(d,n)
-            return G
 
         elif hasattr(args,'gnp') and args.gnp:
 
