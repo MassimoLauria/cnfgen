@@ -347,11 +347,12 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
 
         class IntFloat(argparse.Action):
             def __call__(self, parser, args, values, option_string = None):
-                n, p = int(values[0]),float(values[1])
-                if not isinstance(n,int):
-                    raise ValueError('n must be an integer')
-                if not (isinstance(p,float) and p<=1.0 and p>=0):
-                    raise ValueError('p must be an float between 0 and 1')
+                v=ValueError('n must be integer and p must be a float between 0 and 1')
+                try:
+                    n, p = int(values[0]),float(values[1])
+                    if p>1.0 or p<0: raise ValueError('p must be a float between 0 and 1')
+                except ValueError:
+                    raise v
                 setattr(args, self.dest, (n,p))
 
         gr.add_argument('--gnp',nargs=2,action=IntFloat,metavar=('n','p'),
