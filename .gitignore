@@ -7,3 +7,4 @@ build/
 dist/
 .eggs/
 *.egg-info/
+.dir-locals.el
