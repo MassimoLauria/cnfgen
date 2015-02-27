@@ -11,9 +11,9 @@ setup(name='CNFgen',
       author='Massimo Lauria',
       author_email='lauria@kth.se',
       url='https://github.com/MassimoLauria/cnfgen',
-      packages =['cnfformula','cnfformula.utils'],
-      license = 'GPL-3',
-      entry_points = {
+      packages=['cnfformula', 'cnfformula.utils'],
+      license='GPL-3',
+      entry_points={
           'console_scripts': [
               'cnfgen=cnfformula.cnfgen:command_line_utility',
               'cnfshuffle=cnfformula.utils.cnfshuffle:command_line_utility',
