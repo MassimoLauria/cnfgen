@@ -5,6 +5,7 @@ Setup script for the CNFgen package
 
 from setuptools import setup
 
+
 setup(name='CNFgen',
       version='0.5.2.2',
       description='CNF formula generator',
