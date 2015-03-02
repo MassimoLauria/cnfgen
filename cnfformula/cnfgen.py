@@ -22,7 +22,8 @@ from .families import (
     RamseyNumber,
     TseitinFormula,
     SubgraphFormula,
-    ColoringFormula)
+    ColoringFormula,
+    RandomKCNFFormula)
 
 __docstring__ =\
 """Utilities to build CNF formulas interesting for proof complexity.
@@ -921,6 +922,33 @@ class _OR(_FormulaFamilyHelper,_CMDLineHelper):
                    header="""Single clause with {} positive and {} negative literals""".format(args.P,args.N))
 
 
+class _RANDOM(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for random formulas
+    """
+    name='kcnf'
+    description='random k-CNF'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for an and of literals
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('k',metavar='<k>',type=int,help="clause width")
+        parser.add_argument('n',metavar='<n>',type=int,help="number of variables")
+        parser.add_argument('m',metavar='<m>',type=int,help="number of clauses")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a conjunction
+
+        Arguments:
+        - `args`: command line options
+        """
+        return RandomKCNFFormula(args.k,args.n,args.m)
+
+
 class _PEB(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for a single clause formula
     """
@@ -997,7 +1025,7 @@ def command_line_utility(argv=sys.argv):
 
     # Commands and subcommand lines
     cmdline = _GeneralCommandLine
-    subcommands=[_PHP,_GPHP,_TSE,_OP,_GOP,_PEB,_RAM,_RAMLB,_KClique,_KColor,_OR,_AND]
+    subcommands=[_PHP,_GPHP,_TSE,_OP,_GOP,_PEB,_RAM,_RAMLB,_KClique,_KColor,_RANDOM,_OR,_AND]
 
     # Parse the command line arguments
     parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),

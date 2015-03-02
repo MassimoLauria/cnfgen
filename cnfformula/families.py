@@ -17,11 +17,13 @@ https://github.com/MassimoLauria/cnfgen.git
 
 """
 
-__all__ = ["PigeonholePrinciple",
-           "GraphPigeonholePrinciple",
+__all__ = ["PigeonholePrinciple","GraphPigeonholePrinciple",
            "PebblingFormula",
            "OrderingPrinciple","GraphOrderingPrinciple",
-           "RamseyNumber","TseitinFormula","SubgraphFormula"]
+           "RamseyNumber",
+           "TseitinFormula",
+           "SubgraphFormula",
+           "RandomKCNFFormula"]
 
 import sys
 from textwrap import dedent
@@ -576,3 +578,49 @@ def SubgraphFormula(graph,templates):
 
     return F
 
+
+
+def RandomKCNFFormula(k, n, m, seed=None):
+    """Build a random k-CNF
+
+    Samle m k-clauses over n variables uniformly at random.
+
+    Arguments
+    ---------
+    - `k`: width of each clause
+    - `n': number of variables to choose from. The resulting cnf will
+           contain n variables even if some are not picked.
+    - `m`: number of clauses to generate
+    - `seed`: hashable object to seed the random generator with
+
+    Returns
+    -------
+    a CNF object
+
+    
+    Raises
+    ------
+    ValueError when some paramenter is negative, or when k>n.
+    """
+    import random
+    if seed: random.seed(seed)
+
+
+    if k>n or n<0 or m<0 or k<0:
+        raise ValueError("Parameters must be non-negatives.")
+        
+    F = CNF()
+    F.header = "Random {}-CNF over {} variables and {} clauses\n".format(k,n,m) + F.header
+    
+    for variable in xrange(1,n+1):
+        F.add_variable(variable)
+
+    clauses = set()
+    while len(clauses)<m :
+        clauses.add(tuple((random.choice([True,False]),x+1)
+                      for x in random.sample(xrange(n),k)))
+    for clause in clauses:
+        F.add_clause(list(clause))
+
+    return F
+ 
