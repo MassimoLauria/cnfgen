@@ -618,7 +618,7 @@ def RandomKCNFFormula(k, n, m, seed=None):
     clauses = set()
     while len(clauses)<m :
         clauses.add(tuple((random.choice([True,False]),x+1)
-                      for x in random.sample(xrange(n),k)))
+                      for x in sorted(random.sample(xrange(n),k))))
     for clause in clauses:
         F.add_clause(list(clause))
 
