@@ -439,7 +439,7 @@ def vlcgraph(cnf):
 # Graph generator (missing from networkx)
 #
 
-def bipartite_random_left_regular(l,r,d):
+def bipartite_random_left_regular(l,r,d,seed=None):
     """Returns a random bipartite graph with constant left degree.
     
     Each vertex on the left side has `d` neighbors on the right side,
@@ -454,6 +454,7 @@ def bipartite_random_left_regular(l,r,d):
     - `l` : vertices on the left side
     - `r` : vertices on the right side
     - `d` : degree on the left side.
+    - `seed`: hashable object to seed the random generator with
 
     Returns
     -------
@@ -465,6 +466,7 @@ def bipartite_random_left_regular(l,r,d):
 
     """
     import random
+    if seed: random.seed(seed)
     
     if (l<0 or r<0 or d<0):
         raise ValueError("bipartite_random_left_regular(l,r,d) needs l,r,d >=0.")
@@ -489,7 +491,7 @@ def bipartite_random_left_regular(l,r,d):
     return G
 
 
-def bipartite_random_regular(l,r,d):
+def bipartite_random_regular(l,r,d,seed=None):
     """Returns a random bipartite graph with constant degree on both sides.
 
     The graph is d-regular on the left side and regular on the right
@@ -504,7 +506,8 @@ def bipartite_random_regular(l,r,d):
     - `l`: number of vertices on the left side
     - `r`: number of vertices on the right side
     - `d`: degree of vertices at the left side
-
+    - `seed`: hashable object to seed the random generator with
+    
     Returns
     -------
     a NetworkX graph object
@@ -518,8 +521,11 @@ def bipartite_random_regular(l,r,d):
     [1] http://...
 
     """
-    from random import randint
 
+    import random
+    if seed: random.seed(seed)
+
+    
     if (l<0 or r<0 or d<0):
         raise ValueError("bipartite_random_regular(l,r,d) needs l,r,d >=0.")
 
@@ -546,8 +552,8 @@ def bipartite_random_regular(l,r,d):
         # Sample an edge, do not add it if it existed
         # We expect to sample at most d^2 edges
         for retries in range(3*d*d):
-            ea=randint(i,l*d-1)
-            eb=randint(i,l*d-1)
+            ea=random.randint(i,l*d-1)
+            eb=random.randint(i,l*d-1)
             if not G.has_edge(A[ea],B[eb]):
                 G.add_edge(A[ea],B[eb])
                 A[i],A[ea] = A[ea],A[i]
