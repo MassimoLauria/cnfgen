@@ -103,7 +103,7 @@ def readDigraph(file,format,force_dag=False,multi=False):
         raise RuntimeError("Internal error, format {} not implemented".format(format))
 
     if force_dag and not networkx.algorithms.is_directed_acyclic_graph(D):
-        raise ValueError("Graph must be acyclic".format(format))
+        raise ValueError("Graph must be acyclic")
 
     return D
 
@@ -394,7 +394,7 @@ def _read_graph_dimacs_format(inputfile,graph_type=networkx.Graph):
             _,fmt,nstr,mstr = l.split()
             if fmt!='edge':
                 raise ValueError("Input error: "+
-                                 "Dimacs \'edge\' format expected.".format(i))
+                                 "Dimacs \'edge\' format expected.")
             n = int(nstr)
             m = int(mstr)
             G.add_nodes_from(xrange(1,n+1))

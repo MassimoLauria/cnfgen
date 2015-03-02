@@ -14,6 +14,7 @@ from .graphs import readDigraph,readGraph,writeGraph
 
 from .families import (
     PigeonholePrinciple,
+    GraphPigeonholePrinciple,
     PebblingFormula,
     OrderingPrinciple,
     GraphOrderingPrinciple,
@@ -446,7 +447,7 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
         """Setup input options for command lines
         """
 
-        # gr=parser.add_argument_group("Read/Write the underlying bipartite graph")
+        gr=parser.add_argument_group("Read/Write the underlying bipartite graph")
         # gr.add_argument('--input','-i',
         #                 type=argparse.FileType('r',0),
         #                 metavar="<input>",
@@ -477,7 +478,7 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
                         """.format(graph_formats()['simple'][0]))
 
 
-        gr=parser.add_argument_group("Generate input graph from a library")
+        gr=parser.add_argument_group("Generate input bipartite graph from a distribution")
         gr=gr.add_mutually_exclusive_group()
 
         class IntIntFloat(argparse.Action):
@@ -504,25 +505,21 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
                     raise ValueError('In a regular bipartite graph, r must divide d*l.')
                 setattr(args, self.dest, (l,r,p))
 
-        # gr.add_argument('--bp',nargs=2,action=IntFloat,metavar=('l','r','p'),
-        #         help="random bipartite graph according with independent edges)")
+        gr.add_argument('--bp',nargs=3,action=IntIntFloat,metavar=('l','r','p'),
+                help="random bipartite graph according with independent edges)")
 
 
-        # gr.add_argument('--bm',type=int,nargs=2,action='store',metavar=('l','r','m'),
-        #         help="random bipartite graph, with m random edges")
+        gr.add_argument('--bm',type=int,nargs=3,action='store',metavar=('l','r','m'),
+                help="random bipartite graph, with m random edges")
 
-        # gr.add_argument('--bleftd',type=int,nargs=2,action='store',metavar=('l','r','d'),
+        # gr.add_argument('--bd',type=int,nargs=3,action='store',metavar=('l','r','d'),
         #         help="random bipartite d-left-regular graph, with d random edges per left vertex)")
 
-        # gr.add_argument('--bregular',type=int,nargs=3,action='store',metavar=('l','r','d'),
+        # gr.add_argument('--bregular',nargs=3,action=BipartiteRegular,metavar=('l','r','d'),
         #         help="random (l,r)-bipartite regular graph, with d edges per left vertex.")
 
-        # gr.add_argument('--bcomplete',type=int,nargs=2,action='store',metavar=('l','r'),
-        #         help="complete bipartite graph")
-
-        # gr=parser.add_argument_group("Graph modifications")
-        # gr.add_argument('--plantclique',type=int,action='store',metavar="<k>",
-        #                     help="choose k vertices per side and add all edges among them")
+        gr.add_argument('--bcomplete',type=int,nargs=2,action='store',metavar=('l','r'),
+                help="complete bipartite graph")
 
 
     @staticmethod
@@ -534,13 +531,15 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
         """
         if hasattr(args,'bp') and args.bp:
 
-            raise ValueError("Not implenented")
+            l,r,p = args.bp
+            G=networkx.bipartite_random_graph(l,r,p)
 
         elif hasattr(args,'bm') and args.bm:
 
-            raise ValueError("Not implenented")
+            l,r,m = args.bm
+            G=networkx.bipartite_gnmk_random_graph(l,r,m)
 
-        elif hasattr(args,'bleftd') and args.bleftd:
+        elif hasattr(args,'bd') and args.bd:
 
             raise ValueError("Not implenented")
 
@@ -548,24 +547,28 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
 
             raise ValueError("Not implenented")
 
-        elif hasattr(args,'bcomplete') and args.torus:
+        elif hasattr(args,'bcomplete') and args.bcomplete:
             
-            raise ValueError("Not implenented")
-
+            l,r = args.bcomplete
+            G=networkx.complete_bipartite_graph(l,r)
+                
         else:
             raise RuntimeError("Invalid graph specification on command line")
 
+        # Mark the bipartition
+        for i in range(0,l):
+            G.add_node(i,bipartite=0)
+        for i in range(l,l+r):
+            G.add_node(i,bipartite=1)
+            
         # Graph modifications
-        if hasattr(args,'plantclique') and args.plantclique>1:
-
-            raise ValueError("Not implenented")
 
         # Output the graph is requested
         if hasattr(args,'savegraph') and args.savegraph:
             writeGraph(G,
                        args.savegraph,
                        args.graphformat,
-                       graph_type='bipartite')
+                       graph_type='simple')
 
         return G
 
@@ -584,6 +587,36 @@ class _FormulaFamilyHelper(object):
     def build_cnf(args):
         pass
 
+
+class _GPHP(_FormulaFamilyHelper,_CMDLineHelper):
+    name='gphp'
+    description='graph pigeonhole principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for pigeonhole principle formula over graphs
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('--functional',action='store_true',
+                            help="pigeons sit in at most one hole")
+        parser.add_argument('--onto',action='store_true',
+                            help="every hole has a sitting pigeon")
+        _BipartiteGraphHelper.setup_command_line(parser)
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a Graph PHP formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        G = _BipartiteGraphHelper.obtain_graph(args) 
+        return GraphPigeonholePrinciple(G,
+                                        functional=args.functional,
+                                        onto=args.onto)
 
 class _PHP(_FormulaFamilyHelper,_CMDLineHelper):
     name='php'
@@ -961,7 +994,7 @@ def command_line_utility(argv=sys.argv):
 
     # Commands and subcommand lines
     cmdline = _GeneralCommandLine
-    subcommands=[_PHP,_TSE,_OP,_GOP,_PEB,_RAM,_RAMLB,_KClique,_KColor,_OR,_AND]
+    subcommands=[_PHP,_GPHP,_TSE,_OP,_GOP,_PEB,_RAM,_RAMLB,_KClique,_KColor,_OR,_AND]
 
     # Parse the command line arguments
     parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),

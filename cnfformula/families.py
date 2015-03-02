@@ -127,6 +127,78 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
 
     return php
 
+def GraphPigeonholePrinciple(graph,functional=False,onto=False):
+    """Graph Pigeonhole Principle CNF formula
+
+    The graph pigeonhole principle CNF formula, defined on a bipartite
+    graph G=(L,R,E), claims that there is a subset E' of the edges such that 
+    every vertex on the left size L has at least one incident edge in E' and 
+    every edge on the right side R has at most one incident edge in E'.
+
+    This is possible only if the graph has a matching of size |L|.
+
+    There are different variants of this formula, depending on the
+    values of `functional` and `onto` argument.
+
+    - PHP(G):  each left vertex can be incident to multiple edges in E'
+    - FPHP(G): each left vertex must be incident to exaclty one edge in E'
+    - onto-PHP: all right vertices must be incident to some vertex
+    - matching: E' must be a perfect matching between L and R
+
+    Arguments:
+    - `graph` : bipartite graph
+    - `functional`: add clauses to enforce at most one edge per left vertex
+    - `onto`: add clauses to enforce that any right vertex has one incident edge
+
+
+    Remark: the graph vertices must have the 'bipartite' attribute
+    set. Left vertices must have it set to 0 and the right ones to
+    1. Any vertex without the attribute is ignored.
+
+    """
+    if functional:
+        if onto:
+            formula_name="Graph matching"
+        else:
+            formula_name="Graph functional pigeonhole principle"
+    else:
+        if onto:
+            formula_name="Graph onto pigeonhole principle"
+        else:
+            formula_name="Graph pigeonhole principle"
+
+    Left  =  [v for v in graph.nodes() if graph.node[v]["bipartite"]==0]
+    Right =  [v for v in graph.nodes() if graph.node[v]["bipartite"]==1]
+            
+    # Clause generator
+    def _GPHP_clause_generator(G,functional,onto):
+        # Pigeon axioms
+        for p in Left:
+            yield [ (True,'p_{{{0},{1}}}'.format(p,h)) for h in G.adj[p]]
+        # Onto axioms
+        if onto:
+            for h in Right:
+                yield [ (True,'p_{{{0},{1}}}'.format(p,h)) for p in G.adj[h]]
+        # No conflicts axioms
+        for h in Right:
+            for (p1,p2) in combinations(G.adj[h],2):
+                yield [ (False,'p_{{{0},{1}}}'.format(p1,h)),
+                        (False,'p_{{{0},{1}}}'.format(p2,h)) ]
+        # Function axioms
+        if functional:
+            for p in Left:
+                for (h1,h2) in combinations(G.adj[p],2):
+                    yield [ (False,'p_{{{0},{1}}}'.format(p,h1)),
+                            (False,'p_{{{0},{1}}}'.format(p,h2)) ]
+
+    gphp=CNF()
+    gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)
+
+    clauses=_GPHP_clause_generator(graph,functional,onto)
+    for c in clauses:
+        gphp.add_clause(c)
+
+    return gphp
 
 
 
