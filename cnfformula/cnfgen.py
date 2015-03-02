@@ -10,6 +10,7 @@ from . import TransformFormula,available_transform
 
 from .graphs import supported_formats as graph_formats
 from .graphs import readDigraph,readGraph,writeGraph
+from .graphs import bipartite_random_left_regular,bipartite_random_regular
 
 
 from .families import (
@@ -503,7 +504,7 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
                     raise ValueError('d must be an integer')
                 if (d*l % r) != 0 :
                     raise ValueError('In a regular bipartite graph, r must divide d*l.')
-                setattr(args, self.dest, (l,r,p))
+                setattr(args, self.dest, (l,r,d))
 
         gr.add_argument('--bp',nargs=3,action=IntIntFloat,metavar=('l','r','p'),
                 help="random bipartite graph according with independent edges)")
@@ -512,11 +513,11 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
         gr.add_argument('--bm',type=int,nargs=3,action='store',metavar=('l','r','m'),
                 help="random bipartite graph, with m random edges")
 
-        # gr.add_argument('--bd',type=int,nargs=3,action='store',metavar=('l','r','d'),
-        #         help="random bipartite d-left-regular graph, with d random edges per left vertex)")
+        gr.add_argument('--bd',type=int,nargs=3,action='store',metavar=('l','r','d'),
+                help="random bipartite d-left-regular graph, with d random edges per left vertex)")
 
-        # gr.add_argument('--bregular',nargs=3,action=BipartiteRegular,metavar=('l','r','d'),
-        #         help="random (l,r)-bipartite regular graph, with d edges per left vertex.")
+        gr.add_argument('--bregular',nargs=3,action=BipartiteRegular,metavar=('l','r','d'),
+                help="random (l,r)-bipartite regular graph, with d edges per left vertex.")
 
         gr.add_argument('--bcomplete',type=int,nargs=2,action='store',metavar=('l','r'),
                 help="complete bipartite graph")
@@ -541,11 +542,13 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
 
         elif hasattr(args,'bd') and args.bd:
 
-            raise ValueError("Not implenented")
+            l,r,d = args.bd
+            G=bipartite_random_left_regular(l,r,d)
 
         elif hasattr(args,'bregular') and args.bregular:
 
-            raise ValueError("Not implenented")
+            l,r,d = args.bregular
+            G=bipartite_random_regular(l,r,d)
 
         elif hasattr(args,'bcomplete') and args.bcomplete:
             

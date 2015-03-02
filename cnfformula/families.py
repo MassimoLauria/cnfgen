@@ -18,6 +18,7 @@ https://github.com/MassimoLauria/cnfgen.git
 """
 
 __all__ = ["PigeonholePrinciple",
+           "GraphPigeonholePrinciple",
            "PebblingFormula",
            "OrderingPrinciple","GraphOrderingPrinciple",
            "RamseyNumber","TseitinFormula","SubgraphFormula"]

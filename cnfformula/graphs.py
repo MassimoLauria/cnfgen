@@ -20,7 +20,6 @@ __all__ = ["supported_formats","readGraph","readDigraph","writeGraph","is_dag"]
 
 _graphformats = {
     'dag':   ['kth','gml','dot'],
-    'bipartite':   ['kth','gml','dot'],
     'digraph': ['kth','gml','dot','dimacs'],
     'simple': ['kth','gml','dot','dimacs']
     }
@@ -436,3 +435,135 @@ def vlcgraph(cnf):
             G.add_edge(("+" if sign else "-")+str(var),"C_{}".format(i))
     return G
 
+#
+# Graph generator (missing from networkx)
+#
+
+def bipartite_random_left_regular(l,r,d):
+    """Returns a random bipartite graph with constant left degree.
+    
+    Each vertex on the left side has `d` neighbors on the right side,
+    picked uniformly at random without repetition.
+    
+    Each vertex in the graph has an attribute `bipartite` which is 0
+    for the vertices on the left side and 1 for the vertices on the
+    right side.
+
+    Parameters
+    ----------
+    - `l` : vertices on the left side
+    - `r` : vertices on the right side
+    - `d` : degree on the left side.
+
+    Returns
+    -------
+    a NetworkX graph object
+
+    Raises
+    ------
+    ValueError unless `l`,`r` and `d` are non negative.
+
+    """
+    import random
+    
+    if (l<0 or r<0 or d<0):
+        raise ValueError("bipartite_random_left_regular(l,r,d) needs l,r,d >=0.")
+ 
+    G=networkx.Graph()
+    G.name = "bipartite_random_left_regular({},{},{})".format(l,r,d)
+    
+    L=range(0,l)
+    R=range(l,l+r)
+    if  d>r: d=r
+    
+    for u in L:
+        G.add_node(u,bipartite=0)
+
+    for v in R:
+        G.add_node(v,bipartite=1)
+
+    for u in L:
+        for v in sorted(random.sample(R,d)):
+            G.add_edge(u,v)
+    
+    return G
+
+
+def bipartite_random_regular(l,r,d):
+    """Returns a random bipartite graph with constant degree on both sides.
+
+    The graph is d-regular on the left side and regular on the right
+    size, so it must be that d*l / r is an integer number.
+    
+    Each vertex in the graph has an attribute `bipartite` which is 0
+    for the vertices on the left side and 1 for the vertices on the
+    right side.
+
+    Parameters
+    ----------
+    - `l`: number of vertices on the left side
+    - `r`: number of vertices on the right side
+    - `d`: degree of vertices at the left side
+
+    Returns
+    -------
+    a NetworkX graph object
+
+    Raises
+    ------
+    ValueError unless `l`,`r` and `d` are non negative and `r` divides `l*d`
+
+    References
+    ----------
+    [1] http://...
+
+    """
+    from random import randint
+
+    if (l<0 or r<0 or d<0):
+        raise ValueError("bipartite_random_regular(l,r,d) needs l,r,d >=0.")
+
+    if (l*d) % r != 0:
+        raise ValueError("bipartite_random_regular(l,r,d) needs r to divid l*d.")
+ 
+    G=networkx.Graph()
+    G.name = "bipartite_random_regular({},{},{})".format(l,r,d)
+    
+    L=range(0,l)
+    R=range(l,l+r)
+    
+    for u in L:
+        G.add_node(u,bipartite=0)
+
+    for v in R:
+        G.add_node(v,bipartite=1)
+
+    A=L*d
+    B=R*(l*d / r)
+    assert len(B)==l*d
+
+    for i in range(l*d):
+        # Sample an edge, do not add it if it existed
+        # We expect to sample at most d^2 edges
+        for retries in range(3*d*d):
+            ea=randint(i,l*d-1)
+            eb=randint(i,l*d-1)
+            if not G.has_edge(A[ea],B[eb]):
+                G.add_edge(A[ea],B[eb])
+                A[i],A[ea] = A[ea],A[i]
+                B[i],B[eb] = B[eb],B[i]
+                break
+        else:
+            # Sampling takes too long, maybe no good edge exists
+            failure=True
+            for ea in range(i,l*d):
+                for eb in range(i,l*d):
+                    if not G.has_edge(A[ea],B[eb]):
+                        failure=False
+                        break
+                if not failure:
+                    break
+            if failure:
+                return bipartite_random_regular(l,r,d)
+
+    return G
