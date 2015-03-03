@@ -17,7 +17,7 @@ devbuild: venv
 
 test: venv
 	. $(VIRTUALENV)/bin/activate
-	python setup.py test
+	python setup.py nosetests --with-doctest
 
 install:
 	python setup.py --user install
