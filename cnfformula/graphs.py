@@ -573,3 +573,16 @@ def bipartite_random_regular(l,r,d,seed=None):
                 return bipartite_random_regular(l,r,d)
 
     return G
+
+def _bipartite_nx_workaroud(G):
+
+    if G.name[:24] !='complete_bipartite_graph': return G
+
+    right_start = min(G.adj[0])
+    
+    # Mark the bipartition
+    for i in range(0,right_start):
+        G.add_node(i,bipartite=0)
+    for i in range(right_start,G.order()):
+        G.add_node(i,bipartite=1)
+

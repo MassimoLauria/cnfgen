@@ -558,15 +558,11 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
                 
         else:
             raise RuntimeError("Invalid graph specification on command line")
-
-        # Mark the bipartition
-        for i in range(0,l):
-            G.add_node(i,bipartite=0)
-        for i in range(l,l+r):
-            G.add_node(i,bipartite=1)
             
-        # Graph modifications
-
+        # Ensure the bipartite labels
+        from cnfformula import graphs
+        graphs._bipartite_nx_workaroud(G)
+        
         # Output the graph is requested
         if hasattr(args,'savegraph') and args.savegraph:
             writeGraph(G,
