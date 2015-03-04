@@ -443,6 +443,8 @@ class CNF(object):
         >>> c=CNF()
         >>> print(c.dimacs(export_header=False))
         p cnf 0 0
+        <BLANKLINE>
+
         """
         from cStringIO import StringIO
         output = StringIO()
@@ -463,13 +465,14 @@ class CNF(object):
             for s in self.header.split("\n")[:-1]: output.write( ("c "+s).rstrip()+"\n")
     
         # Formula specification
-        output.write( "p cnf {0} {1}\n".format(n,m) )
+        output.write("p cnf {0} {1}".format(n,m))
+
+        if len(self._clauses) == 0:
+            output.write("\n")   # this newline makes `lingeling` solver happy
 
         # Clauses
         for c in self._clauses:
-            output.write(" ".join([str(l) for l in c])  + " 0\n")
-        
-        
+            output.write("\n" + " ".join([str(l) for l in c]) + " 0")
 
     def latex(self,export_header=True):
         """Produce the LaTeX version of the formula
