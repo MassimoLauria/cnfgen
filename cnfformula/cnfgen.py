@@ -25,7 +25,7 @@ from .families import (
     TseitinFormula,
     SubgraphFormula,
     ColoringFormula,
-    RandomKCNFFormula)
+    RandomKCNF)
 
 __docstring__ =\
 """Utilities to build CNF formulas interesting for proof complexity.

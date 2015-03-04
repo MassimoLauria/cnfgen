@@ -447,17 +447,17 @@ class TestKth2Dimacs(TestCNF) :
 
 class TestRandomCNF(TestCNF) :
     def test_empty_cnf(self) :
-        F = cnfformula.families.RandomKCNFFormula(0,0,0)
+        F = cnfformula.families.RandomKCNF(0,0,0)
         self.assertListEqual(list(F.variables()),[])
         self.assertListEqual(list(F.clauses()),[])
 
     def test_empty_cnf_with_vars(self) :
-        F = cnfformula.families.RandomKCNFFormula(0,10,0)
+        F = cnfformula.families.RandomKCNF(0,10,0)
         self.assertListEqual(list(F.variables()),range(1,11))
         self.assertListEqual(list(F.clauses()),[])
 
     def test_random_cnf(self) :
-        F = cnfformula.families.RandomKCNFFormula(3,10,50)
+        F = cnfformula.families.RandomKCNF(3,10,50)
         self.assertListEqual(list(F.variables()),range(1,11))
         self.assertEqual(len(F),50)
         self.assertEqual(len(set(frozenset(x) for x in F.clauses())),50)
