@@ -19,6 +19,8 @@ from .families import (
     PebblingFormula,
     OrderingPrinciple,
     GraphOrderingPrinciple,
+    GraphIsomorphism,
+    GraphAutomorphism,
     RamseyNumber,
     TseitinFormula,
     SubgraphFormula,
@@ -320,7 +322,7 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
                         metavar="<input>",
                         default='-',
                         help="""Input file. The graph is read from a file instead of being read from
-                        standard output. Setting '<input>' to '-' is
+                        standard input. Setting '<input>' to '-' is
                         another way to read from standard
                         input.  (default: -)
                         """)
@@ -572,6 +574,176 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
 
         return G
 
+class _TwoSimpleGraphsHelper(_CMDLineHelper):
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup input options for command lines
+        """
+
+        gr=parser.add_argument_group("Read/Write the two graphs. '-' stands for standard input.")
+        gr.add_argument('--first','-1',
+                        type=argparse.FileType('r',0),
+                        metavar="<first>",
+                        help="""First input graph file.
+                        """)
+        gr.add_argument('--second','-2',
+                        type=argparse.FileType('r',0),
+                        metavar="<input>",
+                        help="""Second input graph file.
+                        """)
+        gr.add_argument('--savegraph','-sg',
+                            type=argparse.FileType('wb',0),
+                            metavar="<graph_output>",
+                            default=None,
+                            help="""Appends the two graphs to a file. Useful for graphs that are
+                            internally generated.  Setting
+                            '<graph_output>' to '-' is another way to
+                            send the graph to standard output.
+                            (default:  -) """)
+        gr.add_argument('--graphformat','-gf',
+                        choices=graph_formats()['simple'],
+                        default=graph_formats()['simple'][0],
+                        help="""
+                        Format for the graphs input/output of BOTH graphs, 
+                        several formats are supported if networkx is
+                        installed.  (default:  {})
+                        """.format(graph_formats()['simple'][0]))
+        
+        class IntFloat(argparse.Action):
+            def __call__(self, parser, args, values, option_string = None):
+                v=ValueError('n must be integer and p must be a float between 0 and 1')
+                try:
+                    n, p = int(values[0]),float(values[1])
+                    if p>1.0 or p<0: raise ValueError('p must be a float between 0 and 1')
+                except ValueError:
+                    raise v
+                setattr(args, self.dest, (n,p))
+
+        gr1=parser.add_argument_group("Generate FIRST graph from a library")
+        gr1=gr1.add_mutually_exclusive_group()
+
+        gr1.add_argument('--gnp1',nargs=2,action=IntFloat,metavar=('n','p'),
+                            help="random graph according to G(n,p) model (i.e. independent edges)")
+        gr1.add_argument('--gnm1',type=int,nargs=2,action='store',metavar=('n','m'),
+                            help="random graph according to G(n,m) model (i.e. m random edges)")
+        gr1.add_argument('--gnd1',type=int,nargs=2,action='store',metavar=('n','d'),
+                            help="random d-regular graph according to G(n,d) model (i.e. d random edges per vertex)")
+        gr1.add_argument('--grid1',type=int,nargs='+',action='store',metavar=('d1','d2'),
+                        help="n-dimensional grid of dimension d1 x d2 x ... ")
+        gr1.add_argument('--torus1',type=int,nargs='+',action='store',metavar=('d1','d2'),
+                        help="n-dimensional torus grid of dimensions d1 x d2 x ... x dn")
+        gr1.add_argument('--complete1',type=int,action='store',metavar="<N>",
+                            help="complete graph on N vertices")
+
+        gr2=parser.add_argument_group("Generate SECOND graph from a library")
+        gr2=gr2.add_mutually_exclusive_group()
+
+        gr2.add_argument('--gnp2',nargs=2,action=IntFloat,metavar=('n','p'),
+                            help="random graph according to G(n,p) model (i.e. independent edges)")
+        gr2.add_argument('--gnm2',type=int,nargs=2,action='store',metavar=('n','m'),
+                            help="random graph according to G(n,m) model (i.e. m random edges)")
+        gr2.add_argument('--gnd2',type=int,nargs=2,action='store',metavar=('n','d'),
+                            help="random d-regular graph according to G(n,d) model (i.e. d random edges per vertex)")
+        gr2.add_argument('--grid2',type=int,nargs='+',action='store',metavar=('d1','d2'),
+                        help="n-dimensional grid of dimension d1 x d2 x ... ")
+        gr2.add_argument('--torus2',type=int,nargs='+',action='store',metavar=('d1','d2'),
+                        help="n-dimensional torus grid of dimensions d1 x d2 x ... x dn")
+        gr2.add_argument('--complete2',type=int,action='store',metavar="<N>",
+                            help="complete graph on N vertices")
+        
+
+    @staticmethod
+    def obtain_graphs(args):
+        """Build the two graphs according to command line arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        if hasattr(args,'gnd1') and args.gnd1:
+
+            n,d = args.gnd1
+            if (n*d)%2 == 1:
+                raise ValueError("n * d must be even")
+            G1=networkx.random_regular_graph(d,n)
+
+        elif hasattr(args,'gnp1') and args.gnp1:
+
+            n,p = args.gnp1
+            G1=networkx.gnp_random_graph(n,p)
+
+        elif hasattr(args,'gnm1') and args.gnm1:
+
+            n,m = args.gnm1
+            G1=networkx.gnm_random_graph(n,m)
+
+        elif hasattr(args,'grid1') and args.grid1:
+
+            G1=networkx.grid_graph(args.grid1)
+
+        elif hasattr(args,'torus1') and args.torus1:
+            
+            G1=networkx.grid_graph(args.torus1,periodic=True)
+
+        elif hasattr(args,'complete1') and args.complete1>0:
+
+            G1=networkx.complete_graph(args.complete1)
+
+        elif args.graphformat:
+
+            G1=readGraph(args.first,args.graphformat)
+        else:
+            raise RuntimeError("Invalid graph specification on command line")
+
+        if hasattr(args,'gnd2') and args.gnd2:
+
+            n,d = args.gnd2
+            if (n*d)%2 == 1:
+                raise ValueError("n * d must be even")
+            G2=networkx.random_regular_graph(d,n)
+
+        elif hasattr(args,'gnp2') and args.gnp2:
+
+            n,p = args.gnp2
+            G2=networkx.gnp_random_graph(n,p)
+
+        elif hasattr(args,'gnm2') and args.gnm2:
+
+            n,m = args.gnm2
+            G2=networkx.gnm_random_graph(n,m)
+
+        elif hasattr(args,'grid2') and args.grid2:
+
+            G2=networkx.grid_graph(args.grid2)
+
+        elif hasattr(args,'torus2') and args.torus2:
+            
+            G2=networkx.grid_graph(args.torus2,periodic=True)
+
+        elif hasattr(args,'complete2') and args.complete2>0:
+
+            G2=networkx.complete_graph(args.complete2)
+
+        elif args.graphformat:
+
+            G2=readGraph(args.second,args.graphformat)
+        else:
+            raise RuntimeError("Invalid graph specification on command line")
+
+        
+        # Output the graph is requested
+        if hasattr(args,'savegraph') and args.savegraph:
+            writeGraph(G1,
+                       args.savegraph,
+                       args.graphformat,
+                       graph_type='simple')
+            writeGraph(G2,
+                       args.savegraph,
+                       args.graphformat,
+                       graph_type='simple')
+
+        return G1,G2
+
 
 ### Formula families
 
@@ -801,6 +973,62 @@ class _KColor(_FormulaFamilyHelper,_CMDLineHelper):
         return ColoringFormula(G,range(1,args.k+1))
 
 
+class _GAuto(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for Graph Automorphism formula
+    """
+    name='gauto'
+    description='graph automorphism formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for graph automorphism formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        _SimpleGraphHelper.setup_command_line(parser)
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a graph automorphism formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        G=_SimpleGraphHelper.obtain_graph(args)
+        return GraphAutomorphism(G)
+
+
+
+class _GIso(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for Graph Isomorphism formula
+    """
+    name='giso'
+    description='graph isomorphism formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for graph isomorphism formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        _TwoSimpleGraphsHelper.setup_command_line(parser)
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a graph automorphism formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        G1,G2=_TwoSimpleGraphsHelper.obtain_graphs(args)
+        return GraphIsomorphism(G1,G2)
+
+
+    
 class _RAMLB(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for ramsey graph formula
     """
@@ -1021,7 +1249,15 @@ def command_line_utility(argv=sys.argv):
 
     # Commands and subcommand lines
     cmdline = _GeneralCommandLine
-    subcommands=[_PHP,_GPHP,_TSE,_OP,_GOP,_PEB,_RAM,_RAMLB,_KClique,_KColor,_RANDOM,_OR,_AND]
+    subcommands=[_PHP,_GPHP,
+                 _TSE,
+                 _OP,_GOP,
+                 _PEB,
+                 _GIso,_GAuto,
+                 _RAM,_RAMLB,
+                 _KClique,
+                 _KColor,
+                 _RANDOM,_OR,_AND]
 
     # Parse the command line arguments
     parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),
