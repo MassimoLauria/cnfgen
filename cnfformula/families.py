@@ -17,13 +17,17 @@ https://github.com/MassimoLauria/cnfgen.git
 
 """
 
-__all__ = ["PigeonholePrinciple","GraphPigeonholePrinciple",
+__all__ = ["PigeonholePrinciple",
+           "GraphPigeonholePrinciple",
            "PebblingFormula",
-           "OrderingPrinciple","GraphOrderingPrinciple",
+           "OrderingPrinciple",
+           "GraphOrderingPrinciple",
+           "GraphIsomorphism",
+           "GraphAutomorphism",
            "RamseyNumber",
            "TseitinFormula",
            "SubgraphFormula",
-           "RandomKCNFFormula"]
+           "RandomKCNF"]
 
 import sys
 from textwrap import dedent
@@ -667,7 +671,7 @@ def SubgraphFormula(graph,templates):
     return F
 
 
-def RandomKCNFFormula(k, n, m, seed=None):
+def RandomKCNF(k, n, m, seed=None):
     """Build a random k-CNF
 
     Samle m k-clauses over n variables uniformly at random.

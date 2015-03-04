@@ -1170,7 +1170,7 @@ class _RANDOM(_FormulaFamilyHelper,_CMDLineHelper):
         Arguments:
         - `args`: command line options
         """
-        return RandomKCNFFormula(args.k,args.n,args.m)
+        return RandomKCNF(args.k,args.n,args.m)
 
 
 class _PEB(_FormulaFamilyHelper,_CMDLineHelper):
