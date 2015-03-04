@@ -77,8 +77,7 @@ def satisfiable(F):
     result, dimacs_assignment = parse_dimacs_solver_output(output)
 
     if result is None:
-        raise subprocess.CalledProcessError("Error during SAT solver call.\n"
-                                            + err)
+        raise subprocess.CalledProcessError("Error during SAT solver call.\n")
 
     # The DIMACS assignment is a vector containing -v or -v for v the
     # integer dimacs indices of variables.

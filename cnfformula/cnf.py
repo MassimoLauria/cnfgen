@@ -463,11 +463,11 @@ class CNF(object):
             for s in self.header.split("\n")[:-1]: output.write( ("c "+s).rstrip()+"\n")
     
         # Formula specification
-        output.write( "p cnf {0} {1}".format(n,m) )
+        output.write( "p cnf {0} {1}\n".format(n,m) )
 
         # Clauses
         for c in self._clauses:
-            output.write("\n" +  " ".join([str(l) for l in c])  + " 0")
+            output.write(" ".join([str(l) for l in c])  + " 0\n")
         
         
 
@@ -540,7 +540,22 @@ class CNF(object):
         output.write(" }")
         return output.getvalue()
 
+    def satisfiable(self):
+        """Determines whether a CNF is satisfiable or not.
 
+        The satisfiability is determined using an external sat solver.  If
+        no command line is specified, the known solvers are tried in
+        succession until one is found.
+
+        Returns:
+        --------
+        A pair (answer,witness) where answer is either True (if
+        satisfiable) or False (if unsatisfiable). If satisfiable the
+        witness is a satisfiable assignment in form of a
+        dictionary. Otherwise it is none.
+        """
+        from utils import solver
+        return solver.satisfiable(self)
 
 ###
 ### Various utility function for CNFs
