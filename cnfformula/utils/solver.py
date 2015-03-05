@@ -256,6 +256,7 @@ def is_satisfiable(F, cmd=None):
         'lingeling': (is_lingeling_available, is_satisfiable_lingeling)
     }
 
+    cmd='lingeling'
     if (cmd is None) or len(cmd.split())==0:
 
         solver_names = dropin.keys()  # try all supported solvers
