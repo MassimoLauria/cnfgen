@@ -29,7 +29,7 @@ SATSOLVER_REPLACEMENT = {
 def supported():
     """List of supported SAT solvers
     """
-    return SATSOLVER_REPLACEMENT.key()
+    return SATSOLVER_REPLACEMENT.keys()
 
 def is_lingeling_available(progname='lingeling'):
     """Test is `lingeling` is available"""
