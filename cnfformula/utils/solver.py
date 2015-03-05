@@ -47,7 +47,7 @@ def parse_dimacs_solver_output(text):
     return result, assignment
 
 
-def satisfiable(F):
+def is_satisfiable(F):
     """Determines whether a CNF is satisfiable or not.
 
     The satisfiability is determined using an external sat solver.  If

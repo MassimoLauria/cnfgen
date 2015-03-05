@@ -543,7 +543,7 @@ class CNF(object):
         output.write(" }")
         return output.getvalue()
 
-    def satisfiable(self):
+    def is_satisfiable(self):
         """Determines whether a CNF is satisfiable or not.
 
         The satisfiability is determined using an external sat solver.  If
@@ -558,7 +558,7 @@ class CNF(object):
         dictionary. Otherwise it is none.
         """
         from utils import solver
-        return solver.satisfiable(self)
+        return solver.is_satisfiable(self)
 
 ###
 ### Various utility function for CNFs
