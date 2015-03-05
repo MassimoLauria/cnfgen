@@ -256,26 +256,27 @@ def is_satisfiable(F, cmd=None):
         'lingeling': (is_lingeling_available, is_satisfiable_lingeling)
     }
 
-    cmd='lingeling'
     if (cmd is None) or len(cmd.split())==0:
 
-        solver_names = dropin.keys()  # try all supported solvers
+        solver_cmds = dropin.keys()  # try all supported solvers
 
     else:
 
-        solver_names = cmd.split()[0:1]  # use the requested solver
-        if solver_names[0] not in dropin:
+        # supported solver?
+        if cmd.split()[0] not in dropin:
             raise RuntimeError("Unsupported solver: see the documentation.")
+        solver_cmds = [cmd]
 
-    # tries the choses solvers until one works
-    for solver in solver_names:
+    # tries the chosen solvers until one works
+    for solver_cmd in solver_cmds:
+        solver = solver_cmd.split()[0]
         assert(dropin[solver] in solver_functions)
         s_test, s_func = solver_functions[dropin[solver]]
 
         if not s_test(progname=solver):
             continue
         else:
-            return s_func(F, cmd)
+            return s_func(F, solver_cmd)
 
     # no solver was available.
     raise RuntimeError("No usable solver was found.")

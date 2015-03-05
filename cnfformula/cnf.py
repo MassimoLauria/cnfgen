@@ -543,22 +543,38 @@ class CNF(object):
         output.write(" }")
         return output.getvalue()
 
-    def is_satisfiable(self):
+    def is_satisfiable(self, cmd=None):
         """Determines whether a CNF is satisfiable or not.
 
         The satisfiability is determined using an external sat solver.  If
         no command line is specified, the known solvers are tried in
         succession until one is found.
 
+        Arguments:
+        ----------
+        `F`: a CNF formula
+        `cmd`: command line used for the solver
+
+        Example:
+        --------
+        F.is_satisfiable()
+        F.is_satisfiable(cmd='minisat -no-pre')
+        F.is_satisfiable(cmd='glucose -pre')
+        F.is_satisfiable(cmd='lingeling --plain')
+
+        For more info on how to use the `cmd` parameter see the
+        documentation of `cnfformula.utils.solver.is_satisfiable`
+
         Returns:
         --------
-        A pair (answer,witness) where answer is either True (if
-        satisfiable) or False (if unsatisfiable). If satisfiable the
-        witness is a satisfiable assignment in form of a
-        dictionary. Otherwise it is none.
+        A pair (answer,witness) where answer is either True when F is
+        satisfiable, or False otherwise. If F is satisfiable the witness
+        is a satisfiable assert ignment in form of a dictionary, otherwise it
+        is None.
+
         """
         from utils import solver
-        return solver.is_satisfiable(self)
+        return solver.is_satisfiable(self, cmd=cmd)
 
 ###
 ### Various utility function for CNFs
