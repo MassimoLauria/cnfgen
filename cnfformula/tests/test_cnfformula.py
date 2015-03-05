@@ -4,13 +4,12 @@
 import cnfformula
 import cnfformula.utils as cnfutils
 
-
-
 import cnfformula.cnfgen as cnfgen
 import cnfformula.utils.cnfshuffle as cnfshuffle
 import cnfformula.utils.kthgraph2dimacs as kthgraph2dimacs
 
 from . import shufflereference
+from . import TestCNFBase
 
 import unittest
 import networkx as nx
@@ -18,15 +17,7 @@ import StringIO
 import random
 import itertools
 
-class TestCNF(unittest.TestCase) :
-    def assertCnfEqual(self,cnf1,cnf2) :
-        self.assertSetEqual(set(cnf1.variables()),set(cnf2.variables()))
-        self.assertSetSetEqual(cnf1.clauses(),cnf2.clauses())
-
-    def assertSetSetEqual(self,list1,list2) :
-        set1=set(frozenset(x) for x in list1)
-        set2=set(frozenset(x) for x in list2)
-        self.assertSetEqual(set1,set2)
+class TestCNF(TestCNFBase) :
 
     @staticmethod
     def cnf_from_variables_and_clauses(variables, clauses) :
@@ -68,7 +59,7 @@ class TestCNF(unittest.TestCase) :
                           [(True,"T"),(False,"V")],strict=True)
 
         
-class TestPebbling(TestCNF) :
+class TestPebbling(TestCNFBase) :
     def test_null_graph(self) :
         G=nx.DiGraph()
         peb = cnfgen.PebblingFormula(G)
