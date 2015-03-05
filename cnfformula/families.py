@@ -580,10 +580,42 @@ def SubgraphFormula(graph,templates):
 
 
 
-def RandomKCNFFormula(k, n, m, seed=None):
+def binomial_approx(n,k):
+    if (k==0) : return 1,1
+    import math
+    lowerbound=(float(n)/k)**k
+    upperbound=lowerbound*math.exp(k)
+    return lowerbound,upperbound
+
+def binomial(n,k):
+    nCk=1
+    for x in xrange(k):
+        nCk*=(n-x)
+        nCk/=(k-x)
+    return nCk
+
+""" Checks if m < 2^k (n choose k) without computing binomials"""
+def m_less_than_2k_nchoosem(k,n,m):
+    lowerbound,upperbound = binomial_approx(n,k)
+    if (m < 2**k * lowerbound) : return True
+    if (m > 2**k * upperbound) : return False
+    return m <= 2**k * binomial(n,k)
+
+""" Checks if m < (n choose g) (n-g choose k-g) without computing binomials"""
+def m_less_than_nchooseg_ngchoosekg(k,n,m,g):
+    lowerbound1,upperbound1 = binomial_approx(n,g)
+    lowerbound2,upperbound2 = binomial_approx(n-g,k-g)
+    if (m < lowerbound1*lowerbound2) : return True
+    if (m > upperbound1*upperbound2) : return False
+    return m <= binomial(n,g) * binomial(n-g,k-g)
+
+def RandomKCNFFormula(k, n, m, g=None, seed=None):
     """Build a random k-CNF
 
-    Samle m k-clauses over n variables uniformly at random.
+    Sample m k-clauses over n variables uniformly at random.
+
+    If g is an integer, fix an assignment and sample from the subset
+    of clauses where the assignment satisfies exactly g literals.
 
     Arguments
     ---------
@@ -591,6 +623,7 @@ def RandomKCNFFormula(k, n, m, seed=None):
     - `n': number of variables to choose from. The resulting cnf will
            contain n variables even if some are not picked.
     - `m`: number of clauses to generate
+    - `g`: plant an assignment that satisfies exactly g literals in every clause.
     - `seed`: hashable object to seed the random generator with
 
     Returns
@@ -601,26 +634,47 @@ def RandomKCNFFormula(k, n, m, seed=None):
     Raises
     ------
     ValueError when some paramenter is negative, or when k>n.
+
     """
     import random
     if seed: random.seed(seed)
 
 
-    if k>n or n<0 or m<0 or k<0:
-        raise ValueError("Parameters must be non-negatives.")
-        
+    if n<0 or m<0 or k<0 or (g and g<0):
+        raise ValueError("Parameters must be non-negative.")
+    if k>n:
+        raise ValueError("Too wide clauses.")
+    if g and g>k:
+        raise ValueError("Too many satisfied literals.")
+    if g is None:
+        if not m_less_than_2k_nchoosem(k,n,m):
+            raise ValueError("Too many clauses.")
+    else:
+        if not m_less_than_nchooseg_ngchoosekg(k,n,m,g):
+            raise ValueError("Too many clauses.")
+
+    # TODO: if m < 2^k n choose k / 2, then remove clauses instead of adding them
+
     F = CNF()
-    F.header = "Random {}-CNF over {} variables and {} clauses\n".format(k,n,m) + F.header
     
     for variable in xrange(1,n+1):
         F.add_variable(variable)
 
     clauses = set()
-    while len(clauses)<m :
-        clauses.add(tuple((random.choice([True,False]),x+1)
-                      for x in sorted(random.sample(xrange(n),k))))
+    if g is None:
+        F.header = "Random {}-CNF over {} variables and {} clauses\n".format(k,n,m) + F.header
+        while len(clauses)<m :
+            clauses.add(frozenset((random.choice([True,False]),x+1)
+                                  for x in random.sample(xrange(n),k)))
+    else:
+        F.header = ("Random {}-CNF over {} variables and {} clauses\n"
+        "with a planted assignment that satisfies {} literals in every clause\n").format(k,n,m,g) + F.header
+        assignment=[random.choice([True,False]) for x in xrange(n)]
+        while len(clauses)<m :
+            clauses.add(frozenset((assignment[x] ^ (i<g),x+1)
+                                  for i,x in enumerate(random.sample(xrange(n),k))))
+
     for clause in clauses:
         F.add_clause(list(clause))
 
     return F
- 
