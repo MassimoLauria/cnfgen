@@ -443,6 +443,8 @@ class CNF(object):
         >>> c=CNF()
         >>> print(c.dimacs(export_header=False))
         p cnf 0 0
+        <BLANKLINE>
+
         """
         from cStringIO import StringIO
         output = StringIO()
@@ -463,13 +465,14 @@ class CNF(object):
             for s in self.header.split("\n")[:-1]: output.write( ("c "+s).rstrip()+"\n")
     
         # Formula specification
-        output.write( "p cnf {0} {1}".format(n,m) )
+        output.write("p cnf {0} {1}".format(n,m))
+
+        if len(self._clauses) == 0:
+            output.write("\n")   # this newline makes `lingeling` solver happy
 
         # Clauses
         for c in self._clauses:
-            output.write("\n" +  " ".join([str(l) for l in c])  + " 0")
-        
-        
+            output.write("\n" + " ".join([str(l) for l in c]) + " 0")
 
     def latex(self,export_header=True):
         """Produce the LaTeX version of the formula
@@ -540,7 +543,22 @@ class CNF(object):
         output.write(" }")
         return output.getvalue()
 
+    def is_satisfiable(self):
+        """Determines whether a CNF is satisfiable or not.
 
+        The satisfiability is determined using an external sat solver.  If
+        no command line is specified, the known solvers are tried in
+        succession until one is found.
+
+        Returns:
+        --------
+        A pair (answer,witness) where answer is either True (if
+        satisfiable) or False (if unsatisfiable). If satisfiable the
+        witness is a satisfiable assignment in form of a
+        dictionary. Otherwise it is none.
+        """
+        from utils import solver
+        return solver.is_satisfiable(self)
 
 ###
 ### Various utility function for CNFs

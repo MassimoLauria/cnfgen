@@ -4,13 +4,12 @@
 import cnfformula
 import cnfformula.utils as cnfutils
 
-
-
 import cnfformula.cnfgen as cnfgen
 import cnfformula.utils.cnfshuffle as cnfshuffle
 import cnfformula.utils.kthgraph2dimacs as kthgraph2dimacs
 
 from . import shufflereference
+from . import TestCNFBase
 
 import unittest
 import networkx as nx
@@ -18,15 +17,7 @@ import StringIO
 import random
 import itertools
 
-class TestCNF(unittest.TestCase) :
-    def assertCnfEqual(self,cnf1,cnf2) :
-        self.assertSetEqual(set(cnf1.variables()),set(cnf2.variables()))
-        self.assertSetSetEqual(cnf1.clauses(),cnf2.clauses())
-
-    def assertSetSetEqual(self,list1,list2) :
-        set1=set(frozenset(x) for x in list1)
-        set2=set(frozenset(x) for x in list2)
-        self.assertSetEqual(set1,set2)
+class TestCNF(TestCNFBase) :
 
     @staticmethod
     def cnf_from_variables_and_clauses(variables, clauses) :
@@ -68,7 +59,7 @@ class TestCNF(unittest.TestCase) :
                           [(True,"T"),(False,"V")],strict=True)
 
         
-class TestPebbling(TestCNF) :
+class TestPebbling(TestCNFBase) :
     def test_null_graph(self) :
         G=nx.DiGraph()
         peb = cnfgen.PebblingFormula(G)
@@ -312,7 +303,7 @@ class TestDimacsReshuffler(TestCNF) :
         polarity_flip = [random.choice([-1,1]) for x in xrange(10)]
         self.equivalence_check_helper(cnf, variable_permutation, clause_permutation, polarity_flip)
 
-class TestSubstitution(TestCNF) :
+class TestSubstitution(TestCNFBase) :
     def test_or(self) :
         cnf = cnfformula.CNF([[(True,'x'),(False,'y')]])
         lift = cnfformula.TransformFormula(cnf, 'or', 3)
@@ -417,7 +408,7 @@ class TestSubstitution(TestCNF) :
         lift2 = cnfformula.TransformFormula(cnf, 'one', 2)
         self.assertCnfEqual(lift,lift2)
 
-class TestKth2Dimacs(TestCNF) :
+class TestKth2Dimacs(TestCNFBase) :
     def identity_check_helper(self, input, liftname, liftrank) :
         G = cnfgen.readDigraph(input,'kth')
         input.seek(0)
@@ -445,19 +436,19 @@ class TestKth2Dimacs(TestCNF) :
         input = StringIO.StringIO("3\n1 : \n2 : \n3 : 1 2\n")
         self.identity_check_helper(input, 'or', 2)
 
-class TestRandomCNF(TestCNF) :
+class TestRandomCNF(TestCNFBase) :
     def test_empty_cnf(self) :
-        F = cnfformula.families.RandomKCNFFormula(0,0,0)
+        F = cnfformula.families.RandomKCNF(0,0,0)
         self.assertListEqual(list(F.variables()),[])
         self.assertListEqual(list(F.clauses()),[])
 
     def test_empty_cnf_with_vars(self) :
-        F = cnfformula.families.RandomKCNFFormula(0,10,0)
+        F = cnfformula.families.RandomKCNF(0,10,0)
         self.assertListEqual(list(F.variables()),range(1,11))
         self.assertListEqual(list(F.clauses()),[])
 
     def test_random_cnf(self) :
-        F = cnfformula.families.RandomKCNFFormula(3,10,50)
+        F = cnfformula.families.RandomKCNF(3,10,50)
         self.assertListEqual(list(F.variables()),range(1,11))
         self.assertEqual(len(F),50)
         self.assertEqual(len(set(frozenset(x) for x in F.clauses())),50)

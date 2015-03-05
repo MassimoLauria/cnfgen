@@ -17,13 +17,17 @@ https://github.com/MassimoLauria/cnfgen.git
 
 """
 
-__all__ = ["PigeonholePrinciple","GraphPigeonholePrinciple",
+__all__ = ["PigeonholePrinciple",
+           "GraphPigeonholePrinciple",
            "PebblingFormula",
-           "OrderingPrinciple","GraphOrderingPrinciple",
+           "OrderingPrinciple",
+           "GraphOrderingPrinciple",
+           "GraphIsomorphism",
+           "GraphAutomorphism",
            "RamseyNumber",
            "TseitinFormula",
            "SubgraphFormula",
-           "RandomKCNFFormula"]
+           "RandomKCNF"]
 
 import sys
 from textwrap import dedent
@@ -256,6 +260,92 @@ def OrderingPrinciple(size,total=False,smart=False,plant=False,knuth=0):
     """
 
     return GraphOrderingPrinciple(networkx.complete_graph(size),total,smart,plant,knuth)
+def _graph_isomorphism_var(u, v):
+    return "x_{{{0},{1}}}".format(u, v)
+
+
+def GraphIsomorphism(G1, G2):
+    """Graph Isomorphism formula
+
+    The formula is the CNF encoding of the statement that G1 and G2
+    are two isomorphic graphs.
+
+    Arguments:
+    ----------
+    - `G1` : a simple graph
+    - `G2` : another simple graph
+
+    Returns:
+    --------
+    A CNF formula which is satiafiable if and only if graphs G1 and G2
+    are isomorphic.
+
+    """
+    F = CNF()
+    F.header = "Graph Isomorphism problem between graphs " +\
+               G1.name + " and " + G2.name + "\n" + F.header
+
+    pairs = [(u, v) for u in G1.nodes() for v in G2.nodes()]
+    var = _graph_isomorphism_var
+
+    for (u, v) in pairs:
+        F.add_variable(var(u, v))
+
+    # Defined on both side
+    for u in G1.nodes():
+        F.add_clause([(True, var(u, v)) for v in G2.nodes()], strict=True)
+
+    for v in G2.nodes():
+        F.add_clause([(True, var(u, v)) for u in G1.nodes()], strict=True)
+
+    # Injective on both sides
+    for u in G1.nodes():
+        for v1, v2 in combinations(G2.nodes(), 2):
+            F.add_clause([(False, var(u, v1)),
+                          (False, var(u, v2))], strict=True)
+    for v in G2.nodes():
+        for u1, u2 in combinations(G1.nodes(), 2):
+            F.add_clause([(False, var(u1, v)),
+                          (False, var(u2, v))], strict=True)
+
+    # Edge consistency
+    for u1, u2 in combinations(G1.nodes(), 2):
+        for v1, v2 in combinations(G2.nodes(), 2):
+            if G1.has_edge(u1, u2) != G2.has_edge(v1, v2):
+                F.add_clause([(False, var(u1, v1)),
+                              (False, var(u2, v2))], strict=True)
+                F.add_clause([(False, var(u1, v2)),
+                              (False, var(u2, v1))], strict=True)
+
+    return F
+
+
+def GraphAutomorphism(G):
+    """Graph Automorphism formula
+
+    The formula is the CNF encoding of the statement that a graph G
+    has a nontrivial automorphism, i.e. an automorphism different from
+    the idential one.
+
+    Arguments:
+    ----------
+    - `G` : a simple graph
+
+    Returns:
+    --------
+    A CNF formula which is satiafiable if and only if graph G has a
+    nontrivial automorphism.
+    """
+    tmp = CNF()
+    header = "Graph automorphism formula for graph "+ G.name +"\n"+ tmp.header
+    F = GraphIsomorphism(G, G)
+    F.header = header
+
+    var = _graph_isomorphism_var
+
+    F.add_clause([(False, var(u, u)) for u in G.nodes()], strict=True)
+
+    return F
 
 
 def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
@@ -609,7 +699,7 @@ def m_less_than_nchooseg_ngchoosekg(k,n,m,g):
     if (m > upperbound1*upperbound2) : return False
     return m <= binomial(n,g) * binomial(n-g,k-g)
 
-def RandomKCNFFormula(k, n, m, g=None, seed=None):
+def RandomKCNF(k, n, m, g=None, seed=None):
     """Build a random k-CNF
 
     Sample m k-clauses over n variables uniformly at random.
@@ -634,7 +724,6 @@ def RandomKCNFFormula(k, n, m, g=None, seed=None):
     Raises
     ------
     ValueError when some paramenter is negative, or when k>n.
-
     """
     import random
     if seed: random.seed(seed)
@@ -654,8 +743,8 @@ def RandomKCNFFormula(k, n, m, g=None, seed=None):
             raise ValueError("Too many clauses.")
 
     # TODO: if m < 2^k n choose k / 2, then remove clauses instead of adding them
-
     F = CNF()
+    F.header = "Random {}-CNF over {} variables and {} clauses\n".format(k,n,m) + F.header
     
     for variable in xrange(1,n+1):
         F.add_variable(variable)
@@ -673,8 +762,8 @@ def RandomKCNFFormula(k, n, m, g=None, seed=None):
         while len(clauses)<m :
             clauses.add(frozenset((assignment[x] ^ (i<g),x+1)
                                   for i,x in enumerate(random.sample(xrange(n),k))))
-
     for clause in clauses:
         F.add_clause(list(clause))
 
     return F
+ 
