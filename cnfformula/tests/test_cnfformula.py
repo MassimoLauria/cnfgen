@@ -303,7 +303,7 @@ class TestDimacsReshuffler(TestCNF) :
         polarity_flip = [random.choice([-1,1]) for x in xrange(10)]
         self.equivalence_check_helper(cnf, variable_permutation, clause_permutation, polarity_flip)
 
-class TestSubstitution(TestCNF) :
+class TestSubstitution(TestCNFBase) :
     def test_or(self) :
         cnf = cnfformula.CNF([[(True,'x'),(False,'y')]])
         lift = cnfformula.TransformFormula(cnf, 'or', 3)
@@ -408,7 +408,7 @@ class TestSubstitution(TestCNF) :
         lift2 = cnfformula.TransformFormula(cnf, 'one', 2)
         self.assertCnfEqual(lift,lift2)
 
-class TestKth2Dimacs(TestCNF) :
+class TestKth2Dimacs(TestCNFBase) :
     def identity_check_helper(self, input, liftname, liftrank) :
         G = cnfgen.readDigraph(input,'kth')
         input.seek(0)
@@ -436,7 +436,7 @@ class TestKth2Dimacs(TestCNF) :
         input = StringIO.StringIO("3\n1 : \n2 : \n3 : 1 2\n")
         self.identity_check_helper(input, 'or', 2)
 
-class TestRandomCNF(TestCNF) :
+class TestRandomCNF(TestCNFBase) :
     def test_empty_cnf(self) :
         F = cnfformula.families.RandomKCNF(0,0,0)
         self.assertListEqual(list(F.variables()),[])
