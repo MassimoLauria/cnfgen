@@ -16,6 +16,21 @@ import tempfile
 import os
 
 
+SATSOLVER_REPLACEMENT = {
+    'lingeling': 'lingeling',
+    'plingeling': 'lingeling',
+    'precosat': 'lingeling',
+    'picosat': 'lingeling',
+    'cryptominisat': 'lingeling',
+    'minisat': 'minisat',
+    'glucose': 'minisat'
+}
+
+def supported():
+    """List of supported SAT solvers
+    """
+    return SATSOLVER_REPLACEMENT.key()
+
 def is_lingeling_available(progname='lingeling'):
     """Test is `lingeling` is available"""
 
@@ -165,7 +180,7 @@ def is_satisfiable_lingeling(F, cmd='lingeling'):
     # parse the solver output, for example
     #
     # s SATISFIABLE
-    # v -1 -2 -3 4 5 6 0
+    # v -1 -2 -3 4 5 6
     # v -7 8 9 -10 0
     #
     # is parsed as (True,[-1,-2,-3,4,5,6,-7,8,9,-10])
@@ -184,7 +199,7 @@ def is_satisfiable_lingeling(F, cmd='lingeling'):
                 result = None
         if line[0] == 'v':
             witness += [int(el)
-                           for el in line.split() if el != "v" and el != "0"]
+                        for el in line.split() if el != "v" and el != "0"]
 
     if result is None:
         raise RuntimeError("Error during SAT solver call.\n")
@@ -244,19 +259,15 @@ def is_satisfiable(F, cmd=None):
     is_satisfiable_minisat(F,cmd='dropin-replacement')
     is_satisfiable_lingeling(F,cmd='dropin-replacement')
     """
-    dropin = {
-        'lingeling': 'lingeling',
-        'plingeling': 'lingeling',
-        'minisat': 'minisat',
-        'glucose': 'minisat'
-    }
+
+    dropin = SATSOLVER_REPLACEMENT
 
     solver_functions = {
         'minisat': (is_minisat_available, is_satisfiable_minisat),
         'lingeling': (is_lingeling_available, is_satisfiable_lingeling)
     }
 
-    if (cmd is None) or len(cmd.split())==0:
+    if (cmd is None) or len(cmd.split()) == 0:
 
         solver_cmds = dropin.keys()  # try all supported solvers
 
@@ -264,13 +275,14 @@ def is_satisfiable(F, cmd=None):
 
         # supported solver?
         if cmd.split()[0] not in dropin:
-            raise RuntimeError("Unsupported solver: see the documentation.")
+            raise RuntimeError(
+                "Solver '{}' is not supported (see documentation)".format(cmd.split()[0]))
         solver_cmds = [cmd]
 
     # tries the chosen solvers until one works
     for solver_cmd in solver_cmds:
         solver = solver_cmd.split()[0]
-        assert(dropin[solver] in solver_functions)
+        assert dropin[solver] in solver_functions
         s_test, s_func = solver_functions[dropin[solver]]
 
         if not s_test(progname=solver):
@@ -279,5 +291,8 @@ def is_satisfiable(F, cmd=None):
             return s_func(F, solver_cmd)
 
     # no solver was available.
-    raise RuntimeError("No usable solver was found.")
-    
+    if len(solver_cmds) == 1:
+        raise RuntimeError("Solver '{}' is not installed or is unusable."\
+                           .format(solver_cmds[0].split()[0]))
+    else:
+        raise RuntimeError("No usable solver found.")
