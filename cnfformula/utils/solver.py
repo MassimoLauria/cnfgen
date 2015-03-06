@@ -3,8 +3,10 @@
 """SAT solver integrated with CNFgen.
 
 Of course it does not implement an actual sat solver, but tries to use
-solvers installed on the machine. So far it only works with lingeling
-and minisat.
+solvers installed on the machine. For the full list of supported
+solvers, see::
+
+  cnfformula.utils.solver.supported()
 
 Copyright (C) 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
@@ -15,63 +17,71 @@ import subprocess
 import tempfile
 import os
 
+__all__ = ["supported", "is_satisfiable", "is_available"]
 
-SATSOLVER_REPLACEMENT = {
-    'lingeling': 'lingeling',
-    'plingeling': 'lingeling',
-    'precosat': 'lingeling',
-    'picosat': 'lingeling',
-    'cryptominisat': 'lingeling',
+_SATSOLVER_IOSTYLE = {
+    'lingeling': 'dimacs',
+    'plingeling': 'dimacs',
+    'precosat': 'dimacs',
+    'picosat': 'dimacs',
+    'march': 'nostdin',
+    'cryptominisat': 'dimacs',
     'minisat': 'minisat',
-    'glucose': 'minisat'
+    'glucose': 'minisat',
+    'sat4j': 'nostdin',
 }
 
+
 def supported():
-    """List of supported SAT solvers
+    """List the supported SAT solvers"""
+    return _SATSOLVER_IOSTYLE.keys()
+
+
+def is_available(solvers=None):
+    """Test whether we can run SAT solvers.
+
+    Paramenters
+    -----------
+    `solvername` : string / list of strings, optional
+        the names of the solvers to be tested.
+
+    If `solvers` is None then all supported solvers are tested.
+    If `solvers` is a list of strings all solvers in the list are tested.
+    If `solvers` is a string then only that solver is tested.
     """
-    return SATSOLVER_REPLACEMENT.keys()
 
-def is_lingeling_available(progname='lingeling'):
-    """Test is `lingeling` is available"""
+    if solvers is None:
+        solvers = supported()
+    elif type(solvers) == str:
+        solvers = [solvers]
 
-    try:
-        subprocess.Popen(args=[progname, '--help'],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-    except OSError:
-        return False
-    else:
-        return True
-
-
-def is_minisat_available(progname='minisat'):
-    """Test is `minisat` is available"""
-
-    try:
-        subprocess.Popen(args=[progname, '--help'],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-    except OSError:
-        return False
-    else:
-        return True
+    for solvername in solvers:
+        try:
+            subprocess.Popen(args=[solvername, '--help'],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        except OSError:
+            pass
+        else:
+            return True
+    return False
 
 
-def is_satisfiable_minisat(F, cmd='minisat'):
+def is_satisfiable_iostyle_minisat(F, cmd='minisat'):
     """Test CNF satisfiability using a minisat-style solver.
 
-    This also works fine using `glucose` instead of `minisat`, and any
-    other solver which is a drop-in replacement of `minisat`.
+    This also works fine using `glucose` instead of `minisat`, or any
+    other solver which uses the same I/O conventions of `minisat`.
 
     Arguments:
     ----------
     `F`: a CNF formula
     `cmd`: the command line used to invoke the SAT solver.
 
-    Example:
-    --------
-    is_satisfiable_minisat(F,cmd='minisat -no-pre')
-    is_satisfiable_minisat(F,cmd='glucose -pre')
+    Examples:
+    ---------
+    is_satisfiable_iostyle_minisat(F,cmd='minisat -no-pre')
+    is_satisfiable_iostyle_minisat(F,cmd='glucose -pre')
 
     The first call tests F using `minisat` without formula
     preprocessing. The second does it using `glucose` with
@@ -84,6 +94,13 @@ def is_satisfiable_minisat(F, cmd='minisat'):
     is a satisfiable assignment in form of a dictionary, otherwise it
     is None.
 
+
+    Notes:
+    ------
+    `minisat` writes its output on a file. If the formula is
+    unsatisfiable then the output file contains just the line "UNSAT",
+    but if it is satisfiable it contains the line "SAT" and on a new
+    line the assignment, encoded as literal values, e.g., "-1 2 3 -4 -5 ..."
     """
 
     # Minisat does not operate on stdin/stdout so we need temporary
@@ -141,11 +158,12 @@ def is_satisfiable_minisat(F, cmd='minisat'):
     return (result, result and witness or None)
 
 
-def is_satisfiable_lingeling(F, cmd='lingeling'):
-    """Test CNF satisfiability using a lingeling-style solver.
+def is_satisfiable_iostyle_dimacs(F, cmd='lingeling'):
+    """Test CNF satisfiability using a dimacs I/O compatible solver.
 
-    This also works fine using any other solver which is a drop-in
-    replacement of `lingeling`.
+    This works fine using any other solver which respects the dimacs
+    conventions for input/output. In particular it works with the
+    default solver which is `lingeling`.
 
     Arguments:
     ----------
@@ -154,12 +172,11 @@ def is_satisfiable_lingeling(F, cmd='lingeling'):
 
     Example:
     --------
-    is_satisfiable_lingeling(F,cmd='minisat -no-pre')
-    is_satisfiable_lingeling(F,cmd='glucose -pre')
+    is_satisfiable_iostyle_dimacs(F,cmd='lingeling --plain')
+    is_satisfiable_iostyle_dimacs(F,cmd='cryptominisat')
 
-    The first call tests F using `minisat` without formula
-    preprocessing. The second does it using `glucose` with
-    preprocessing.
+    The first call tests F using `lingeling` without formula
+    preprocessing. The second does it using `march` with default settings.
 
 
     Returns:
@@ -169,13 +186,31 @@ def is_satisfiable_lingeling(F, cmd='lingeling'):
     is a satisfiable assignment in form of a dictionary, otherwise it
     is None.
 
+    Notes:
+    ------
+    A solver adheres to dimacs I/O conventions if every line on the
+    standard output is preceded by the 'c' character, except for the
+    solution line, preceded by 's', and possibly for the assignment
+    lines, each one preceded by 'v'. See example::
+
+      c comment line
+      c more comments
+      s SATISFIABLE
+      c other comments
+      v -1 -2 -3 4 5 6
+      v -7 8 9 -10 0
+      c concluding comments.
     """
 
     # call solver
-    p = subprocess.Popen(args=cmd.split(),
-                         stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE)
-    (output, err) = p.communicate(F.dimacs())
+    output = ""
+    try:
+        p = subprocess.Popen(args=cmd.split(),
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE)
+        (output, err) = p.communicate(F.dimacs())
+    except OSError:
+        pass
 
     # parse the solver output, for example
     #
@@ -189,6 +224,9 @@ def is_satisfiable_lingeling(F, cmd='lingeling'):
     result = None
 
     for line in output.splitlines():
+
+        if len(line) == 0:
+            continue
 
         if line[0] == 's':
             if line.split()[1] == 'SATISFIABLE':
@@ -213,6 +251,84 @@ def is_satisfiable_lingeling(F, cmd='lingeling'):
     return (result, result and witness or None)
 
 
+def is_satisfiable_iostyle_nostdin(F, cmd='sat4j'):
+    """Test CNF satisfiability using solvers that requires input file.
+
+    This works fine using any solver which requires the input formula
+    as a file but respects the dimacs conventions for the output. In
+    particular it works with the default solver which is `sat4j`.
+
+    Arguments:
+    ----------
+    `F`: a CNF formula
+    `cmd`: the command line used to invoke the SAT solver.
+
+    Example:
+    --------
+    is_satisfiable_iostyle_dimacs(F,cmd='sat4j')
+    is_satisfiable_iostyle_dimacs(F,cmd='march')
+ 
+    Returns:
+    --------
+    A pair (answer,witness) where answer is either True when F is
+    satisfiable, or False otherwise. If F is satisfiable the witness
+    is a satisfiable assignment in form of a dictionary, otherwise it
+    is None.
+
+    """
+
+    # Input formula must be on file.
+    cnf = tempfile.NamedTemporaryFile(delete=False)
+    cnf.write(F.dimacs())
+    cnf.close()
+
+    output = ""
+
+    try:
+        p = subprocess.Popen(args=cmd.split()+[cnf.name],
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE)
+        (output, err) = p.communicate()
+    except OSError:
+        pass
+
+    # parse the solver output, for example
+    #
+    # s SATISFIABLE
+    # v -1 -2 -3 4 5 6
+    # v -7 8 9 -10 0
+    #
+    # is parsed as (True,[-1,-2,-3,4,5,6,-7,8,9,-10])
+
+    witness = []
+    result = None
+
+    for line in output.splitlines():
+
+        if len(line) == 0:
+            continue
+
+        if line[0] == 's':
+            if line.split()[1] == 'SATISFIABLE':
+                result = True
+            elif line.split()[1] == 'UNSATISFIABLE':
+                result = False
+            else:
+                result = None
+        if line[0] == 'v':
+            witness += [int(el)
+                        for el in line.split() if el != "v" and el != "0"]
+
+    if result is None:
+        raise RuntimeError("Error during SAT solver call.\n")
+
+    # Now witness is a list [v1,v2,...,vn] where vi is either -i or
+    # +i, to represent the assignment. We translate this to our
+    # desired output.
+    witness = {F._index2name[abs(v)]: v > 0
+               for v in witness}
+
+    return (result, result and witness or None)
 
 
 def is_satisfiable(F, cmd=None):
@@ -232,6 +348,7 @@ def is_satisfiable(F, cmd=None):
     is_satisfiable(F,cmd='minisat -no-pre')
     is_satisfiable(F,cmd='glucose -pre')
     is_satisfiable(F,cmd='lingeling --plain')
+    is_satisfiable(F,cmd='sat4j')
 
     Returns:
     --------
@@ -242,29 +359,31 @@ def is_satisfiable(F, cmd=None):
 
     Supported solvers:
     ------------------
-    We support `lingeling`, `plingeling`, `minisat` and `glucose` solvers,
-    tried in this order.
+    see `cnfformula.utils.solver.supported()`
 
     Drop-in solver replacements:
     ----------------------------
+
     It is possible to use any drop-in replacement for these solvers,
     but in this case more information is needed on how to communicate
-    with the solver. In particular `lingeling` and `minisat` have very
-    different interfaces. `glucose` is a drop-in replacement of
-    `minisat`, as `plingeling` is for `lingeling`.
+    with the solver. In particular `minisat` does not respect
+    the standard `dimacs` I/O conventions, and that holds also for
+    `glucose` which is a drop-in replacement of `minisat`.
 
-    For the supported solver we pick the right interface, but for
+    For the supported solver we can pick the right interface, but for
     other solvers it is impossible to guess. We suggest to use one of
 
-    is_satisfiable_minisat(F,cmd='dropin-replacement')
-    is_satisfiable_lingeling(F,cmd='dropin-replacement')
+    is_satisfiable_iostyle_minisat(F,cmd='minisat-style-solver')
+    is_satisfiable_iostyle_dimacs(F,cmd='dimacs-style-solver')
+    is_satisfiable_iostyle_nostdin(F,cmd='sat4j')
     """
 
-    dropin = SATSOLVER_REPLACEMENT
+    dropin = _SATSOLVER_IOSTYLE
 
     solver_functions = {
-        'minisat': (is_minisat_available, is_satisfiable_minisat),
-        'lingeling': (is_lingeling_available, is_satisfiable_lingeling)
+        'minisat': is_satisfiable_iostyle_minisat,
+        'nostdin': is_satisfiable_iostyle_nostdin,
+        'dimacs': is_satisfiable_iostyle_dimacs,
     }
 
     if (cmd is None) or len(cmd.split()) == 0:
@@ -276,23 +395,24 @@ def is_satisfiable(F, cmd=None):
         # supported solver?
         if cmd.split()[0] not in dropin:
             raise RuntimeError(
-                "Solver '{}' is not supported (see documentation)".format(cmd.split()[0]))
+                "Solver '{}' is not supported (see documentation)"
+                .format(cmd.split()[0]))
         solver_cmds = [cmd]
 
     # tries the chosen solvers until one works
     for solver_cmd in solver_cmds:
         solver = solver_cmd.split()[0]
         assert dropin[solver] in solver_functions
-        s_test, s_func = solver_functions[dropin[solver]]
+        s_func = solver_functions[dropin[solver]]
 
-        if not s_test(progname=solver):
+        if not is_available(solvers=[solver]):
             continue
         else:
             return s_func(F, solver_cmd)
 
     # no solver was available.
     if len(solver_cmds) == 1:
-        raise RuntimeError("Solver '{}' is not installed or is unusable."\
+        raise RuntimeError("Solver '{}' is not installed or is unusable."
                            .format(solver_cmds[0].split()[0]))
     else:
         raise RuntimeError("No usable solver found.")
