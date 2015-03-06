@@ -13,61 +13,10 @@ https://github.com/MassimoLauria/cnfgen.git
 
 """
 
-import subprocess
-import tempfile
-import os
-
-__all__ = ["supported", "is_satisfiable", "is_available"]
-
-_SATSOLVER_IOSTYLE = {
-    'lingeling': 'dimacs',
-    'plingeling': 'dimacs',
-    'precosat': 'dimacs',
-    'picosat': 'dimacs',
-    'march': 'nostdin',
-    'cryptominisat': 'dimacs',
-    'minisat': 'minisat',
-    'glucose': 'minisat',
-    'sat4j': 'nostdin',
-}
+__all__ = ["supported_satsolvers", "is_satisfiable", "have_satsolver"]
 
 
-def supported():
-    """List the supported SAT solvers"""
-    return _SATSOLVER_IOSTYLE.keys()
-
-
-def is_available(solvers=None):
-    """Test whether we can run SAT solvers.
-
-    Paramenters
-    -----------
-    `solvername` : string / list of strings, optional
-        the names of the solvers to be tested.
-
-    If `solvers` is None then all supported solvers are tested.
-    If `solvers` is a list of strings all solvers in the list are tested.
-    If `solvers` is a string then only that solver is tested.
-    """
-
-    if solvers is None:
-        solvers = supported()
-    elif type(solvers) == str:
-        solvers = [solvers]
-
-    for solvername in solvers:
-        try:
-            subprocess.Popen(args=[solvername, '--help'],
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-        except OSError:
-            pass
-        else:
-            return True
-    return False
-
-
-def is_satisfiable_iostyle_minisat(F, cmd='minisat'):
+def _satsolve_filein_fileout(F, cmd='minisat'):
     """Test CNF satisfiability using a minisat-style solver.
 
     This also works fine using `glucose` instead of `minisat`, or any
@@ -80,8 +29,8 @@ def is_satisfiable_iostyle_minisat(F, cmd='minisat'):
 
     Examples:
     ---------
-    is_satisfiable_iostyle_minisat(F,cmd='minisat -no-pre')
-    is_satisfiable_iostyle_minisat(F,cmd='glucose -pre')
+    _satsolve_filein_fileout(F,cmd='minisat -no-pre')
+    _satsolve_filein_fileout(F,cmd='glucose -pre')
 
     The first call tests F using `minisat` without formula
     preprocessing. The second does it using `glucose` with
@@ -102,6 +51,10 @@ def is_satisfiable_iostyle_minisat(F, cmd='minisat'):
     but if it is satisfiable it contains the line "SAT" and on a new
     line the assignment, encoded as literal values, e.g., "-1 2 3 -4 -5 ..."
     """
+
+    import subprocess
+    import os
+    import tempfile
 
     # Minisat does not operate on stdin/stdout so we need temporary
     # files
@@ -158,7 +111,7 @@ def is_satisfiable_iostyle_minisat(F, cmd='minisat'):
     return (result, result and witness or None)
 
 
-def is_satisfiable_iostyle_dimacs(F, cmd='lingeling'):
+def _satsolve_stdin_stdout(F, cmd='lingeling'):
     """Test CNF satisfiability using a dimacs I/O compatible solver.
 
     This works fine using any other solver which respects the dimacs
@@ -172,8 +125,8 @@ def is_satisfiable_iostyle_dimacs(F, cmd='lingeling'):
 
     Example:
     --------
-    is_satisfiable_iostyle_dimacs(F,cmd='lingeling --plain')
-    is_satisfiable_iostyle_dimacs(F,cmd='cryptominisat')
+    _satsolve_stdin_stdout(F,cmd='lingeling --plain')
+    _satsolve_stdin_stdout(F,cmd='cryptominisat')
 
     The first call tests F using `lingeling` without formula
     preprocessing. The second does it using `march` with default settings.
@@ -201,6 +154,8 @@ def is_satisfiable_iostyle_dimacs(F, cmd='lingeling'):
       v -7 8 9 -10 0
       c concluding comments.
     """
+
+    import subprocess
 
     # call solver
     output = ""
@@ -251,7 +206,7 @@ def is_satisfiable_iostyle_dimacs(F, cmd='lingeling'):
     return (result, result and witness or None)
 
 
-def is_satisfiable_iostyle_nostdin(F, cmd='sat4j'):
+def _satsolve_filein_stdout(F, cmd='sat4j'):
     """Test CNF satisfiability using solvers that requires input file.
 
     This works fine using any solver which requires the input formula
@@ -265,9 +220,9 @@ def is_satisfiable_iostyle_nostdin(F, cmd='sat4j'):
 
     Example:
     --------
-    is_satisfiable_iostyle_dimacs(F,cmd='sat4j')
-    is_satisfiable_iostyle_dimacs(F,cmd='march')
- 
+    _satsolve_filein_stdout(F,cmd='sat4j')
+    _satsolve_filein_stdout(F,cmd='march')
+
     Returns:
     --------
     A pair (answer,witness) where answer is either True when F is
@@ -276,6 +231,9 @@ def is_satisfiable_iostyle_nostdin(F, cmd='sat4j'):
     is None.
 
     """
+
+    import subprocess
+    import tempfile
 
     # Input formula must be on file.
     cnf = tempfile.NamedTemporaryFile(delete=False)
@@ -331,7 +289,66 @@ def is_satisfiable_iostyle_nostdin(F, cmd='sat4j'):
     return (result, result and witness or None)
 
 
-def is_satisfiable(F, cmd=None):
+# Solver uses different interfaces
+_SATSOLVER_INTERFACE = {
+    'lingeling': _satsolve_stdin_stdout,
+    'plingeling': _satsolve_stdin_stdout,
+    'precosat': _satsolve_stdin_stdout,
+    'picosat': _satsolve_stdin_stdout,
+    'march': _satsolve_filein_stdout,
+    'cryptominisat': _satsolve_stdin_stdout,
+    'minisat': _satsolve_filein_fileout,
+    'glucose': _satsolve_filein_fileout,
+    'sat4j': _satsolve_filein_stdout,
+}
+
+
+def supported_satsolvers():
+    """List the supported SAT solvers"""
+    return _SATSOLVER_INTERFACE.keys()
+
+
+def have_satsolver(solvers=None):
+    """Test whether we can run SAT solvers.
+
+    Parameters
+    ----------
+    `solvername` : string / list of strings, optional
+        the names of the solvers to be tested.
+
+    If `solvers` is None then all supported solvers are tested.
+    If `solvers` is a list of strings all solvers in the list are tested.
+    If `solvers` is a string then only that solver is tested.
+
+    Raises
+    ------
+    `TypeError` if `solvers` is not of the right type.
+    """
+
+    import subprocess
+
+    if solvers is None:
+        solvers = supported()
+    elif type(solvers) == str:
+        solvers = [solvers]
+    elif any([type(s) != str for s in solvers]):
+        raise TypeError("'solvers' type must be either 'str' or 'list(str)'.")
+
+    for solvername in solvers:
+        try:
+            subprocess.Popen(args=[solvername, '--help'],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        except OSError:
+            pass
+        else:
+            return True
+    return False
+
+
+
+
+def is_satisfiable(F, cmd=None, sameas=None):
     """Determines whether a CNF is satisfiable or not.
 
     The satisfiability is determined using an external sat solver.  If
@@ -340,15 +357,23 @@ def is_satisfiable(F, cmd=None):
 
     Arguments:
     ----------
-    `F`: a CNF formula
-    `cmd`: command line used for the solver
+    `F`: a CNF formula object
+       check the satisfiablility of this formula
+    `cmd`: string,optional
+       the actual command line used to invoke the SAT solver
+    `sameas`: string, optional
+       use the interface of one of the supported solvers, indicated in
+       input. Useful when the solver ont the command line is not supported.
 
     Example:
     --------
+    is_satisfiable(F)
     is_satisfiable(F,cmd='minisat -no-pre')
     is_satisfiable(F,cmd='glucose -pre')
     is_satisfiable(F,cmd='lingeling --plain')
     is_satisfiable(F,cmd='sat4j')
+    is_satisfiable(F,cmd='my-hacked-minisat -pre',sameas='minisat')
+    is_satisfiable(F,cmd='patched-lingeling',sameas='lingeling')
 
     Returns:
     --------
@@ -357,9 +382,17 @@ def is_satisfiable(F, cmd=None):
     is a satisfiable assignment in form of a dictionary, otherwise it
     is None.
 
+    Raises:
+    -------
+    `RuntimeError` if it is not possible to correctly invoke the
+    solver needed.
+    `ValueError` if `sameas` is set and is not the name of a supported
+    solver.
+    `TypeError` if F is not a CNF object.
+    
     Supported solvers:
     ------------------
-    see `cnfformula.utils.solver.supported()`
+    see `cnfformula.utils.solver.supported_satsolvers()`
 
     Drop-in solver replacements:
     ----------------------------
@@ -373,39 +406,38 @@ def is_satisfiable(F, cmd=None):
     For the supported solver we can pick the right interface, but for
     other solvers it is impossible to guess. We suggest to use one of
 
-    is_satisfiable_iostyle_minisat(F,cmd='minisat-style-solver')
-    is_satisfiable_iostyle_dimacs(F,cmd='dimacs-style-solver')
-    is_satisfiable_iostyle_nostdin(F,cmd='sat4j')
+    is_satisfiable(F,cmd='minisat-style-solver',sameas='minisat')
+    is_satisfiable(F,cmd='dimacs-style-solver',sameas='lingeling')
     """
 
-    dropin = _SATSOLVER_IOSTYLE
+    # Public API. Check the arguments
+    import cnfformula
+    if not isinstance(F, cnfformula.CNF):
+        raise TypeError("'F' is not a CNF formula object.")
 
-    solver_functions = {
-        'minisat': is_satisfiable_iostyle_minisat,
-        'nostdin': is_satisfiable_iostyle_nostdin,
-        'dimacs': is_satisfiable_iostyle_dimacs,
-    }
+    if (sameas is not None) and (sameas not in _SATSOLVER_INTERFACE):
+        raise ValueError("'{}' is not a supported sat solver.".format(sameas))
 
     if (cmd is None) or len(cmd.split()) == 0:
 
-        solver_cmds = dropin.keys()  # try all supported solvers
+        solver_cmds = _SATSOLVER_INTERFACE.keys()  # try all supported solvers
+        sameas = None
 
     else:
 
         # supported solver?
-        if cmd.split()[0] not in dropin:
+        if cmd.split()[0] not in _SATSOLVER_INTERFACE and (sameas is None):
             raise RuntimeError(
-                "Solver '{}' is not supported (see documentation)"
+                "Solver '{}' is not supported, use 'sameas' option (see docs)."
                 .format(cmd.split()[0]))
         solver_cmds = [cmd]
 
     # tries the chosen solvers until one works
     for solver_cmd in solver_cmds:
         solver = solver_cmd.split()[0]
-        assert dropin[solver] in solver_functions
-        s_func = solver_functions[dropin[solver]]
+        s_func = _SATSOLVER_INTERFACE[sameas or solver]
 
-        if not is_available(solvers=[solver]):
+        if not have_satsolver(solvers=[solver]):
             continue
         else:
             return s_func(F, solver_cmd)

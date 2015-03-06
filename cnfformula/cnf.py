@@ -543,17 +543,25 @@ class CNF(object):
         output.write(" }")
         return output.getvalue()
 
-    def is_satisfiable(self, cmd=None):
-        """Determines whether a CNF is satisfiable or not.
 
+    def is_satisfiable(self, cmd=None, sameas=None):
+        """Determines whether a CNF is satisfiable or not.
+        
         The satisfiability is determined using an external sat solver.  If
         no command line is specified, the known solvers are tried in
         succession until one is found.
 
         Arguments:
         ----------
-        `F`: a CNF formula
-        `cmd`: command line used for the solver
+        `F`: a CNF formula object
+        check the satisfiablility of this formula
+        
+        `cmd`: string,optional
+        the actual command line used to invoke the SAT solver
+    
+        `sameas`: string, optional
+        use the interface of one of the supported solvers, indicated in
+        input. Useful when the solver ont the command line is not supported.
 
         Example:
         --------
@@ -561,20 +569,32 @@ class CNF(object):
         F.is_satisfiable(cmd='minisat -no-pre')
         F.is_satisfiable(cmd='glucose -pre')
         F.is_satisfiable(cmd='lingeling --plain')
-
-        For more info on how to use the `cmd` parameter see the
-        documentation of `cnfformula.utils.solver.is_satisfiable`
+        F.is_satisfiable(cmd='sat4j')
+        F.is_satisfiable(cmd='my-hacked-minisat -pre',sameas='minisat')
+        F.is_satisfiable(cmd='patched-lingeling',sameas='lingeling')
 
         Returns:
         --------
         A pair (answer,witness) where answer is either True when F is
         satisfiable, or False otherwise. If F is satisfiable the witness
-        is a satisfiable assert ignment in form of a dictionary, otherwise it
+        is a satisfiable assignment in form of a dictionary, otherwise it
         is None.
 
+        Raises:
+        -------
+        `RuntimeError` if it is not possible to correctly invoke the
+        solver needed.
+        `ValueError` if `sameas` is set and is not the name of a supported
+        solver.
+        `TypeError` if F is not a CNF object.
+
+        See also
+        ------------------
+        `cnfformula.utils.solver.supported_satsolvers`
+        `cnfformula.utils.solver.is_satisfiable`
         """
         from utils import solver
-        return solver.is_satisfiable(self, cmd=cmd)
+        return solver.is_satisfiable(self, cmd=cmd, sameas=sameas)
 
 ###
 ### Various utility function for CNFs
