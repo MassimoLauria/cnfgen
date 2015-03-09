@@ -3,7 +3,7 @@
 import unittest
 
 from cnfformula import CNF
-
+from cnfformula.utils.solver import is_satisfiable, have_satsolver
 
 class TestCNFBase(unittest.TestCase):
     """Base class for the test suite.
@@ -19,3 +19,13 @@ class TestCNFBase(unittest.TestCase):
         set1=set(frozenset(x) for x in list1)
         set2=set(frozenset(x) for x in list2)
         self.assertSetEqual(set1,set2)
+
+    def assertSAT(self, formula):
+        if have_satsolver():
+            result, _ = is_satisfiable(formula)
+            assert result
+
+    def assertUNSAT(self, formula):
+        if have_satsolver():
+            result, _ = is_satisfiable(formula)
+            assert not result

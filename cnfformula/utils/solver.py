@@ -6,7 +6,7 @@ Of course it does not implement an actual sat solver, but tries to use
 solvers installed on the machine. For the full list of supported
 solvers, see::
 
-  cnfformula.utils.solver.supported()
+  cnfformula.utils.solver.supported_satsolvers()
 
 Copyright (C) 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
@@ -328,7 +328,7 @@ def have_satsolver(solvers=None):
     import subprocess
 
     if solvers is None:
-        solvers = supported()
+        solvers = supported_satsolvers()
     elif type(solvers) == str:
         solvers = [solvers]
     elif any([type(s) != str for s in solvers]):
@@ -415,24 +415,24 @@ def is_satisfiable(F, cmd=None, sameas=None):
     if not isinstance(F, cnfformula.CNF):
         raise TypeError("'F' is not a CNF formula object.")
 
-    if (sameas is not None) and (sameas not in _SATSOLVER_INTERFACE):
+    if (sameas is not None) and (sameas not in supported_satsolvers()):
         raise ValueError("'{}' is not a supported sat solver.".format(sameas))
 
     if (cmd is None) or len(cmd.split()) == 0:
 
-        solver_cmds = _SATSOLVER_INTERFACE.keys()  # try all supported solvers
+        solver_cmds = supported_satsolvers()  # try all supported solvers
         sameas = None
 
     else:
 
         # supported solver?
-        if cmd.split()[0] not in _SATSOLVER_INTERFACE and (sameas is None):
+        if cmd.split()[0] not in supported_satsolvers() and (sameas is None):
             raise RuntimeError(
                 "Solver '{}' is not supported, use 'sameas' option (see docs)."
                 .format(cmd.split()[0]))
         solver_cmds = [cmd]
 
-    # tries the chosen solvers until one works
+    # try the chosen solvers until one works
     for solver_cmd in solver_cmds:
         solver = solver_cmd.split()[0]
         s_func = _SATSOLVER_INTERFACE[sameas or solver]
