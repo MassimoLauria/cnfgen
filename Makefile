@@ -1,6 +1,6 @@
 PROJECT=cnfgen
 PYTHON_BIN = /usr/bin/python
-VIRTUALENV = ~/.virtualenvs/$(PROJECT)-venv
+VIRTUALENV = $(HOME)/.virtualenvs/$(PROJECT)-venv
 
 
 all : test
@@ -29,24 +29,24 @@ clean:
 	rm -fr *.egg-info
 
 
-# Install basic tools for development
-basic-tools:
-	@type pip >/dev/null || easy_install --user pip
-	@type virtualenv>/dev/null || easy_install --user virtualenv
-
 # Install editor tools.
-editor-tools : venv basic-tools
+editor-tools : venv
 	. $(VIRTUALENV)/bin/activate
 	pip install jedi
 	pip install epc
 	pip install pylint
 	pip install nose
+	pip install six
+	pip install service_factory
 
 
 # Configure virtualenv
 venv: $(VIRTUALENV)/bin/activate
 
-$(VIRTUALENV)/bin/activate: requirements.txt basic-tools
+$(VIRTUALENV)/bin/activate: requirements.txt
+	@type pip >/dev/null || easy_install --user pip
+	@type virtualenv>/dev/null || easy_install --user virtualenv
 	test -d $(VIRTUALENV) || virtualenv -p $(PYTHON_BIN) $(VIRTUALENV)
-	. $(VIRTUALENV)/bin/activate ; pip install -Ur requirements.txt
-	touch $(VIRTUALENV)/bin/activate
+	. $@ ; pip install -Ur requirements.txt
+	touch $@
+
