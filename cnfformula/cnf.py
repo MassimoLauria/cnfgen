@@ -513,19 +513,17 @@ class CNF(object):
 
         # We produce clauses and comments
         output.write( "\\ensuremath{%" )
-        empty_cnf=True
+        empty_cnf = True
 
         # format clause
-        def write_clause(cls,first):
-            """
-            """
-            output.write( "\n      " if first else "\n\\land " )
+        def write_clause(cls, first):
+            """Print a clause."""
+            output.write("\n      " if first else "\n\\land ")
             first = False
 
             # build the latex clause
-            if len(cls)==0:
+            if len(cls) == 0:
                 output.write("\\square")
-
             else:
                 output.write("\\left( " + \
                              " \\lor ".join(map_literals(l) for l in cls) + \
@@ -533,11 +531,12 @@ class CNF(object):
 
         # print all clauses
         for clause in self._clauses:
-            write_clause(clause,empty_cnf)
-            empty_cnf=False
+            write_clause(clause, empty_cnf)
+            empty_cnf = False
 
         # no clause in the CNF
-        if empty_cnf: output.write("\n   \\top")
+        if empty_cnf:
+            output.write("\n   \\top")
 
         # close the  formula
         output.write(" }")
