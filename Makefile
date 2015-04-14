@@ -20,7 +20,7 @@ test: venv
 	python setup.py nosetests --with-doctest
 
 install:
-	python setup.py --user install
+	python setup.py install --user
 
 clean:
 	rm -fr *.pyc

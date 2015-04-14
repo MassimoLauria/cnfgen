@@ -264,9 +264,9 @@
     : cnfgen op [-t|-s] [-p]  <N>
 
     The difference between =-t= and =-s= is in the way the totality of
-    the order  is encoded: =-t=  just adds some additional  clauses to
-    enforce  totality; =-s=  uses xᵢⱼ=0  to  encode i>j  and xᵢⱼ=1  to
-    encode i<j. The latter encoding itself enforces totality.
+    the order is encoded: =-t= adds some additional clauses to enforce
+    totality; =-s= uses  xᵢⱼ=0 to encode i>j and xᵢⱼ=1  to encode i<j.
+    The latter  encoding itself enforces  totality.
 
     There  are  two alternative  encoding  of  the ordering  principle
     inspired by a  question by Donald E. Knuth. It  is possible to use
