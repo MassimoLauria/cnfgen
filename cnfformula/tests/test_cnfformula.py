@@ -102,7 +102,7 @@ class TestPebbling(TestCNFBase) :
         
     def test_cycle(self) :
         G=nx.cycle_graph(10,nx.DiGraph())
-        with self.assertRaises(RuntimeError) :
+        with self.assertRaises(ValueError) :
             cnfgen.PebblingFormula(G)
 
 class TestDimacsParser(TestCNF) :

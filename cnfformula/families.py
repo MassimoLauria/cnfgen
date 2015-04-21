@@ -20,6 +20,7 @@ https://github.com/MassimoLauria/cnfgen.git
 __all__ = ["PigeonholePrinciple",
            "GraphPigeonholePrinciple",
            "PebblingFormula",
+           "StoneFormula",
            "OrderingPrinciple",
            "GraphOrderingPrinciple",
            "GraphIsomorphism",
@@ -247,10 +248,10 @@ def PebblingFormula(digraph):
 
     return peb
 
-def StonesFormula(digraph,nstones):
+def StoneFormula(digraph,nstones):
     """Stones formula
 
-    Build a \"stones formula\" from the directed graph. If the graph has
+    Build a \"stone formula\" from the directed graph. If the graph has
     an `ordered_vertices` attribute, then it is used to enumerate the
     vertices (and the corresponding variables).
 
@@ -271,17 +272,17 @@ def StonesFormula(digraph,nstones):
 
     """
     if not is_dag(digraph):
-        raise ValueError("Stones formulas are defined only for directed acyclic graphs.")
+        raise ValueError("Stone formulas are defined only for directed acyclic graphs.")
     
     if digraph.order() > nstones:
-        raise ValueError("There must be more stones than vertices in the DAG.")
+        raise ValueError("There must be at least as many stones as vertices in the DAG.")
 
-    stone = CNF()
+    cnf = CNF()
 
     if hasattr(digraph, 'name'):
-        stone.header = "Stones formula of: "+digraph.name+"\n\n"+peb.header
+        cnf.header = "Stone formula of: " + digraph.name + "\nwith " + str(nstones) + " stones\n" + cnf.header
     else:
-        stone.header="Stones formula\n\n"+peb.header
+        cnf.header = "Stone formula with " + str(nstones) + " stones\n" + cnf.header
 
     # add variables in the appropriate order
     vertices=enumerate_vertices(digraph)
@@ -290,34 +291,34 @@ def StonesFormula(digraph,nstones):
     # Stones->Vertices variables
     for v in vertices:
         for j in stones:
-            stone.add_variable("P_{{{0},{1}}}".format(v,j))
+            cnf.add_variable("P_{{{0},{1}}}".format(v,j))
 
     # Color variables
     for j in stones:
-        stone.add_variable("R_{{{0}}}".format(j))
+        cnf.add_variable("R_{{{0}}}".format(j))
     
     # Each vertex has some stone
     for v in vertices:
-        stone.add_clauses([(True,"P_{{{0},{1}}}".format(v,j)) for j in stones])
+        cnf.add_clause([(True,"P_{{{0},{1}}}".format(v,j)) for j in stones])
         
     # If predecessors have red stones, the sink must have a red stone
     for v in vertices:
         for j in stones:
             pred=digraph.predecessors(v)
             for stones_tuple in product(stones,repeat=len(pred)):
-                stones.add_clause([(False, "P_{{{0},{1}}}".format(p,s)) for (p,s) in zip(pred,stones_tuple)] +
+                cnf.add_clause([(False, "P_{{{0},{1}}}".format(p,s)) for (p,s) in zip(pred,stones_tuple)] +
                                   [(False, "R_{{{0}}}".format(s)) for s in stones_tuple] +
                                   [(False, "P_{{{0},{1}}}".format(v,j))] +
                                   [(True,  "R_{{{0}}}".format(j))])
         
         if digraph.out_degree(v)==0: #the sink
             for j in stones:
-                stones.add_clause([
+                cnf.add_clause([
                     (False,"P_{{{0},{1}}}".format(v,j)),
                     (False,"R_{{{0}}}".format(j))
                 ])
 
-    return stones
+    return cnf
 
 
 

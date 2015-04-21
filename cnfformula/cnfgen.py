@@ -17,6 +17,7 @@ from .families import (
     PigeonholePrinciple,
     GraphPigeonholePrinciple,
     PebblingFormula,
+    StoneFormula,
     OrderingPrinciple,
     GraphOrderingPrinciple,
     GraphIsomorphism,
@@ -1174,7 +1175,7 @@ class _RANDOM(_FormulaFamilyHelper,_CMDLineHelper):
 
 
 class _PEB(_FormulaFamilyHelper,_CMDLineHelper):
-    """Command line helper for a single clause formula
+    """Command line helper for pebbling formulas
     """
     name='peb'
     description='pebbling formula'
@@ -1198,9 +1199,41 @@ class _PEB(_FormulaFamilyHelper,_CMDLineHelper):
         D=_DAGHelper.obtain_graph(args)
         try:
             return PebblingFormula(D)
-        except RuntimeError:
+        except ValueError:
             print("\nError: input graph must be directed and acyclic.",file=sys.stderr)
             sys.exit(-1)
+
+class _Stone(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for stone formulas
+    """
+    name='stone'
+    description='stone formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for stone formulas
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        _DAGHelper.setup_command_line(parser)
+        parser.add_argument('s',metavar='<s>',type=int,help="number of stones")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build the pebbling formula
+
+        Arguments:
+        - `args`: command line options
+        """
+        D=_DAGHelper.obtain_graph(args)
+        try:
+            return StoneFormula(D,args.s)
+        except ValueError:
+            print("\nError: Input graph must be a DAG, and at least one stone per vertices.",file=sys.stderr)
+            sys.exit(-1)
+            
+
             
 class _AND(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for a single clause formula
@@ -1253,6 +1286,7 @@ def command_line_utility(argv=sys.argv):
                  _TSE,
                  _OP,_GOP,
                  _PEB,
+                 _Stone,
                  _GIso,_GAuto,
                  _RAM,_RAMLB,
                  _KClique,
