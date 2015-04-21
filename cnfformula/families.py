@@ -274,8 +274,8 @@ def StoneFormula(digraph,nstones):
     if not is_dag(digraph):
         raise ValueError("Stone formulas are defined only for directed acyclic graphs.")
     
-    if digraph.order() > nstones:
-        raise ValueError("There must be at least as many stones as vertices in the DAG.")
+    if nstones<0:
+        raise ValueError("There must be at least one stone.")
 
     cnf = CNF()
 

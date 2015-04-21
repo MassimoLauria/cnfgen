@@ -1230,7 +1230,7 @@ class _Stone(_FormulaFamilyHelper,_CMDLineHelper):
         try:
             return StoneFormula(D,args.s)
         except ValueError:
-            print("\nError: Input graph must be a DAG, and at least one stone per vertices.",file=sys.stderr)
+            print("\nError: Input graph must be a DAG, and a non negative # of stones.",file=sys.stderr)
             sys.exit(-1)
             
 
