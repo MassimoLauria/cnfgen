@@ -221,7 +221,7 @@ def PebblingFormula(digraph):
     - `digraph`: directed acyclic graph.
     """
     if not is_dag(digraph):
-        raise RuntimeError("Pebbling formula is defined only for directed acyclic graphs")
+        raise ValueError("Pebbling formula is defined only for directed acyclic graphs")
 
     peb=CNF()
 
