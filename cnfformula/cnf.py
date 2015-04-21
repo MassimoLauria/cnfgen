@@ -484,14 +484,16 @@ class CNF(object):
         % Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
         % https://github.com/MassimoLauria/cnfgen.git
         %
-        \\ensuremath{%
-              \\left( \\neg{x_1} \\lor     {x_2} \\lor \\neg{x_3} \\right)
-        \\land \\left( \\neg{x_2} \\lor \\neg{x_4} \\right)
-        \\land \\left(     {x_2} \\lor     {x_3} \\lor \\neg{x_4} \\right) }
+        \\begin{align}
+        &       \\left( \\neg{x_1} \\lor     {x_2} \\lor \\neg{x_3} \\right) \\\\
+        & \\land \\left( \\neg{x_2} \\lor \\neg{x_4} \\right) \\\\
+        & \\land \\left(     {x_2} \\lor     {x_3} \\lor \\neg{x_4} \\right)
+        \\end{align}
         >>> c=CNF()
         >>> print(c.latex(export_header=False))
-        \\ensuremath{%
-           \\top }
+        \\begin{align}
+           \\top
+        \end{align}
 
         """
         assert self._coherent
@@ -512,13 +514,13 @@ class CNF(object):
 
 
         # We produce clauses and comments
-        output.write( "\\ensuremath{%" )
+        output.write("\\begin{align}")
         empty_cnf = True
 
         # format clause
         def write_clause(cls, first):
             """Print a clause."""
-            output.write("\n      " if first else "\n\\land ")
+            output.write("\n&       " if first else " \\\\\n& \\land ")
             first = False
 
             # build the latex clause
@@ -539,7 +541,7 @@ class CNF(object):
             output.write("\n   \\top")
 
         # close the  formula
-        output.write(" }")
+        output.write("\n\\end{align}")
         return output.getvalue()
 
 
