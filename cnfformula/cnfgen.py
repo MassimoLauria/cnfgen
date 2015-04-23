@@ -22,6 +22,7 @@ from .families import (
     GraphOrderingPrinciple,
     MatchingPrinciple,
     GraphMatchingPrinciple,
+    CountingPrinciple,
     GraphIsomorphism,
     GraphAutomorphism,
     RamseyNumber,
@@ -971,6 +972,32 @@ class _GMATCH(_FormulaFamilyHelper,_CMDLineHelper):
         G=_SimpleGraphHelper.obtain_graph(args)
         return GraphMatchingPrinciple(G)
 
+
+class _COUNT(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for Counting Principle formulas
+    """
+    name='count'
+    description='counting principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Counting Principle formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('M',metavar='<M>',type=int,help="domain size")
+        parser.add_argument('p',metavar='<p>',type=int,help="size of the parts")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build an Counting Principle formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        return CountingPrinciple(args.M,args.p)
+
     
 class _KClique(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for k-clique formula
@@ -1340,6 +1367,7 @@ def command_line_utility(argv=sys.argv):
                  _TSE,
                  _OP,_GOP,
                  _MATCH,_GMATCH,
+                 _COUNT,
                  _PEB,
                  _Stone,
                  _GIso,_GAuto,

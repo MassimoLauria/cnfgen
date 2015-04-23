@@ -625,6 +625,46 @@ def MatchingPrinciple(size):
     return GraphMatchingPrinciple(networkx.complete_graph(size))
 
 
+def CountingPrinciple(M,p):
+    """Generates the clauses for the counting matching principle.
+    
+    The principle claims that there is a way to partition M in sets of
+    size p each.
+
+    Arguments:
+    - `M`  : size of the domain
+    - `p`  : size of each class
+
+    """
+    cnf=CNF()
+
+    # Describe the formula
+    name="Counting Principle: {0} divided in parts of size {1}.".format(M,p)
+    cnf.header=name+"\n"+cnf.header
+
+    def var_name(tpl):
+        return "Y_{{"+",".join("{0}".format(v) for v in tpl)+"}}"
+
+    # Incidence lists
+    incidence=[[] for x in range(M)]
+    for tpl in combinations(range(M),p):
+        for i in tpl:
+            incidence[i].append(tpl)
+    
+    # Each element of the domain is in exactly one part.
+    for el in range(M):
+
+        edge_vars = [var_name(tpl) for tpl in incidence[el]]
+
+        # the element is in at least one part
+        cnf.add_clause([(True,var) for var in edge_vars])
+
+        # the element is in at most one part
+        for cls in less_than_constraint(edge_vars,2):
+            cnf.add_clause(cls)
+
+    return cnf
+
 
 
 def RamseyNumber(s,k,N):
