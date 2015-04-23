@@ -634,7 +634,7 @@ def parity_constraint( variables, b ):
 def less_than_constraint( variables, k ):
     """Output the CNF encoding of a cardinality constraint
 
-    E.g. X1 + X2 + X3 + X4 <= 2 
+    E.g. X1 + X2 + X3 + X4 < 3 
 
     (~X1 v ~X2 v ~X3)
     (~X1 v ~X2 v ~X4)
@@ -646,9 +646,9 @@ def less_than_constraint( variables, k ):
     - `k`   : cardinality limit
 
     Returns: a list of clauses
-    >>> less_than_constraint(['a','b','c'],1)
-    [[(False, 'a'), (False, 'b')], [(False, 'b'), (False, 'c')], [(False, 'a'), (False, 'c')]]
-    >>> less_than_constraint(['a'],0)
+    >>> less_than_constraint(['a','b','c'],2)
+    [[(False, 'a'), (False, 'b')], [(False, 'a'), (False, 'c')], [(False, 'b'), (False, 'c')]]
+    >>> less_than_constraint(['a'],1)
     [[(False, 'a')]]
     """
     clauses=[]
