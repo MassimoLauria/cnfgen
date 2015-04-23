@@ -20,6 +20,8 @@ from .families import (
     StoneFormula,
     OrderingPrinciple,
     GraphOrderingPrinciple,
+    MatchingPrinciple,
+    GraphMatchingPrinciple,
     GraphIsomorphism,
     GraphAutomorphism,
     RamseyNumber,
@@ -918,6 +920,58 @@ class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
         return GraphOrderingPrinciple(G,args.total,args.smart,args.plant,args.knuth)
 
 
+class _MATCH(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for Matching Principle formulas
+    """
+    name='matching'
+    description='matching principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Matching Principle formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('N',metavar='<N>',type=int,help="domain size")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build an Ordering principle formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        return MatchingPrinciple(args.N)
+
+
+class _GMATCH(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for Graph Matching Principle formulas
+    """
+    name='gmatching'
+    description='graph matching principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Graph Matching Principle formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        _SimpleGraphHelper.setup_command_line(parser)
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a Graph ordering principle formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        G=_SimpleGraphHelper.obtain_graph(args)
+        return GraphMatchingPrinciple(G)
+
+    
 class _KClique(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for k-clique formula
     """
@@ -1285,6 +1339,7 @@ def command_line_utility(argv=sys.argv):
     subcommands=[_PHP,_GPHP,
                  _TSE,
                  _OP,_GOP,
+                 _MATCH,_GMATCH,
                  _PEB,
                  _Stone,
                  _GIso,_GAuto,
