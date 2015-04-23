@@ -7,6 +7,7 @@ from .cnf import CNF
 # internal methods
 from .graphs import enumerate_vertices,is_dag
 from .cnf    import parity_constraint
+from .cnf    import less_than_constraint
 
 
 __docstring__ =\
@@ -27,6 +28,8 @@ __all__ = ["PigeonholePrinciple",
            "GraphAutomorphism",
            "RamseyNumber",
            "TseitinFormula",
+           "ParityPrinciple",
+           "GraphParityPrinciple",
            "SubgraphFormula",
            "RandomKCNF"]
 
@@ -570,6 +573,57 @@ def ColoringFormula(graph,colors,functional=True):
                     (False,'x_{{{0},{1}}}'.format(v2,c))])
             
     return kcol
+
+
+def GraphMatchingPrinciple(graph):
+    """Generates the clauses for the graph matching principle.
+    
+    The principle claims that there is a way to select edges to such
+    that all vertices have exactly one incident edge set to 1.
+
+    Arguments:
+    - `graph`  : undirected graph
+
+    """
+    cnf=CNF()
+
+    # Describe the formula
+    name="Graph Matching Principle"
+    
+    if hasattr(graph,'name'):
+        cnf.header=name+" of graph:\n"+graph.name+"\n"+cnf.header
+    else:
+        cnf.header=name+".\n"+cnf.header
+
+    def var_name(u,v):
+        if u<=v:
+            return 'x_{{{0},{1}}}'.format(u,v)
+        else:
+            return 'x_{{{0},{1}}}'.format(v,u)
+            
+    # Each vertex has exactly one edge set to one.
+    for v in graph.nodes():
+
+        edge_vars = [var_name(u,v) for u in graph.adj[v]]
+
+        # at least one edge is active
+        cnf.add_clause([(True,var) for var in edge_vars])
+
+        # at most one edge is active
+        for cls in less_than_constraint(edge_vars,2):
+            cnf.add_clause(cls)
+
+    return cnf
+
+
+def MatchingPrinciple(size):
+    """Matching principle on a domain with `size` elements
+
+    Arguments:
+    - `size`  : size of the domain
+    """
+    return GraphMatchingPrinciple(networkx.complete_graph(size))
+
 
 
 

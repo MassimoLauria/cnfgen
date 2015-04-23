@@ -646,9 +646,9 @@ def less_than_constraint( variables, k ):
     - `k`   : cardinality limit
 
     Returns: a list of clauses
-    >>> cardinality_constraint(['a','b','c'],1)
+    >>> less_than_constraint(['a','b','c'],1)
     [[(False, 'a'), (False, 'b')], [(False, 'b'), (False, 'c')], [(False, 'a'), (False, 'c')]]
-    >>> parity_constraint(['a'],0)
+    >>> less_than_constraint(['a'],0)
     [[(False, 'a')]]
     """
     clauses=[]
