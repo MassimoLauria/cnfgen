@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 
 from __future__ import print_function
-from itertools import product
+from itertools import product,combinations
 
 __docstring__ =\
 """Utilities to build CNF formulas interesting for proof complexity.
@@ -628,4 +628,30 @@ def parity_constraint( variables, b ):
         # Save only the clauses with the right polarity
         parity = sum(1-l[0] for l in c) % 2
         if parity != b : clauses.append(list(c))
+    return clauses
+
+
+def less_than_constraint( variables, k ):
+    """Output the CNF encoding of a cardinality constraint
+
+    E.g. X1 + X2 + X3 + X4 <= 2 
+
+    (~X1 v ~X2 v ~X3)
+    (~X1 v ~X2 v ~X4)
+    (~X1 v ~X3 v ~X4)
+    (~X2 v ~X3 v ~X4)
+
+    Arguments:
+    - `vars`: variables in the constraint
+    - `k`   : cardinality limit
+
+    Returns: a list of clauses
+    >>> cardinality_constraint(['a','b','c'],1)
+    [[(False, 'a'), (False, 'b')], [(False, 'b'), (False, 'c')], [(False, 'a'), (False, 'c')]]
+    >>> parity_constraint(['a'],0)
+    [[(False, 'a')]]
+    """
+    clauses=[]
+    for tpl in combinations(variables,k):
+        clauses.append([(False,v) for v in tpl])
     return clauses
