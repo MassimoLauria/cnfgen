@@ -577,7 +577,6 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
                        graph_type='simple')
 
         return G
-
 class _TwoSimpleGraphsHelper(_CMDLineHelper):
 
     @staticmethod
@@ -1244,6 +1243,7 @@ class _RANDOM(_FormulaFamilyHelper,_CMDLineHelper):
         parser.add_argument('k',metavar='<k>',type=int,help="clause width")
         parser.add_argument('n',metavar='<n>',type=int,help="number of variables")
         parser.add_argument('m',metavar='<m>',type=int,help="number of clauses")
+        parser.add_argument('--plant',metavar='<g>',type=int,help="satisfiable literals per clause")
 
     @staticmethod
     def build_cnf(args):
@@ -1252,7 +1252,7 @@ class _RANDOM(_FormulaFamilyHelper,_CMDLineHelper):
         Arguments:
         - `args`: command line options
         """
-        return RandomKCNF(args.k,args.n,args.m)
+        return RandomKCNF(args.k,args.n,args.m,g=getattr(args,'plant',None))
 
 
 class _PEB(_FormulaFamilyHelper,_CMDLineHelper):
