@@ -7,7 +7,7 @@ all : test
 
 
 
-.PHONY: test install devbuild venv editor-tools doc-tools
+.PHONY: test install devbuild venv editor-tools doc-tools docs
 
 
 # Build, test, install, clean
@@ -27,7 +27,10 @@ clean:
 	rm -fr build
 	rm -fr dist
 	rm -fr *.egg-info
+	rm -fr docs/_build
 
+docs:
+	$(MAKE) -C docs html
 
 # Install editor tools.
 editor-tools : venv
@@ -44,8 +47,8 @@ doc-tools : venv
 venv: $(VIRTUALENV)/bin/activate
 
 $(VIRTUALENV)/bin/activate: requirements.txt
-	@type pip >/dev/null || easy_install --user pip
-	@type virtualenv>/dev/null || easy_install --user virtualenv
+	type pip >/dev/null || easy_install --user pip
+	type virtualenv>/dev/null || easy_install --user virtualenv
 	test -d $(VIRTUALENV) || virtualenv -p $(PYTHON_BIN) $(VIRTUALENV)
 	. $@ && pip install -Ur requirements.txt
 	touch $@
