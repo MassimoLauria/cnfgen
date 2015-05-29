@@ -29,7 +29,9 @@ clean:
 	rm -fr *.egg-info
 	rm -fr docs/_build
 
-docs:
+docs: devbuild
+	. $(VIRTUALENV)/bin/activate && \
+	sphinx-apidoc -o docs cnfformula && \
 	$(MAKE) -C docs html
 
 # Install editor tools.
@@ -40,7 +42,7 @@ editor-tools : venv
 # Install documentation tools.
 doc-tools : venv
 	. $(VIRTUALENV)/bin/activate && \
-	pip install sphinx sphinx-autobuild
+	pip install sphinx sphinx-autobuild sphinxcontrib-napoleon sphinx_rtd_theme
 
 
 # Configure virtualenv
