@@ -87,18 +87,18 @@ class CNF(object):
     def __init__(self, clauses=None, header=None):
         """Propositional formulas in conjunctive normal form.
 
-        Arguments:
-        - `clauses`: ordered list of clauses;
-                     a clause with k literals list containing k
-                     pairs, each representing a literal (see
-                     `add_clause`).  First element is the
-                     polarity and the second is the variable,
-                     which must be an hashable object.
+        Parameters
+        ----------
+        clauses : ordered list of clauses
+            a clause with k literals list containing k pairs, each
+            representing a literal (see `add_clause`). First element
+            is the polarity and the second is the variable, which must
+            be an hashable object.
 
-                     E.g. (not x3) or x4 or (not x2) is encoded as
-                     [(False,"x3"),(True,"x4"),False,"x2")]
+                E.g. (not x3) or x4 or (not x2) is encoded as [(False,"x3"),(True,"x4"),False,"x2")]
 
-        - `header`: a preamble which documents the formula
+        header: string
+            a preamble which documents the formula
         """
 
         self._header = header if header!=None else _default_header
@@ -577,7 +577,7 @@ class CNF(object):
 
         Returns
         -------
-        (boolean,assignment)
+        (boolean,assignment or None)
             A pair (answer,witness) where answer is either True when
             F is satisfiable, or False otherwise. If F is satisfiable
             the witness is a satisfiable assignment in form of
@@ -597,7 +597,7 @@ class CNF(object):
         See Also
         --------
         cnfformula.utils.solver.is_satisfiable
-        cnfformula.utils.solver.supported_satsolvers : list of supported solvers
+        cnfformula.utils.solver.supported_satsolvers
 
         """
         from utils import solver
