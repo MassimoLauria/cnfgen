@@ -42,7 +42,7 @@ editor-tools : venv
 # Install documentation tools.
 doc-tools : venv
 	. $(VIRTUALENV)/bin/activate && \
-	pip install sphinx sphinx-autobuild sphinxcontrib-napoleon sphinx_rtd_theme
+	pip install sphinx sphinx-autobuild numpydoc sphinx_rtd_theme
 
 
 # Configure virtualenv

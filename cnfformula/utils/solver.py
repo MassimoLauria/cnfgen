@@ -4,9 +4,9 @@
 
 Of course it does not implement an actual sat solver, but tries to use
 solvers installed on the machine. For the full list of supported
-solvers, see::
+solvers, see
 
-  cnfformula.utils.solver.supported_satsolvers()
+  `cnfformula.utils.solver.supported_satsolvers`
 
 Copyright (C) 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
@@ -304,7 +304,10 @@ _SATSOLVER_INTERFACE = {
 
 
 def supported_satsolvers():
-    """List the supported SAT solvers"""
+    """List the supported SAT solvers.
+
+    Output the list of all solvers supported by CNFgen.
+    """
     return _SATSOLVER_INTERFACE.keys()
 
 
@@ -392,7 +395,7 @@ def is_satisfiable(F, cmd=None, sameas=None):
     
     Supported solvers:
     ------------------
-    see `cnfformula.utils.solver.supported_satsolvers()`
+    See `cnfformula.utils.solver.supported_satsolvers`
 
     Drop-in solver replacements:
     ----------------------------
