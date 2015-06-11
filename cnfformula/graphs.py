@@ -575,7 +575,14 @@ def bipartite_random_regular(l,r,d,seed=None):
     return G
 
 def _bipartite_nx_workaroud(G):
+    """Workaround for bipartition labels
 
+    The complete bipartite graph does not set the bipartite vertex
+    labels appropriately.
+
+    ..note:: 
+        This will be superfluous in Networkx 2.0, since the bug was fixed there.
+    """
     if G.name[:24] !='complete_bipartite_graph': return G
 
     right_start = min(G.adj[0])
