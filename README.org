@@ -2,7 +2,7 @@
 #+OPTIONS:     H:2 num:nil toc:nil \n:nil @:t ::t |:t ^:t f:t TeX:t
 
 
-* CNF formula generator and tools
+* CNFgen formula generator and tools
 
   This repository provides the command
 
@@ -20,406 +20,37 @@
   You  can get  a brief  help on  how to  use these  tools by  running
   =<program_name> --help= from the command line.
 
-** Installation
-
-   To install the =cnfgen= and  the =cnfformula= python package, it is
-   sufficient to do
-   
-   : python setup.py install [--user]
-   
-   in the package directory. The =--user= option allows to install the
-   package  in user  space.  In  this latter  case  be  sure that  the
-   corresponding binary path is in your =PATH= environment variable.
-
-** CNF generator =cnfgen= 
-
-  Tool =cnfgen= is CNF formulas generator (i.e. propositional formulas
-  in conjunctive normal form). It produce formulas of interest for the
-  proof  complexity  community  (e.g. pigeonhole  principle,  ordering
-  principle, …)  both in  dimacs and LaTeX  format. The  basic command
-  line to get the dimacs version of a formula is 
-
-  : cnfgen -o <output_file> <formula_type> <formula_parameters>
-
-  Each  formula family  has its  own parameters  and options.  Some of
-  them even  require further input.  To get more  specific information
-  on each formula family type
+  Run =cnfgen --help= to get a list of the implemented formula families.
+  To get  more specific information  on one  class of formula  use the
+  command
 
   : cnfgen <formula_type> --help
 
-  =cnfgen= allows  to apply  transformations on the  generated formula
-  afterward.   These transformations  systematically make  the formula
-  harder for SAT solver, so they are of interest for proof complexity. 
-  
-  : cnfgen -o <ofile> --Transform <type> --Tarity <N> <ftype> <fparameters>
+  See the webpage of the project at http://massimolauria.github.io/cnfgen/
 
-  To get more information about the available transformation types
-  
-  : cnfgen --help-transform
-
-  Here's how to get a pigeonhole  principle formula from 10 pigeons to
-  7 holes into file =pigeon.cnf=:
-
-  : cnfgen -o pigeon.cnf php 10 7 
-
-*** A note of =cnfgen= and graphs
-
-    Some of  the formula families are  based on graphs, and  they need
-    some as input.  The =cnfgen= tool accepts graphs in kth, gml, dot,
-    dimacs.  If  =networkx= is not  installed, some of these formats may
-    not be available.
-
-    Instead of  feeding =cnfgen= with a  graph, it is possible  to ask
-    for some  default graphs from  the command line (e.g  grid graphs,
-    random graphs...).
-
-** DIMACS file shuffler =cnfshuffle= 
-
-  =cnfshuffle=  takes a  CNF in  input and  outputs the  same CNF  with
-  a  random  variables  order,  clauses order  and  variable  polarity
-  flips.
-
-  : cnfshuffle -i <input_cnf> -o <output_cnf> [-S random_seed]
-
-** DIMACS file transformation =cnftransform= 
-
-  =cnftransform= applies  formula transformations to any  CNF given
-  in input. The command line
-
-  : cnftransform --Transform <type> --Tarity <N> -i <input_cnf> -o <output_cnf>
-  
-  applies transformation =<type>= of arity N to the input CNF. To see the
-  available types of transformation.
-
-  : cnftransform --help-transform
-
-** From DAGs to pebbling =kthgraph2pebformula=
-
-  =kthgraph2pebformula= gets a directed acyclic  graph in input in KTH graph
-  format  (see  below),  and   produces  the  corresponding  *pebbling
-  formula*. Optionally can apply formula transformation afterward.
-
-  : kthgraph2pebformula [--Transform <type> --Tarity <N>] -i <input_graph>
- 
-*** KTH graph format
+** Installation
    
-    Graphs must be  given in the following format: the  file can start
-    with some comments line, each of them starting with character =c=.
-    The next non  black line must contain the number  n of vertices in
-    the graph.  Then  there must be $n$ non black  lines, one for each
-    vertex 1 ≤ i ≤ n. The lines have the format:
+   You can install CNFgen from  [[http://pypi.python.org][Python Package Index]], together with all
+   its dependencies, typing either
 
-    : i : <pred 1> <pred 2> <pred 3> ... <pred k>
+   : easy_install [--user] cnfgen
+
+   or
+
+   : pip install  [--user] cnfgen
+
+   Otherwise it  is possible to install from source using
     
-    where =<pred  1> <pred 2>  <pred 3> ...  <pred k>= is  the ordered
-    list  of  all vertices  which  have  an  outgoing edge  to  vertex
-    i. Here’s an example
+   : python setup.py install [--user]
 
-    : c
-    : c This is a DAG of 5 vertices
-    : c
-    : 5
-    : 1  :
-    : 2  : 
-    : 3  : 1  
-    : 4  : 3  
-    : 5  : 2  4
-   
+   The =--user= option  allows to install the package in  the user home
+   directory. If you  do that please check that the  location where the
+   command   line   utilities   are   installed   is   in   your   PATH
+   environment variable.
 
+** Contribution 
 
-  *Performance*: the code contains a lot of sanity checks and internal
-  safe nets.   They take  a toll  on the running  time and  memory: to
-  avoid that you can use the  python optimization flag =-O= which will
-  (among other thing) suppress these checks.
+   Please contribute by sending pull requests. 
 
-  : python -O <program_name> [command line options for <program_name>]
 
-
-** Target of the software
-
-   Anyone can use this software of  course! But the main target is the
-   community  of SAT  solver programmers,  who may  want to  test they
-   solvers  on  canonical  families  of  formulas.   Proof  complexity
-   researcher may be interested to, since they study the computational
-
-** General requirements
-
-   - =argparse=  library, which  Python 2.7  includes, but  Python 2.6
-     does not;
-
-   - =networkx= library, which is used to parse some input formats for
-     specifying graphs in =cnfgen=.
-
-   Optionally:
-
-   - =pygraphviz= which  is also  used to read  some graph  formats in
-     =cnfgen=.  If it is missing,  operations on such graph formats
-     will not be available.
-
-* Background
-
-** What is a CNF?
-
-   A propositional formula a  representation of a function oven {0,1}
-   variables. Consider such a variable  x, then ¬x is a formula
-   which  has  value 1-x.  This  is  called  the /negation/  of  x.
-   Expressions of the form x  and ¬x are called \literals/, and
-   a /clause/ is a disjunction
-
-   l₁ v l₂ v … v lₖ
-
-   where each lᵢ is a literal. A clause evaluates to one if and only
-   if *at  least* one of the  literals evaluates to  one. Otherwise the
-   clause evaluates to zero.
-   A CNF is a conjunction of clauses
-
-   C₁ ∧ C₂ ∧ … ∧ Cₘ
-
-   and the CNF evaluates to one if *all* clauses evaluates to one.
-
-   To  *falsify* a  formula we  need an  input for  which the  formula
-   evaluates to 0;  to *satisfy* a formula we need  an input for which
-   it evaluates to 1.  Observe that  to falsify a CNF it is sufficient
-   to pick  a clause  and set  the variables  in such  a way  that all
-   literals in  the clause  evaluate to zero.   There is  no efficient
-   algorithm that decides whether a CNF is satisfiable or not.
-
-** DIMACS encoding of CNFs
-
-   The program outputs CNF formulas  encoded in /dimacs/ format, which
-   has the following structure:
-
-   at the  beginning of the file  there may be an  arbitrary number of
-   comment lines, which  must start with character =c=.  The first non
-   comment line specifies how many  variables and how many clauses are
-   in  the CNF  formulas.  The next  lines are  sequence  of non  zero
-   integers followed by zero.
-   : p cnf <N> <M>
-   : <i> <i> <i> <i> 0
-   : <i> <i> <i> 0
-   : ...
-   Each  line  after the  specification  represents  a clause  in  the
-   following way:  a positive number t  is the positive literal on the
-   variable indexed by t.  A negative  number t is the negated literal
-   on  the variable  indexed by  -t.  
-
-   For example if the formula is defined  on n variables x₁, x₂, …, xₙ
-   then the line =3 -1 5 6 -4 0= encodes the clause x3 v ¬x₁ v x₅ v x₆ v ¬x₄.
-
-
-** Formula Families
-
-   We implement several families of formula in =cnfgen= tool. Here's a
-   brief description of each family  with the principal parameters. To
-   get more info about the parameters of a specific family just type
-
-   : cnfgen <family> –help 
-
-*** Pigeonhole Principle (=php=)
-
-    The formula  claims that  it is  possible to assign  H holes  to P
-    pigeons in such a way that
-
-    - at least one hole is assigned to each pigeon;
-    - no hole is assigned to more than on pigeon.
-
-    : cnfgen php <P> <N>
-
-    The   formula    exists   other   variants:    functional,   onto,
-    matching. These formulas have the same clauses of PHP plus more:
-
-    - in  *functional* PHP  every pigeon  is assigned  to exactly  one
-      hole;
-    - in *onto* PHP every hole must contain at least a pigeon;
-    - *matching* PHP has both *functional* and *onto* clauses.
-
-    You can  add functional  and onto clauses  using the  command line
-    options.
-
-    : cnfgen php [--functional] [--onto] <P> <N>
-
-*** Tseitin  formula (=tseitin=)
-
-    Tseitin formula  are graph  based formulas. Start  from a  graph G
-    such that each vertex is labelled either 0 or 1. The formula claim
-    that you can put labels 0 or 1 on the edges of G so that the label
-    of each vertex  v is equal to  the sum of the labels  on the edges
-    incident to v (module 2).
-
-    : cnfgen tseitin –charge <type> -i <input_graph>
-
-    The initial  charge of  the vertices is  either =first=  (only the
-    first  vertex is  labelled  1) or  one  of =random=,  =randomodd=,
-    =randomeven=.
-
-*** Ordering principle (=op=)
-
-    The formula  claims that there  is partial order  over a set  of N
-    elements,   such   that   every   element   has   at   least   one
-    predecessor.  If  either the  option =-t= or  =-s= are  used, then
-    the formula will claim the same but within *total orders*. If =-p=
-    is  active,  then a  single  element  is  allowed  not to  have  a
-    predecessor (this makes the formula satisfiable).
-
-    : cnfgen op [-t|-s] [-p]  <N>
-
-    The difference between =-t= and =-s= is in the way the totality of
-    the order is encoded: =-t= adds some additional clauses to enforce
-    totality; =-s= uses  xᵢⱼ=0 to encode i>j and xᵢⱼ=1  to encode i<j.
-    The latter  encoding itself enforces  totality.
-
-    There  are  two alternative  encoding  of  the ordering  principle
-    inspired by a  question by Donald E. Knuth. It  is possible to use
-    only a  third of the  transitive axioms  and the formula  is still
-    unsatisfiable.  The standard transitivity axioms are
-
-    xᵢⱼ ∧ xⱼₖ → xᵢₖ 
-
-    for every  different i,j,k. The  option =--knuth2= and  the option
-    =--knuth3= are in alternative to =-t= and =-s=. Option =--knuth2= 
-    only adds  transitivity axioms for  j>i and j>k.  Option =--knuth3=
-    only adds transitivity axioms for k>i and k>j.
-
-    Both such formulas are unsatisfiable, but the short refutation for
-    ordering  principle by  Stålmarck  works  for =--knuth2=  variant,
-    while it does not for =--knuth3= variant.
-
-*** Graph ordering principle (=gop=)
-
-    The graph ordering  principle is a variant  of ordering principle:
-    given a graph G  of n vertices, the formula claim  that there is a
-    partial (or total) order on V(G),  such that every vertex there is
-    another one which is
-    
-    - a predecessor in the order;
-    - a neighbor in the graph.
-
-    : cnfgen gop [-t|-s] [-p]-i <input_graph>
-    
-    If =-p= is active, then a single  element is allowed not to have a
-    predecessor (this  makes the formula  satisfiable if the  graph is
-    connected).   Notice  that  this  formula  is  equivalent  to  the
-    ordering principle if the underlying graph is the complete one.
-    
-    Options =--knuth2= and =--knuth3= work here as well.
-    
-*** Pebbling formula (=peb=)
-
-    A directed acyclic graph G has some vertices with no incoming arcs
-    (*sources*) and  vertices with no  outgoing arcs (*sinks*).  For a
-    given directed acyclic graph G,  the pebbling formula for G claims
-    that:
-    
-    - there is a pebble on every source;
-    - if all predecessors  of vertex v are pebbled, then  v is pebbled
-      too;
-    - the sinks are not pebbled.
-
-    : cnfgen peb -i <inputDAG>
-    
-*** K-clique formula (=kclique=)
-
-    If given a graph G, the formula  claims that there is no clique of
-    size at least k in the graph G. 
-
-    : cnfgen kclique <k> -i <input_graph> 
-
-    Notice that there is  the additional option =--plantclique= that
-    plant a random clique in the graph.  In this way it is possible to
-    study the behavior of SAT solver on the /hidden clique problem/.
-
-    : cnfgen kclique <k> -i <input_graph> --plantclique <k>
-
-*** Ramsey number formula (=ram=)
-   
-    The simplest  version of the  famous /Ramsey theorem/ says  that for
-    every s and  k there is a  number r(s,k) such that  every graph of
-    r(s,k)  vertices has  either an  independent set  of size  s or  a
-    clique of size k. Command line
-
-    : cnfgen ram <s> <k> <N>
-
-    produces  a formula  that claims  that r(s,k)>N.  If a  SAT solver
-    claims that  the formula is  unsatisfiable, then it also  prove an
-    upper  bound r(s,k)≤N,  otherwise it  would  give a  witness of  a
-    Ramsey number lower bound.
-
-*** Ramsey number witness of lower bound (=ramlb=)
-
-    If given  a graph G,  the formula claims  that there is  either an
-    independent set of size s or a clique of size k.
-
-    : cnfgen ramlb <k> <s> -i <input_graph> 
-
-    If the  formula is  unsatisfiable, it  means that  the graph  is a
-    witness  of   the  lower   bound  r(s,k)>|V(G)|  for   the  Ramsey
-    numbers. While the  =ram= formula allows to find a  witness with a
-    SAT solver, this formula allow the *verification*.
-
-*** OR formula (=or=)
-
-    This is a single clause on p+n variables, with p positive literals
-    and n negative ones: x₁ v x₂ … xₚ v ¬y₁ v ¬y₁ … ¬yₙ.
-
-    : cnfgen or <p> <n>
-
-*** AND formula (=and=)
-
-    This is a conjunction of  singleton clauses on p+n variables, with
-    p positive literals and n negative ones: x₁ ∧ x₂ … xₚ ∧ ¬y₁ ∧ ¬y₁
-    … ¬yₙ.
-
-    : cnfgen and <p> <n>
-
-
-** Formula Transformations
-
-   Othen  we  want  to  increase  the hardness  of formulas  in  a
-   controlled way  to study  their proof complexity  or how  SAT solver
-   perform on them. A way to do that is to apply transformations.
-
-   Pick  a  formula  F  on  variables {xᵢ}.  We  can  take  a  function
-   g:{0,1}ˡ→{0,1}  and  substitute  each  variable with  the  value  of
-   function g  on l independent  copies of the variables.   For example
-   if g is XOR and l=2 then the CNF
-
-   x ∧ (y v ¬z)
-
-   becomes
-
-   x₁⊕x₂ ∧ (y₁⊕y₂ v ¬z₁⊕z₂).
-
-   Each of the two original clauses must be represented in CNF form:
-   x₁⊕x₂ becomes (x₁ v x₂)∧( ¬x₁ v ¬x₂); and y₁⊕y₂ v ¬z₁⊕z₂ becomes 
-
-   ( y₁ v  y₂  z₁ v ¬z₂)∧
-   (¬y₁ v ¬y₂  z₁ v ¬z₂)∧
-   ( y₁ v  y₂ ¬z₁ v  z₂)∧
-   (¬y₁ v ¬y₂ ¬z₁ v  z₂)
-
-   As  long  as the  original  CNF  has  only  narrow clauses  and  the
-   parameter l is not too large, the formula does not increase too much
-   in size.
-
-   Our tools =cnfgen=,  =kth2dimacs.py=, =dimacstransform.py= allow
-   to  select  a   function  g  and  a  value  l   and  to  apply  the
-   corresponding transformation to the output CNF.  For example:
-
-   : dimacstransform.py --Transform eq --Tarity 5 -i <ifile> -o <ofile>
-   
-   substitutes  every  boolan variable  of  the  input formula  with  a
-   function which  is true  if and only  if its 5  inputs are  all the
-   same.
-
-   Another  transformation  we  implement  is  *lifting*,  and  it  is
-   slightly  different   than  a   variable  substitution.   For  more
-   information  about this  transformation  we suggest  to browse  the
-   proof complexity literature.
-
-   For  a  list  of  all  implemented  transformations  you  can  type
-   (e.g. for =cnfgen= tool)
- 
-   : cnfgen.py --help-transform
-
-
-
+Copyright 2012–2015 © Massimo Lauria (mailto:lauria.massimo@gmail.com)
