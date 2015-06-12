@@ -13,23 +13,8 @@ from .graphs import readDigraph,readGraph,writeGraph
 from .graphs import bipartite_random_left_regular,bipartite_random_regular
 
 
-from .families import (
-    PigeonholePrinciple,
-    GraphPigeonholePrinciple,
-    PebblingFormula,
-    StoneFormula,
-    OrderingPrinciple,
-    GraphOrderingPrinciple,
-    MatchingPrinciple,
-    GraphMatchingPrinciple,
-    CountingPrinciple,
-    GraphIsomorphism,
-    GraphAutomorphism,
-    RamseyNumber,
-    TseitinFormula,
-    SubgraphFormula,
-    ColoringFormula,
-    RandomKCNF)
+from .families import *
+
 
 __docstring__ =\
 """Utilities to build CNF formulas interesting for proof complexity.
@@ -669,6 +654,35 @@ class _GPHP(_FormulaFamilyHelper,_CMDLineHelper):
                                         functional=args.functional,
                                         onto=args.onto)
 
+class _SSC(_FormulaFamilyHelper,_CMDLineHelper):
+    name='subsetcard'
+    description='subset cardinality formulas'
+
+    @staticmethod
+    def setup_command_line(parser):
+        _BipartiteGraphHelper.setup_command_line(parser)
+
+    @staticmethod
+    def build_cnf(args):
+        B = _BipartiteGraphHelper.obtain_graph(args)
+        return SubsetCardinalityFormula(B)
+
+    
+class _MARKSTROM(_FormulaFamilyHelper,_CMDLineHelper):
+    name='markstrom'
+    description='markstrom formulas'
+
+    @staticmethod
+    def setup_command_line(parser):
+        _SimpleGraphHelper.setup_command_line(parser)
+
+
+    @staticmethod
+    def build_cnf(args):
+        G = _SimpleGraphHelper.obtain_graph(args) 
+        return MarkstromFormula(G)
+
+    
 class _PHP(_FormulaFamilyHelper,_CMDLineHelper):
     name='php'
     description='pigeonhole principle'
@@ -796,15 +810,15 @@ class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
         return GraphOrderingPrinciple(G,args.total,args.smart,args.plant,args.knuth)
 
 
-class _MATCH(_FormulaFamilyHelper,_CMDLineHelper):
+class _PARITY(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for Matching Principle formulas
     """
-    name='matching'
-    description='matching principle'
+    name='parity'
+    description='parity principle'
 
     @staticmethod
     def setup_command_line(parser):
-        """Setup the command line options for Matching Principle formula
+        """Setup the command line options for Parity Principle formula
 
         Arguments:
         - `parser`: parser to load with options.
@@ -813,23 +827,18 @@ class _MATCH(_FormulaFamilyHelper,_CMDLineHelper):
 
     @staticmethod
     def build_cnf(args):
-        """Build an Ordering principle formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        return MatchingPrinciple(args.N)
+        return ParityPrinciple(args.N)
 
 
-class _GMATCH(_FormulaFamilyHelper,_CMDLineHelper):
-    """Command line helper for Graph Matching Principle formulas
+class _PMATCH(_FormulaFamilyHelper,_CMDLineHelper):
+    """Command line helper for Perfect Matching Principle formulas
     """
-    name='gmatching'
-    description='graph matching principle'
+    name='matching'
+    description='perfect matching principle'
 
     @staticmethod
     def setup_command_line(parser):
-        """Setup the command line options for Graph Matching Principle formula
+        """Setup the command line options for Perfect Matching Principle formula
 
         Arguments:
         - `parser`: parser to load with options.
@@ -839,11 +848,6 @@ class _GMATCH(_FormulaFamilyHelper,_CMDLineHelper):
 
     @staticmethod
     def build_cnf(args):
-        """Build a Graph ordering principle formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
         G=_SimpleGraphHelper.obtain_graph(args)
         return GraphMatchingPrinciple(G)
 
@@ -1243,15 +1247,18 @@ def command_line_utility(argv=sys.argv):
     subcommands=[_PHP,_GPHP,
                  _TSE,
                  _OP,_GOP,
-                 _MATCH,_GMATCH,
+                 _KClique,
+                 _KColor,
+                 _RANDOM,
+                 _PARITY,_PMATCH,
                  _COUNT,
                  _PEB,
                  _Stone,
                  _GIso,_GAuto,
                  _RAM,_RAMLB,
-                 _KClique,
-                 _KColor,
-                 _RANDOM,_OR,_AND,_EMPTY,_EMPTY_CLAUSE]
+                 _MARKSTROM,
+                 _SSC,
+                 _OR,_AND,_EMPTY,_EMPTY_CLAUSE]
 
     # Parse the command line arguments
     parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),

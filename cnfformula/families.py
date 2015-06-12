@@ -8,6 +8,11 @@ from .cnf import CNF
 from .graphs import enumerate_vertices,is_dag
 from .cnf    import parity_constraint
 from .cnf    import less_than_constraint
+from .cnf    import less_or_equal_constraint
+from .cnf    import greater_than_constraint
+from .cnf    import greater_or_equal_constraint
+from .cnf    import loose_minority_constraint
+from .cnf    import loose_majority_constraint
 
 
 __docstring__ =\
@@ -27,9 +32,13 @@ __all__ = ["PigeonholePrinciple",
            "GraphIsomorphism",
            "GraphAutomorphism",
            "RamseyNumber",
+           "SubsetCardinalityFormula",
            "TseitinFormula",
            "ParityPrinciple",
-           "GraphParityPrinciple",
+           "MarkstromFormula",
+           "PerfectMatchingPrinciple",
+           "CountingPrinciple",
+           "ColoringFormula",
            "SubgraphFormula",
            "RandomKCNF"]
 
@@ -212,7 +221,56 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     return gphp
 
 
+def SubsetCardinalityFormula(B):
+    """SubsetCardinalityFormula
 
+    Consider a bipartite graph $B$. The CNF claims that at least half
+    of the edges incident to each of the vertices on left side of $B$
+    must be zero, while at least half of the edges incident to each
+    vertex on the left side must be one.
+
+    Variants of these formula, on specific families of bipartite
+    graphs, have been studied in [1]_ and [2]_.
+
+    Parameters
+    ----------
+    B : networkx.Graph
+        the graph vertices must have the 'bipartite' attribute
+        set. Left vertices must have it set to 0 and the right ones to 1.
+        Any vertex without the attribute is ignored.
+
+    Returns
+    -------
+    A CNF object
+
+    References
+    ----------
+    .. [1] blah
+    .. [2] blah
+    """
+    Left  =  [v for v in B.nodes() if B.node[v]["bipartite"]==0]
+    Right =  [v for v in B.nodes() if B.node[v]["bipartite"]==1]
+            
+    ssc=CNF()
+    ssc.header="Subset cardinality formula for graph {0}\n".format(B.name)
+
+    def var_name(u,v):
+        if u<=v:
+            return 'x_{{{0},{1}}}'.format(u,v)
+        else:
+            return 'x_{{{0},{1}}}'.format(v,u)
+    
+    for u in Left:
+        edge_vars = [ var_name(*e) for e in B.edges(u) ]
+        for cls in loose_minority_constraint(edge_vars):
+            ssc.add_clause(cls)
+
+    for v in Right:
+        edge_vars = [ var_name(*e) for e in B.edges(v) ]
+        for cls in loose_majority_constraint(edge_vars):
+            ssc.add_clause(cls)
+    
+    return ssc
 
 def PebblingFormula(digraph):
     """Pebbling formula
@@ -258,20 +316,32 @@ def StoneFormula(digraph,nstones):
     an `ordered_vertices` attribute, then it is used to enumerate the
     vertices (and the corresponding variables).
 
-    These formula, introduced in [2] are one of the classic examples
-    that separate regular resolutions from general resolution [1].
+    These formula, introduced in [2]_ are one of the classic examples
+    that separate regular resolutions from general resolution [1]_.
 
-    Arguments:
-    - `digraph`: directed acyclic graph.
-    - `nstones`: number of stones.
+    Parameters
+    ----------
+    digraph : a graph
+       it should be a directed acyclic graph.
+    nstones : int
+       the number of stones.
 
-    References:
-    [1] M. Alekhnovich, J. Johannsen, T. Pitassi and A. Urquhart
-    	An Exponential Separation between Regular and General Resolution.
-        Theory of Computing (2007)
-    [2] R. Raz and P. McKenzie
-        Separation of the monotone NC hierarchy.
-        Combinatorica (1999)
+    Raises
+    ------
+    ValueError
+       if the graph is not a directed acyclic graph
+    
+    ValueError
+       if the number of stones is non positive
+
+    References
+    ----------
+    .. [1] M. Alekhnovich, J. Johannsen, T. Pitassi and A. Urquhart
+    	   An Exponential Separation between Regular and General Resolution.
+           Theory of Computing (2007)
+    .. [2] R. Raz and P. McKenzie
+           Separation of the monotone NC hierarchy.
+           Combinatorica (1999)
 
     """
     if not is_dag(digraph):
@@ -346,16 +416,18 @@ def _graph_isomorphism_var(u, v):
 def GraphIsomorphism(G1, G2):
     """Graph Isomorphism formula
 
-    The formula is the CNF encoding of the statement that G1 and G2
-    are two isomorphic graphs.
+    The formula is the CNF encoding of the statement that two simple
+    graphs G1 and G2 are isomorphic.
 
-    Arguments:
+    Parameters
     ----------
-    - `G1` : a simple graph
-    - `G2` : another simple graph
+    G1 : networkx.Graph
+        an undirected graph object
+    G2 : networkx.Graph
+        an undirected graph object
 
-    Returns:
-    --------
+    Returns
+    -------
     A CNF formula which is satiafiable if and only if graphs G1 and G2
     are isomorphic.
 
@@ -406,12 +478,12 @@ def GraphAutomorphism(G):
     has a nontrivial automorphism, i.e. an automorphism different from
     the idential one.
 
-    Arguments:
-    ----------
-    - `G` : a simple graph
+    Parameter
+    ---------
+    G : a simple graph
 
-    Returns:
-    --------
+    Returns
+    -------
     A CNF formula which is satiafiable if and only if graph G has a
     nontrivial automorphism.
     """
@@ -530,37 +602,113 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
     return gop
 
 
-def ColoringFormula(graph,colors,functional=True):
-    """Generates the clauses for k-colorability formula
+def MarkstromFormula(G):
+    """Markstrom formula
 
-    Arguments:
-    - `graph`  : undirected graph
-    - `colors` : sequence of available colors
+    The formula is defined on a graph ``G`` and claims that it is
+    possible to split the edges of the graph in two parts, so that
+    each vertex has an equal number of incident edges in each part.
+
+    The formula is defined on graphs where all vertices have even
+    degree. The formula is satisfiable only on those graphs with an
+    even number of vertices in each connected component [1]_.
+
+    Arguments
+    ---------
+    G : networkx.Graph 
+       a simple undirected graph where all vertices have even degree
+
+    Raises
+    ------
+    ValueError
+       if the graph in input has a vertex with odd degree
+
+    Returns
+    -------
+    CNF object
+
+    References
+    ----------
+    .. [1] Locality and Hard SAT-instances, Klas Markstrom
+       Journal on Satisfiability, Boolean Modeling and Computation 2 (2006) 221-228
+
     """
-    kcol=CNF()
+    F = CNF()
+    F.header = "Markstrom formula on graph " + G.name + "\n" + F.header
+
+    def var_name(u,v):
+        if u<=v:
+            return 'x_{{{0},{1}}}'.format(u,v)
+        else:
+            return 'x_{{{0},{1}}}'.format(v,u)
+    
+    for (u, v) in G.edges():
+        F.add_variable(var_name(u, v))
+
+    # Defined on both side
+    for v in G.nodes():
+
+        if G.degree(v) % 2 == 1:
+            raise ValueError("Markstrom formulas requires all vertices in the graph to have even degree.")
+
+        edge_vars = [ var_name(*e) for e in G.edges(v) ]
+        
+        for cls in less_or_equal_constraint(edge_vars,
+                                            len(edge_vars)/2):
+            F.add_clause(cls,strict=True)
+
+        for cls in greater_or_equal_constraint(edge_vars,
+                                               len(edge_vars)/2):
+            F.add_clause(cls,strict=True)
+
+    return F
+
+
+def ColoringFormula(G,colors,functional=True):
+    """Generates the clauses for colorability formula
+
+    The formula encodes the fact that the graph ``G`` has a coloring
+    with color set ``colors``. This means that it is possible to
+    assign one among the elements in ``colors``to that each vertex of
+    the graph such that no two adjacent vertices get the same color.
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        a simple undirected graph
+    colors : list 
+        a list of colors
+
+    Returns
+    -------
+    CNF
+       the CNF encoding of the coloring problem on graph ``G``
+
+    """
+    col=CNF()
 
     # Describe the formula
-    name="K-Colorabily"
+    name="colorability"
     
     if hasattr(graph,'name'):
-        kcol.header=name+" of graph:\n"+graph.name+"\n"+kcol.header
+        col.header=name+" of graph:\n"+G.name+"\n"+col.header
     else:
-        kcol.header=name+".\n"+kcol.header
+        col.header=name+".\n"+col.header
 
     # Fix the vertex order
-    V=graph.nodes()
+    V=G.nodes()
 
     # Each vertex has a color
     for vertex in V:
         clause = []
         for color in colors:
             clause += [(True,'x_{{{0},{1}}}'.format(vertex,color))]
-        kcol.add_clause(clause)
+        col.add_clause(clause)
         
         # unique color per vertex
         if functional:
             for (c1,c2) in combinations(colors,2):
-                kcol.add_clause([
+                col.add_clause([
                     (False,'x_{{{0},{1}}}'.format(vertex,c1)),
                     (False,'x_{{{0},{1}}}'.format(vertex,c2))])
 
@@ -568,15 +716,15 @@ def ColoringFormula(graph,colors,functional=True):
     for (v1,v2) in combinations(V,2):
         if graph.has_edge(v1,v2):
             for c in colors:
-                kcol.add_clause([
+                col.add_clause([
                     (False,'x_{{{0},{1}}}'.format(v1,c)),
                     (False,'x_{{{0},{1}}}'.format(v2,c))])
             
-    return kcol
+    return col
 
 
-def GraphMatchingPrinciple(graph):
-    """Generates the clauses for the graph matching principle.
+def PerfectMatchingPrinciple(graph):
+    """Generates the clauses for the graph perfect matching principle.
     
     The principle claims that there is a way to select edges to such
     that all vertices have exactly one incident edge set to 1.
@@ -588,7 +736,7 @@ def GraphMatchingPrinciple(graph):
     cnf=CNF()
 
     # Describe the formula
-    name="Graph Matching Principle"
+    name="Perfect Matching Principle"
     
     if hasattr(graph,'name'):
         cnf.header=name+" of graph:\n"+graph.name+"\n"+cnf.header
@@ -616,8 +764,8 @@ def GraphMatchingPrinciple(graph):
     return cnf
 
 
-def MatchingPrinciple(size):
-    """Matching principle on a domain with `size` elements
+def ParityPrinciple(size):
+    """Parity rinciple on a domain with `size` elements
 
     Arguments:
     - `size`  : size of the domain
@@ -660,7 +808,7 @@ def CountingPrinciple(M,p):
         cnf.add_clause([(True,var) for var in edge_vars])
 
         # the element is in at most one part
-        for cls in less_than_constraint(edge_vars,2):
+        for cls in strict_inequality_constraint(edge_vars,2):
             cnf.add_clause(cls)
 
     return cnf
@@ -853,24 +1001,31 @@ def SubgraphFormula(graph,templates):
 def RandomKCNF(k, n, m, seed=None):
     """Build a random k-CNF
 
-    Samle m k-clauses over n variables uniformly at random.
+    Sample m k-clauses over n variables uniformly at random.
 
-    Arguments
-    ---------
-    - `k`: width of each clause
-    - `n': number of variables to choose from. The resulting cnf will
-           contain n variables even if some are not picked.
-    - `m`: number of clauses to generate
-    - `seed`: hashable object to seed the random generator with
+    Parameters
+    ----------
+    k : int
+       width of each clause
+    
+    n : int
+       number of variables to choose from. The resulting cnf will
+       contain n variables even if some are not picked.
+    
+    m : int
+       number of clauses to generate
+    
+    seed : hashable object
+       seed of the random generator
 
     Returns
     -------
     a CNF object
 
-    
     Raises
     ------
-    ValueError when some paramenter is negative, or when k>n.
+    ValueError 
+        when some paramenter is negative, or when k>n.
     """
     import random
     if seed: random.seed(seed)
