@@ -605,6 +605,40 @@ class _FormulaFamilyHelper(object):
         pass
 
 
+class _EMPTY(_FormulaFamilyHelper,_CMDLineHelper):
+    name='empty'
+    description='empty CNF formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        pass
+
+    @staticmethod
+    def build_cnf(args):
+        """Build an empty CNF formula 
+
+        Arguments:
+        - `args`: command line options
+        """
+        return CNF()
+
+class _EMPTY_CLAUSE(_FormulaFamilyHelper,_CMDLineHelper):
+    name='emptyclause'
+    description='one empty clause'
+
+    @staticmethod
+    def setup_command_line(parser):
+        pass
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a CNF formula with an empty clause 
+
+        Arguments:
+        - `args`: command line options
+        """
+        return CNF([[]])
+    
 class _GPHP(_FormulaFamilyHelper,_CMDLineHelper):
     name='gphp'
     description='graph pigeonhole principle'
@@ -1217,7 +1251,7 @@ def command_line_utility(argv=sys.argv):
                  _RAM,_RAMLB,
                  _KClique,
                  _KColor,
-                 _RANDOM,_OR,_AND]
+                 _RANDOM,_OR,_AND,_EMPTY,_EMPTY_CLAUSE]
 
     # Parse the command line arguments
     parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),
