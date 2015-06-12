@@ -21,7 +21,8 @@ __all__ = ["supported_formats","readGraph","readDigraph","writeGraph","is_dag"]
 _graphformats = {
     'dag':   ['kth','gml','dot'],
     'digraph': ['kth','gml','dot','dimacs'],
-    'simple': ['kth','gml','dot','dimacs']
+    'simple': ['kth','gml','dot','dimacs'],
+    'bipartite': ['gml','dot']
     }
 
 def supported_formats():

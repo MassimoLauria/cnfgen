@@ -145,11 +145,8 @@ class _GeneralCommandLine(_CMDLineHelper):
                             type=argparse.FileType('wb',0),
                             metavar="<output>",
                             default='-',
-                            help="""Output file. The formula is saved
-                            on file instead of being sent to standard
-                            output. Setting '<output>' to '-' is another
-                            way to send the formula to standard output.
-                            (default: -)
+                            help="""Save the formula to <output>. Setting '<output>' to '-' sends the
+                            formula to standard output. (default: -)
                             """)
         parser.add_argument('--output-format','-of',
                             choices=['latex','dimacs'],
@@ -167,8 +164,7 @@ class _GeneralCommandLine(_CMDLineHelper):
                             type=str,
                             action='store',
                             help="""Seed for any random process in the
-                            program. Any python hashable object will
-                            be fine.  (default: current time)
+                            program. (default: current time)
                             """)
         g=parser.add_mutually_exclusive_group()
         g.add_argument('--verbose', '-v',action='store_true',default=True,
@@ -219,7 +215,7 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
         gr=parser.add_argument_group(title="Input directed acyclic graph (DAG)",
                                      description="""
                                      You can either read the input DAG from file according to one of
-                                     the formats, or generate it using one of the included constructions.""")
+                                     the formats, or generate it using one of the constructions included.""")
 
         gr=gr.add_mutually_exclusive_group(required=True)
        
@@ -227,38 +223,31 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
                         type=argparse.FileType('r',0),
                         metavar="<input>",
                         default='-',
-                        help="""Input file. The DAG is read from a file instead of being read from
-                        standard output. Setting '<input>' to '-' is
-                        another way to read from standard
-                        input.  (default: -)
-                        """)
+                        help="""Read the DAG from <input>. Setting '<input>' to '-' is another way
+                        to read from standard input. (default: -) """)
 
         gr.add_argument('--tree',type=int,action='store',metavar="<height>",
-                            help="tree graph")
+                            help="rooted tree digraph")
 
         gr.add_argument('--pyramid',type=int,action='store',metavar="<height>",
-                            help="pyramid graph")
+                            help="pyramid digraph")
 
-        gr=parser.add_argument_group("I/O options for graph ")
+        gr=parser.add_argument_group("I/O options")
 
         gr.add_argument('--savegraph','-sg',
                             type=argparse.FileType('wb',0),
                             metavar="<graph_file>",
                             default=None,
-                            help="""Output the DAG to a file. The
-                            graph is saved, which is useful if the
-                            graph is generated internally.
+                            help="""Save the DAG to <graph_file>.
                             Setting '<graph_file>' to '-' is
-                            another way to send the graph to
+                            another way to send the DAG to
                             standard output.  (default:  -)
                             """)
         gr.add_argument('--graphformat','-gf',
                         choices=graph_formats()['dag'],
                         default=graph_formats()['dag'][0],
                         help="""
-                        Format of the DAG in input/output, several
-                        formats are supported if networkx is
-                        installed.  (default:  {})
+                        Format of the DAG file. (default:  {})
                         """.format(graph_formats()['dag'][0]))
 
  
@@ -349,9 +338,8 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
                         type=argparse.FileType('r',0),
                         metavar="<input>",
                         default='-',
-                        help="""Input file. The graph is read from a file instead of being read from
-                        standard input. Setting '<input>' to '-' is
-                        another way to read from standard
+                        help="""Read the graph from <input>. 
+                        Setting '<input>' to '-' reads the graph from standard
                         input.  (default: -)
                         """)
 
@@ -383,9 +371,7 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
                             type=argparse.FileType('wb',0),
                             metavar="<graph_file>",
                             default=None,
-                            help="""Output the graph to a file. The
-                            graph is saved, which is useful if the
-                            graph is randomly generated internally.
+                            help="""Save the graph to <graph_file>.
                             Setting '<graph_file>' to '-' is
                             another way to send the graph to
                             standard output.  (default:  -)
@@ -394,9 +380,7 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
                         choices=graph_formats()['simple'],
                         default=graph_formats()['simple'][0],
                         help="""
-                        Format of the graph in input/output, several
-                        formats are supported if networkx is
-                        installed.  (default:  {})
+                        Format of the graph file. (default:  {})
                         """.format(graph_formats()['simple'][0]))
 
 
@@ -470,39 +454,10 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
         """Setup input options for command lines
         """
 
-        gr=parser.add_argument_group("Read/Write the underlying bipartite graph")
-        # gr.add_argument('--input','-i',
-        #                 type=argparse.FileType('r',0),
-        #                 metavar="<input>",
-        #                 default='-',
-        #                 help="""Input file. The graph is read from a file instead of being read from
-        #                 standard output. Setting '<input>' to '-' is
-        #                 another way to read from standard
-        #                 input.  (default: -)
-        #                 """)
-        gr.add_argument('--savegraph','-sg',
-                            type=argparse.FileType('wb',0),
-                            metavar="<graph_file>",
-                            default=None,
-                            help="""Output the graph to a file. The
-                            graph is saved, which is useful if the
-                            graph is randomly generated internally.
-                            Setting '<graph_file>' to '-' is
-                            another way to send the graph to
-                            standard output.  (default:  -)
-                            """)
-        gr.add_argument('--graphformat','-gf',
-                        choices=graph_formats()['simple'],
-                        default=graph_formats()['simple'][0],
-                        help="""
-                        Format of the graph in input/output, several
-                        formats are supported if networkx is
-                        installed.  (default:  {})
-                        """.format(graph_formats()['simple'][0]))
-
-
-        gr=parser.add_argument_group("Generate input bipartite graph from a distribution")
-        gr=gr.add_mutually_exclusive_group()
+        gr=parser.add_argument_group(title="Input bipartite graph",
+                                     description="""
+                                     You can either read the input bipartite graph from file according to one of
+                                     the formats, or generate it using one of the included constructions.""")
 
         class IntIntFloat(argparse.Action):
             def __call__(self, parser, args, values, option_string = None):
@@ -528,6 +483,22 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
                     raise ValueError('In a regular bipartite graph, r must divide d*l.')
                 setattr(args, self.dest, (l,r,d))
 
+        gr=parser.add_argument_group("Read/Write the underlying bipartite graph")
+
+        gr=gr.add_mutually_exclusive_group(required=True)
+
+
+        gr.add_argument('--input','-i',
+                        type=argparse.FileType('r',0),
+                        metavar="<input>",
+                        default='-',
+                        help="""Input file. The graph is read from a file instead of being read from
+                        standard output. Setting '<input>' to '-' is
+                        another way to read from standard
+                        input.  (default: -)
+                        """)
+
+                
         gr.add_argument('--bp',nargs=3,action=IntIntFloat,metavar=('l','r','p'),
                 help="random bipartite graph according with independent edges)")
 
@@ -543,6 +514,20 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
 
         gr.add_argument('--bcomplete',type=int,nargs=2,action='store',metavar=('l','r'),
                 help="complete bipartite graph")
+
+        gr=parser.add_argument_group("I/O options")
+        gr.add_argument('--savegraph','-sg',
+                            type=argparse.FileType('wb',0),
+                            metavar="<graph_file>",
+                            default=None,
+                            help="""Save the graph to <graph_file>. Setting '<graph_file>' to '-'sends
+                            the graph to standard output. (default: -) """)
+        gr.add_argument('--graphformat','-gf',
+                        choices=graph_formats()['bipartite'],
+                        default=graph_formats()['bipartite'][0],
+                        help="""
+                        Format of the graph file.  (default:  {})
+                        """.format(graph_formats()['bipartite'][0]))
 
 
     @staticmethod
@@ -576,7 +561,18 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
             
             l,r = args.bcomplete
             G=networkx.complete_bipartite_graph(l,r)
-                
+
+        elif getattr(args,'graphformat'):
+
+            G=readGraph(args.input,
+                        args.graphformat)
+            try: 
+                for n in G.nodes():
+                    if not G.node[n]['bipartite'] in [0,1]:
+                        raise KeyError
+            except:
+                raise ValueError("Input Error: graph vertices miss the 'bipartite' 0,1 label.")
+                    
         else:
             raise RuntimeError("Invalid graph specification on command line")
             
@@ -589,7 +585,7 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
             writeGraph(G,
                        args.savegraph,
                        args.graphformat,
-                       graph_type='simple')
+                       graph_type='bipartite')
 
         return G
 
