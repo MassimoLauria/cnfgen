@@ -7,11 +7,12 @@ from setuptools import setup
 
 
 setup(name='CNFgen',
-      version='0.5.4.0',
+      version='0.5.4.1',
       description='CNF formula generator',
       author='Massimo Lauria',
-      author_email='lauria@kth.se',
-      url='https://github.com/MassimoLauria/cnfgen',
+      author_email='lauria.massimo@gmail.com',
+      url='https://massimolauria.github.io/cnfgen',
+      # url='https://github.com/MassimoLauria/cnfgen',
       packages=['cnfformula', 'cnfformula.utils'],
       license='GPL-3',
       entry_points={
