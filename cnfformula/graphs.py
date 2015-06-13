@@ -602,10 +602,14 @@ def bipartite_random_left_regular(l,r,d,seed=None):
 
     Parameters
     ----------
-    - `l` : vertices on the left side
-    - `r` : vertices on the right side
-    - `d` : degree on the left side.
-    - `seed`: hashable object to seed the random generator with
+    l : int 
+        vertices on the left side
+    r : int
+        vertices on the right side
+    d : int
+        degree on the left side.
+    seed : hashable object
+        seed the random generator
 
     Returns
     -------
@@ -614,7 +618,7 @@ def bipartite_random_left_regular(l,r,d,seed=None):
     Raises
     ------
     ValueError 
-        unless `l`,`r` and `d` are non negative.
+        unless ``l``, ``r`` and ``d`` are non negative.
 
     """
     import random
@@ -655,11 +659,15 @@ def bipartite_random_regular(l,r,d,seed=None):
 
     Parameters
     ----------
-    - `l`: number of vertices on the left side
-    - `r`: number of vertices on the right side
-    - `d`: degree of vertices at the left side
-    - `seed`: hashable object to seed the random generator with
-    
+    l : int 
+       vertices on the left side
+    r : int 
+       vertices on the right side
+    d : int 
+       degree of vertices at the left side
+    seed : hashable object
+       seed of random generator
+ 
     Returns
     -------
     networkx.Graph
@@ -667,7 +675,8 @@ def bipartite_random_regular(l,r,d,seed=None):
     Raises
     ------
     ValueError 
-        unless `l`,`r` and `d` are non negative and `r` divides `l*d`
+        if one among ``l``, ``r`` and ``d`` is negative or 
+        if ``r`` does not divides `l*d`
 
     References
     ----------
