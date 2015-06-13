@@ -18,7 +18,7 @@ from .cnf    import loose_majority_constraint
 __docstring__ =\
 """Formula families useful in proof complexity
 
-Copyright (C) 2012, 2013, 2015  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """

@@ -22,7 +22,7 @@ _graphformats = {
     'dag':   ['kth','gml','dot'],
     'digraph': ['kth','gml','dot','dimacs'],
     'simple': ['kth','gml','dot','dimacs'],
-    'bipartite': ['gml','dot']
+    'bipartite': ['matrix','gml','dot']
     }
 
 def supported_formats():
@@ -118,7 +118,7 @@ def readGraph(file,format,multi=False):
 
     Return: a networkx.Graph / networkx.MultiGraph object.
     """
-    if format not in _graphformats['simple']:
+    if format not in _graphformats['simple'] + _graphformats['bipartite']:
         raise ValueError("Invalid format for undirected graph")
 
     if multi:
@@ -141,6 +141,10 @@ def readGraph(file,format,multi=False):
     elif format=='dimacs':
 
         G=_read_graph_dimacs_format(file,grtype)
+
+    elif format=='matrix':
+
+        G=_read_graph_matrix_format(file)
 
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(format))
@@ -218,6 +222,22 @@ def writeGraph(G,output_file,format,graph_type='simple'):
         for v,w in edges:
             print("e {} {}".format(vertices[v],vertices[w]),file=output_file)
 
+    elif format=='matrix':
+
+        Left  =  [v for v in G.nodes() if G.node[v]["bipartite"]==0]
+        Right =  [v for v in G.nodes() if G.node[v]["bipartite"]==1]
+
+        print("{} {}".format(len(Left),len(Right)),file=output_file)
+        for u in Left:
+
+            adj_row =[]
+
+            for v in Right:
+                if G.has_edge(u,v): adj_row.append("1")
+                else: adj_row.append("0")
+                
+            print(" ".join(adj_row),file=output_file)
+            
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(format))
 
@@ -248,6 +268,28 @@ def is_dag(digraph):
 
     else:
         return networkx.algorithms.is_directed_acyclic_graph(digraph)
+
+
+def has_bipartition(G):
+    """Check that the graph is labelled with a bipartition
+
+    NetworkX follows the convention that bipartite graphs have their
+    vertices labeled with the bipartition. In particular each vertex
+    has the 'bipartite' attribute with is either 0 or 1.
+    
+    Parameters
+    ----------
+    G: networkx.Graph
+        
+    """
+    try: 
+        for n in G.nodes():
+            if not G.node[n]['bipartite'] in [0,1]:
+                return False
+    except KeyError:
+        return False
+    
+    return True
 
 
 #
@@ -411,6 +453,149 @@ def _read_graph_dimacs_format(inputfile,graph_type=networkx.Graph):
                          "{} edges were expected.".format(m))
        
     return G
+
+def _read_graph_matrix_format(inputfile):
+    """Read a bipartite graph from file, in the adjiacency matrix format.
+
+    This is an example of an adjacency matrix for a bipartite graph
+    with 9 vertices on one side and 15 on the another side.
+
+    .. 9 15
+       1 1 0 1 0 0 0 1 0 0 0 0 0 0 0
+       0 1 1 0 1 0 0 0 1 0 0 0 0 0 0
+       0 0 1 1 0 1 0 0 0 1 0 0 0 0 0
+       0 0 0 1 1 0 1 0 0 0 1 0 0 0 0
+       0 0 0 0 1 1 0 1 0 0 0 1 0 0 0
+       0 0 0 0 0 1 1 0 1 0 0 0 1 0 0
+       0 0 0 0 0 0 1 1 0 1 0 0 0 1 0
+       0 0 0 0 0 0 0 1 1 0 1 0 0 0 1
+       1 0 0 0 0 0 0 0 1 1 0 1 0 0 0
+
+    Parameters
+    ----------
+    inputfile: file object
+        the file containing the graph specification
+
+    Returns
+    -------
+    G : networkx.Graph
+
+    """
+    G=networkx.Graph()
+    G.name=''
+
+    def scan_integer(inputfile):
+
+        num_buffer = []
+        line_cnt = 0
+
+        while(True):
+            if len(num_buffer)==0:
+
+                # read more entries from the file
+                line = inputfile.readline()
+                line_cnt += 1
+                try:
+                    num_buffer.extend( int(lit) for lit in line.split() )
+                except ValueError:
+                    raise ValueError("Syntax error: "+
+                                     "line {} contains a non numeric entry.".format(line_cnt))
+        
+            yield num_buffer.pop(0)
+            
+    scanner = scan_integer(inputfile)
+    n = scanner.next()
+    m = scanner.next()
+
+    # bipartition of vertices
+    for i in range(1,n+1):
+        G.add_node(i,bipartite=0)
+    for i in range(n+1,n+m+1):
+        G.add_node(i,bipartite=1)
+
+    # read edges
+    for i in range(1,n+1):
+        for j in range(n+1,n+m+1):
+
+            b = scanner.next()
+            if b:
+                G.add_edge(i,j)
+
+    # writeGraph(G,sys.stderr,format="gml",graph_type="bipartite")
+    assert has_bipartition(G)
+    return G
+
+
+def _write_graph_matrix_format(inputfile):
+    """Write a bipartite graph from file, in the adjiacency matrix format.
+
+    This is an example of an adjacency matrix for a bipartite graph
+    with 9 vertices on one side and 15 on the another side.
+
+    .. 9 15
+       1 1 0 1 0 0 0 1 0 0 0 0 0 0 0
+       0 1 1 0 1 0 0 0 1 0 0 0 0 0 0
+       0 0 1 1 0 1 0 0 0 1 0 0 0 0 0
+       0 0 0 1 1 0 1 0 0 0 1 0 0 0 0
+       0 0 0 0 1 1 0 1 0 0 0 1 0 0 0
+       0 0 0 0 0 1 1 0 1 0 0 0 1 0 0
+       0 0 0 0 0 0 1 1 0 1 0 0 0 1 0
+       0 0 0 0 0 0 0 1 1 0 1 0 0 0 1
+       1 0 0 0 0 0 0 0 1 1 0 1 0 0 0
+
+    Parameters
+    ----------
+    inputfile: file object
+        the file where to write the output
+
+    Returns
+    -------
+    G : networkx.Graph
+
+    """
+    G=networkx.Graph()
+    G.name=''
+
+    def scan_integer(inputfile):
+
+        num_buffer = []
+        line_cnt = 0
+
+        while(True):
+            if len(num_buffer)==0:
+
+                # read more entries from the file
+                line = inputfile.readline()
+                line_cnt += 1
+                try:
+                    num_buffer.extend( int(lit) for lit in line.split() )
+                except ValueError:
+                    raise ValueError("Syntax error: "+
+                                     "line {} contains a non numeric entry.".format(line_cnt))
+        
+            yield num_buffer.pop(0)
+            
+    scanner = scan_integer(inputfile)
+    n = scanner.next()
+    m = scanner.next()
+
+    # bipartition of vertices
+    for i in range(1,n+1):
+        G.add_node(i,bipartite=0)
+    for i in range(n+1,n+m+1):
+        G.add_node(i,bipartite=1)
+
+    # read edges
+    for i in range(1,n+1):
+        for j in range(n+1,n+m+1):
+
+            b = scanner.next()
+            if b:
+                G.add_edge(i,j)
+
+    assert has_bipartition(G)
+    return G
+        
 
 
 #

@@ -22,7 +22,7 @@ setup(name='CNFgen',
               'cnftransform=cnfformula.utils.dimacstransform:command_line_utility',
               'kthgraph2pebformula=cnfformula.utils.kthgraph2dimacs:command_line_utility'],
       },
-      install_requires=['networkx'],
+      install_requires=['networkx','pyparsing'],
       # make some tests
       test_suite='nose.collector',
       tests_require=['nose']

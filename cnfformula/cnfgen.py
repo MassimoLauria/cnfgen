@@ -11,6 +11,7 @@ from . import TransformFormula,available_transform
 from .graphs import supported_formats as graph_formats
 from .graphs import readDigraph,readGraph,writeGraph
 from .graphs import bipartite_random_left_regular,bipartite_random_regular
+from .graphs import has_bipartition
 
 
 from .families import *
@@ -551,11 +552,8 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
 
             G=readGraph(args.input,
                         args.graphformat)
-            try: 
-                for n in G.nodes():
-                    if not G.node[n]['bipartite'] in [0,1]:
-                        raise KeyError
-            except:
+
+            if not has_bipartition(G): 
                 raise ValueError("Input Error: graph vertices miss the 'bipartite' 0,1 label.")
                     
         else:
