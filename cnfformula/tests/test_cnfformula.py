@@ -408,7 +408,7 @@ class TestSubstitution(TestCNFBase) :
 
 class TestKth2Dimacs(TestCNFBase) :
     def identity_check_helper(self, input, liftname, liftrank) :
-        G = cnfgen.readDigraph(input,'kth')
+        G = cnfgen.readGraph(input,'dag','kth')
         input.seek(0)
         peb = cnfgen.PebblingFormula(G)
         lift = cnfformula.TransformFormula(peb, liftname, liftrank)

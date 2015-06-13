@@ -9,9 +9,9 @@ from . import CNF
 from . import TransformFormula,available_transform
 
 from .graphs import supported_formats as graph_formats
-from .graphs import readDigraph,readGraph,writeGraph
+from .graphs import readGraph,writeGraph
 from .graphs import bipartite_random_left_regular,bipartite_random_regular
-from .graphs import has_bipartition
+from .graphs import is_dag, has_bipartition
 
 
 from .families import *
@@ -281,7 +281,7 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
 
         elif args.graphformat:
 
-            D=readDigraph(args.input,args.graphformat)
+            D=readGraph(args.input,"dag",args.graphformat)
 
         else:
             raise RuntimeError("Invalid graph specification on command line")
@@ -290,8 +290,8 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
         if hasattr(args,'savegraph') and args.savegraph:
             writeGraph(D,
                        args.savegraph,
-                       args.graphformat,
-                       graph_type='dag')
+                       "dag",
+                       args.graphformat)
 
         return D
 
@@ -411,6 +411,7 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
         elif getattr(args,'graphformat'+suffix):
 
             G=readGraph(getattr(args,'input'+suffix),
+                        "simple",
                         getattr(args,'graphformat'+suffix))
         else:
             raise RuntimeError("Invalid graph specification on command line")
@@ -427,8 +428,8 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
         if hasattr(args,'savegraph'+suffix) and getattr(args,'savegraph'+suffix):
             writeGraph(G,
                        getattr(args,'savegraph'+suffix),
-                       getattr(args,'graphformat'+suffix),
-                       graph_type='simple')
+                       'simple',
+                       getattr(args,'graphformat'+suffix))
 
         return G
 
@@ -551,6 +552,7 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
         elif getattr(args,'graphformat'):
 
             G=readGraph(args.input,
+                        "bipartite",
                         args.graphformat)
 
             if not has_bipartition(G): 
@@ -567,8 +569,8 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
         if hasattr(args,'savegraph') and args.savegraph:
             writeGraph(G,
                        args.savegraph,
-                       args.graphformat,
-                       graph_type='bipartite')
+                       'bipartite',
+                       args.graphformat)
 
         return G
 

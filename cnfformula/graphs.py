@@ -12,7 +12,10 @@ https://github.com/MassimoLauria/cnfgen.git
 
 """
 
-__all__ = ["supported_formats","readGraph","readDigraph","writeGraph","is_dag"]
+__all__ = ["supported_formats",
+           "readGraph","writeGraph",
+           "is_dag","has_bipartition",
+           "bipartite_random_left_regular", "bipartite_random_regular"]
 
 #################################################################
 #          Graph Decoders (first is default)
@@ -60,117 +63,145 @@ except ImportError:
 
 
 #################################################################
-#          Graph reader(s)
+#          Graph reader/writer
 #################################################################
 
-def readDigraph(file,format,force_dag=False,multi=False):
-    """Read a directed graph from file
+def readGraph(file,graph_type,file_format,multi_edges=False):
+    """Read a Graph from file
 
-    Arguments:
-    - `file`: file object
-    - `format`: file format
-    - `force_dag`: enforces whether graph must be acyclic
-    - `multi`:     multiple edge allowed
+    The graph are managed using the NetworkX library, and most of the
+    input and output formats are the ones supported by it. Plus we
+    added support for some more *hackish* formats that are useful
+    in applications.
 
-    Return: a networkx.DiGraph / networkx.MultiDiGraph object.
+    for the "simple" and "bipartite" types, the graph is actually
+    a (Multi)Graph object, while it is a (Multi)DiGraph in case of
+    "dag" or "digraph".
+
+    In the case of "dag" type, the graph is guaranteed to be acyclic
+    and to pass the ``is_dag`` test. In the case of "bipartite" type,
+    the graph is guaranteed to have the two parts labeled and to pass
+    the ``has_bipartition`` test.
+
+
+    Parameters
+    -----------
+    file: file object
+        the input file from which the graph is read.
+
+    graph_type: string in {"simple","digraph","dag","bipartite"}
+        see also ``cnfformula.graph.supported_formats()``
+
+    file_format: string
+        The file format that the parser should expect to receive.
+        See also ``cnfformula.graph.supported_formats()``
+    
+    multi_edges: bool,optional
+        are multiple edge allowed in the graph? By default this is not allowed.
+
+    Returns
+    -------
+    a graph object
+        one among networkx.DiGraph, networkx.MultiDiGraph, 
+        networkx.Graph, networkx.MultiGraph object.
+
+    See Also
+    --------
+    readGraph, is_dag, has_bipartition
+
     """
-    if format not in _graphformats['digraph']:
-        raise ValueError("Invalid format for directed graph")
+    if graph_type not in _graphformats.keys():
+        raise ValueError("Wrong type. We can only read graphs of types "+_graphformats.keys())
 
-    if multi:
-        grtype=networkx.MultiDiGraph
+    if graph_type in {"dag","digraph"}:
+        if multi_edges:
+            grtype=networkx.MultiDiGraph
+        else:
+            grtype=networkx.DiGraph
     else:
-        grtype=networkx.DiGraph
+        if multi_edges:
+            grtype=networkx.MultiGraph
+        else:
+            grtype=networkx.Graph
 
-    if format=='dot':
+    if file_format not in _graphformats[graph_type]:
+        raise ValueError("For \"{}\" type we only support these formats: ".format(graph_type)
+                         +_graphformats[graph_type])
 
-        D=grtype(networkx.read_dot(file))
-        #D=grtype(pygraphviz.AGraph(file.read()).edges())
+    if file_format=='dot':
 
-    elif format=='gml':
+        G=grtype(networkx.read_dot(file))
 
-        D=grtype(networkx.read_gml(file))
-
-    elif format=='kth':
-
-        D=_read_graph_kth_format(file,grtype)
-
-    elif format=='dimacs':
-
-        D=_read_graph_dimacs_format(file,grtype)
-
-    else:
-        raise RuntimeError("Internal error, format {} not implemented".format(format))
-
-    if force_dag and not networkx.algorithms.is_directed_acyclic_graph(D):
-        raise ValueError("Graph must be acyclic")
-
-    return D
-
-
-def readGraph(file,format,multi=False):
-    """Read a graph from file
-
-    Arguments:
-    - `file`: file object
-    - `format`: file format
-    - `multi`: multiple edge allowed
-
-    Return: a networkx.Graph / networkx.MultiGraph object.
-    """
-    if format not in _graphformats['simple'] + _graphformats['bipartite']:
-        raise ValueError("Invalid format for undirected graph")
-
-    if multi:
-        grtype=networkx.MultiGraph
-    else:
-        grtype=networkx.Graph
-
-    if format=='dot':
-
-        D=grtype(networkx.read_dot(file))
-
-    elif format=='gml':
+    elif file_format=='gml':
 
         G=grtype(networkx.read_gml(file))
 
-    elif format=='kth':
+    elif file_format=='kth':
 
         G=_read_graph_kth_format(file,grtype)
 
-    elif format=='dimacs':
+    elif file_format=='dimacs':
 
         G=_read_graph_dimacs_format(file,grtype)
 
-    elif format=='matrix':
+    elif file_format=='matrix':
 
+        assert graph_type=="bipartite"
+        assert grtype==networkx.Graph
         G=_read_graph_matrix_format(file)
 
     else:
-        raise RuntimeError("Internal error, format {} not implemented".format(format))
+        raise RuntimeError("Internal error, format {} not implemented".format(file_format))
 
+    if graph_type=="dag" and not is_dag(G):
+        raise ValueError("Input graph must be acyclic")
+
+    if graph_type=="bipartite" and not has_bipartition(G):
+        raise ValueError("Input graph must be labeled with a bipartition")
+        
     return G
+
 
 #################################################################
 #          Graph writer(s)
 #################################################################
 
-def writeGraph(G,output_file,format,graph_type='simple'):
+def writeGraph(G,output_file,graph_type,file_format=None):
     """Write a graph to a file
 
-    Arguments:
-    - `G`: graph object
-    - `output_file`: file name or file handle to write on
-    - `output_format`: graph format (e.g. dot, gml)
-    - `graph_type`: one among {simple,digraph,dag,bipartite}
+    Parameters
+    -----------
+    G : networkx.Graph (or similar)
 
-    Return: none.
+    output_file: file object
+        the output file to which the graph is written.
+
+    graph_type: string in {"simple","digraph","dag","bipartite"}
+        see also ``cnfformula.graph.supported_formats()``
+
+    file_format: string, optional
+        The file format that the parser should expect to receive.
+        See also ``cnfformula.graph.supported_formats()``. By default
+        is the first of the supported format for the value of
+        ``graph_type``.
+    
+    Returns
+    -------
+    None
+
+    See Also
+    --------
+    readGraph
     """
-    if graph_type not in _graphformats:
-        raise ValueError("Invalid graph type")
+    if graph_type not in _graphformats.keys():
+        raise ValueError("Wrong type. We can only save graphs of types "+_graphformats.keys())
 
-    if format not in _graphformats[graph_type]:
-        raise ValueError("Invalid format for {} graph".format(graph_type))
+    if file_format is None:
+        file_format = _graphformats[graph_type][0]
+
+    if file_format not in _graphformats[graph_type]:
+        raise ValueError("For \"{}\" type we only support these formats: ".format(graph_type)
+                         +_graphformats[graph_type])
 
     if format=='dot':
 
@@ -254,7 +285,10 @@ def is_dag(digraph):
     - `digraph`: input graph
     """
 
-    if hasattr(digraph,"topologically_sorted"):
+    if not isinstance(digraph,(networkx.MultiDiGraph,networkx.DiGraph)):
+        return False
+
+    elif hasattr(digraph,"topologically_sorted"):
 
         assert isinstance(digraph,(networkx.MultiDiGraph,networkx.DiGraph))
         assert hasattr(digraph,"ordered_vertices")
@@ -262,9 +296,6 @@ def is_dag(digraph):
         assert set(digraph.nodes())==set(digraph.ordered_vertices)
         assert networkx.algorithms.is_directed_acyclic_graph(digraph)
         return True
-
-    elif not isinstance(digraph,(networkx.MultiDiGraph,networkx.DiGraph)):
-        return False
 
     else:
         return networkx.algorithms.is_directed_acyclic_graph(digraph)
@@ -316,7 +347,7 @@ def enumerate_vertices(graph):
 #
 
 # kth reader
-def _read_graph_kth_format(inputfile,graph_type=networkx.DiGraph):
+def _read_graph_kth_format(inputfile,graph_class=networkx.DiGraph):
     """Read a graph from file, in the KTH format.
 
     If the vertices are listed from to sources to the sinks, then the
@@ -324,22 +355,23 @@ def _read_graph_kth_format(inputfile,graph_type=networkx.DiGraph):
     answered without running any visit to the graph. Otherwise no
     assumption is made.
     
-    Arguments:
-    - `inputfile`:  file handle of the input
-    - `graph_type`: the graph class to read, one of
-                    networkx.DiGraph (default)
-                    networkx.MultiDiGraph
-                    networkx.Graph
-                    networkx.MultiGraph    
+    Parameters
+    ----------
+    inputfile : file object
+        file handle of the input
+    
+    graph_class: class object
+        the graph class to read, one of networkx.DiGraph (default)
+        networkx.MultiDiGraph networkx.Graph networkx.MultiGraph
     """
-    if not graph_type in [networkx.DiGraph,
+    if not graph_class in [networkx.DiGraph,
                           networkx.MultiDiGraph,
                           networkx.Graph,
                           networkx.MultiGraph]:
-        raise ValueError("We are asked to read an invalid graph type from input.")
+        raise ValueError("Internal error. Attempt to use an unsupported class for graph representation.")
 
     
-    G=graph_type()
+    G=graph_class()
     G.name=''
     G.ordered_vertices=[]
 
@@ -396,24 +428,25 @@ def _read_graph_kth_format(inputfile,graph_type=networkx.DiGraph):
                          "{} vertices expected. Got {} instead.".format(nvertex,G.order()))
     return G
 
-def _read_graph_dimacs_format(inputfile,graph_type=networkx.Graph):
+def _read_graph_dimacs_format(inputfile,graph_class=networkx.Graph):
     """Read a graph simple from file, in the DIMACS edge format.
 
-    Arguments:
-    - `inputfile`:  file handle of the input
-    - `graph_type`: the graph class to read, one of
-                    networkx.DiGraph
-                    networkx.MultiDiGraph
-                    networkx.Graph   (default)
-                    networkx.MultiGraph    
-    """
-    if not graph_type in [networkx.Graph,
-                          networkx.MultiGraph,
-                          networkx.DiGraph,
-                          networkx.MultiDiGraph]:
-        raise ValueError("We are asked to read an invalid graph type from input.")
+    Parameters
+    ----------
+    inputfile : file object
+        file handle of the input
     
-    G=graph_type()
+    graph_class: class object
+        the graph class to read, one of networkx.DiGraph (default)
+        networkx.MultiDiGraph networkx.Graph networkx.MultiGraph
+    """
+    if not graph_class in [networkx.Graph,
+                           networkx.MultiGraph,
+                           networkx.DiGraph,
+                           networkx.MultiDiGraph]:
+        raise ValueError("Internal error. Attempt to use an unsupported class for graph representation.")
+    
+    G=graph_class()
     G.name=''
 
     n = -1
@@ -516,13 +549,13 @@ def _read_graph_matrix_format(inputfile):
         for i in range(n+1,n+m+1):
             G.add_node(i,bipartite=1)
 
-            # read edges
-            for i in range(1,n+1):
-                for j in range(n+1,n+m+1):
-
-                    b = scanner.next()
-                    if b:
-                        G.add_edge(i,j)
+        # read edges
+        for i in range(1,n+1):
+            for j in range(n+1,n+m+1):
+                
+                b = scanner.next()
+                if b:
+                    G.add_edge(i,j)
     except IndexError:
         raise ValueError("Input error: unexpected end of the matrix")
 
@@ -576,11 +609,12 @@ def bipartite_random_left_regular(l,r,d,seed=None):
 
     Returns
     -------
-    a NetworkX graph object
+    networkx.Graph
 
     Raises
     ------
-    ValueError unless `l`,`r` and `d` are non negative.
+    ValueError 
+        unless `l`,`r` and `d` are non negative.
 
     """
     import random
@@ -628,11 +662,12 @@ def bipartite_random_regular(l,r,d,seed=None):
     
     Returns
     -------
-    a NetworkX graph object
+    networkx.Graph
 
     Raises
     ------
-    ValueError unless `l`,`r` and `d` are non negative and `r` divides `l*d`
+    ValueError 
+        unless `l`,`r` and `d` are non negative and `r` divides `l*d`
 
     References
     ----------
