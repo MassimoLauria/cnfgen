@@ -15,25 +15,6 @@ both a library of CNF generators and a command line utility.
 Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
-
-Create you own CNFs:
-
->>> c=CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], \
-          [(False,"x2"),(True,"x4")] ])
->>> print( c.dimacs(False) )
-p cnf 4 2
-1 2 -3 0
--2 4 0
-
-You can add clauses later in the process:
-
->>> c.add_clause( [(False,"x3"),(True,"x4"),(False,"x5")] )
->>> print( c.dimacs(add_header=False))
-p cnf 5 3
-1 2 -3 0
--2 4 0
--3 4 -5 0
-
 """
 
 _default_header=r"""Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
@@ -42,46 +23,42 @@ https://github.com/MassimoLauria/cnfgen.git
 """
 
 
-# ## implementation of lookahead iterator
-# class _ClosedIterator:
-#     def __init__(self, iter,endToken=None):
-#         self.iter = iter
-#         self.endToken = endToken
-
-#     def __iter__(self):
-#         return self
-
-#     def next(self):
-#         try:
-#             return self.iter.next()
-#         except StopIteration:
-#             return self.endToken
-
-###
-### Basic CNF class
-###
-
 class CNF(object):
     """Propositional formulas in conjunctive normal form.
 
     A CNF  formula is a  sequence of  clauses, which are  sequences of
     literals. Each literal is either a variable or its negation.
 
-    Use `add_variable` method to add a variable to the formula. Two
+    Use ``add_variable`` method to add a variable to the formula. Two
     variable with the same name are considered the same variable, add
     successive additions do not have any effect.
 
-    Use `add_clause` to add new clauses to CNF. Clauses will be added
+    Use ``add_clause`` to add new clauses to CNF. Clauses will be added
     multiple times in case of multiple insertion of the same clauses.
 
     For documentation purpose it is possible use have an additional
     comment header at the top of the formula, which will be
-    *optionally* exported to LaTeX or dimacs. 
+    *optionally* exported to LaTeX or dimacs.
 
-    Implementation:  for  efficiency reason  clauses and  variable can
-    only be added,  and not deleted. Furthermore order  matters in the
-    representation.
+    Implementation:  for efficiency reason clauses and variable can
+    only be added, and not deleted. Furthermore order matters in
+    the representation.
 
+    Examples
+    --------
+    >>> c=CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], \
+              [(False,"x2"),(True,"x4")] ])
+    >>> print( c.dimacs(export_header=False) )
+    p cnf 4 2
+    1 2 -3 0
+    -2 4 0
+
+    >>> c.add_clause( [(False,"x3"),(True,"x4"),(False,"x5")] )
+    >>> print( c.dimacs(export_header=False))
+    p cnf 5 3
+    1 2 -3 0
+    -2 4 0
+    -3 4 -5 0
     """
 
     def __init__(self, clauses=None, header=None):
@@ -95,9 +72,9 @@ class CNF(object):
             is the polarity and the second is the variable, which must
             be an hashable object.
 
-                E.g. (not x3) or x4 or (not x2) is encoded as [(False,"x3"),(True,"x4"),False,"x2")]
+            E.g. (not x3) or x4 or (not x2) is encoded as [(False,"x3"),(True,"x4"),False,"x2")]
 
-        header: string
+        header: string, optional
             a preamble which documents the formula
         """
 
@@ -135,12 +112,10 @@ class CNF(object):
 
     def __iter__(self):
         """Iterates over all clauses of the CNF
-
-        Iterator over all clauses, ignoring the interleaving comments.
         """
-        for c in self._clauses:
+        for cls in self._clauses:
             assert self._coherent
-            yield self._uncompress_clause(c)
+            yield self._uncompress_clause(cls)
 
     def __str__(self):
         """String representation of the formula
@@ -172,17 +147,33 @@ class CNF(object):
         return [ (l>0, self._index2name[abs(l)]) for l in clause ]
 
     def _compress_clause(self, clause):
-        """(INTERNAL USE) Compress a clause to the numeric representation.
+        """Convert a clause to its numeric representation.
 
-        Arguments:
-        - `clause`: clause to be compressed
+        For reason of efficiency, clauses are memorized as tuples of
+        integers. Each integer correspond to a variable, with sign +1
+        or -1 depending whether it represents a positive or negative
+        literal. The correspondence between the numbers and the
+        variables names depends on the formula itself
 
+        Parameters
+        ----------
+        clause: list of pairs
+            a clause, in the form of a list of literals, which are
+            pairs (bool,string).
+
+        Returns
+        -------
+        a tuple of int
+
+        Examples
+        --------
         >>> c=CNF()
         >>> c.add_clause([(True,"x"),(False,"y")])
         >>> print(c._compress_clause([(False, 'x'), (False, 'y')]))
         (-1, -2)
+
         """
-        return tuple( (1 if p else -1) * self._name2index[n] for p,n in clause)
+        return tuple((1 if p else -1) * self._name2index[n] for p, n in clause)
 
 
     def _add_compressed_clauses(self, clauses):
@@ -409,7 +400,7 @@ class CNF(object):
         """Returns (a copy of) the list of variable names.
         """
         assert self._coherent
-        vars_iterator=iter(self._index2name)
+        vars_iterator = iter(self._index2name)
         vars_iterator.next()
         return vars_iterator
 
@@ -419,13 +410,27 @@ class CNF(object):
         assert self._coherent
         return self.__iter__()
 
-    #
-    #  Export to useful output format
-    #
 
-    def dimacs(self,export_header=True):
+    def dimacs(self, export_header=True):
         """Produce the dimacs encoding of the formula
 
+        The formula is rendered in the DIMACS format for CNF formulas,
+        which is a particularly popular input format for SAT solvers [1]_.
+
+        Parameters
+        ----------
+        export_header : bool
+            determines whether the formula header should be inserted as
+            a comment in the DIMACS output.
+
+        Returns
+        -------
+        string
+            the string contains the LaTeX code
+
+
+        Examples
+        --------
         >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],\
                    [(False,"x_2"),(False,"x_4")], \
                    [(True,"x_2"),(True,"x_3"),(False,"x_4")]])
@@ -438,21 +443,27 @@ class CNF(object):
         -2 -4 0
         2 3 -4 0
 
-        The empty formula
-
         >>> c=CNF()
         >>> print(c.dimacs(export_header=False))
         p cnf 0 0
         <BLANKLINE>
 
+        References
+        ----------
+        .. [1] http://www.satlib.org/Benchmarks/SAT/satformat.ps
+
         """
         from cStringIO import StringIO
         output = StringIO()
-        self.dimacs_dump(output,export_header)
+        self._dimacs_dump_clauses(output, export_header)
         return output.getvalue()
 
-    def dimacs_dump(self,output=None,export_header=True):
+    def _dimacs_dump_clauses(self, output=None, export_header=True):
         """Dump the dimacs encoding of the formula to the file-like output
+
+        This is for internal use only. It produces the dimacs output
+        of the clauses, and write then on the output buffer, which is
+        tipically a StringIO.
         """
         assert self._coherent
 
@@ -462,21 +473,45 @@ class CNF(object):
 
         # A nice header
         if export_header:
-            for s in self.header.split("\n")[:-1]: output.write( ("c "+s).rstrip()+"\n")
-    
+            for line in self.header.split("\n")[:-1]:
+                output.write(("c "+line).rstrip()+"\n")
+
         # Formula specification
-        output.write("p cnf {0} {1}".format(n,m))
+        output.write("p cnf {0} {1}".format(n, m))
 
         if len(self._clauses) == 0:
             output.write("\n")   # this newline makes `lingeling` solver happy
 
         # Clauses
-        for c in self._clauses:
-            output.write("\n" + " ".join([str(l) for l in c]) + " 0")
+        for cls in self._clauses:
+            output.write("\n" + " ".join([str(l) for l in cls]) + " 0")
 
-    def latex(self,export_header=True):
-        """Produce the LaTeX version of the formula
+    def latex(self, export_header=True):
+        """Output a LaTeX version of the CNF formula
 
+        The CNF formula is translated into the LaTeX markup language
+        [1]_, using the names of the variable literally. The formula
+        is rendered in the ``align`` environment, with one clause per
+        row. Negated literals are rendered using the
+        ``\\neg`` command.
+
+        The output string is ready to be included in a document, but
+        it does not include neither a preamble nor is nested inside
+        ``\\begin{document}`` ... ``\\end{document}``.
+
+        Parameters
+        ----------
+        export_header : bool
+            determines whether the formula header should be inserted as
+            a LaTeX comment in the output.
+
+        Returns
+        -------
+        string
+            the string contains the LaTeX code
+
+        Examples
+        --------
         >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],\
                    [(False,"x_2"),(False,"x_4")], \
                    [(True,"x_2"),(True,"x_3"),(False,"x_4")]])
@@ -493,8 +528,11 @@ class CNF(object):
         >>> print(c.latex(export_header=False))
         \\begin{align}
            \\top
-        \end{align}
+        \\end{align}
 
+        References
+        ----------
+        .. [1] http://www.latex-project.org/
         """
         assert self._coherent
 
@@ -548,15 +586,28 @@ class CNF(object):
     def is_satisfiable(self, cmd=None, sameas=None):
         """Determines whether a CNF is satisfiable or not.
 
-        The satisfiability is determined using an external sat solver.  If
-        no command line is specified, the known solvers are tried in
-        succession until one is found.
+        The formula is passed to a SAT solver, according to the
+        optional command line ``cmd``. If no command line is
+        specified, the known solvers are tried in succession until one
+        is found.
+
+        It is possible to use any drop-in replacement for these
+        solvers, but in this case more information is needed on how to
+        communicate with the solver. In particular ``minisat`` does not
+        respect the standard DIMACS I/O conventions, and that holds
+        also for ``glucose`` which is a drop-in replacement of
+        ``minisat``.
+
+        For the supported solver we can pick the right interface, but
+        for other solvers it is impossible to guess. Nevertheless it
+        is possible to indicate which interface to use, or more
+        specifically which known solver interface to mimic.
+
+        >>> F.is_satisfiable(F,cmd='minisat-style-solver',sameas='minisat')  # doctest: +SKIP
+        >>> F.is_satisfiable(F,cmd='dimacs-style-solver',sameas='lingeling') # doctest: +SKIP
 
         Parameters
         ----------
-        F : a CNF formula object
-            check the satisfiablility of this formula
-
         cmd : string,optional
             the actual command line used to invoke the SAT solver
 
@@ -649,8 +700,8 @@ def _inequality_constraint_builder(variables, k, greater=False):
     """Builder for inequality constraint
 
     This is a generic builder used to build all the inequality
-    constraints. By default it build a "stricly less that", and if ``greater``
-    is True it builds a "strictly greater than".
+    constraints. By default it build a "stricly less that", and if
+    ``greater`` is True it builds a "strictly greater than".
     """
     clauses = []
     polarity = greater

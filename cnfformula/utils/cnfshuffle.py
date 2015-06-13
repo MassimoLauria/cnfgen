@@ -155,12 +155,12 @@ def command_line_utility(argv=sys.argv):
     if hasattr(args,'seed') and args.seed:
         random.seed(args.seed)
 
-    input_cnf=dimacs2cnf(args.input)
-    output_cnf=cnfshuffle(input_cnf)
-    output_cnf.dimacs_dump(output=args.output,
-                           export_header=args.verbose)
+    input_cnf = dimacs2cnf(args.input)
+    output_cnf = cnfshuffle(input_cnf)
+    output_cnf._dimacs_dump_clauses(output=args.output,
+                                   export_header=args.verbose)
 
-    if args.output!=sys.stdout:
+    if args.output != sys.stdout:
         args.output.close()
 
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 import cnfformula
 import cnfformula.utils as cnfutils
 
@@ -259,8 +258,7 @@ class TestDimacsReshuffler(TestCNF) :
             sys.stdout = dimacs_shuffle
             cnfshuffle.command_line_utility(argv)
         except Exception as e:
-            print e
-            self.fail()
+            self.fail(e)
         finally:
             sys.stdin = sys.__stdin__
             sys.stdout = sys.__stdout__
