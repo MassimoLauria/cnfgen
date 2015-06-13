@@ -502,100 +502,32 @@ def _read_graph_matrix_format(inputfile):
                                      "line {} contains a non numeric entry.".format(line_cnt))
         
             yield num_buffer.pop(0)
-            
+
+    
     scanner = scan_integer(inputfile)
-    n = scanner.next()
-    m = scanner.next()
 
-    # bipartition of vertices
-    for i in range(1,n+1):
-        G.add_node(i,bipartite=0)
-    for i in range(n+1,n+m+1):
-        G.add_node(i,bipartite=1)
+    try:
+        n = scanner.next()
+        m = scanner.next()
 
-    # read edges
-    for i in range(1,n+1):
-        for j in range(n+1,n+m+1):
+        # bipartition of vertices
+        for i in range(1,n+1):
+            G.add_node(i,bipartite=0)
+        for i in range(n+1,n+m+1):
+            G.add_node(i,bipartite=1)
 
-            b = scanner.next()
-            if b:
-                G.add_edge(i,j)
+            # read edges
+            for i in range(1,n+1):
+                for j in range(n+1,n+m+1):
 
-    # writeGraph(G,sys.stderr,format="gml",graph_type="bipartite")
-    assert has_bipartition(G)
-    return G
-
-
-def _write_graph_matrix_format(inputfile):
-    """Write a bipartite graph from file, in the adjiacency matrix format.
-
-    This is an example of an adjacency matrix for a bipartite graph
-    with 9 vertices on one side and 15 on the another side.
-
-    .. 9 15
-       1 1 0 1 0 0 0 1 0 0 0 0 0 0 0
-       0 1 1 0 1 0 0 0 1 0 0 0 0 0 0
-       0 0 1 1 0 1 0 0 0 1 0 0 0 0 0
-       0 0 0 1 1 0 1 0 0 0 1 0 0 0 0
-       0 0 0 0 1 1 0 1 0 0 0 1 0 0 0
-       0 0 0 0 0 1 1 0 1 0 0 0 1 0 0
-       0 0 0 0 0 0 1 1 0 1 0 0 0 1 0
-       0 0 0 0 0 0 0 1 1 0 1 0 0 0 1
-       1 0 0 0 0 0 0 0 1 1 0 1 0 0 0
-
-    Parameters
-    ----------
-    inputfile: file object
-        the file where to write the output
-
-    Returns
-    -------
-    G : networkx.Graph
-
-    """
-    G=networkx.Graph()
-    G.name=''
-
-    def scan_integer(inputfile):
-
-        num_buffer = []
-        line_cnt = 0
-
-        while(True):
-            if len(num_buffer)==0:
-
-                # read more entries from the file
-                line = inputfile.readline()
-                line_cnt += 1
-                try:
-                    num_buffer.extend( int(lit) for lit in line.split() )
-                except ValueError:
-                    raise ValueError("Syntax error: "+
-                                     "line {} contains a non numeric entry.".format(line_cnt))
-        
-            yield num_buffer.pop(0)
-            
-    scanner = scan_integer(inputfile)
-    n = scanner.next()
-    m = scanner.next()
-
-    # bipartition of vertices
-    for i in range(1,n+1):
-        G.add_node(i,bipartite=0)
-    for i in range(n+1,n+m+1):
-        G.add_node(i,bipartite=1)
-
-    # read edges
-    for i in range(1,n+1):
-        for j in range(n+1,n+m+1):
-
-            b = scanner.next()
-            if b:
-                G.add_edge(i,j)
+                    b = scanner.next()
+                    if b:
+                        G.add_edge(i,j)
+    except IndexError:
+        raise ValueError("Input error: unexpected end of the matrix")
 
     assert has_bipartition(G)
     return G
-        
 
 
 #
