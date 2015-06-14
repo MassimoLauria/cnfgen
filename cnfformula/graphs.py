@@ -525,11 +525,17 @@ def _read_graph_matrix_format(inputfile):
         while(True):
             if len(num_buffer)==0:
 
-                # read more entries from the file
                 line = inputfile.readline()
+
+                if len(line)==0: raise StopIteration # end of file
+                
                 line_cnt += 1
+                tokens = line.split()
+
+                if len(tokens)==0 or tokens[0][0]=='#': continue # comment line
+                
                 try:
-                    num_buffer.extend( int(lit) for lit in line.split() )
+                    num_buffer.extend( (int(lit),line_cnt) for lit in tokens )
                 except ValueError:
                     raise ValueError("Syntax error: "+
                                      "line {} contains a non numeric entry.".format(line_cnt))
@@ -540,8 +546,8 @@ def _read_graph_matrix_format(inputfile):
     scanner = scan_integer(inputfile)
 
     try:
-        n = scanner.next()
-        m = scanner.next()
+        n = scanner.next()[0]
+        m = scanner.next()[0]
 
         # bipartition of vertices
         for i in range(1,n+1):
@@ -553,12 +559,23 @@ def _read_graph_matrix_format(inputfile):
         for i in range(1,n+1):
             for j in range(n+1,n+m+1):
                 
-                b = scanner.next()
-                if b:
+                (b,l) = scanner.next()
+                if b==1:
                     G.add_edge(i,j)
-    except IndexError:
+                elif b==0:
+                    pass
+                else:
+                    raise ValueError("Input error at line {}: only 0 or 1 are allowed".format(l))
+    except StopIteration:
         raise ValueError("Input error: unexpected end of the matrix")
 
+    # check that there are is no more data
+    try:
+        (b,l) = scanner.next()
+        raise ValueError("Input error at line {}: there are more than {}x{} entries".format(l,n,m))
+    except StopIteration:
+        pass
+    
     assert has_bipartition(G)
     return G
 
