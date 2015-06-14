@@ -105,6 +105,12 @@ def readGraph(input_file,graph_type,file_format,multi_edges=False):
         one among networkx.DiGraph, networkx.MultiDiGraph, 
         networkx.Graph, networkx.MultiGraph object.
 
+    Raises
+    ------
+    ValueError
+        raised when either ``input_file`` is not a file object, or 
+        ``graph_type`` and ``file_format`` are not valid choices
+
     See Also
     --------
     readGraph, is_dag, has_bipartition
@@ -188,6 +194,12 @@ def writeGraph(G,output_file,graph_type,file_format=None):
     Returns
     -------
     None
+
+    Raises
+    ------
+    ValueError
+        raised when either ``output_file`` is not a file object, or 
+        ``graph_type`` and ``file_format`` are not valid choices.
 
     See Also
     --------
