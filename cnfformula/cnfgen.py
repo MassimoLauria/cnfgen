@@ -281,8 +281,11 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
 
         elif args.graphformat:
 
-            D=readGraph(args.input,"dag",args.graphformat)
-
+            try:
+                D=readGraph(args.input,"dag",args.graphformat)
+            except ValueError,e:
+                print("ERROR ON '{}'. {}".format(args.input.name,e),file=sys.stderr)
+                exit(-1)
         else:
             raise RuntimeError("Invalid graph specification on command line")
 
@@ -410,9 +413,15 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
 
         elif getattr(args,'graphformat'+suffix):
 
-            G=readGraph(getattr(args,'input'+suffix),
-                        "simple",
-                        getattr(args,'graphformat'+suffix))
+            try:
+                G=readGraph(getattr(args,'input'+suffix),
+                            "simple",
+                            getattr(args,'graphformat'+suffix))
+            except ValueError,e:
+                print("ERROR ON '{}'. {}".format(
+                    getattr(args,'input'+suffix).name,e),
+                    file=sys.stderr)
+                exit(-1)
         else:
             raise RuntimeError("Invalid graph specification on command line")
 
@@ -551,10 +560,12 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
 
         elif getattr(args,'graphformat'):
 
-            G=readGraph(args.input,
-                        "bipartite",
-                        args.graphformat)
-
+            try:
+                G=readGraph(args.input, "bipartite", args.graphformat)
+            except ValueError,e:
+                print("ERROR ON '{}'. {}".format(args.input.name,e),file=sys.stderr)
+                exit(-1)
+                
             if not has_bipartition(G): 
                 raise ValueError("Input Error: graph vertices miss the 'bipartite' 0,1 label.")
                     
@@ -1284,14 +1295,11 @@ def command_line_utility(argv=sys.argv):
     if hasattr(args,'seed') and args.seed:
         random.seed(args.seed)
 
-    # Generate the basic formula
+    # Generate the formula
     cnf=args.subcommand.build_cnf(args)
-
-    # Apply a formula transformation
     tcnf=TransformFormula(cnf,args.Transform,args.Tarity)
-
-
-    # Do we wnat comments or not
+        
+    # Output
 
     if args.output_format == 'latex':
         output = tcnf.latex()
