@@ -162,10 +162,6 @@ def readGraph(file,graph_type,file_format,multi_edges=False):
     return G
 
 
-#################################################################
-#          Graph writer(s)
-#################################################################
-
 def writeGraph(G,output_file,graph_type,file_format=None):
     """Write a graph to a file
 
@@ -213,61 +209,15 @@ def writeGraph(G,output_file,graph_type,file_format=None):
 
     elif format=='kth':
 
-        print("c {}".format(G.name),file=output_file)
-        print("{}".format(G.order()),file=output_file)
-
-        # we need numerical indices for the vertices
-        enumeration = zip( enumerate_vertices(G),
-                               xrange(1,G.order()+1))
-
-        # adj list in the same order
-        indices = dict( enumeration )
-
-        from cStringIO import StringIO
-        output = StringIO()
-
-        for v,i in enumeration:
-
-            if G.is_directed():
-                neighbors = [indices[w] for w in G.predecessors(v)]
-
-            else:
-                neighbors = [indices[w] for w in G.adj[v].keys()]
-
-            neighbors.sort()
-
-            output.write( str(i)+" : ")
-            output.write( " ".join([str(i) for i in neighbors]))
-            output.write( "\n")
-
-        print(output.getvalue(),file=output_file)
+        _write_graph_kth_format(G,output_file):
 
     elif format=='dimacs':
 
-        print("c {}".format(G.name).strip(),file=output_file)
-        vertices=dict((name,index)
-                      for index,name in enumerate(G.nodes(),1))
-        edges   =G.edges()
-        print("p edge {} {}".format(len(vertices),len(edges)),file=output_file)
-
-        for v,w in edges:
-            print("e {} {}".format(vertices[v],vertices[w]),file=output_file)
+        _write_graph_dimacs_format(G,output_file):
 
     elif format=='matrix':
 
-        Left  =  [v for v in G.nodes() if G.node[v]["bipartite"]==0]
-        Right =  [v for v in G.nodes() if G.node[v]["bipartite"]==1]
-
-        print("{} {}".format(len(Left),len(Right)),file=output_file)
-        for u in Left:
-
-            adj_row =[]
-
-            for v in Right:
-                if G.has_edge(u,v): adj_row.append("1")
-                else: adj_row.append("0")
-                
-            print(" ".join(adj_row),file=output_file)
+        _write_graph_matrix_format(G,output_file):
             
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(format))
@@ -581,27 +531,94 @@ def _read_graph_matrix_format(inputfile):
 
 
 #
-# Obtain the variable,literal,clause graph from a CNF.
+# In-house graph writers
 #
+def _write_graph_kth_format(G,output_file):
+    """Wrire a graph to a file, in the KTH format.
+    
+    Parameters
+    ----------
+    G : graph object
 
-def vlcgraph(cnf):
-    G=networkx.Graph()
+    output_file : file object
+        file handle of the output
+    """
 
-    # adding variables
-    for v in cnf.variables():
-        G.add_nodes_from([v,
-                          "+"+str(v),
-                          "-"+str(v)])
-        # each variable is conneted to its two literals
-        G.add_edge(v,"+"+str(v))
-        G.add_edge(v,"-"+str(v))
-        
-    # adding clauses
-    for i,clause in enumerate(cnf.clauses()):
-        G.add_node("C_{}".format(i))
-        for (sign,var) in clause:
-            G.add_edge(("+" if sign else "-")+str(var),"C_{}".format(i))
-    return G
+    print("c {}".format(G.name),file=output_file)
+    print("{}".format(G.order()),file=output_file)
+
+    # we need numerical indices for the vertices
+    enumeration = zip( enumerate_vertices(G),
+                       xrange(1,G.order()+1))
+
+    # adj list in the same order
+    indices = dict( enumeration )
+
+    from cStringIO import StringIO
+    output = StringIO()
+
+    for v,i in enumeration:
+
+        if G.is_directed():
+            neighbors = [indices[w] for w in G.predecessors(v)]
+
+        else:
+            neighbors = [indices[w] for w in G.adj[v].keys()]
+
+        neighbors.sort()
+
+        output.write( str(i)+" : ")
+        output.write( " ".join([str(i) for i in neighbors]))
+        output.write( "\n")
+    
+    print(output.getvalue(),file=output_file)
+
+
+def  _write_graph_dimacs_format(G,output_file):
+    """Wrire a graph to a file, in DIMACS format.
+    
+    Parameters
+    ----------
+    G : graph object
+
+    output_file : file object
+        file handle of the output
+    """
+
+    print("c {}".format(G.name).strip(),file=output_file)
+    vertices=dict((name,index)
+                  for index,name in enumerate(G.nodes(),1))
+    edges   =G.edges()
+    print("p edge {} {}".format(len(vertices),len(edges)),file=output_file)
+
+    for v,w in edges:
+        print("e {} {}".format(vertices[v],vertices[w]),file=output_file)
+
+
+def _write_graph_matrix_format(G,output_file):
+    """Wrire a graph to a file, in \"matrix\" format.
+    
+    Parameters
+    ----------
+    G : graph object
+
+    output_file : file object
+        file handle of the output
+    """
+
+    Left  =  [v for v in G.nodes() if G.node[v]["bipartite"]==0]
+    Right =  [v for v in G.nodes() if G.node[v]["bipartite"]==1]
+
+    print("{} {}".format(len(Left),len(Right)),file=output_file)
+    for u in Left:
+
+        adj_row =[]
+
+        for v in Right:
+            if G.has_edge(u,v): adj_row.append("1")
+            else: adj_row.append("0")
+                
+        print(" ".join(adj_row),file=output_file)
 
 #
 # Graph generator (missing from networkx)
