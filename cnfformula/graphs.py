@@ -209,15 +209,15 @@ def writeGraph(G,output_file,graph_type,file_format=None):
 
     elif format=='kth':
 
-        _write_graph_kth_format(G,output_file):
+        _write_graph_kth_format(G,output_file)
 
     elif format=='dimacs':
 
-        _write_graph_dimacs_format(G,output_file):
+        _write_graph_dimacs_format(G,output_file)
 
     elif format=='matrix':
 
-        _write_graph_matrix_format(G,output_file):
+        _write_graph_matrix_format(G,output_file)
             
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(format))
