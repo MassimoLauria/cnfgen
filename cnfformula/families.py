@@ -714,7 +714,7 @@ def ColoringFormula(G,colors,functional=True):
 
     # This is a legal coloring
     for (v1,v2) in combinations(V,2):
-        if graph.has_edge(v1,v2):
+        if G.has_edge(v1,v2):
             for c in colors:
                 col.add_clause([
                     (False,'x_{{{0},{1}}}'.format(v1,c)),
