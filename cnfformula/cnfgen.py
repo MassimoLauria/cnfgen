@@ -203,7 +203,7 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
                                      You can either read the input DAG from file according to one of
                                      the formats, or generate it using one of the constructions included.""")
 
-        gr=gr.add_mutually_exclusive_group(required=True)
+        gr=gr.add_mutually_exclusive_group()
        
         gr.add_argument('--input','-i',
                         type=argparse.FileType('r',0),
@@ -302,8 +302,22 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
 class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
 
     @staticmethod
-    def setup_command_line(parser,suffix=""):
+    def setup_command_line(parser,suffix="",required=False):
         """Setup input options for command lines
+
+        Parameters
+        ----------
+        parser : ArgParse parser object
+            it is populated with options for input graphs
+
+        suffix: string, optional
+            add a suffix to all input options. Useful if you need to input 
+            multiple graphs in the same command line (default: empty)
+
+        require : bool, optional
+            enforce that at least one input specification is required. 
+            If it is not the case the standard input is the default input. 
+            Not a good idea if we read multiple graphs in input.
         """
 
         gr=parser.add_argument_group(title="Input graph "+suffix,
@@ -321,7 +335,7 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
                     raise v
                 setattr(args, self.dest, (n,p))
 
-        gr=gr.add_mutually_exclusive_group(required=True)
+        gr=gr.add_mutually_exclusive_group(required=required)
 
         gr.add_argument('--input'+suffix,'-i'+suffix,
                         type=argparse.FileType('r',0),
@@ -481,7 +495,7 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
 
         gr=parser.add_argument_group("Read/Write the underlying bipartite graph")
 
-        gr=gr.add_mutually_exclusive_group(required=True)
+        gr=gr.add_mutually_exclusive_group()
 
 
         gr.add_argument('--input','-i',
@@ -986,8 +1000,8 @@ class _GIso(_FormulaFamilyHelper,_CMDLineHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        _SimpleGraphHelper.setup_command_line(parser,"1")
-        _SimpleGraphHelper.setup_command_line(parser,"2")
+        _SimpleGraphHelper.setup_command_line(parser,suffix="1",required=True)
+        _SimpleGraphHelper.setup_command_line(parser,suffix="2",required=True)
 
 
     @staticmethod
@@ -997,8 +1011,8 @@ class _GIso(_FormulaFamilyHelper,_CMDLineHelper):
         Arguments:
         - `args`: command line options
         """
-        G1 =_SimpleGraphHelper.obtain_graph(args,"1")
-        G2 =_SimpleGraphHelper.obtain_graph(args,"2")
+        G1 =_SimpleGraphHelper.obtain_graph(args,suffix="1")
+        G2 =_SimpleGraphHelper.obtain_graph(args,suffix="2")
         return GraphIsomorphism(G1,G2)
 
 

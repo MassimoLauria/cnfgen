@@ -4,6 +4,8 @@
 from __future__ import print_function
 from .cnf import CNF
 
+import collections
+
 # internal methods
 from .graphs import enumerate_vertices,is_dag
 from .cnf    import parity_constraint
@@ -13,6 +15,7 @@ from .cnf    import greater_than_constraint
 from .cnf    import greater_or_equal_constraint
 from .cnf    import loose_minority_constraint
 from .cnf    import loose_majority_constraint
+
 
 
 __docstring__ =\
@@ -676,8 +679,8 @@ def ColoringFormula(G,colors,functional=True):
     ----------
     G : networkx.Graph
         a simple undirected graph
-    colors : list 
-        a list of colors
+    colors : list or positive int
+        a list of colors or a number of colors
 
     Returns
     -------
@@ -687,10 +690,16 @@ def ColoringFormula(G,colors,functional=True):
     """
     col=CNF()
 
+    if isinstance(colors,int) and colors>=0:
+        colors = range(1,colors+1)
+    
+    if not isinstance(list, collections.Iterable):
+        ValueError("Parameter \"colors\" is expected to be a iterable")
+    
     # Describe the formula
     name="colorability"
     
-    if hasattr(graph,'name'):
+    if hasattr(G,'name'):
         col.header=name+" of graph:\n"+G.name+"\n"+col.header
     else:
         col.header=name+".\n"+col.header
