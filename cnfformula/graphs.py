@@ -66,7 +66,7 @@ except ImportError:
 #          Graph reader/writer
 #################################################################
 
-def readGraph(file,graph_type,file_format,multi_edges=False):
+def readGraph(input_file,graph_type,file_format,multi_edges=False):
     """Read a Graph from file
 
     The graph are managed using the NetworkX library, and most of the
@@ -110,6 +110,10 @@ def readGraph(file,graph_type,file_format,multi_edges=False):
     readGraph, is_dag, has_bipartition
 
     """
+
+    if not isinstance(input_file,file):
+        raise ValueError("The input object \"{}\" is not a file".format(input_file))
+    
     if graph_type not in _graphformats.keys():
         raise ValueError("Wrong type. We can only read graphs of types "+_graphformats.keys())
 
@@ -130,25 +134,25 @@ def readGraph(file,graph_type,file_format,multi_edges=False):
 
     if file_format=='dot':
 
-        G=grtype(networkx.read_dot(file))
+        G=grtype(networkx.read_dot(input_file))
 
     elif file_format=='gml':
 
-        G=grtype(networkx.read_gml(file))
+        G=grtype(networkx.read_gml(input_file))
 
     elif file_format=='kth':
 
-        G=_read_graph_kth_format(file,grtype)
+        G=_read_graph_kth_format(input_file,grtype)
 
     elif file_format=='dimacs':
 
-        G=_read_graph_dimacs_format(file,grtype)
+        G=_read_graph_dimacs_format(input_file,grtype)
 
     elif file_format=='matrix':
 
         assert graph_type=="bipartite"
         assert grtype==networkx.Graph
-        G=_read_graph_matrix_format(file)
+        G=_read_graph_matrix_format(input_file)
 
     else:
         raise RuntimeError("Internal error, format {} not implemented".format(file_format))
@@ -189,8 +193,14 @@ def writeGraph(G,output_file,graph_type,file_format=None):
     --------
     readGraph
     """
+
+    if not isinstance(output_file,file):
+        raise ValueError("The output object \"{}\" is not a file".format(output_file))
+
+
     if graph_type not in _graphformats.keys():
-        raise ValueError("Wrong type. We can only save graphs of types "+_graphformats.keys())
+        raise ValueError("Wrong type {}. We can only save graphs of types {}".format(graph_type,
+                                                                                     _graphformats.keys()))
 
     if file_format is None:
         file_format = _graphformats[graph_type][0]
@@ -199,28 +209,28 @@ def writeGraph(G,output_file,graph_type,file_format=None):
         raise ValueError("For \"{}\" type we only support these formats: ".format(graph_type)
                          +_graphformats[graph_type])
 
-    if format=='dot':
+    if file_format=='dot':
 
         networkx.write_dot(G,output_file)
 
-    elif format=='gml':
+    elif file_format=='gml':
 
         networkx.write_gml(G,output_file)
 
-    elif format=='kth':
+    elif file_format=='kth':
 
         _write_graph_kth_format(G,output_file)
 
-    elif format=='dimacs':
+    elif file_format=='dimacs':
 
         _write_graph_dimacs_format(G,output_file)
 
-    elif format=='matrix':
+    elif file_format=='matrix':
 
         _write_graph_matrix_format(G,output_file)
             
     else:
-        raise RuntimeError("Internal error, format {} not implemented".format(format))
+        raise RuntimeError("Internal error, format {} not implemented".format(file_format))
 
 #
 # test for dag / with caching
