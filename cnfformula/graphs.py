@@ -361,6 +361,10 @@ def _read_graph_kth_format(inputfile,graph_class=networkx.DiGraph):
             G.name+=l[2:]
             continue
 
+        # empty line
+        if len(l.strip()==0):
+            continue
+        
         if ':' not in l:
             # vertex number spec
             if nvertex>=0:
