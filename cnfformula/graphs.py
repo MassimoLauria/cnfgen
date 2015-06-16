@@ -362,7 +362,7 @@ def _read_graph_kth_format(inputfile,graph_class=networkx.DiGraph):
             continue
 
         # empty line
-        if len(l.strip()==0):
+        if len(l.strip())==0:
             continue
         
         if ':' not in l:
