@@ -722,12 +722,11 @@ def ColoringFormula(G,colors,functional=True):
                     (False,'x_{{{0},{1}}}'.format(vertex,c2))])
 
     # This is a legal coloring
-    for (v1,v2) in combinations(V,2):
-        if G.has_edge(v1,v2):
-            for c in colors:
-                col.add_clause([
-                    (False,'x_{{{0},{1}}}'.format(v1,c)),
-                    (False,'x_{{{0},{1}}}'.format(v2,c))])
+    for (v1,v2) in G.edges():
+        for c in colors:
+            col.add_clause([
+                (False,'x_{{{0},{1}}}'.format(v1,c)),
+                (False,'x_{{{0},{1}}}'.format(v2,c))])
             
     return col
 
