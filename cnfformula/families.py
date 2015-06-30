@@ -896,12 +896,28 @@ vertices are is specified in input.
     return tse
 
 def SubgraphFormula(graph,templates):
-    """Formula which claims that one of the subgraph is contained in a
-    graph.
+    """Test whether a graph contains one of the templates.
 
-    Arguments:
-    - `graph'    : input graph
-    - `templates': a sequence of graphs
+    Given a graph :math:`G` and a sequence of template graphs
+    :math:`H_1`, :math:`H_2`, ..., :math:`H_t`, the CNF formula claims
+    that :math:`G` contains an isomorphic copy of at least one of the
+    template graphs.
+
+    E.g. when :math:`H_1` is the complete graph of :math:`k` vertices
+    and it is the only template, the formula claims that :math:`G`
+    contains a :math:`k`-clique.
+
+    Parameters
+    ----------
+    graph : networkx.Graph
+        a simple graph
+    templates : list-like object
+        a sequence of graphs.
+
+    Returns
+    -------
+    a CNF object
+
     """
 
     F=CNF()
@@ -1009,7 +1025,13 @@ def SubgraphFormula(graph,templates):
 def RandomKCNF(k, n, m, seed=None):
     """Build a random k-CNF
 
-    Sample m k-clauses over n variables uniformly at random.
+    Sample :math:`m` clauses over :math:`n` variables, each of width
+    :math:`k`, uniformly at random. The sampling is done without
+    repetition, meaning that whenever a randomly picked clause is
+    already in the CNF, it is sampled again.
+
+    If the sampling takes too long (i.e. the space of possible clauses
+    is too small) then a ``RuntimeError`` is raised.
 
     Parameters
     ----------
@@ -1017,8 +1039,8 @@ def RandomKCNF(k, n, m, seed=None):
        width of each clause
     
     n : int
-       number of variables to choose from. The resulting cnf will
-       contain n variables even if some are not picked.
+       number of variables to choose from. The resulting CNF object 
+       will contain n variables even if some are not mentioned in the clauses.
     
     m : int
        number of clauses to generate
@@ -1034,6 +1056,9 @@ def RandomKCNF(k, n, m, seed=None):
     ------
     ValueError 
         when some paramenter is negative, or when k>n.
+    RuntimeError
+        the formula is too dense for the simple sampling process.
+
     """
     import random
     if seed: random.seed(seed)
@@ -1049,9 +1074,13 @@ def RandomKCNF(k, n, m, seed=None):
         F.add_variable(variable)
 
     clauses = set()
-    while len(clauses)<m :
+    t = 0
+    while len(clauses)<m and t < 10*m:
+        t += 1
         clauses.add(tuple((random.choice([True,False]),x+1)
                       for x in sorted(random.sample(xrange(n),k))))
+    if len(clauses)<m:
+        raise RuntimeError("Sampling is taking too long. Maybe the requested formula is too dense.")
     for clause in clauses:
         F.add_clause(list(clause))
 
