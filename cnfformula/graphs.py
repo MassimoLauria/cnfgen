@@ -38,6 +38,8 @@ def supported_formats():
 #################################################################
 
 import sys
+import StringIO
+import io
 
 try:
     import networkx
@@ -118,7 +120,8 @@ def readGraph(input_file,graph_type,file_format,multi_edges=False):
 
     """
 
-    if not isinstance(input_file,file):
+    if not isinstance(input_file,io.TextIOBase) and \
+       not isinstance(input_file,StringIO.StringIO):
         raise ValueError("The input object \"{}\" is not a file".format(input_file))
     
     elif graph_type not in _graphformats.keys():
@@ -207,7 +210,8 @@ def writeGraph(G,output_file,graph_type,file_format=None):
     readGraph
     """
 
-    if not isinstance(output_file,file):
+    if not isinstance(output_file,io.TextIOBase) and \
+       not isinstance(output_file,StringIO.StringIO):
         raise ValueError("The output object \"{}\" is not a file".format(output_file))
 
 
