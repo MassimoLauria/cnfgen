@@ -499,17 +499,19 @@ def _read_graph_matrix_format(inputfile):
         num_buffer = []
         line_cnt = 0
 
-        while(True):
+        while True:
             if len(num_buffer)==0:
 
                 line = inputfile.readline()
 
-                if len(line)==0: raise StopIteration # end of file
+                if len(line)==0:
+                    raise StopIteration # end of file
                 
                 line_cnt += 1
                 tokens = line.split()
 
-                if len(tokens)==0 or tokens[0][0]=='#': continue # comment line
+                if len(tokens)==0 or tokens[0][0]=='#':
+                    continue # comment line
                 
                 try:
                     num_buffer.extend( (int(lit),line_cnt) for lit in tokens )
@@ -809,7 +811,8 @@ def _bipartite_nx_workaroud(G):
     ..note:: 
         This will be superfluous in Networkx 2.0, since the bug was fixed there.
     """
-    if G.name[:24] !='complete_bipartite_graph': return G
+    if G.name[:24] !='complete_bipartite_graph':
+        return G
 
     right_start = min(G.adj[0])
     
