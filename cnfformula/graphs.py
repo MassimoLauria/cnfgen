@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-
-from __future__ import print_function
-
-__docstring__ =\
 """Utilities to manage graph formats and graph files in order to build
 formulas that are graph based.
 
@@ -11,6 +7,9 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
+
+from __future__ import print_function
+
 
 __all__ = ["supported_formats",
            "readGraph","writeGraph",
@@ -29,6 +28,7 @@ _graphformats = {
     }
 
 def supported_formats():
+    """The graph file formats supported by the library."""
     return _graphformats
 
 
@@ -52,6 +52,7 @@ except ImportError:
 # notice that it is networkx itself that requires graphviz.
 try:
     import pygraphviz
+    del pygraphviz
 except ImportError:
     print("WARNING: Missing 'pygraphviz' library: no support for 'dot' graph format.",
           file=sys.stderr)
@@ -120,7 +121,7 @@ def readGraph(input_file,graph_type,file_format,multi_edges=False):
     if not isinstance(input_file,file):
         raise ValueError("The input object \"{}\" is not a file".format(input_file))
     
-    if graph_type not in _graphformats.keys():
+    elif graph_type not in _graphformats.keys():
         raise ValueError("Wrong type. We can only read graphs of types "+_graphformats.keys())
 
     if graph_type in {"dag","digraph"}:
@@ -211,8 +212,8 @@ def writeGraph(G,output_file,graph_type,file_format=None):
 
 
     if graph_type not in _graphformats.keys():
-        raise ValueError("Wrong type {}. We can only save graphs of types {}".format(graph_type,
-                                                                                     _graphformats.keys()))
+        raise ValueError("Wrong type {}. We only support graphs \'{}\'".format(graph_type,
+                                                                               _graphformats.keys()))
 
     if file_format is None:
         file_format = _graphformats[graph_type][0]
@@ -337,9 +338,9 @@ def _read_graph_kth_format(inputfile,graph_class=networkx.DiGraph):
         networkx.MultiDiGraph networkx.Graph networkx.MultiGraph
     """
     if not graph_class in [networkx.DiGraph,
-                          networkx.MultiDiGraph,
-                          networkx.Graph,
-                          networkx.MultiGraph]:
+                           networkx.MultiDiGraph,
+                           networkx.Graph,
+                           networkx.MultiGraph]:
         raise ValueError("Internal error. Attempt to use an unsupported class for graph representation.")
 
     
@@ -641,8 +642,10 @@ def _write_graph_matrix_format(G,output_file):
         adj_row =[]
 
         for v in Right:
-            if G.has_edge(u,v): adj_row.append("1")
-            else: adj_row.append("0")
+            if G.has_edge(u,v):
+                adj_row.append("1")
+            else:
+                adj_row.append("0")
                 
         print(" ".join(adj_row),file=output_file)
 
@@ -682,9 +685,10 @@ def bipartite_random_left_regular(l,r,d,seed=None):
 
     """
     import random
-    if seed: random.seed(seed)
+    if seed:
+        random.seed(seed)
     
-    if (l<0 or r<0 or d<0):
+    if l<0 or r<0 or d<0:
         raise ValueError("bipartite_random_left_regular(l,r,d) needs l,r,d >=0.")
  
     G=networkx.Graph()
@@ -692,7 +696,7 @@ def bipartite_random_left_regular(l,r,d,seed=None):
     
     L=range(0,l)
     R=range(l,l+r)
-    if  d>r: d=r
+    d=min(r,d)
     
     for u in L:
         G.add_node(u,bipartite=0)
@@ -745,10 +749,10 @@ def bipartite_random_regular(l,r,d,seed=None):
     """
 
     import random
-    if seed: random.seed(seed)
+    if seed:
+        random.seed(seed)
 
-    
-    if (l<0 or r<0 or d<0):
+    if l<0 or r<0 or d<0:
         raise ValueError("bipartite_random_regular(l,r,d) needs l,r,d >=0.")
 
     if (l*d) % r != 0:
