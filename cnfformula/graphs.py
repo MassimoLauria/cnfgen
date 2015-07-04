@@ -20,7 +20,8 @@ __all__ = ["supported_formats",
 #          Graph Decoders (first is default)
 #################################################################
 
-_graphformats = {
+
+_graphformats = { 
     'dag':   ['kth','gml','dot'],
     'digraph': ['kth','gml','dot','dimacs'],
     'simple': ['kth','gml','dot','dimacs'],
@@ -40,6 +41,7 @@ def supported_formats():
 import sys
 import StringIO
 import io
+import os
 
 try:
     import networkx
@@ -69,7 +71,55 @@ except ImportError:
 #          Graph reader/writer
 #################################################################
 
-def readGraph(input_file,graph_type,file_format,multi_edges=False):
+
+def _process_graph_io_arguments(iofile,
+                                graph_type,
+                                file_format,
+                                multi_edges):
+    """Test if the argument for the graph I/O functions make sense"""
+
+    # Check the file
+    if not isinstance(iofile,io.TextIOBase) and \
+       not isinstance(iofile,file) and \
+       not isinstance(iofile,StringIO.StringIO):
+        raise ValueError("The input source \"{}\" is not a file".format(iofile))
+    
+    # Check the graph type specification
+    if graph_type not in _graphformats.keys():
+        raise ValueError("The graph type must be one of "+_graphformats.keys())
+
+    elif graph_type in {"dag","digraph"}:
+        if multi_edges:
+            grtype=networkx.MultiDiGraph
+        else:
+            grtype=networkx.DiGraph
+    elif graph_type in {"simple",'bipartite'}:
+        if multi_edges:
+            grtype=networkx.MultiGraph
+        else:
+            grtype=networkx.Graph
+    else:
+        raise RuntimeError("Unchecked graph type argument: {}".format(grtype))
+
+    # Check/discover file format specification
+    if file_format=='autodetect':
+        extension = os.path.splitext(iofile.name)[-1][1:]
+
+        if extension not in _graphformats[graph_type]:
+            raise ValueError("Cannot guess a file format for {} graphs from \"{}\".".\
+                             format(graph_type,iofile.name))
+        else:
+            file_format=extension
+
+    elif file_format not in _graphformats[graph_type]:
+        raise ValueError("For {} graphs we only support these formats: ".format(graph_type)
+                         +_graphformats[graph_type])
+
+    return (grtype,file_format)
+    
+
+
+def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
     """Read a Graph from file
 
     The graph are managed using the NetworkX library, and most of the
@@ -120,27 +170,10 @@ def readGraph(input_file,graph_type,file_format,multi_edges=False):
 
     """
 
-    if not isinstance(input_file,io.TextIOBase) and \
-       not isinstance(input_file,StringIO.StringIO):
-        raise ValueError("The input object \"{}\" is not a file".format(input_file))
-    
-    elif graph_type not in _graphformats.keys():
-        raise ValueError("Wrong type. We can only read graphs of types "+_graphformats.keys())
-
-    if graph_type in {"dag","digraph"}:
-        if multi_edges:
-            grtype=networkx.MultiDiGraph
-        else:
-            grtype=networkx.DiGraph
-    else:
-        if multi_edges:
-            grtype=networkx.MultiGraph
-        else:
-            grtype=networkx.Graph
-
-    if file_format not in _graphformats[graph_type]:
-        raise ValueError("For \"{}\" type we only support these formats: ".format(graph_type)
-                         +_graphformats[graph_type])
+    grtype, file_format = _process_graph_io_arguments(input_file,
+                                                      graph_type,
+                                                      file_format,
+                                                      multi_edges)
 
     if file_format=='dot':
 
@@ -160,8 +193,6 @@ def readGraph(input_file,graph_type,file_format,multi_edges=False):
 
     elif file_format=='matrix':
 
-        assert graph_type=="bipartite"
-        assert grtype==networkx.Graph
         G=_read_graph_matrix_format(input_file)
 
     else:
@@ -176,7 +207,7 @@ def readGraph(input_file,graph_type,file_format,multi_edges=False):
     return G
 
 
-def writeGraph(G,output_file,graph_type,file_format=None):
+def writeGraph(G,output_file,graph_type,file_format='autodetect'):
     """Write a graph to a file
 
     Parameters
@@ -210,22 +241,11 @@ def writeGraph(G,output_file,graph_type,file_format=None):
     readGraph
     """
 
-    if not isinstance(output_file,io.TextIOBase) and \
-       not isinstance(output_file,StringIO.StringIO):
-        raise ValueError("The output object \"{}\" is not a file".format(output_file))
-
-
-    if graph_type not in _graphformats.keys():
-        raise ValueError("Wrong type {}. We only support graphs \'{}\'".format(graph_type,
-                                                                               _graphformats.keys()))
-
-    if file_format is None:
-        file_format = _graphformats[graph_type][0]
-
-    if file_format not in _graphformats[graph_type]:
-        raise ValueError("For \"{}\" type we only support these formats: ".format(graph_type)
-                         +_graphformats[graph_type])
-
+    _,file_format = _process_graph_io_arguments(output_file,
+                                                graph_type,
+                                                file_format,
+                                                False)
+    
     if file_format=='dot':
 
         networkx.write_dot(G,output_file)
@@ -267,7 +287,6 @@ def is_dag(digraph):
 
     elif hasattr(digraph,"topologically_sorted"):
 
-        assert isinstance(digraph,(networkx.MultiDiGraph,networkx.DiGraph))
         assert hasattr(digraph,"ordered_vertices")
         assert digraph.order()==len(digraph.ordered_vertices)
         assert set(digraph.nodes())==set(digraph.ordered_vertices)

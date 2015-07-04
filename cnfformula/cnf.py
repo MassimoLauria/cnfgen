@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-
-from __future__ import print_function
-from itertools import product,combinations
-
-__docstring__ =\
 """Utilities to build CNF formulas interesting for proof complexity.
 
 The module `cnfgen`  contains facilities to generate  cnf formulas, in
@@ -14,8 +9,12 @@ both a library of CNF generators and a command line utility.
 
 Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
-
 """
+
+
+from __future__ import print_function
+from itertools import product,combinations
+
 
 _default_header=r"""Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
@@ -93,15 +92,17 @@ class CNF(object):
         self._coherent        = True
 
         # Load the initial data into the CNF
-        for c in (clauses or []):
+        for c in clauses or []:
             self.add_clause(c)
 
 
     # Formula contains an header property
     def _set_header(self, value):
+        """Header setter"""
         self._header = value
 
     def _get_header(self):
+        """Header getter"""
         return self._header
 
     header = property(_get_header, _set_header)
@@ -267,26 +268,29 @@ class CNF(object):
         Traceback (most recent call last):
         AssertionError
         """
-        if not force and self._coherent: return True
+        if not force and self._coherent:
+            return True
 
         varindex=self._name2index
         varnames=self._index2name
 
         # number of variables and clauses
         N=len(varindex.keys())
-        M=len(self._clauses)
-
-
+        
         # Consistency in the variable dictionary
-        if N != len(varnames)-1:      return False
+        if N != len(varnames)-1:
+            return False
+
         for i in range(1,N+1):
-            if varindex[varnames[i]]!=i: return False
+            if varindex[varnames[i]]!=i:
+                return False
 
 
         # Count clauses and check literal representation
         for clause in self._clauses:
             for literal in clause:
-                if not 0 < abs(literal) <= N: return False
+                if not 0 < abs(literal) <= N:
+                    return False
 
         # formula passed all tests
         self._coherent = True
@@ -380,7 +384,8 @@ class CNF(object):
             if oldname in self._name2index:
                 
                 if newname in self._name2index: 
-                    raise ValueError("Variable renaming clashes. Var %s is already in the formula "%newname)
+                    raise ValueError("Variable renaming clashes."
+                                     "Var {} is already in the formula ".format(newname))
                 
                 varindex=self._name2index[oldname]
                 self._name2index[newname] = varindex
@@ -541,10 +546,12 @@ class CNF(object):
 
         # A nice header
         if export_header:
-            for s in self.header.split("\n")[:-1]: output.write( ("% "+s).rstrip()+"\n" )
+            for s in self.header.split("\n")[:-1]:
+                output.write( ("% "+s).rstrip()+"\n" )
 
         # map literals to latex formulas
         def map_literals(l):
+            """Literal -> LaTeX string"""
             if l>0 :
                 return  "    {"+str(self._index2name[ l])+"}"
             else:
@@ -651,7 +658,7 @@ class CNF(object):
         cnfformula.utils.solver.supported_satsolvers
 
         """
-        from utils import solver
+        from .utils import solver
         return solver.is_satisfiable(self, cmd=cmd, sameas=sameas)
 
 ###
@@ -692,7 +699,8 @@ def parity_constraint(variables, constant):
     for c in product(*domains):
         # Save only the clauses with the right polarity
         parity = sum(1-l[0] for l in c) % 2
-        if parity != constant: clauses.append(list(c))
+        if parity != constant:
+            clauses.append(list(c))
     return clauses
 
 

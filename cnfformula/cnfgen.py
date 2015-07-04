@@ -231,10 +231,8 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
                             """)
         gr.add_argument('--graphformat','-gf',
                         choices=graph_formats()['dag'],
-                        default=graph_formats()['dag'][0],
-                        help="""
-                        Format of the DAG file. (default:  {})
-                        """.format(graph_formats()['dag'][0]))
+                        default='autodetect',
+                        help="Format of the DAG file. (default: autodetect)")
 
  
     @staticmethod
@@ -263,10 +261,8 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
             D.ordered_vertices=[]
 
             # vertices
-            X=[
-                [('x_{{{},{}}}'.format(h,i),h,i) for i in range(args.pyramid-h+1)]
-                for h in range(args.pyramid+1)
-              ]
+            X=[ [('x_{{{},{}}}'.format(h,i),h,i) for i in range(args.pyramid-h+1)] \
+                for h in range(args.pyramid+1) ]
 
             for layer in X:
                 for (name,h,i) in layer:
@@ -381,10 +377,8 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
                             """)
         gr.add_argument('--graphformat'+suffix,'-gf'+suffix,
                         choices=graph_formats()['simple'],
-                        default=graph_formats()['simple'][0],
-                        help="""
-                        Format of the graph file. (default:  {})
-                        """.format(graph_formats()['simple'][0]))
+                        default='autodetect',
+                        help="Format of the graph file. (default: autodetect)")
 
 
 
@@ -534,10 +528,8 @@ class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
                             the graph to standard output. (default: -) """)
         gr.add_argument('--graphformat','-gf',
                         choices=graph_formats()['bipartite'],
-                        default=graph_formats()['bipartite'][0],
-                        help="""
-                        Format of the graph file.  (default:  {})
-                        """.format(graph_formats()['bipartite'][0]))
+                        default='autodetect',
+                        help="Format of the graph file. (default: autodetect)")
 
 
     @staticmethod
@@ -1030,8 +1022,10 @@ class _RAMLB(_FormulaFamilyHelper,_CMDLineHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('k',metavar='<k>',type=int,action='store',help="size of the clique to be found")
-        parser.add_argument('s',metavar='<s>',type=int,action='store',help="size of the stable to be found")
+        parser.add_argument('k',metavar='<k>',type=int,
+                            action='store',help="size of the clique to be found")
+        parser.add_argument('s',metavar='<s>',type=int,
+                            action='store',help="size of the stable to be found")
         _SimpleGraphHelper.setup_command_line(parser)
 
 
@@ -1088,7 +1082,7 @@ class _TSE(_FormulaFamilyHelper,_CMDLineHelper):
             charge=[1]+[0]*(G.order()-1)
 
         else: # random vector
-            charge=[random.randint(0,1) for i in xrange(G.order()-1)]
+            charge=[random.randint(0,1) for _ in xrange(G.order()-1)]
 
             parity=sum(charge) % 2
 
@@ -1131,13 +1125,14 @@ class _OR(_FormulaFamilyHelper,_CMDLineHelper):
         clause = [ (True,"x_{}".format(i)) for i in range(args.P) ] + \
                  [ (False,"y_{}".format(i)) for i in range(args.N) ]
         return CNF([clause],
-                   header="""Single clause with {} positive and {} negative literals""".format(args.P,args.N))
+                   header="Single clause with {} positive"
+                          " and {} negative literals".format(args.P,args.N))
 
 
 class _RANDOM(_FormulaFamilyHelper,_CMDLineHelper):
     """Command line helper for random formulas
     """
-    name='kcnf'
+    name='randkcnf'
     description='random k-CNF'
 
     @staticmethod
