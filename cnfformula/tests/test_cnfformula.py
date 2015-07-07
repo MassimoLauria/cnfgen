@@ -5,7 +5,7 @@ import cnfformula.utils as cnfutils
 
 import cnfformula.cnfgen as cnfgen
 import cnfformula.utils.cnfshuffle as cnfshuffle
-import cnfformula.utils.kthgraph2dimacs as kthgraph2dimacs
+import cnfformula.utils.adjlist2pebbling as adjlist2pebbling
 
 from . import shufflereference
 from . import TestCNFBase
@@ -406,7 +406,7 @@ class TestSubstitution(TestCNFBase) :
         lift2 = cnfformula.TransformFormula(cnf, 'one', 2)
         self.assertCnfEqual(lift,lift2)
 
-class TestAdjList2Dimacs(TestCNFBase) :
+class TestAdjList2Pebbling(TestCNFBase) :
     def identity_check_helper(self, input, liftname, liftrank) :
         G = cnfgen.readGraph(input,'dag','adjlist')
         input.seek(0)
@@ -414,9 +414,9 @@ class TestAdjList2Dimacs(TestCNFBase) :
         lift = cnfformula.TransformFormula(peb, liftname, liftrank)
         reference_output = lift.dimacs(export_header=False)+"\n"
         
-        adjlist2dimacs_output=StringIO.StringIO()
-        adjlist2dimacs.adjlist2dimacs(input, liftname, liftrank, adjlist2dimacs_output, header=True)
-        self.assertMultiLineEqual(adjlist2dimacs_output.getvalue(), reference_output)
+        tool_output=StringIO.StringIO()
+        adjlist2pebbling.adjlist2pebbling(input, liftname, liftrank, tool_output, header=True)
+        self.assertMultiLineEqual(tool_output.getvalue(), reference_output)
 
     def test_unit_graph(self) :
         input = StringIO.StringIO("1\n1 :\n")
