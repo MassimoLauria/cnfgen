@@ -491,7 +491,7 @@ class CNF(object):
         for cls in self._clauses:
             output.write("\n" + " ".join([str(l) for l in cls]) + " 0")
 
-    def latex(self, export_header=True):
+    def latex(self, export_header=True, full_document=False):
         """Output a LaTeX version of the CNF formula
 
         The CNF formula is translated into the LaTeX markup language
@@ -506,9 +506,13 @@ class CNF(object):
 
         Parameters
         ----------
-        export_header : bool
+        export_header : bool, optional
             determines whether the formula header should be inserted as
-            a LaTeX comment in the output.
+            a LaTeX comment in the output. By default is True. 
+
+        full_document : bool, optional
+            rather than just output the formula, output a document 
+            that contains it. False by default.
 
         Returns
         -------
@@ -541,30 +545,36 @@ class CNF(object):
         """
         assert self._coherent
 
+        clauses_per_page = 40
+
+        latex_preamble=r"""%
+\documentclass[10pt,notitlepage]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+"""
+        
         from cStringIO import StringIO
         output = StringIO()
-
-        # A nice header
+        
+        # formula header as a LaTeX comment
         if export_header:
             for s in self.header.split("\n")[:-1]:
                 output.write( ("% "+s).rstrip()+"\n" )
 
-        # map literals to latex formulas
+        # document opening
+        if full_document:
+            output.write(latex_preamble)
+            output.write("\\begin{document}\n")
+                
         def map_literals(l):
-            """Literal -> LaTeX string"""
+            """Map literals to LaTeX string"""
             if l>0 :
                 return  "    {"+str(self._index2name[ l])+"}"
             else:
                 return "\\neg{"+str(self._index2name[-l])+"}"
 
-
-        # We produce clauses and comments
-        output.write("\\begin{align}")
-        empty_cnf = True
-
-        # format clause
         def write_clause(cls, first):
-            """Print a clause."""
+            """Write the clause in LaTeX."""
             output.write("\n&       " if first else " \\\\\n& \\land ")
             first = False
 
@@ -576,17 +586,27 @@ class CNF(object):
                              " \\lor ".join(map_literals(l) for l in cls) + \
                              " \\right)")
 
-        # print all clauses
-        for clause in self._clauses:
-            write_clause(clause, empty_cnf)
-            empty_cnf = False
-
-        # no clause in the CNF
-        if empty_cnf:
+        # Output the clauses
+        clauses_number = len(self._clauses)
+        output.write("\\begin{align}")
+        
+        if clauses_number==0:
             output.write("\n   \\top")
+        else:
+            for i,clause in enumerate(self._clauses):
+                if i% clauses_per_page ==0 and i!=0 and full_document:
+                    output.write("\n\\end{align}")
+                    output.write("\n\\begin{align}")
+                    write_clause(clause, True)
+                else:
+                    write_clause(clause, i==0)
 
-        # close the  formula
         output.write("\n\\end{align}")
+
+        # document closing
+        if full_document:
+            output.write("\n\\end{document}")
+  
         return output.getvalue()
 
 

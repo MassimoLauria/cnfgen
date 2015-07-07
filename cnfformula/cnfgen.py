@@ -1311,7 +1311,7 @@ def command_line_utility(argv=sys.argv):
     # Output
 
     if args.output_format == 'latex':
-        output = tcnf.latex()
+        output = tcnf.latex(export_header=args.verbose,full_document=True)
 
     elif args.output_format == 'dimacs':
         output = tcnf.dimacs(export_header=args.verbose)
