@@ -133,7 +133,7 @@ def pebbling_formula_compressed_clauses(adjfile):
 
 
 ### Produce the dimacs output from the data
-def adjlist2dimacs(inputfile, method, rank, output, header=True):
+def adjlist2pebbling(inputfile, method, rank, output, header=True):
     # Build the lifting mechanism
 
     # Generate the basic formula
@@ -146,8 +146,8 @@ def adjlist2dimacs(inputfile, method, rank, output, header=True):
         output_cache=output
         
     cls_iter=transform_compressed_clauses(
-                    pebbling_formula_compressed_clauses(inputfile),
-                    method,rank)
+        pebbling_formula_compressed_clauses(inputfile),
+        method,rank)
 
     try:
 
@@ -173,8 +173,8 @@ def adjlist2dimacs(inputfile, method, rank, output, header=True):
 ###
 import signal
 def signal_handler(insignal, frame):
-    assert(insignal!=None)
-    assert(frame!=None)
+    assert insignal!=None
+    assert frame!=None
     print('Program interrupted',file=sys.stderr)
     sys.exit(-1)
 
@@ -203,7 +203,7 @@ def command_line_utility(argv=sys.argv):
     # Process the options
     args=parser.parse_args(argv[1:])
 
-    adjlist2dimacs(args.input, args.Transform, args.Tarity, args.output, args.header)
+    adjlist2pebbling(args.input, args.Transform, args.Tarity, args.output, args.header)
 
 ### Launcher
 if __name__ == '__main__':
