@@ -22,9 +22,9 @@ __all__ = ["supported_formats",
 
 
 _graphformats = { 
-    'dag':   ['kth','gml','dot'],
-    'digraph': ['kth','gml','dot','dimacs'],
-    'simple': ['kth','gml','dot','dimacs'],
+    'dag':   ['adjlist','gml','dot'],
+    'digraph': ['adjlist','gml','dot','dimacs'],
+    'simple': ['adjlist','gml','dot','dimacs'],
     'bipartite': ['matrix','gml','dot']
     }
 
@@ -183,9 +183,9 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
 
         G=grtype(networkx.read_gml(input_file))
 
-    elif file_format=='kth':
+    elif file_format=='adjlist':
 
-        G=_read_graph_kth_format(input_file,grtype)
+        G=_read_graph_adjlist_format(input_file,grtype)
 
     elif file_format=='dimacs':
 
@@ -254,9 +254,9 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
 
         networkx.write_gml(G,output_file)
 
-    elif file_format=='kth':
+    elif file_format=='adjlist':
 
-        _write_graph_kth_format(G,output_file)
+        _write_graph_adjlist_format(G,output_file)
 
     elif file_format=='dimacs':
 
@@ -343,8 +343,8 @@ def enumerate_vertices(graph):
 #
 
 # kth reader
-def _read_graph_kth_format(inputfile,graph_class=networkx.DiGraph):
-    """Read a graph from file, in the KTH format.
+def _read_graph_adjlist_format(inputfile,graph_class=networkx.DiGraph):
+    """Read a graph from file, in the adjacency lists format.
 
     If the vertices are listed from to sources to the sinks, then the
     graph is marked as topologically sorted, and any DAG test will be
@@ -585,8 +585,8 @@ def _read_graph_matrix_format(inputfile):
 #
 # In-house graph writers
 #
-def _write_graph_kth_format(G,output_file):
-    """Wrire a graph to a file, in the KTH format.
+def _write_graph_adjlist_format(G,output_file):
+    """Wrire a graph to a file, in the adjacency lists format.
     
     Parameters
     ----------

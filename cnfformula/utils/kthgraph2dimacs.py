@@ -12,7 +12,7 @@ from ..transformation import transform_compressed_clauses,StopClauses
 __docstring__ =\
 """Utilities to build dimacs encoding of pebbling formulas
 
-Accept a KTH specific graph format:
+Accepts only the adjacency list graph format:
 
 ASSUMPTIONS: the graph is given with a line for each vertex, from
 sources to a *single sink*.
@@ -103,9 +103,9 @@ def setup_command_line(parser):
                         """)
 
 
-def pebbling_formula_compressed_clauses(kthfile):
+def pebbling_formula_compressed_clauses(adjfile):
     """
-    Read a graph from file, in the KTH format. And output the list of
+    Read a graph from file, in the adjacency lists format. And output the list of
     compressed clauses representing the pebbling formula.
 
     The vertices MUST be listed from to sources to the *A SINGLE
@@ -116,7 +116,7 @@ def pebbling_formula_compressed_clauses(kthfile):
 
     """
 
-    for l in kthfile.readlines():
+    for l in adjfile.readlines():
         
         # ignore comments
         if l[0]=='c':
@@ -133,7 +133,7 @@ def pebbling_formula_compressed_clauses(kthfile):
 
 
 ### Produce the dimacs output from the data
-def kthgraph2dimacs(inputfile, method, rank, output, header=True):
+def adjlist2dimacs(inputfile, method, rank, output, header=True):
     # Build the lifting mechanism
 
     # Generate the basic formula
@@ -203,7 +203,7 @@ def command_line_utility(argv=sys.argv):
     # Process the options
     args=parser.parse_args(argv[1:])
 
-    kthgraph2dimacs(args.input, args.Transform, args.Tarity, args.output, args.header)
+    adjlist2dimacs(args.input, args.Transform, args.Tarity, args.output, args.header)
 
 ### Launcher
 if __name__ == '__main__':

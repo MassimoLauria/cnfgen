@@ -406,17 +406,17 @@ class TestSubstitution(TestCNFBase) :
         lift2 = cnfformula.TransformFormula(cnf, 'one', 2)
         self.assertCnfEqual(lift,lift2)
 
-class TestKth2Dimacs(TestCNFBase) :
+class TestAdjList2Dimacs(TestCNFBase) :
     def identity_check_helper(self, input, liftname, liftrank) :
-        G = cnfgen.readGraph(input,'dag','kth')
+        G = cnfgen.readGraph(input,'dag','adjlist')
         input.seek(0)
         peb = cnfgen.PebblingFormula(G)
         lift = cnfformula.TransformFormula(peb, liftname, liftrank)
         reference_output = lift.dimacs(export_header=False)+"\n"
         
-        kthgraph2dimacs_output=StringIO.StringIO()
-        kthgraph2dimacs.kthgraph2dimacs(input, liftname, liftrank, kthgraph2dimacs_output, header=True)
-        self.assertMultiLineEqual(kthgraph2dimacs_output.getvalue(), reference_output)
+        adjlist2dimacs_output=StringIO.StringIO()
+        adjlist2dimacs.adjlist2dimacs(input, liftname, liftrank, adjlist2dimacs_output, header=True)
+        self.assertMultiLineEqual(adjlist2dimacs_output.getvalue(), reference_output)
 
     def test_unit_graph(self) :
         input = StringIO.StringIO("1\n1 :\n")

@@ -19,8 +19,7 @@ setup(name='CNFgen',
           'console_scripts': [
               'cnfgen=cnfformula.cnfgen:command_line_utility',
               'cnfshuffle=cnfformula.utils.cnfshuffle:command_line_utility',
-              'cnftransform=cnfformula.utils.dimacstransform:command_line_utility',
-              'kthgraph2pebformula=cnfformula.utils.kthgraph2dimacs:command_line_utility'],
+              'cnftransform=cnfformula.utils.dimacstransform:command_line_utility'],
       },
       install_requires=['networkx','pyparsing'],
       # make some tests
