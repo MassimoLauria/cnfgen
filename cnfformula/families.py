@@ -297,15 +297,17 @@ def PebblingFormula(digraph):
 
     # add variables in the appropriate order
     vertices=enumerate_vertices(digraph)
+    position=dict((v,i) for (i,v) in enumerate(vertices))
 
     for v in vertices:
-        peb.add_variable(v)
+        peb.add_variable(v,description="There is a pebble on vertex ${}$".format(v))
 
     # add the clauses
     for v in vertices:
 
         # If predecessors are pebbled the vertex must be pebbled
-        peb.add_clause([(False,p) for p in digraph.predecessors(v)]+[(True,v)])
+        pred=sorted(digraph.predecessors(v),key=lambda x:position[x])
+        peb.add_clause([(False,p) for p in pred]+[(True,v)])
 
         if digraph.out_degree(v)==0: #the sink
             peb.add_clause([(False,v)])
@@ -362,16 +364,19 @@ def StoneFormula(digraph,nstones):
 
     # add variables in the appropriate order
     vertices=enumerate_vertices(digraph)
+    position=dict((v,i) for (i,v) in enumerate(vertices))
     stones=range(1,nstones+1)
     
     # Stones->Vertices variables
     for v in vertices:
         for j in stones:
-            cnf.add_variable("P_{{{0},{1}}}".format(v,j))
+            cnf.add_variable("P_{{{0},{1}}}".format(v,j),
+                             description="Stone ${1}$ on vertex ${0}$".format(v,j))
 
     # Color variables
     for j in stones:
-        cnf.add_variable("R_{{{0}}}".format(j))
+        cnf.add_variable("R_{{{0}}}".format(j),
+                         description="Stone ${}$ is red".format(j))
     
     # Each vertex has some stone
     for v in vertices:
@@ -380,12 +385,12 @@ def StoneFormula(digraph,nstones):
     # If predecessors have red stones, the sink must have a red stone
     for v in vertices:
         for j in stones:
-            pred=digraph.predecessors(v)
-            for stones_tuple in product(stones,repeat=len(pred)):
+            pred=sorted(digraph.predecessors(v),key=lambda x:position[x])
+            for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
                 cnf.add_clause([(False, "P_{{{0},{1}}}".format(p,s)) for (p,s) in zip(pred,stones_tuple)] +
-                                  [(False, "R_{{{0}}}".format(s)) for s in stones_tuple] +
-                                  [(False, "P_{{{0},{1}}}".format(v,j))] +
-                                  [(True,  "R_{{{0}}}".format(j))])
+                               [(False, "P_{{{0},{1}}}".format(v,j))] +
+                               [(False, "R_{{{0}}}".format(s)) for s in stones_tuple] +
+                               [(True,  "R_{{{0}}}".format(j))])
         
         if digraph.out_degree(v)==0: #the sink
             for j in stones:

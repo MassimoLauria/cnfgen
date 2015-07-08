@@ -387,7 +387,7 @@ class CNF(object):
         vars_iterator = iter(self._index2name)
         vars_iterator.next()
         return vars_iterator
-
+    
     def clauses(self):
         """Return the list of clauses
         """
@@ -562,12 +562,13 @@ class CNF(object):
                 
         def map_literals(l):
             """Map literals to LaTeX string"""
-            name = self._index2name[l]
-            split_point=name.find("_")
+            assert l!=0
             if l>0 :
-                return  "         {"+str(self._index2name[ l])+"}"
+                return  "          {"+str(self._index2name[l])+"}"
             else:
-                return "\\overline{"+name[:split_point]+"}"+name[split_point:]
+                name = self._index2name[-l]
+                split_point=name.find("_")
+                return "{\\overline{"+name[:split_point]+"}"+name[split_point:]+"}"
 
         def write_clause(cls, first,full_document):
             """Write the clause in LaTeX."""
@@ -584,8 +585,21 @@ class CNF(object):
                              " \\lor ".join(map_literals(l) for l in cls) + \
                              " \\right)")
 
+        # Output the variable description if any
+        if full_document and len(self._name2descr)>0:
+            output.write("\\noindent\\textbf{Variables description:}\n")
+            output.write("\\begin{itemize}\n")
+            for name in self._index2name[1:]:
+                if name in self._name2descr.keys():
+                    output.write("\\item ${}$ --- {}\n".format(name,self._name2descr[name]))   
+            output.write("\\end{itemize}\n")
+    
         # Output the clauses
         clauses_number = len(self._clauses)
+        if full_document:
+            output.write("\\noindent\\textbf{{CNF with {} variables and and {} clauses:}}\n".\
+                         format(len(self._name2index),clauses_number))
+
         output.write("\\begin{align}")
         
         if clauses_number==0:
