@@ -491,7 +491,7 @@ class CNF(object):
         for cls in self._clauses:
             output.write("\n" + " ".join([str(l) for l in cls]) + " 0")
 
-    def latex(self, export_header=True, full_document=False):
+    def latex(self, export_header=True, full_document=False, extra_text=None):
         """Output a LaTeX version of the CNF formula
 
         The CNF formula is translated into the LaTeX markup language
@@ -513,6 +513,9 @@ class CNF(object):
         full_document : bool, optional
             rather than just output the formula, output a document 
             that contains it. False by default.
+
+        extra_text : str, optional
+            Additional text attached to the abstract.
 
         Returns
         -------
@@ -567,12 +570,16 @@ class CNF(object):
             output.write(latex_preamble)
             output.write("\\begin{document}\n")
             output.write("\\title{{{}}}\n".format(self.header.split('\n')[0]))
+            output.write("\\author{CNFgen formula generator}\n")
             output.write("\\maketitle\n")
             output.write("\\begin{abstract}\n")
             output.write("\\begin{lstlisting}[breaklines]\n")
             output.write(self.header)
             output.write("\\end{lstlisting}\n")
             output.write("\\end{abstract}\n")
+
+        if extra_text is not None and full_document:
+            output.write(extra_text)
                 
         def map_literals(l):
             """Map literals to LaTeX string"""
