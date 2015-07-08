@@ -548,9 +548,10 @@ class CNF(object):
         clauses_per_page = 50
 
         latex_preamble=r"""%
-\documentclass[10pt,notitlepage,a4paper]{article}
+\documentclass[10pt,a4paper]{article}
 \usepackage[margin=0.5in]{geometry}
 \usepackage{amsmath}
+\usepackage{listings}
 """
         
         from cStringIO import StringIO
@@ -565,6 +566,13 @@ class CNF(object):
         if full_document:
             output.write(latex_preamble)
             output.write("\\begin{document}\n")
+            output.write("\\title{{{}}}\n".format(self.header.split('\n')[0]))
+            output.write("\\maketitle\n")
+            output.write("\\begin{abstract}\n")
+            output.write("\\begin{lstlisting}[breaklines]\n")
+            output.write(self.header)
+            output.write("\\end{lstlisting}\n")
+            output.write("\\end{abstract}\n")
                 
         def map_literals(l):
             """Map literals to LaTeX string"""
@@ -641,8 +649,8 @@ class CNF(object):
             the actual command line used to invoke the SAT solver
 
         sameas : string, optional
-            use the interface of one of the supported solvers, indicated in
-            input. Useful when the solver ont the command line is not supported.
+            use the interface of one of the supported solvers. Useful
+            when the solver used in the command line is not supported.
 
         Examples
         --------
