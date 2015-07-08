@@ -4,8 +4,6 @@
 from __future__ import print_function
 from .cnf import CNF
 
-import collections
-
 # internal methods
 from .graphs import enumerate_vertices,is_dag
 from .cnf    import parity_constraint
@@ -49,6 +47,12 @@ import sys
 from textwrap import dedent
 from itertools import product,permutations
 from itertools import combinations,combinations_with_replacement
+import collections
+
+def _unique(x):
+    """Remove duplicates while maintaining the order."""
+    x=collections.OrderedDict.fromkeys(x)
+    return x.keys()
 
 # Network X is used to produce graph based formulas
 try:
@@ -389,7 +393,7 @@ def StoneFormula(digraph,nstones):
             for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
                 cnf.add_clause([(False, "P_{{{0},{1}}}".format(p,s)) for (p,s) in zip(pred,stones_tuple)] +
                                [(False, "P_{{{0},{1}}}".format(v,j))] +
-                               [(False, "R_{{{0}}}".format(s)) for s in set(stones_tuple)] +
+                               [(False, "R_{{{0}}}".format(s)) for s in _unique(stones_tuple)] +
                                [(True,  "R_{{{0}}}".format(j))])
         
         if digraph.out_degree(v)==0: #the sink
