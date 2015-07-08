@@ -545,11 +545,11 @@ class CNF(object):
         """
         assert self._coherent
 
-        clauses_per_page = 40
+        clauses_per_page = 50
 
         latex_preamble=r"""%
-\documentclass[10pt,notitlepage]{article}
-\usepackage[margin=1in]{geometry}
+\documentclass[10pt,notitlepage,a4paper]{article}
+\usepackage[margin=0.5in]{geometry}
 \usepackage{amsmath}
 """
         
@@ -573,14 +573,16 @@ class CNF(object):
             else:
                 return "\\neg{"+str(self._index2name[-l])+"}"
 
-        def write_clause(cls, first):
+        def write_clause(cls, first,full_document):
             """Write the clause in LaTeX."""
-            output.write("\n&       " if first else " \\\\\n& \\land ")
-            first = False
+            output.write("\n&" if first  else " \\\\\n&")
+            output.write("       " if full_document else " \\land ")
 
             # build the latex clause
             if len(cls) == 0:
                 output.write("\\square")
+            elif full_document:
+                output.write(" \\lor ".join(map_literals(l) for l in cls))
             else:
                 output.write("\\left( " + \
                              " \\lor ".join(map_literals(l) for l in cls) + \
@@ -595,11 +597,11 @@ class CNF(object):
         else:
             for i,clause in enumerate(self._clauses):
                 if i% clauses_per_page ==0 and i!=0 and full_document:
-                    output.write("\n\\end{align}")
+                    output.write("\n\\end{align}\\pagebreak")
                     output.write("\n\\begin{align}")
-                    write_clause(clause, True)
+                    write_clause(clause, True,full_document)
                 else:
-                    write_clause(clause, i==0)
+                    write_clause(clause, i==0,full_document)
 
         output.write("\n\\end{align}")
 
