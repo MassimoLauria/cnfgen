@@ -86,6 +86,7 @@ class CNF(object):
         # first variable is indexed with 1.
         self._index2name      = [None]
         self._name2index      = dict()
+        self._name2descr      = dict()
 
         # Internal coherence can be disrupted by some methods.  API
         # methods require it to be rechecked.
@@ -273,7 +274,7 @@ class CNF(object):
 
         varindex=self._name2index
         varnames=self._index2name
-
+        
         # number of variables and clauses
         N=len(varindex.keys())
         
@@ -347,15 +348,20 @@ class CNF(object):
         self._clauses.append( self._compress_clause(clause) )
 
 
-    def add_variable(self,var):
+    def add_variable(self,var,description=None):
         """Add a variable to the formula (if not already resent).
 
         The variable must be `hashable`. I.e. it must be usable as key
         in a dictionary.  It raises `TypeError` if the variable cannot
         be hashed.
 
-        Arguments:
-        - `var`: the variable to add.
+        Parameters
+        ----------
+        var: hashable
+             the variable name to be added/updated. It can be any
+             hashable object (i.e. a dictionary key).
+        description: str, optional
+             an explanation/description/comment about the variable.
         """
         assert self._coherent
         try:
@@ -366,36 +372,9 @@ class CNF(object):
         except TypeError:
             raise TypeError("%s is not a legal variable name" %var)
 
-
-    def rename_variable(self,oldname,newname):
-        """Rename a variable to the formula.
-
-        The new variable name must be `hashable`. I.e. it must be
-        usable as key in a dictionary.  It raises `TypeError` if the
-        variable cannot be hashed. It ignores the operation if the old
-        name does not correpsond to a variable in the formula.
-
-        Arguments:
-        - `var`: the variable to add.
-
-        """
-        assert self._coherent
-        try:
-            if oldname in self._name2index:
-                
-                if newname in self._name2index: 
-                    raise ValueError("Variable renaming clashes."
-                                     "Var {} is already in the formula ".format(newname))
-                
-                varindex=self._name2index[oldname]
-                self._name2index[newname] = varindex
-                self._index2name[varindex]=newname
-                del self._name2index[oldname]
-            else:
-                pass
-        except TypeError:
-            raise TypeError("%s is not a legal variable name" %newname)
-
+        # update description
+        if description is not None:
+            self._name2descr[var] = description
 
     #
     # High level API: read the CNF
