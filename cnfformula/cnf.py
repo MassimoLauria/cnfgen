@@ -548,11 +548,11 @@ class CNF(object):
         """
         assert self._coherent
 
-        clauses_per_page = 50
+        clauses_per_page = 40
 
         latex_preamble=r"""%
 \documentclass[10pt,a4paper]{article}
-\usepackage[margin=0.5in]{geometry}
+\usepackage[margin=1in]{geometry}
 \usepackage{amsmath}
 \usepackage{listings}
 """
@@ -572,21 +572,23 @@ class CNF(object):
             output.write("\\title{{{}}}\n".format(self.header.split('\n')[0]))
             output.write("\\author{CNFgen formula generator}\n")
             output.write("\\maketitle\n")
-            output.write("\\begin{abstract}\n")
+            output.write("\\noindent\\textbf{Formula header:}\n")
             output.write("\\begin{lstlisting}[breaklines]\n")
             output.write(self.header)
             output.write("\\end{lstlisting}\n")
-            output.write("\\end{abstract}\n")
+            output.write("\\bigskip\n")
 
         if extra_text is not None and full_document:
             output.write(extra_text)
                 
         def map_literals(l):
             """Map literals to LaTeX string"""
+            name = self._index2name[l]
+            split_point=name.find("_")
             if l>0 :
-                return  "    {"+str(self._index2name[ l])+"}"
+                return  "         {"+str(self._index2name[ l])+"}"
             else:
-                return "\\neg{"+str(self._index2name[-l])+"}"
+                return "\\overline{"+name[:split_point]+"}"+name[split_point:]
 
         def write_clause(cls, first,full_document):
             """Write the clause in LaTeX."""

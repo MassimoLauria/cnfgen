@@ -1309,15 +1309,18 @@ def command_line_utility(argv=sys.argv):
     tcnf=TransformFormula(cnf,args.Transform,args.Tarity)
         
     # Output
-
     if args.output_format == 'latex':
         output = tcnf.latex(export_header=args.verbose,
                             full_document=True,
-                            extra_text="This formula has been generated using the command line\n" +
+                            extra_text="\\noindent\\textbf{Command line:}\n" +
                             "\\begin{lstlisting}[breaklines]\n" +
                             "$ cnfgen " + " ".join(argv[1:]) + "\n" +
+                            # "\\end{lstlisting}\n" +
+                            # "\\noindent\\textbf{Docstring:}\n" +
+                            # "\\begin{lstlisting}[breaklines,basicstyle=\\small]\n" +
+                            # StoneFormula.__doc__ +
                             "\\end{lstlisting}\n")
-
+        
     elif args.output_format == 'dimacs':
         output = tcnf.dimacs(export_header=args.verbose)
     else:
