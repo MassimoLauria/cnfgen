@@ -389,7 +389,7 @@ def StoneFormula(digraph,nstones):
             for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
                 cnf.add_clause([(False, "P_{{{0},{1}}}".format(p,s)) for (p,s) in zip(pred,stones_tuple)] +
                                [(False, "P_{{{0},{1}}}".format(v,j))] +
-                               [(False, "R_{{{0}}}".format(s)) for s in stones_tuple] +
+                               [(False, "R_{{{0}}}".format(s)) for s in set(stones_tuple)] +
                                [(True,  "R_{{{0}}}".format(j))])
         
         if digraph.out_degree(v)==0: #the sink
