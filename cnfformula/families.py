@@ -344,30 +344,50 @@ def PebblingFormula(digraph):
 
     return peb
 
-def StoneFormula(digraph,nstones):
-    """Stones formula
+def StoneFormula(D,nstones):
+    """Stones formulas
 
-    Build a \"stone formula\" from the directed graph. If the graph has
-    an `ordered_vertices` attribute, then it is used to enumerate the
-    vertices (and the corresponding variables).
+    The stone formulas have been introduced in [2]_ and generalized in
+    [1]_. They are one of the classic examples that separate regular
+    resolutions from general resolution [1]_.
 
-    These formula, introduced in [2]_ are one of the classic examples
-    that separate regular resolutions from general resolution [1]_.
+    A \"Stones formula\" from a directed acyclic graph :math:`D`
+    claims that each vertex of the graph is associated with one on
+    :math:`s` stones (not necessarily in an injective way).
+    In particular for each vertex :math:`v` in :math:`V(D)` and each
+    stone :math:`j` we have a variable :math:`P_{v,j}` that claims
+    that stone :math:`j` is associated to vertex :math:`v`.
+
+    Each stone can be either red or blue, and not both.
+    The propositional variable :math:`R_j` if true when the stone
+    :math:`j` is red and false otherwise.
+
+    The clauses of the formula encode the following constraints.
+    If a stone is on a source vertex (i.e. a vertex with no incoming
+    edges), then it must be red. If all stones on the predecessors of
+    a vertex are red, then the stone of the vertex itself must be red.
+
+    The formula furthermore enforces that the stones on the sinks
+    (i.e. vertices with no outgoing edges) are blue.
+
+    .. note:: The exact formula structure depends by the graph and on
+              its topological order, which is determined by the
+              ``enumerate_vertices(D)``.
 
     Parameters
     ----------
-    digraph : a graph
-       it should be a directed acyclic graph.
+    D : a directed acyclic graph
+        it should be a directed acyclic graph.
     nstones : int
        the number of stones.
 
     Raises
     ------
     ValueError
-       if the graph is not a directed acyclic graph
+       if :math:`D` is not a directed acyclic graph
     
     ValueError
-       if the number of stones is non positive
+       if the number of stones is negative
 
     References
     ----------
@@ -379,7 +399,7 @@ def StoneFormula(digraph,nstones):
            Combinatorica (1999)
 
     """
-    if not is_dag(digraph):
+    if not is_dag(D):
         raise ValueError("Stone formulas are defined only for directed acyclic graphs.")
     
     if nstones<0:
@@ -387,19 +407,19 @@ def StoneFormula(digraph,nstones):
 
     cnf = CNF()
 
-    if hasattr(digraph, 'name'):
-        cnf.header = "Stone formula of: " + digraph.name + "\nwith " + str(nstones) + " stones\n" + cnf.header
+    if hasattr(D, 'name'):
+        cnf.header = "Stone formula of: " + D.name + "\nwith " + str(nstones) + " stones\n" + cnf.header
     else:
         cnf.header = "Stone formula with " + str(nstones) + " stones\n" + cnf.header
 
     # add variables in the appropriate order
-    vertices=enumerate_vertices(digraph)
+    vertices=enumerate_vertices(D)
     position=dict((v,i) for (i,v) in enumerate(vertices))
     stones=range(1,nstones+1)
     
     # Stones->Vertices variables
     for v in vertices:
-        for j in stones:
+        for j in nstones:
             cnf.add_variable("P_{{{0},{1}}}".format(v,j),
                              description="Stone ${1}$ on vertex ${0}$".format(v,j))
 
@@ -415,14 +435,14 @@ def StoneFormula(digraph,nstones):
     # If predecessors have red stones, the sink must have a red stone
     for v in vertices:
         for j in stones:
-            pred=sorted(digraph.predecessors(v),key=lambda x:position[x])
+            pred=sorted(D.predecessors(v),key=lambda x:position[x])
             for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
                 cnf.add_clause([(False, "P_{{{0},{1}}}".format(p,s)) for (p,s) in zip(pred,stones_tuple)] +
                                [(False, "P_{{{0},{1}}}".format(v,j))] +
                                [(False, "R_{{{0}}}".format(s)) for s in _unique(stones_tuple)] +
                                [(True,  "R_{{{0}}}".format(j))])
         
-        if digraph.out_degree(v)==0: #the sink
+        if D.out_degree(v)==0: #the sink
             for j in stones:
                 cnf.add_clause([
                     (False,"P_{{{0},{1}}}".format(v,j)),
