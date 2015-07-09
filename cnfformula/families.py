@@ -229,15 +229,32 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
 
 
 def SubsetCardinalityFormula(B):
-    """SubsetCardinalityFormula
+    r"""SubsetCardinalityFormula
 
-    Consider a bipartite graph $B$. The CNF claims that at least half
-    of the edges incident to each of the vertices on left side of $B$
+    Consider a bipartite graph :math:`B`. The CNF claims that at least half
+    of the edges incident to each of the vertices on left side of :math:`B`
     must be zero, while at least half of the edges incident to each
     vertex on the left side must be one.
 
-    Variants of these formula, on specific families of bipartite
-    graphs, have been studied in [1]_ and [2]_.
+    Variants of these formula on specific families of bipartite graphs
+    have been studied in [1]_, [2]_ and [3]_, and turned out to be
+    difficult for resolution based SAT-solvers.
+
+    Each variable of the formula is denoted as :math:`x_{i,j}` where
+    :math:`\{i,j\}` is an edge of the bipartite graph. The clauses of
+    the CNF encode the following constraints on the edge variables.
+
+    For every left vertex i with neighborhood :math:`\Gamma(i)`
+
+    .. math::
+         
+         \sum_{j \in \Gamma(i)} x_{i,j} \leq \frac{|\Gamma(i)|}{2}
+
+    For every right vertex j with neighborhood :math:`\Gamma(j)`
+
+    .. math::
+         
+         \sum_{i \in \Gamma(j)} x_{i,j} \geq \frac{|\Gamma(i)|}{2}.
 
     Parameters
     ----------
@@ -252,8 +269,16 @@ def SubsetCardinalityFormula(B):
 
     References
     ----------
-    .. [1] blah
-    .. [2] blah
+    .. [1] Mladen Miksa and Jakob Nordstrom
+           Long proofs of (seemingly) simple formulas
+           Theory and Applications of Satisfiability Testing--SAT 2014 (2014)
+    .. [2] Spence
+           sgen1: A generator of small but difficult satisfiability benchmarks
+           Journal of Experimental Algorithmics (2010)
+    .. [3] Van Gelder & Spence
+           Zero-One Designs Produce Small Hard SAT Instances
+           Theory and Applications of Satisfiability Testing--SAT 2010(2010)
+
     """
     Left  =  [v for v in B.nodes() if B.node[v]["bipartite"]==0]
     Right =  [v for v in B.nodes() if B.node[v]["bipartite"]==1]
@@ -679,7 +704,7 @@ def MarkstromFormula(G):
 def ColoringFormula(G,colors,functional=True):
     """Generates the clauses for colorability formula
 
-    The formula encodes the fact that the graph ``G`` has a coloring
+    The formula encodes the fact that the graph :math:`G` has a coloring
     with color set ``colors``. This means that it is possible to
     assign one among the elements in ``colors``to that each vertex of
     the graph such that no two adjacent vertices get the same color.
@@ -872,8 +897,8 @@ def RamseyNumber(s,k,N):
 def TseitinFormula(graph,charges=None):
     """Build a Tseitin formula based on the input graph.
 
-Odd charge is put on the first vertex by default, unless other
-vertices are is specified in input.
+    Odd charge is put on the first vertex by default, unless other
+    vertices are is specified in input.
 
     Arguments:
     - `graph`: input graph
@@ -926,7 +951,6 @@ def SubgraphFormula(graph,templates):
     Returns
     -------
     a CNF object
-
     """
 
     F=CNF()
