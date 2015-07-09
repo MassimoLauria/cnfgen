@@ -511,9 +511,9 @@ class CNF(object):
         % https://github.com/MassimoLauria/cnfgen.git
         %
         \\begin{align}
-        &       \\left( \\neg{x_1} \\lor     {x_2} \\lor \\neg{x_3} \\right) \\\\
-        & \\land \\left( \\neg{x_2} \\lor \\neg{x_4} \\right) \\\\
-        & \\land \\left(     {x_2} \\lor     {x_3} \\lor \\neg{x_4} \\right)
+        &       \\left( {\\overline{x}_1} \\lor            {x_2} \\lor {\\overline{x}_3} \\right) \\\\
+        & \\land \\left( {\\overline{x}_2} \\lor {\\overline{x}_4} \\right) \\\\
+        & \\land \\left(            {x_2} \\lor            {x_3} \\lor {\\overline{x}_4} \\right)
         \\end{align}
         >>> c=CNF()
         >>> print(c.latex(export_header=False))
@@ -564,7 +564,7 @@ class CNF(object):
             """Map literals to LaTeX string"""
             assert l!=0
             if l>0 :
-                return  "          {"+str(self._index2name[l])+"}"
+                return  "           {"+str(self._index2name[l])+"}"
             else:
                 name = self._index2name[-l]
                 split_point=name.find("_")
@@ -573,7 +573,7 @@ class CNF(object):
         def write_clause(cls, first,full_document):
             """Write the clause in LaTeX."""
             output.write("\n&" if first  else " \\\\\n&")
-            output.write("       " if full_document else " \\land ")
+            output.write("       " if full_document or first else " \\land ")
 
             # build the latex clause
             if len(cls) == 0:
