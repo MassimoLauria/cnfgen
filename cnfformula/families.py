@@ -272,10 +272,10 @@ def SubsetCardinalityFormula(B):
     .. [1] Mladen Miksa and Jakob Nordstrom
            Long proofs of (seemingly) simple formulas
            Theory and Applications of Satisfiability Testing--SAT 2014 (2014)
-    .. [2] Spence
+    .. [2] Ivor Spence
            sgen1: A generator of small but difficult satisfiability benchmarks
            Journal of Experimental Algorithmics (2010)
-    .. [3] Van Gelder & Spence
+    .. [3] Allen Van Gelder and Ivor Spence
            Zero-One Designs Produce Small Hard SAT Instances
            Theory and Applications of Satisfiability Testing--SAT 2010(2010)
 
@@ -287,6 +287,7 @@ def SubsetCardinalityFormula(B):
     ssc.header="Subset cardinality formula for graph {0}\n".format(B.name)
 
     def var_name(u,v):
+        """Compute the variable names."""
         if u<=v:
             return 'x_{{{0},{1}}}'.format(u,v)
         else:
