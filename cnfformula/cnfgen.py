@@ -94,90 +94,63 @@ class HelpTransformAction(argparse.Action):
 ###
 ### Command line helpers
 ###
+def setup_command_line_args(parser):
+    """Setup general command line options
 
-class _CMDLineHelper(object):
-    """Base Command Line helper
-
-    For every formula family there should be a subclass.
+    Arguments:
+    - `parser`: parser to fill with options
     """
-    description=None
-    name=None
+    parser.add_argument('--output','-o',
+                        type=argparse.FileType('wb',0),
+                        metavar="<output>",
+                        default='-',
+                        help="""Save the formula to <output>. Setting '<output>' to '-' sends the
+                        formula to standard output. (default: -)
+                        """)
+    parser.add_argument('--output-format','-of',
+                        choices=['latex','dimacs'],
+                        default='dimacs',
+                        help="""
+                        Output format of the formulas. 'latex' is
+                        convenient to insert formulas into papers, and
+                        'dimacs' is the format used by sat solvers.
+                        (default: dimacs)
+                        """)
 
-    @staticmethod
-    def setup_command_line(parser):
-        """Add command line options for this family of formulas
-        """
-        pass
-
-    @staticmethod
-    def additional_options_check(args):
-        pass
-
-
-class _GeneralCommandLine(_CMDLineHelper):
-    """Command Line helper for the general commands
-
-    For every formula family there should be a subclass.
-    """
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup general command line options
-
-        Arguments:
-        - `parser`: parser to fill with options
-        """
-        parser.add_argument('--output','-o',
-                            type=argparse.FileType('wb',0),
-                            metavar="<output>",
-                            default='-',
-                            help="""Save the formula to <output>. Setting '<output>' to '-' sends the
-                            formula to standard output. (default: -)
-                            """)
-        parser.add_argument('--output-format','-of',
-                            choices=['latex','dimacs'],
-                            default='dimacs',
-                            help="""
-                            Output format of the formulas. 'latex' is
-                            convenient to insert formulas into papers, and
-                            'dimacs' is the format used by sat solvers.
-                            (default: dimacs)
-                            """)
-
-        parser.add_argument('--seed','-S',
-                            metavar="<seed>",
-                            default=None,
-                            type=str,
-                            action='store',
-                            help="""Seed for any random process in the
-                            program. (default: current time)
-                            """)
-        g=parser.add_mutually_exclusive_group()
-        g.add_argument('--verbose', '-v',action='store_true',default=True,
-                       help="""Output formula header and comments.""")
-        g.add_argument('--quiet', '-q',action='store_false',dest='verbose',
-                       help="""Output just the formula with no header.""")
-        parser.add_argument('--Transform','-T',
-                            metavar="<transformation method>",
-                            choices=available_transform().keys(),
-                            default='none',
-                            help="""
-                            Transform the CNF formula to make it harder.
-                            See `--help-transform` for more information
-                            """)
-        parser.add_argument('--Tarity','-Ta',
-                            metavar="<transformation arity>",
-                            type=int,
-                            default=None,
-                            help="""
-                            Hardness parameter for the transformation procedure.
-                            See `--help-transform` for more informations
-                            """)
-        parser.add_argument('--help-transform',nargs=0,action=HelpTransformAction,help="""
-                             Formula can be made harder applying some
-                             so called "transformation procedures".
-                             This gives information about the implemented transformation.
-                             """)
+    parser.add_argument('--seed','-S',
+                        metavar="<seed>",
+                        default=None,
+                        type=str,
+                        action='store',
+                        help="""Seed for any random process in the
+                        program. (default: current time)
+                        """)
+    g=parser.add_mutually_exclusive_group()
+    g.add_argument('--verbose', '-v',action='store_true',default=True,
+                   help="""Output formula header and comments.""")
+    g.add_argument('--quiet', '-q',action='store_false',dest='verbose',
+                   help="""Output just the formula with no header.""")
+    parser.add_argument('--Transform','-T',
+                        metavar="<transformation method>",
+                        choices=available_transform().keys(),
+                        default='none',
+                        help="""
+                        Transform the CNF formula to make it harder.
+                        See `--help-transform` for more information
+                        """)
+    parser.add_argument('--Tarity','-Ta',
+                        metavar="<transformation arity>",
+                        type=int,
+                        default=None,
+                        help="""
+                        Hardness parameter for the transformation procedure.
+                        See `--help-transform` for more informations
+                        """)
+    parser.add_argument('--help-transform',nargs=0,action=HelpTransformAction,help="""
+                         Formula can be made harder applying some
+                         so called "transformation procedures".
+                         This gives information about the implemented transformation.
+                         """)
 
 
 ### Graph readers/generators
@@ -191,7 +164,7 @@ class _GraphHelper(object):
         raise NotImplementedError("Graph Input helper must be subclassed")
 
 
-class _DAGHelper(_GraphHelper,_CMDLineHelper):
+class _DAGHelper(_GraphHelper):
 
     @staticmethod
     def setup_command_line(parser):
@@ -295,7 +268,7 @@ class _DAGHelper(_GraphHelper,_CMDLineHelper):
         return D
 
 
-class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
+class _SimpleGraphHelper(_GraphHelper):
 
     @staticmethod
     def setup_command_line(parser,suffix="",required=False):
@@ -451,7 +424,7 @@ class _SimpleGraphHelper(_GraphHelper,_CMDLineHelper):
         return G
 
 
-class _BipartiteGraphHelper(_GraphHelper,_CMDLineHelper):
+class _BipartiteGraphHelper(_GraphHelper):
 
     @staticmethod
     def setup_command_line(parser):
@@ -607,7 +580,7 @@ class _FormulaFamilyHelper(object):
         pass
 
 
-class _EMPTY(_FormulaFamilyHelper,_CMDLineHelper):
+class _EMPTY(_FormulaFamilyHelper):
     name='empty'
     description='empty CNF formula'
 
@@ -624,7 +597,7 @@ class _EMPTY(_FormulaFamilyHelper,_CMDLineHelper):
         """
         return CNF()
 
-class _EMPTY_CLAUSE(_FormulaFamilyHelper,_CMDLineHelper):
+class _EMPTY_CLAUSE(_FormulaFamilyHelper):
     name='emptyclause'
     description='one empty clause'
 
@@ -641,7 +614,7 @@ class _EMPTY_CLAUSE(_FormulaFamilyHelper,_CMDLineHelper):
         """
         return CNF([[]])
     
-class _GPHP(_FormulaFamilyHelper,_CMDLineHelper):
+class _GPHP(_FormulaFamilyHelper):
     name='gphp'
     description='graph pigeonhole principle'
 
@@ -671,7 +644,7 @@ class _GPHP(_FormulaFamilyHelper,_CMDLineHelper):
                                         functional=args.functional,
                                         onto=args.onto)
 
-class _SSC(_FormulaFamilyHelper,_CMDLineHelper):
+class _SSC(_FormulaFamilyHelper):
     name='subsetcard'
     description='subset cardinality formulas'
 
@@ -685,7 +658,7 @@ class _SSC(_FormulaFamilyHelper,_CMDLineHelper):
         return SubsetCardinalityFormula(B)
 
     
-class _MARKSTROM(_FormulaFamilyHelper,_CMDLineHelper):
+class _MARKSTROM(_FormulaFamilyHelper):
     name='markstrom'
     description='markstrom formulas'
 
@@ -700,7 +673,7 @@ class _MARKSTROM(_FormulaFamilyHelper,_CMDLineHelper):
         return MarkstromFormula(G)
 
     
-class _PHP(_FormulaFamilyHelper,_CMDLineHelper):
+class _PHP(_FormulaFamilyHelper):
     name='php'
     description='pigeonhole principle'
 
@@ -732,7 +705,7 @@ class _PHP(_FormulaFamilyHelper,_CMDLineHelper):
                                    onto=args.onto)
 
 
-class _RAM(_FormulaFamilyHelper,_CMDLineHelper):
+class _RAM(_FormulaFamilyHelper):
     """Command line helper for RamseyNumber formulas
     """
     name='ram'
@@ -759,7 +732,7 @@ class _RAM(_FormulaFamilyHelper,_CMDLineHelper):
         return RamseyNumber(args.s, args.k, args.N)
 
 
-class _OP(_FormulaFamilyHelper,_CMDLineHelper):
+class _OP(_FormulaFamilyHelper):
     """Command line helper for Ordering principle formulas
     """
     name='op'
@@ -792,7 +765,7 @@ class _OP(_FormulaFamilyHelper,_CMDLineHelper):
         return OrderingPrinciple(args.N,args.total,args.smart,args.plant,args.knuth)
 
 
-class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
+class _GOP(_FormulaFamilyHelper):
     """Command line helper for Graph Ordering principle formulas
     """
     name='gop'
@@ -827,7 +800,7 @@ class _GOP(_FormulaFamilyHelper,_CMDLineHelper):
         return GraphOrderingPrinciple(G,args.total,args.smart,args.plant,args.knuth)
 
 
-class _PARITY(_FormulaFamilyHelper,_CMDLineHelper):
+class _PARITY(_FormulaFamilyHelper):
     """Command line helper for Matching Principle formulas
     """
     name='parity'
@@ -847,7 +820,7 @@ class _PARITY(_FormulaFamilyHelper,_CMDLineHelper):
         return ParityPrinciple(args.N)
 
 
-class _PMATCH(_FormulaFamilyHelper,_CMDLineHelper):
+class _PMATCH(_FormulaFamilyHelper):
     """Command line helper for Perfect Matching Principle formulas
     """
     name='matching'
@@ -866,10 +839,10 @@ class _PMATCH(_FormulaFamilyHelper,_CMDLineHelper):
     @staticmethod
     def build_cnf(args):
         G=_SimpleGraphHelper.obtain_graph(args)
-        return GraphMatchingPrinciple(G)
+        return PerfectMatchingPrinciple(G)
 
 
-class _COUNT(_FormulaFamilyHelper,_CMDLineHelper):
+class _COUNT(_FormulaFamilyHelper):
     """Command line helper for Counting Principle formulas
     """
     name='count'
@@ -895,7 +868,7 @@ class _COUNT(_FormulaFamilyHelper,_CMDLineHelper):
         return CountingPrinciple(args.M,args.p)
 
     
-class _KClique(_FormulaFamilyHelper,_CMDLineHelper):
+class _KClique(_FormulaFamilyHelper):
     """Command line helper for k-clique formula
     """
     name='kclique'
@@ -923,7 +896,7 @@ class _KClique(_FormulaFamilyHelper,_CMDLineHelper):
         return SubgraphFormula(G,[networkx.complete_graph(args.k)])
 
 
-class _KColor(_FormulaFamilyHelper,_CMDLineHelper):
+class _KColor(_FormulaFamilyHelper):
     """Command line helper for k-color formula
     """
     name='kcolor'
@@ -951,7 +924,7 @@ class _KColor(_FormulaFamilyHelper,_CMDLineHelper):
         return ColoringFormula(G,range(1,args.k+1))
 
 
-class _GAuto(_FormulaFamilyHelper,_CMDLineHelper):
+class _GAuto(_FormulaFamilyHelper):
     """Command line helper for Graph Automorphism formula
     """
     name='gauto'
@@ -979,7 +952,7 @@ class _GAuto(_FormulaFamilyHelper,_CMDLineHelper):
 
 
 
-class _GIso(_FormulaFamilyHelper,_CMDLineHelper):
+class _GIso(_FormulaFamilyHelper):
     """Command line helper for Graph Isomorphism formula
     """
     name='giso'
@@ -1009,7 +982,7 @@ class _GIso(_FormulaFamilyHelper,_CMDLineHelper):
 
 
     
-class _RAMLB(_FormulaFamilyHelper,_CMDLineHelper):
+class _RAMLB(_FormulaFamilyHelper):
     """Command line helper for ramsey graph formula
     """
     name='ramlb'
@@ -1042,7 +1015,7 @@ class _RAMLB(_FormulaFamilyHelper,_CMDLineHelper):
 
 
 
-class _TSE(_FormulaFamilyHelper,_CMDLineHelper):
+class _TSE(_FormulaFamilyHelper):
     """Command line helper for Tseitin  formulas
     """
     name='tseitin'
@@ -1098,7 +1071,7 @@ class _TSE(_FormulaFamilyHelper,_CMDLineHelper):
         return TseitinFormula(G,charge)
 
 
-class _OR(_FormulaFamilyHelper,_CMDLineHelper):
+class _OR(_FormulaFamilyHelper):
     """Command line helper for a single clause formula
     """
     name='or'
@@ -1129,7 +1102,7 @@ class _OR(_FormulaFamilyHelper,_CMDLineHelper):
                           " and {} negative literals".format(args.P,args.N))
 
 
-class _RANDOM(_FormulaFamilyHelper,_CMDLineHelper):
+class _RANDOM(_FormulaFamilyHelper):
     """Command line helper for random formulas
     """
     name='randkcnf'
@@ -1156,7 +1129,7 @@ class _RANDOM(_FormulaFamilyHelper,_CMDLineHelper):
         return RandomKCNF(args.k,args.n,args.m)
 
 
-class _PEB(_FormulaFamilyHelper,_CMDLineHelper):
+class _PEB(_FormulaFamilyHelper):
     """Command line helper for pebbling formulas
     """
     name='peb'
@@ -1185,7 +1158,7 @@ class _PEB(_FormulaFamilyHelper,_CMDLineHelper):
             print("\nError: input graph must be directed and acyclic.",file=sys.stderr)
             sys.exit(-1)
 
-class _Stone(_FormulaFamilyHelper,_CMDLineHelper):
+class _Stone(_FormulaFamilyHelper):
     """Command line helper for stone formulas
     """
     name='stone'
@@ -1217,7 +1190,7 @@ class _Stone(_FormulaFamilyHelper,_CMDLineHelper):
             
 
             
-class _AND(_FormulaFamilyHelper,_CMDLineHelper):
+class _AND(_FormulaFamilyHelper):
     """Command line helper for a single clause formula
     """
     name='and'
@@ -1261,9 +1234,22 @@ signal.signal(signal.SIGINT, signal_handler)
 ### Main program
 ###
 def command_line_utility(argv=sys.argv):
+    """CNFgen main command line interface
+
+    This function provide the main interface to CNFgen. It sets up the
+    command line, parses the command line arguments, builds the
+    appropriate formula and outputs its representation.
+    
+    It **must not** raise exceptions.
+
+    Parameters
+    ----------
+    argv: list, optional
+        The list of token with the command line arguments/options.
+
+    """
 
     # Commands and subcommand lines
-    cmdline = _GeneralCommandLine
     subcommands=[_PHP,_GPHP,
                  _TSE,
                  _OP,_GOP,
@@ -1286,7 +1272,7 @@ def command_line_utility(argv=sys.argv):
     Each <formula type> has its own command line arguments and options.
     For more information type 'cnfgen <formula type> [--help | -h ]'
     """)
-    cmdline.setup_command_line(parser)
+    setup_command_line_args(parser)
     subparsers=parser.add_subparsers(title="Available formula types",metavar='<formula type>')
 
     # Setup of various formula command lines options
@@ -1297,8 +1283,6 @@ def command_line_utility(argv=sys.argv):
 
     # Process the options
     args=parser.parse_args(argv[1:])
-    cmdline.additional_options_check(args)
-    args.subcommand.additional_options_check(args)
 
     # If necessary, init the random generator
     if hasattr(args,'seed') and args.seed:
