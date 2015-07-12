@@ -202,7 +202,7 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
         raise ValueError("Input graph must be acyclic")
 
     if graph_type=="bipartite" and not has_bipartition(G):
-        raise ValueError("Input graph must be labeled with a bipartition")
+        raise ValueError("Input Error: graph vertices miss the 'bipartite' 0,1 label.")
         
     return G
 
