@@ -7,6 +7,7 @@ from .cnf import CNF
 # internal methods
 from .graphs import enumerate_vertices,is_dag
 from .cnf    import parity_constraint
+from .cnf    import equal_to_constraint
 from .cnf    import less_than_constraint
 from .cnf    import less_or_equal_constraint
 from .cnf    import greater_than_constraint
@@ -707,16 +708,12 @@ def MarkstromFormula(G):
     for v in G.nodes():
 
         if G.degree(v) % 2 == 1:
-            raise ValueError("Markstrom formulas requires all vertices in the graph to have even degree.")
+            raise ValueError("Markstrom formulas requires all vertices to have even degree.")
 
         edge_vars = [ var_name(*e) for e in G.edges(v) ]
         
-        for cls in less_or_equal_constraint(edge_vars,
-                                            len(edge_vars)/2):
-            F.add_clause(cls,strict=True)
-
-        for cls in greater_or_equal_constraint(edge_vars,
-                                               len(edge_vars)/2):
+        for cls in equal_to_constraint(edge_vars,
+                                       len(edge_vars)/2):
             F.add_clause(cls,strict=True)
 
     return F
