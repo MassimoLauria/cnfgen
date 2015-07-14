@@ -7,6 +7,8 @@ import cnfformula.cnfgen as cnfgen
 import cnfformula.utils.cnfshuffle as cnfshuffle
 import cnfformula.utils.adjlist2pebbling as adjlist2pebbling
 
+from cnfformula.graphs import readGraph
+
 from . import shufflereference
 from . import TestCNFBase
 
@@ -61,21 +63,21 @@ class TestCNF(TestCNFBase) :
 class TestPebbling(TestCNFBase) :
     def test_null_graph(self) :
         G=nx.DiGraph()
-        peb = cnfgen.PebblingFormula(G)
+        peb = cnfformula.families.PebblingFormula(G)
         self.assertTrue(peb._check_coherence())
         self.assertCnfEqual(peb,cnfformula.CNF())
 
     def test_single_vertex(self) :
         G=nx.DiGraph()
         G.add_node('x')
-        peb = cnfgen.PebblingFormula(G)
+        peb = cnfformula.families.PebblingFormula(G)
         self.assertTrue(peb._check_coherence())
         self.assertSetEqual(set(peb.variables()),set(['x']))
         self.assertSetSetEqual(list(peb.clauses()),[[(True,'x')],[(False,'x')]])
 
     def test_path(self) :
         G=nx.path_graph(10,nx.DiGraph())
-        peb = cnfgen.PebblingFormula(G)
+        peb = cnfformula.families.PebblingFormula(G)
         self.assertTrue(peb._check_coherence())
         clauses = \
             [[(True,0)]] + \
@@ -90,7 +92,7 @@ class TestPebbling(TestCNFBase) :
         for i in xrange(0,10) :
             G.add_node(i)
             G.add_edge(i,10)
-        peb = cnfgen.PebblingFormula(G)
+        peb = cnfformula.families.PebblingFormula(G)
         self.assertTrue(peb._check_coherence())
         clauses = \
             [[(True,i)] for i in xrange(10)] + \
@@ -102,7 +104,7 @@ class TestPebbling(TestCNFBase) :
     def test_cycle(self) :
         G=nx.cycle_graph(10,nx.DiGraph())
         with self.assertRaises(ValueError) :
-            cnfgen.PebblingFormula(G)
+            cnfformula.families.PebblingFormula(G)
 
 class TestDimacsParser(TestCNF) :
     def test_empty_file(self) :
@@ -408,7 +410,7 @@ class TestSubstitution(TestCNFBase) :
 
 class TestAdjList2Pebbling(TestCNFBase) :
     def identity_check_helper(self, input, liftname, liftrank) :
-        G = cnfgen.readGraph(input,'dag','adjlist')
+        G = readGraph(input,'dag','adjlist')
         input.seek(0)
         peb = cnfgen.PebblingFormula(G)
         lift = cnfformula.TransformFormula(peb, liftname, liftrank)

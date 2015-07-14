@@ -281,74 +281,6 @@ class _GOP:
         return GraphOrderingPrinciple(G,args.total,args.smart,args.plant,args.knuth)
 
 
-class _PARITY:
-    """Command line helper for Matching Principle formulas
-    """
-    name='parity'
-    description='parity principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for Parity Principle formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('N',metavar='<N>',type=int,help="domain size")
-
-    @staticmethod
-    def build_cnf(args):
-        return ParityPrinciple(args.N)
-
-
-class _PMATCH:
-    """Command line helper for Perfect Matching Principle formulas
-    """
-    name='matching'
-    description='perfect matching principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for Perfect Matching Principle formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        G = SimpleGraphHelper.obtain_graph(args)
-        return PerfectMatchingPrinciple(G)
-
-
-class _COUNT:
-    """Command line helper for Counting Principle formulas
-    """
-    name='count'
-    description='counting principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for Counting Principle formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('M',metavar='<M>',type=int,help="domain size")
-        parser.add_argument('p',metavar='<p>',type=int,help="size of the parts")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build an Counting Principle formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        return CountingPrinciple(args.M,args.p)
-
-    
 class _KClique:
     """Command line helper for k-clique formula
     """
@@ -403,63 +335,6 @@ class _KColor:
         """
         G = SimpleGraphHelper.obtain_graph(args)
         return ColoringFormula(G,range(1,args.k+1))
-
-
-class _GAuto:
-    """Command line helper for Graph Automorphism formula
-    """
-    name='gauto'
-    description='graph automorphism formula'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for graph automorphism formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a graph automorphism formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return GraphAutomorphism(G)
-
-
-
-class _GIso:
-    """Command line helper for Graph Isomorphism formula
-    """
-    name='giso'
-    description='graph isomorphism formula'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for graph isomorphism formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        SimpleGraphHelper.setup_command_line(parser,suffix="1",required=True)
-        SimpleGraphHelper.setup_command_line(parser,suffix="2",required=True)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a graph automorphism formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G1 = SimpleGraphHelper.obtain_graph(args,suffix="1")
-        G2 = SimpleGraphHelper.obtain_graph(args,suffix="2")
-        return GraphIsomorphism(G1,G2)
 
 
     
@@ -580,65 +455,6 @@ class _RANDOM:
         return RandomKCNF(args.k,args.n,args.m)
 
 
-class _PEB:
-    """Command line helper for pebbling formulas
-    """
-    name='peb'
-    description='pebbling formula'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for pebbling formulas
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        DirectedAcyclicGraphHelper.setup_command_line(parser)
-
-    @staticmethod
-    def build_cnf(args):
-        """Build the pebbling formula
-
-        Arguments:
-        - `args`: command line options
-        """
-        D= DirectedAcyclicGraphHelper.obtain_graph(args)
-        try:
-            return PebblingFormula(D)
-        except ValueError:
-            print("\nError: input graph must be directed and acyclic.",file=sys.stderr)
-            sys.exit(-1)
-
-class _Stone:
-    """Command line helper for stone formulas
-    """
-    name='stone'
-    description='stone formula'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for stone formulas
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        DirectedAcyclicGraphHelper.setup_command_line(parser)
-        parser.add_argument('s',metavar='<s>',type=int,help="number of stones")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build the pebbling formula
-
-        Arguments:
-        - `args`: command line options
-        """
-        D= DirectedAcyclicGraphHelper.obtain_graph(args)
-        try:
-            return StoneFormula(D,args.s)
-        except ValueError:
-            print("\nError: Input graph must be a DAG, and a non negative # of stones.",file=sys.stderr)
-            sys.exit(-1)
-            
 
 
 
@@ -677,11 +493,6 @@ def command_line_utility(argv=sys.argv):
                  _KClique,
                  _KColor,
                  _RANDOM,
-                 _PARITY,_PMATCH,
-                 _COUNT,
-                 _PEB,
-                 _Stone,
-                 _GIso,_GAuto,
                  _RAM,_RAMLB,
                  _MARKSTROM,
                  _SSC]

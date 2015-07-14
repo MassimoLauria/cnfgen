@@ -20,18 +20,12 @@ from ..cnf    import greater_or_equal_constraint
 from ..cnf    import loose_minority_constraint
 from ..cnf    import loose_majority_constraint
 
-# removes duplicates from list maintaining order
-import collections
-
-def unify_list(x):
-    """Remove duplicates while maintaining the order."""
-    x=collections.OrderedDict.fromkeys(x)
-    return x.keys()
-
 
 # Import formulas for library access
 from .pigeonhole import PigeonholePrinciple,GraphPigeonholePrinciple
-
+from .graphisomorphism import GraphIsomorphism, GraphAutomorphism
+from .pebbling import PebblingFormula, StoneFormula
+from .counting import PerfectMatchingPrinciple, CountingPrinciple
 
 
 __all__ = ["PigeonholePrinciple",
@@ -45,7 +39,6 @@ __all__ = ["PigeonholePrinciple",
            "RamseyNumber",
            "SubsetCardinalityFormula",
            "TseitinFormula",
-           "ParityPrinciple",
            "MarkstromFormula",
            "PerfectMatchingPrinciple",
            "CountingPrinciple",
@@ -67,26 +60,6 @@ except ImportError:
           file=sys.stderr)
     exit(-1)
 
-
-
-
-class FormulaFamilyHelper(object):
-    """Command Line helper for formula families
-
-    For every formula family there should be a subclass.
-    """
-    description=None
-    name=None
-
-    @staticmethod
-    def build_cnf(args):
-        pass
-
-    @staticmethod
-    def setup_command_line(parser):
-        pass
-
-    
 
 def SubsetCardinalityFormula(B):
     r"""SubsetCardinalityFormula
@@ -165,151 +138,6 @@ def SubsetCardinalityFormula(B):
     
     return ssc
 
-def PebblingFormula(digraph):
-    """Pebbling formula
-
-    Build a pebbling formula from the directed graph. If the graph has
-    an `ordered_vertices` attribute, then it is used to enumerate the
-    vertices (and the corresponding variables).
-
-    Arguments:
-    - `digraph`: directed acyclic graph.
-    """
-    if not is_dag(digraph):
-        raise ValueError("Pebbling formula is defined only for directed acyclic graphs")
-
-    peb=CNF()
-
-    if hasattr(digraph,'name'):
-        peb.header="Pebbling formula of: "+digraph.name+"\n\n"+peb.header
-    else:
-        peb.header="Pebbling formula\n\n"+peb.header
-
-    # add variables in the appropriate order
-    vertices=enumerate_vertices(digraph)
-    position=dict((v,i) for (i,v) in enumerate(vertices))
-
-    for v in vertices:
-        peb.add_variable(v,description="There is a pebble on vertex ${}$".format(v))
-
-    # add the clauses
-    for v in vertices:
-
-        # If predecessors are pebbled the vertex must be pebbled
-        pred=sorted(digraph.predecessors(v),key=lambda x:position[x])
-        peb.add_clause([(False,p) for p in pred]+[(True,v)])
-
-        if digraph.out_degree(v)==0: #the sink
-            peb.add_clause([(False,v)])
-
-    return peb
-
-def StoneFormula(D,nstones):
-    """Stones formulas
-
-    The stone formulas have been introduced in [2]_ and generalized in
-    [1]_. They are one of the classic examples that separate regular
-    resolutions from general resolution [1]_.
-
-    A \"Stones formula\" from a directed acyclic graph :math:`D`
-    claims that each vertex of the graph is associated with one on
-    :math:`s` stones (not necessarily in an injective way).
-    In particular for each vertex :math:`v` in :math:`V(D)` and each
-    stone :math:`j` we have a variable :math:`P_{v,j}` that claims
-    that stone :math:`j` is associated to vertex :math:`v`.
-
-    Each stone can be either red or blue, and not both.
-    The propositional variable :math:`R_j` if true when the stone
-    :math:`j` is red and false otherwise.
-
-    The clauses of the formula encode the following constraints.
-    If a stone is on a source vertex (i.e. a vertex with no incoming
-    edges), then it must be red. If all stones on the predecessors of
-    a vertex are red, then the stone of the vertex itself must be red.
-
-    The formula furthermore enforces that the stones on the sinks
-    (i.e. vertices with no outgoing edges) are blue.
-
-    .. note:: The exact formula structure depends by the graph and on
-              its topological order, which is determined by the
-              ``enumerate_vertices(D)``.
-
-    Parameters
-    ----------
-    D : a directed acyclic graph
-        it should be a directed acyclic graph.
-    nstones : int
-       the number of stones.
-
-    Raises
-    ------
-    ValueError
-       if :math:`D` is not a directed acyclic graph
-    
-    ValueError
-       if the number of stones is negative
-
-    References
-    ----------
-    .. [1] M. Alekhnovich, J. Johannsen, T. Pitassi and A. Urquhart
-    	   An Exponential Separation between Regular and General Resolution.
-           Theory of Computing (2007)
-    .. [2] R. Raz and P. McKenzie
-           Separation of the monotone NC hierarchy.
-           Combinatorica (1999)
-
-    """
-    if not is_dag(D):
-        raise ValueError("Stone formulas are defined only for directed acyclic graphs.")
-    
-    if nstones<0:
-        raise ValueError("There must be at least one stone.")
-
-    cnf = CNF()
-
-    if hasattr(D, 'name'):
-        cnf.header = "Stone formula of: " + D.name + "\nwith " + str(nstones) + " stones\n" + cnf.header
-    else:
-        cnf.header = "Stone formula with " + str(nstones) + " stones\n" + cnf.header
-
-    # add variables in the appropriate order
-    vertices=enumerate_vertices(D)
-    position=dict((v,i) for (i,v) in enumerate(vertices))
-    stones=range(1,nstones+1)
-    
-    # Stones->Vertices variables
-    for v in vertices:
-        for j in stones:
-            cnf.add_variable("P_{{{0},{1}}}".format(v,j),
-                             description="Stone ${1}$ on vertex ${0}$".format(v,j))
-
-    # Color variables
-    for j in stones:
-        cnf.add_variable("R_{{{0}}}".format(j),
-                         description="Stone ${}$ is red".format(j))
-    
-    # Each vertex has some stone
-    for v in vertices:
-        cnf.add_clause([(True,"P_{{{0},{1}}}".format(v,j)) for j in stones])
-        
-    # If predecessors have red stones, the sink must have a red stone
-    for v in vertices:
-        for j in stones:
-            pred=sorted(D.predecessors(v),key=lambda x:position[x])
-            for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
-                cnf.add_clause([(False, "P_{{{0},{1}}}".format(p,s)) for (p,s) in zip(pred,stones_tuple)] +
-                               [(False, "P_{{{0},{1}}}".format(v,j))] +
-                               [(False, "R_{{{0}}}".format(s)) for s in unify_list(stones_tuple)] +
-                               [(True,  "R_{{{0}}}".format(j))])
-        
-        if D.out_degree(v)==0: #the sink
-            for j in stones:
-                cnf.add_clause([
-                    (False,"P_{{{0},{1}}}".format(v,j)),
-                    (False,"R_{{{0}}}".format(j))
-                ])
-
-    return cnf
 
 
 
@@ -327,94 +155,6 @@ def OrderingPrinciple(size,total=False,smart=False,plant=False,knuth=0):
     return GraphOrderingPrinciple(networkx.complete_graph(size),total,smart,plant,knuth)
 
 
-def _graph_isomorphism_var(u, v):
-    return "x_{{{0},{1}}}".format(u, v)
-
-
-def GraphIsomorphism(G1, G2):
-    """Graph Isomorphism formula
-
-    The formula is the CNF encoding of the statement that two simple
-    graphs G1 and G2 are isomorphic.
-
-    Parameters
-    ----------
-    G1 : networkx.Graph
-        an undirected graph object
-    G2 : networkx.Graph
-        an undirected graph object
-
-    Returns
-    -------
-    A CNF formula which is satiafiable if and only if graphs G1 and G2
-    are isomorphic.
-
-    """
-    F = CNF()
-    F.header = "Graph Isomorphism problem between graphs " +\
-               G1.name + " and " + G2.name + "\n" + F.header
-
-    pairs = [(u, v) for u in G1.nodes() for v in G2.nodes()]
-    var = _graph_isomorphism_var
-
-    for (u, v) in pairs:
-        F.add_variable(var(u, v))
-
-    # Defined on both side
-    for u in G1.nodes():
-        F.add_clause([(True, var(u, v)) for v in G2.nodes()], strict=True)
-
-    for v in G2.nodes():
-        F.add_clause([(True, var(u, v)) for u in G1.nodes()], strict=True)
-
-    # Injective on both sides
-    for u in G1.nodes():
-        for v1, v2 in combinations(G2.nodes(), 2):
-            F.add_clause([(False, var(u, v1)),
-                          (False, var(u, v2))], strict=True)
-    for v in G2.nodes():
-        for u1, u2 in combinations(G1.nodes(), 2):
-            F.add_clause([(False, var(u1, v)),
-                          (False, var(u2, v))], strict=True)
-
-    # Edge consistency
-    for u1, u2 in combinations(G1.nodes(), 2):
-        for v1, v2 in combinations(G2.nodes(), 2):
-            if G1.has_edge(u1, u2) != G2.has_edge(v1, v2):
-                F.add_clause([(False, var(u1, v1)),
-                              (False, var(u2, v2))], strict=True)
-                F.add_clause([(False, var(u1, v2)),
-                              (False, var(u2, v1))], strict=True)
-
-    return F
-
-
-def GraphAutomorphism(G):
-    """Graph Automorphism formula
-
-    The formula is the CNF encoding of the statement that a graph G
-    has a nontrivial automorphism, i.e. an automorphism different from
-    the idential one.
-
-    Parameter
-    ---------
-    G : a simple graph
-
-    Returns
-    -------
-    A CNF formula which is satiafiable if and only if graph G has a
-    nontrivial automorphism.
-    """
-    tmp = CNF()
-    header = "Graph automorphism formula for graph "+ G.name +"\n"+ tmp.header
-    F = GraphIsomorphism(G, G)
-    F.header = header
-
-    var = _graph_isomorphism_var
-
-    F.add_clause([(False, var(u, u)) for u in G.nodes()], strict=True)
-
-    return F
 
 
 def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
@@ -642,95 +382,6 @@ def ColoringFormula(G,colors,functional=True):
     return col
 
 
-def PerfectMatchingPrinciple(graph):
-    """Generates the clauses for the graph perfect matching principle.
-    
-    The principle claims that there is a way to select edges to such
-    that all vertices have exactly one incident edge set to 1.
-
-    Arguments:
-    - `graph`  : undirected graph
-
-    """
-    cnf=CNF()
-
-    # Describe the formula
-    name="Perfect Matching Principle"
-    
-    if hasattr(graph,'name'):
-        cnf.header=name+" of graph:\n"+graph.name+"\n"+cnf.header
-    else:
-        cnf.header=name+".\n"+cnf.header
-
-    def var_name(u,v):
-        if u<=v:
-            return 'x_{{{0},{1}}}'.format(u,v)
-        else:
-            return 'x_{{{0},{1}}}'.format(v,u)
-            
-    # Each vertex has exactly one edge set to one.
-    for v in graph.nodes():
-
-        edge_vars = [var_name(u,v) for u in graph.adj[v]]
-
-        # at least one edge is active
-        cnf.add_clause([(True,var) for var in edge_vars])
-
-        # at most one edge is active
-        for cls in less_than_constraint(edge_vars,2):
-            cnf.add_clause(cls)
-
-    return cnf
-
-
-def ParityPrinciple(size):
-    """Parity rinciple on a domain with `size` elements
-
-    Arguments:
-    - `size`  : size of the domain
-    """
-    return GraphMatchingPrinciple(networkx.complete_graph(size))
-
-
-def CountingPrinciple(M,p):
-    """Generates the clauses for the counting matching principle.
-    
-    The principle claims that there is a way to partition M in sets of
-    size p each.
-
-    Arguments:
-    - `M`  : size of the domain
-    - `p`  : size of each class
-
-    """
-    cnf=CNF()
-
-    # Describe the formula
-    name="Counting Principle: {0} divided in parts of size {1}.".format(M,p)
-    cnf.header=name+"\n"+cnf.header
-
-    def var_name(tpl):
-        return "Y_{{"+",".join("{0}".format(v) for v in tpl)+"}}"
-
-    # Incidence lists
-    incidence=[[] for x in range(M)]
-    for tpl in combinations(range(M),p):
-        for i in tpl:
-            incidence[i].append(tpl)
-    
-    # Each element of the domain is in exactly one part.
-    for el in range(M):
-
-        edge_vars = [var_name(tpl) for tpl in incidence[el]]
-
-        # the element is in at least one part
-        cnf.add_clause([(True,var) for var in edge_vars])
-
-        # the element is in at most one part
-        for cls in strict_inequality_constraint(edge_vars,2):
-            cnf.add_clause(cls)
-
-    return cnf
 
 
 
