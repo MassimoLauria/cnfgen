@@ -42,6 +42,7 @@ from . import TransformFormula,available_transform
 from .cmdline import DirectedAcyclicGraphHelper
 from .cmdline import SimpleGraphHelper
 from .cmdline import BipartiteGraphHelper
+from .cmdline import is_formula_cmdhelper
 
 from .families import *
 
@@ -154,52 +155,8 @@ def setup_command_line_args(parser):
 
     
 ### Formula families
-
-class _FormulaFamilyHelper(object):
-    """Command Line helper for formula families
-
-    For every formula family there should be a subclass.
-    """
-    description=None
-    name=None
-
-    @staticmethod
-    def build_cnf(args):
-        pass
-
-
     
-class _GPHP(_FormulaFamilyHelper):
-    name='gphp'
-    description='graph pigeonhole principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for pigeonhole principle formula over graphs
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('--functional',action='store_true',
-                            help="pigeons sit in at most one hole")
-        parser.add_argument('--onto',action='store_true',
-                            help="every hole has a sitting pigeon")
-        BipartiteGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a Graph PHP formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = BipartiteGraphHelper.obtain_graph(args) 
-        return GraphPigeonholePrinciple(G,
-                                        functional=args.functional,
-                                        onto=args.onto)
-
-class _SSC(_FormulaFamilyHelper):
+class _SSC:
     name='subsetcard'
     description='subset cardinality formulas'
 
@@ -213,7 +170,7 @@ class _SSC(_FormulaFamilyHelper):
         return SubsetCardinalityFormula(B)
 
     
-class _MARKSTROM(_FormulaFamilyHelper):
+class _MARKSTROM:
     name='markstrom'
     description='markstrom formulas'
 
@@ -228,39 +185,8 @@ class _MARKSTROM(_FormulaFamilyHelper):
         return MarkstromFormula(G)
 
     
-class _PHP(_FormulaFamilyHelper):
-    name='php'
-    description='pigeonhole principle'
 
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for pigeonhole principle formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('pigeons',metavar='<pigeons>',type=int,help="Number of pigeons")
-        parser.add_argument('holes',metavar='<holes>',type=int,help="Number of holes")
-        parser.add_argument('--functional',action='store_true',
-                            help="pigeons sit in at most one hole")
-        parser.add_argument('--onto',action='store_true',
-                            help="every hole has a sitting pigeon")
-        parser.set_defaults(func=_PHP.build_cnf)
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a PHP formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        return PigeonholePrinciple(args.pigeons,
-                                   args.holes,
-                                   functional=args.functional,
-                                   onto=args.onto)
-
-
-class _RAM(_FormulaFamilyHelper):
+class _RAM:
     """Command line helper for RamseyNumber formulas
     """
     name='ram'
@@ -287,7 +213,7 @@ class _RAM(_FormulaFamilyHelper):
         return RamseyNumber(args.s, args.k, args.N)
 
 
-class _OP(_FormulaFamilyHelper):
+class _OP:
     """Command line helper for Ordering principle formulas
     """
     name='op'
@@ -320,7 +246,7 @@ class _OP(_FormulaFamilyHelper):
         return OrderingPrinciple(args.N,args.total,args.smart,args.plant,args.knuth)
 
 
-class _GOP(_FormulaFamilyHelper):
+class _GOP:
     """Command line helper for Graph Ordering principle formulas
     """
     name='gop'
@@ -355,7 +281,7 @@ class _GOP(_FormulaFamilyHelper):
         return GraphOrderingPrinciple(G,args.total,args.smart,args.plant,args.knuth)
 
 
-class _PARITY(_FormulaFamilyHelper):
+class _PARITY:
     """Command line helper for Matching Principle formulas
     """
     name='parity'
@@ -375,7 +301,7 @@ class _PARITY(_FormulaFamilyHelper):
         return ParityPrinciple(args.N)
 
 
-class _PMATCH(_FormulaFamilyHelper):
+class _PMATCH:
     """Command line helper for Perfect Matching Principle formulas
     """
     name='matching'
@@ -397,7 +323,7 @@ class _PMATCH(_FormulaFamilyHelper):
         return PerfectMatchingPrinciple(G)
 
 
-class _COUNT(_FormulaFamilyHelper):
+class _COUNT:
     """Command line helper for Counting Principle formulas
     """
     name='count'
@@ -423,7 +349,7 @@ class _COUNT(_FormulaFamilyHelper):
         return CountingPrinciple(args.M,args.p)
 
     
-class _KClique(_FormulaFamilyHelper):
+class _KClique:
     """Command line helper for k-clique formula
     """
     name='kclique'
@@ -451,7 +377,7 @@ class _KClique(_FormulaFamilyHelper):
         return SubgraphFormula(G,[networkx.complete_graph(args.k)])
 
 
-class _KColor(_FormulaFamilyHelper):
+class _KColor:
     """Command line helper for k-color formula
     """
     name='kcolor'
@@ -479,7 +405,7 @@ class _KColor(_FormulaFamilyHelper):
         return ColoringFormula(G,range(1,args.k+1))
 
 
-class _GAuto(_FormulaFamilyHelper):
+class _GAuto:
     """Command line helper for Graph Automorphism formula
     """
     name='gauto'
@@ -507,7 +433,7 @@ class _GAuto(_FormulaFamilyHelper):
 
 
 
-class _GIso(_FormulaFamilyHelper):
+class _GIso:
     """Command line helper for Graph Isomorphism formula
     """
     name='giso'
@@ -537,7 +463,7 @@ class _GIso(_FormulaFamilyHelper):
 
 
     
-class _RAMLB(_FormulaFamilyHelper):
+class _RAMLB:
     """Command line helper for ramsey graph formula
     """
     name='ramlb'
@@ -570,7 +496,7 @@ class _RAMLB(_FormulaFamilyHelper):
 
 
 
-class _TSE(_FormulaFamilyHelper):
+class _TSE:
     """Command line helper for Tseitin  formulas
     """
     name='tseitin'
@@ -627,7 +553,7 @@ class _TSE(_FormulaFamilyHelper):
 
 
 
-class _RANDOM(_FormulaFamilyHelper):
+class _RANDOM:
     """Command line helper for random formulas
     """
     name='randkcnf'
@@ -654,7 +580,7 @@ class _RANDOM(_FormulaFamilyHelper):
         return RandomKCNF(args.k,args.n,args.m)
 
 
-class _PEB(_FormulaFamilyHelper):
+class _PEB:
     """Command line helper for pebbling formulas
     """
     name='peb'
@@ -683,7 +609,7 @@ class _PEB(_FormulaFamilyHelper):
             print("\nError: input graph must be directed and acyclic.",file=sys.stderr)
             sys.exit(-1)
 
-class _Stone(_FormulaFamilyHelper):
+class _Stone:
     """Command line helper for stone formulas
     """
     name='stone'
@@ -713,6 +639,8 @@ class _Stone(_FormulaFamilyHelper):
             print("\nError: Input graph must be a DAG, and a non negative # of stones.",file=sys.stderr)
             sys.exit(-1)
             
+
+
 
 ###
 ### Register signals
@@ -744,8 +672,7 @@ def command_line_utility(argv=sys.argv):
     """
 
     # Commands and subcommand lines
-    subcommands=[_PHP,_GPHP,
-                 _TSE,
+    subcommands=[_TSE,
                  _OP,_GOP,
                  _KClique,
                  _KColor,
@@ -758,6 +685,20 @@ def command_line_utility(argv=sys.argv):
                  _RAM,_RAMLB,
                  _MARKSTROM,
                  _SSC]
+
+    # Collect formula families
+    import pkgutil
+    import cnfformula.families
+
+    for loader, module_name, _ in  pkgutil.walk_packages(cnfformula.families.__path__):
+        module_name = cnfformula.families.__name__+"."+module_name
+        module = loader.find_module(module_name).load_module(module_name)
+        for objname in dir(module):
+            obj = getattr(module, objname)
+            if is_formula_cmdhelper(obj):
+                subcommands.append(obj)
+    subcommands.sort(key=lambda x: x.name)
+    del pkgutil,cnfformula.families
 
     # Parse the command line arguments
     parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),

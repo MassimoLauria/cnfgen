@@ -23,7 +23,49 @@ from .graphs import bipartite_random_left_regular,bipartite_random_regular
 import sys
 
 
-__all__ = [ "DirectedAcyclicGraphHelper", "SimpleGraphHelper", "BipartiteGraphHelper"]
+__all__ = [ "is_formula_cmdhelper",
+            "DirectedAcyclicGraphHelper", "SimpleGraphHelper", "BipartiteGraphHelper"]
+
+
+
+
+def is_formula_cmdhelper(obj):
+    """Test whether the object is a formula command line helper
+
+    Any object that passes this test should be a suitable
+    implementation of a CNFgen subcommand that generates
+    a formula family.
+
+    In particular the object must have four attributes
+    
+    + ``name`` the name of the CNF formula 
+    + ``description`` a short description of the formulas
+    + ``setup_command_line`` a method that takes a command line parser 
+      object and populates it with appropriate options.
+    + ``build_cnf`` a method that takes the arguments and produce the CNF.
+
+    The parser expected by ``setup_command_line(parser)`` in such as the one produced by
+    ``argparse.ArgumentParser``.
+
+    The argument for ``build_cnf(args)`` is the dictionary of flags and
+    options parsed from the command line as produced by ``args=parser.parse_args``
+
+    Parameters
+    ----------
+    obj : any
+        the object to test
+
+    Returns
+    -------
+    None
+
+    """
+    return \
+        hasattr(obj,'build_cnf') and \
+        hasattr(obj,'setup_command_line') and \
+        hasattr(obj,'name') and \
+        hasattr(obj,'description')
+
 
 ### Graph readers/generators
 

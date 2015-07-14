@@ -110,12 +110,3 @@ def dimacs2cnf(file_handle):
     # return the formula
     cnf._check_coherence(force=True)
     return cnf
-
-
-import collections
-
-def unify_list(x):
-    """Remove duplicates while maintaining the order."""
-    x=collections.OrderedDict.fromkeys(x)
-    return x.keys()
-

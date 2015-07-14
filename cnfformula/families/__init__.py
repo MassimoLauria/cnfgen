@@ -21,12 +21,16 @@ from ..cnf    import loose_minority_constraint
 from ..cnf    import loose_majority_constraint
 
 # removes duplicates from list maintaining order
-from ..utils  import unify_list
+import collections
 
-import pkgutil 
+def unify_list(x):
+    """Remove duplicates while maintaining the order."""
+    x=collections.OrderedDict.fromkeys(x)
+    return x.keys()
 
-for t in pkgutil.iter_modules(path=__path__):
-    print(t)
+
+# Import formulas for library access
+from .pigeonhole import PigeonholePrinciple,GraphPigeonholePrinciple
 
 
 
@@ -64,170 +68,25 @@ except ImportError:
     exit(-1)
 
 
-###
-### Formula families
-###
 
-def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
-    """Pigeonhole Principle CNF formula
 
-    The pigeonhole  principle claims  that no M  pigeons can sit  in N
-    pigeonholes  without collision  if M>N.   The  counterpositive CNF
-    formulation  requires  such mapping  to  be  satisfied. There  are
-    different  variants of this  formula, depending  on the  values of
-    `functional` and `onto` argument.
+class FormulaFamilyHelper(object):
+    """Command Line helper for formula families
 
-    - PHP: pigeon can sit in multiple holes
-    - FPHP: each pigeon sits in exactly one hole
-    - onto-PHP: pigeon can  sit in multiple holes, every  hole must be
-                covered.
-    - Matching: one-to-one bijection between pigeons and holes.
-
-    Arguments:
-    - `pigeon`: number of pigeons
-    - `hole`:   number of holes
-    - `functional`: add clauses to enforce at most one hole per pigeon
-    - `onto`: add clauses to enforce that any hole must have a pigeon
-
-    >>> print(PigeonholePrinciple(4,3).dimacs(export_header=False))
-    p cnf 12 22
-    1 2 3 0
-    4 5 6 0
-    7 8 9 0
-    10 11 12 0
-    -1 -4 0
-    -1 -7 0
-    -1 -10 0
-    -4 -7 0
-    -4 -10 0
-    -7 -10 0
-    -2 -5 0
-    -2 -8 0
-    -2 -11 0
-    -5 -8 0
-    -5 -11 0
-    -8 -11 0
-    -3 -6 0
-    -3 -9 0
-    -3 -12 0
-    -6 -9 0
-    -6 -12 0
-    -9 -12 0
+    For every formula family there should be a subclass.
     """
-    if functional:
-        if onto:
-            formula_name="Matching"
-        else:
-            formula_name="Functional pigeonhole principle"
-    else:
-        if onto:
-            formula_name="Onto pigeonhole principle"
-        else:
-            formula_name="Pigeonhole principle"
+    description=None
+    name=None
 
-    # Clause generator
-    def _PHP_clause_generator(pigeons,holes,functional,onto):
-        # Pigeon axioms
-        for p in xrange(1,pigeons+1):
-            yield [ (True,'p_{{{0},{1}}}'.format(p,h)) for h in xrange(1,holes+1)]
-        # Onto axioms
-        if onto:
-            for h in xrange(1,holes+1):
-                yield [ (True,'p_{{{0},{1}}}'.format(p,h)) for p in xrange(1,pigeons+1)]
-        # No conflicts axioms
-        for h in xrange(1,holes+1):
-            for (p1,p2) in combinations(range(1,pigeons+1),2):
-                yield [ (False,'p_{{{0},{1}}}'.format(p1,h)),
-                        (False,'p_{{{0},{1}}}'.format(p2,h)) ]
-        # Function axioms
-        if functional:
-            for p in xrange(1,pigeons+1):
-                for (h1,h2) in combinations(range(1,holes+1),2):
-                    yield [ (False,'p_{{{0},{1}}}'.format(p,h1)),
-                            (False,'p_{{{0},{1}}}'.format(p,h2)) ]
+    @staticmethod
+    def build_cnf(args):
+        pass
 
-    php=CNF()
-    php.header="{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes) + php.header
+    @staticmethod
+    def setup_command_line(parser):
+        pass
 
-    clauses=_PHP_clause_generator(pigeons,holes,functional,onto)
-    for c in clauses:
-        php.add_clause(c)
-
-    return php
-
-def GraphPigeonholePrinciple(graph,functional=False,onto=False):
-    """Graph Pigeonhole Principle CNF formula
-
-    The graph pigeonhole principle CNF formula, defined on a bipartite
-    graph G=(L,R,E), claims that there is a subset E' of the edges such that 
-    every vertex on the left size L has at least one incident edge in E' and 
-    every edge on the right side R has at most one incident edge in E'.
-
-    This is possible only if the graph has a matching of size |L|.
-
-    There are different variants of this formula, depending on the
-    values of `functional` and `onto` argument.
-
-    - PHP(G):  each left vertex can be incident to multiple edges in E'
-    - FPHP(G): each left vertex must be incident to exaclty one edge in E'
-    - onto-PHP: all right vertices must be incident to some vertex
-    - matching: E' must be a perfect matching between L and R
-
-    Arguments:
-    - `graph` : bipartite graph
-    - `functional`: add clauses to enforce at most one edge per left vertex
-    - `onto`: add clauses to enforce that any right vertex has one incident edge
-
-
-    Remark: the graph vertices must have the 'bipartite' attribute
-    set. Left vertices must have it set to 0 and the right ones to
-    1. Any vertex without the attribute is ignored.
-
-    """
-    if functional:
-        if onto:
-            formula_name="Graph matching"
-        else:
-            formula_name="Graph functional pigeonhole principle"
-    else:
-        if onto:
-            formula_name="Graph onto pigeonhole principle"
-        else:
-            formula_name="Graph pigeonhole principle"
-
-    Left  =  [v for v in graph.nodes() if graph.node[v]["bipartite"]==0]
-    Right =  [v for v in graph.nodes() if graph.node[v]["bipartite"]==1]
-            
-    # Clause generator
-    def _GPHP_clause_generator(G,functional,onto):
-        # Pigeon axioms
-        for p in Left:
-            yield [ (True,'p_{{{0},{1}}}'.format(p,h)) for h in G.adj[p]]
-        # Onto axioms
-        if onto:
-            for h in Right:
-                yield [ (True,'p_{{{0},{1}}}'.format(p,h)) for p in G.adj[h]]
-        # No conflicts axioms
-        for h in Right:
-            for (p1,p2) in combinations(G.adj[h],2):
-                yield [ (False,'p_{{{0},{1}}}'.format(p1,h)),
-                        (False,'p_{{{0},{1}}}'.format(p2,h)) ]
-        # Function axioms
-        if functional:
-            for p in Left:
-                for (h1,h2) in combinations(G.adj[p],2):
-                    yield [ (False,'p_{{{0},{1}}}'.format(p,h1)),
-                            (False,'p_{{{0},{1}}}'.format(p,h2)) ]
-
-    gphp=CNF()
-    gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)
-
-    clauses=_GPHP_clause_generator(graph,functional,onto)
-    for c in clauses:
-        gphp.add_clause(c)
-
-    return gphp
-
+    
 
 def SubsetCardinalityFormula(B):
     r"""SubsetCardinalityFormula
