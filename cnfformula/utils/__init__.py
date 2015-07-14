@@ -112,3 +112,10 @@ def dimacs2cnf(file_handle):
     return cnf
 
 
+import collections
+
+def unify_list(x):
+    """Remove duplicates while maintaining the order."""
+    x=collections.OrderedDict.fromkeys(x)
+    return x.keys()
+

@@ -1,29 +1,34 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-
-from __future__ import print_function
-from .cnf import CNF
-
-# internal methods
-from .graphs import enumerate_vertices,is_dag
-from .cnf    import parity_constraint
-from .cnf    import equal_to_constraint
-from .cnf    import less_than_constraint
-from .cnf    import less_or_equal_constraint
-from .cnf    import greater_than_constraint
-from .cnf    import greater_or_equal_constraint
-from .cnf    import loose_minority_constraint
-from .cnf    import loose_majority_constraint
-
-
-
-__docstring__ =\
 """Formula families useful in proof complexity
 
 Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
-
 """
+
+from __future__ import print_function
+from ..cnf import CNF
+
+# internal methods
+from ..graphs import enumerate_vertices,is_dag
+from ..cnf    import parity_constraint
+from ..cnf    import equal_to_constraint
+from ..cnf    import less_than_constraint
+from ..cnf    import less_or_equal_constraint
+from ..cnf    import greater_than_constraint
+from ..cnf    import greater_or_equal_constraint
+from ..cnf    import loose_minority_constraint
+from ..cnf    import loose_majority_constraint
+
+# removes duplicates from list maintaining order
+from ..utils  import unify_list
+
+import pkgutil 
+
+for t in pkgutil.iter_modules(path=__path__):
+    print(t)
+
+
 
 __all__ = ["PigeonholePrinciple",
            "GraphPigeonholePrinciple",
@@ -48,12 +53,7 @@ import sys
 from textwrap import dedent
 from itertools import product,permutations
 from itertools import combinations,combinations_with_replacement
-import collections
 
-def _unique(x):
-    """Remove duplicates while maintaining the order."""
-    x=collections.OrderedDict.fromkeys(x)
-    return x.keys()
 
 # Network X is used to produce graph based formulas
 try:
@@ -420,7 +420,7 @@ def StoneFormula(D,nstones):
     
     # Stones->Vertices variables
     for v in vertices:
-        for j in nstones:
+        for j in stones:
             cnf.add_variable("P_{{{0},{1}}}".format(v,j),
                              description="Stone ${1}$ on vertex ${0}$".format(v,j))
 
@@ -440,7 +440,7 @@ def StoneFormula(D,nstones):
             for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
                 cnf.add_clause([(False, "P_{{{0},{1}}}".format(p,s)) for (p,s) in zip(pred,stones_tuple)] +
                                [(False, "P_{{{0},{1}}}".format(v,j))] +
-                               [(False, "R_{{{0}}}".format(s)) for s in _unique(stones_tuple)] +
+                               [(False, "R_{{{0}}}".format(s)) for s in unify_list(stones_tuple)] +
                                [(True,  "R_{{{0}}}".format(j))])
         
         if D.out_degree(v)==0: #the sink
