@@ -36,27 +36,18 @@ from __future__ import print_function
 
 import os
 
-from . import CNF
 from . import TransformFormula,available_transform
 
-from .cmdline import DirectedAcyclicGraphHelper
-from .cmdline import SimpleGraphHelper
-from .cmdline import BipartiteGraphHelper
 from .cmdline import is_formula_cmdhelper
-
-from .families import *
-
-
 
 import sys
 
-from itertools import combinations
 
 # Python 2.6 does not have argparse library
 try:
     import argparse
 except ImportError:
-    print("Sorry: %s requires `argparse` library, which is missing.\n"%argv[0],file=sys.stderr)
+    print("Sorry: %s requires `argparse` library, which is missing.\n"%sys.argv[0],file=sys.stderr)
     print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
     print(" * http://pypi.python.org/pypi/argparse",file=sys.stderr)
     print(" * http://code.google.com/p/argparse",file=sys.stderr)
@@ -154,307 +145,6 @@ def setup_command_line_args(parser):
 
 
     
-### Formula families
-    
-class _SSC:
-    name='subsetcard'
-    description='subset cardinality formulas'
-
-    @staticmethod
-    def setup_command_line(parser):
-        BipartiteGraphHelper.setup_command_line(parser)
-
-    @staticmethod
-    def build_cnf(args):
-        B = BipartiteGraphHelper.obtain_graph(args)
-        return SubsetCardinalityFormula(B)
-
-    
-class _MARKSTROM:
-    name='markstrom'
-    description='markstrom formulas'
-
-    @staticmethod
-    def setup_command_line(parser):
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        G = SimpleGraphHelper.obtain_graph(args) 
-        return MarkstromFormula(G)
-
-    
-
-class _RAM:
-    """Command line helper for RamseyNumber formulas
-    """
-    name='ram'
-    description='ramsey number principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for Ramsey formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('s',metavar='<s>',type=int,help="Forbidden independent set size")
-        parser.add_argument('k',metavar='<k>',type=int,help="Forbidden independent clique")
-        parser.add_argument('N',metavar='<N>',type=int,help="Graph size")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a Ramsey formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        return RamseyNumber(args.s, args.k, args.N)
-
-
-class _OP:
-    """Command line helper for Ordering principle formulas
-    """
-    name='op'
-    description='ordering principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for Ordering principle formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('N',metavar='<N>',type=int,help="domain size")
-        g=parser.add_mutually_exclusive_group()
-        g.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
-        g.add_argument('--smart','-s',default=False,action='store_true',help="encode 'x<y' and 'x>y' in a single variable (implies totality)")
-        g.add_argument('--knuth2', action='store_const', dest='knuth',const=2,
-                       help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for j>i,k")
-        g.add_argument('--knuth3', action='store_const', dest='knuth',const=3,
-                       help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for k>i,j")
-        parser.add_argument('--plant','-p',default=False,action='store_true',help="allow a minimum element")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build an Ordering principle formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        return OrderingPrinciple(args.N,args.total,args.smart,args.plant,args.knuth)
-
-
-class _GOP:
-    """Command line helper for Graph Ordering principle formulas
-    """
-    name='gop'
-    description='graph ordering principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for Graph ordering principle formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        g=parser.add_mutually_exclusive_group()
-        g.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
-        g.add_argument('--smart','-s',default=False,action='store_true',help="encode 'x<y' and 'x>y' in a single variable (implies totality)")
-        g.add_argument('--knuth2', action='store_const', dest='knuth',const=2,
-                       help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for j>i,k")
-        g.add_argument('--knuth3', action='store_const', dest='knuth',const=3,
-                       help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for k>i,j")
-        parser.add_argument('--plant','-p',default=False,action='store_true',help="allow a minimum element")
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a Graph ordering principle formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G= SimpleGraphHelper.obtain_graph(args)
-        return GraphOrderingPrinciple(G,args.total,args.smart,args.plant,args.knuth)
-
-
-class _KClique:
-    """Command line helper for k-clique formula
-    """
-    name='kclique'
-    description='k clique formula'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for k-clique formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('k',metavar='<k>',type=int,action='store',help="size of the clique to be found")
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a k-clique formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return SubgraphFormula(G,[networkx.complete_graph(args.k)])
-
-
-class _KColor:
-    """Command line helper for k-color formula
-    """
-    name='kcolor'
-    description='k-colorability formula'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for k-color formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('k',metavar='<k>',type=int,action='store',help="number of available colors")
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a k-colorability formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return ColoringFormula(G,range(1,args.k+1))
-
-
-    
-class _RAMLB:
-    """Command line helper for ramsey graph formula
-    """
-    name='ramlb'
-    description='unsat if G witnesses that r(k,s)>|V(G)| (i.e. G has not k-clique nor s-stable)'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for ramsey witness formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('k',metavar='<k>',type=int,
-                            action='store',help="size of the clique to be found")
-        parser.add_argument('s',metavar='<s>',type=int,
-                            action='store',help="size of the stable to be found")
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a formula to check that a graph is a ramsey number lower bound
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return SubgraphFormula(G,[networkx.complete_graph(args.k),
-                                  networkx.complete_graph(args.s)])
-
-
-
-class _TSE:
-    """Command line helper for Tseitin  formulas
-    """
-    name='tseitin'
-    description='tseitin formula'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for Tseitin formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('--charge',metavar='<charge>',default='first',
-                            choices=['first','random','randomodd','randomeven'],
-                            help="""charge on the vertices.
-                                    `first'  puts odd charge on first vertex;
-                                    `random' puts a random charge on vertices;
-                                    `randomodd' puts random odd  charge on vertices;
-                                    `randomeven' puts random even charge on vertices.
-                                     """)
-        SimpleGraphHelper.setup_command_line(parser)
-
-    @staticmethod
-    def build_cnf(args):
-        """Build Tseitin formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = SimpleGraphHelper.obtain_graph(args)
-
-        if G.order()<1:
-            charge=None
-
-        elif args.charge=='first':
-
-            charge=[1]+[0]*(G.order()-1)
-
-        else: # random vector
-            charge=[random.randint(0,1) for _ in xrange(G.order()-1)]
-
-            parity=sum(charge) % 2
-
-            if args.charge=='random':
-                charge.append(random.randint(0,1))
-            elif args.charge=='randomodd':
-                charge.append(1-parity)
-            elif args.charge=='randomeven':
-                charge.append(parity)
-            else:
-                raise ValueError('Illegal charge specification on command line')
-
-        return TseitinFormula(G,charge)
-
-
-
-class _RANDOM:
-    """Command line helper for random formulas
-    """
-    name='randkcnf'
-    description='random k-CNF'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for an and of literals
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('k',metavar='<k>',type=int,help="clause width")
-        parser.add_argument('n',metavar='<n>',type=int,help="number of variables")
-        parser.add_argument('m',metavar='<m>',type=int,help="number of clauses")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a conjunction
-
-        Arguments:
-        - `args`: command line options
-        """
-        return RandomKCNF(args.k,args.n,args.m)
-
-
 
 
 
@@ -487,20 +177,12 @@ def command_line_utility(argv=sys.argv):
 
     """
 
-    # Commands and subcommand lines
-    subcommands=[_TSE,
-                 _OP,_GOP,
-                 _KClique,
-                 _KColor,
-                 _RANDOM,
-                 _RAM,_RAMLB,
-                 _MARKSTROM,
-                 _SSC]
-
     # Collect formula families
     import pkgutil
     import cnfformula.families
 
+    subcommands = []
+    
     for loader, module_name, _ in  pkgutil.walk_packages(cnfformula.families.__path__):
         module_name = cnfformula.families.__name__+"."+module_name
         module = loader.find_module(module_name).load_module(module_name)
