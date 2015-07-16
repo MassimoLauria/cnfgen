@@ -585,15 +585,6 @@ class CNF(object):
                              " \\lor ".join(map_literals(l) for l in cls) + \
                              " \\right)")
 
-        # Output the variable description if any
-        if full_document and len(self._name2descr)>0:
-            output.write("\\noindent\\textbf{Variables description:}\n")
-            output.write("\\begin{itemize}\n")
-            for name in self._index2name[1:]:
-                if name in self._name2descr.keys():
-                    output.write("\\item ${}$ --- {}\n".format(name,self._name2descr[name]))   
-            output.write("\\end{itemize}\n")
-    
         # Output the clauses
         clauses_number = len(self._clauses)
         if full_document:
