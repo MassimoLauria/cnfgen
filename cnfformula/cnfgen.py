@@ -35,12 +35,11 @@ p cnf 5 3
 from __future__ import print_function
 
 import os
+import sys
+import random
 
 from . import TransformFormula,available_transform
-
 from .cmdline import is_formula_cmdhelper
-
-import sys
 
 
 # Python 2.6 does not have argparse library
@@ -54,14 +53,6 @@ except ImportError:
     print("",file=sys.stderr)
     exit(-1)
 
-import random
-
-try:
-    import networkx
-    import networkx.algorithms
-except ImportError:
-    print("ERROR: Missing 'networkx' library: no support for graph based formulas.",file=sys.stderr)
-    exit(-1)
 
 #################################################################
 #          Command line tool follows
@@ -156,7 +147,7 @@ def signal_handler(insignal, frame):
     print('Program interrupted',file=sys.stderr)
     sys.exit(-1)
 
-signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGINT,signal_handler)
 
 ###
 ### Main program
@@ -168,13 +159,13 @@ def command_line_utility(argv=sys.argv):
     command line, parses the command line arguments, builds the
     appropriate formula and outputs its representation.
     
-    It **must not** raise exceptions.
+    It **must not** raise exceptions, but fail with error messages for
+    the user.
 
     Parameters
     ----------
     argv: list, optional
         The list of token with the command line arguments/options.
-
     """
 
     # Collect formula families
@@ -193,16 +184,16 @@ def command_line_utility(argv=sys.argv):
     subcommands.sort(key=lambda x: x.name)
     del pkgutil,cnfformula.families
 
-    # Parse the command line arguments
+    # Main command line setup
     parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),
                                    epilog="""
     Each <formula type> has its own command line arguments and options.
     For more information type 'cnfgen <formula type> [--help | -h ]'
     """)
     setup_command_line_args(parser)
-    subparsers=parser.add_subparsers(title="Available formula types",metavar='<formula type>')
 
-    # Setup of various formula command lines options
+    # Sub command lines setup 
+    subparsers=parser.add_subparsers(title="Available formula types",metavar='<formula type>')
     for sc in subcommands:
         p=subparsers.add_parser(sc.name,help=sc.description)
         sc.setup_command_line(p)
@@ -228,10 +219,12 @@ def command_line_utility(argv=sys.argv):
             "\\begin{lstlisting}[breaklines]\n" + \
             "$ cnfgen " + " ".join(argv[1:]) + "\n" + \
             "\\end{lstlisting}\n"
-        # "\\noindent\\textbf{Docstring:}\n" +
-        # "\\begin{lstlisting}[breaklines,basicstyle=\\small]\n" +
-        # StoneFormula.__doc__ +
-        # "\\end{lstlisting}\n"
+        if hasattr(args.subcommand,"docstring"):
+            cmdline_descr += \
+                             "\\noindent\\textbf{Docstring:}\n" +\
+                             "\\begin{lstlisting}[breaklines,basicstyle=\\small]\n" +\
+                             args.subcommand.docstring+ \
+                             "\\end{lstlisting}\n"
         output = tcnf.latex(export_header=args.verbose,
                             full_document=True,extra_text=cmdline_descr)
         
