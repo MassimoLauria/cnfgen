@@ -1,5 +1,5 @@
 PROJECT=cnfgen
-PYTHON_BIN = /usr/bin/python
+PYTHON_BIN = python2
 VIRTUALENV = $(HOME)/.virtualenvs/$(PROJECT)-venv
 
 all : test
