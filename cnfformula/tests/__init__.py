@@ -1,4 +1,4 @@
-#!/usrbin/env python
+#!/usr/bin/env python
 
 import unittest
 
