@@ -58,8 +58,8 @@ try:
     import pygraphviz
     del pygraphviz
 except ImportError:
-    print("WARNING: Missing 'pygraphviz' library: no support for 'dot' graph format.",
-          file=sys.stderr)
+    # print("WARNING: Missing 'pygraphviz' library: no support for 'dot' graph format.",
+    #       file=sys.stderr)
     for k in _graphformats.values():
         try:
             k.remove('dot')
