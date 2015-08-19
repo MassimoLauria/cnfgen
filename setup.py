@@ -3,7 +3,7 @@
 Setup script for the CNFgen package
 """
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 setup(name='CNFgen',
@@ -13,7 +13,7 @@ setup(name='CNFgen',
       author_email='lauria.massimo@gmail.com',
       url='https://massimolauria.github.io/cnfgen',
       # url='https://github.com/MassimoLauria/cnfgen',
-      packages=['cnfformula', 'cnfformula.utils'],
+      packages = find_packages(".", exclude=["*.tests"]),
       license='GPL-3',
       entry_points={
           'console_scripts': [

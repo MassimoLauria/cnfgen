@@ -19,15 +19,17 @@ test: venv
 	. $(VIRTUALENV)/bin/activate && \
 	python setup.py nosetests --with-doctest
 
+
 install:
-	python setup.py install --user
+	python setup.py install --user --prefix=
 
 clean:
-	rm -fr *.pyc
 	rm -fr build
 	rm -fr dist
 	rm -fr *.egg-info
 	rm -fr docs/_build
+	rm `find . -name '*.pyc' -print`
+	rm `find . -name 'flycheck*.py' -print`
 
 docs: devbuild
 	. $(VIRTUALENV)/bin/activate && \
