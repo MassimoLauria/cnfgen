@@ -41,6 +41,9 @@ import random
 from . import TransformFormula,available_transform
 from .cmdline import is_formula_cmdhelper
 
+import pkgutil
+import cnfformula.families
+
 
 # Python 2.6 does not have argparse library
 try:
@@ -134,7 +137,24 @@ def setup_command_line_args(parser):
                          """)
 
 
+###
+### Explore the cnfformula.families modules to find formula implementations
+###
 
+def find_formula_families():
+    """Look in cnfformula.families package for implementations of CNFs"""
+
+    result = []
+    
+    for loader, module_name, _ in  pkgutil.walk_packages(cnfformula.families.__path__):
+        module_name = cnfformula.families.__name__+"."+module_name
+        module = loader.find_module(module_name).load_module(module_name)
+        for objname in dir(module):
+            obj = getattr(module, objname)
+            if is_formula_cmdhelper(obj):
+                result.append(obj)
+    result.sort(key=lambda x: x.name)
+    return result
     
 
 
@@ -168,22 +188,6 @@ def command_line_utility(argv=sys.argv):
         The list of token with the command line arguments/options.
     """
 
-    # Collect formula families
-    import pkgutil
-    import cnfformula.families
-
-    subcommands = []
-    
-    for loader, module_name, _ in  pkgutil.walk_packages(cnfformula.families.__path__):
-        module_name = cnfformula.families.__name__+"."+module_name
-        module = loader.find_module(module_name).load_module(module_name)
-        for objname in dir(module):
-            obj = getattr(module, objname)
-            if is_formula_cmdhelper(obj):
-                subcommands.append(obj)
-    subcommands.sort(key=lambda x: x.name)
-    del pkgutil,cnfformula.families
-
     # Main command line setup
     parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),
                                    epilog="""
@@ -194,7 +198,7 @@ def command_line_utility(argv=sys.argv):
 
     # Sub command lines setup 
     subparsers=parser.add_subparsers(title="Available formula types",metavar='<formula type>')
-    for sc in subcommands:
+    for sc in find_formula_families():
         p=subparsers.add_parser(sc.name,help=sc.description)
         sc.setup_command_line(p)
         p.set_defaults(subcommand=sc)
