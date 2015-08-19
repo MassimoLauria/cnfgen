@@ -13,7 +13,7 @@ setup(name='CNFgen',
       author_email='lauria.massimo@gmail.com',
       url='https://massimolauria.github.io/cnfgen',
       # url='https://github.com/MassimoLauria/cnfgen',
-      packages=['cnfformula', 'cnfformula.utils'],
+      packages=['cnfformula', 'cnfformula.families', 'cnfformula.utils'],
       license='GPL-3',
       entry_points={
           'console_scripts': [
