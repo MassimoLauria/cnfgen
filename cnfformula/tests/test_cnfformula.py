@@ -412,7 +412,7 @@ class TestAdjList2Pebbling(TestCNFBase) :
     def identity_check_helper(self, input, liftname, liftrank) :
         G = readGraph(input,'dag','adjlist')
         input.seek(0)
-        peb = cnfgen.PebblingFormula(G)
+        peb = cnfformula.families.PebblingFormula(G)
         lift = cnfformula.TransformFormula(peb, liftname, liftrank)
         reference_output = lift.dimacs(export_header=False)+"\n"
         
