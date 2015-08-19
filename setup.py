@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='CNFgen',
-      version='0.5.4.4',
+      version='0.5.4.5',
       description='CNF formula generator',
       author='Massimo Lauria',
       author_email='lauria.massimo@gmail.com',
