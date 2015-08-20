@@ -1,16 +1,11 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+"""CNF transformation, it increases the hardness of a CNF.
 
-from __future__ import print_function
-import os
+This is the implementation of a command line utility that transform
+CNF files in DIMACS format into new  CNFs
 
-from .. import available_transform
-from ..transformation import transform_compressed_clauses,StopClauses
-from . import dimacs2compressed_clauses
-
-
-__docstring__ =\
-"""Utilities to apply to a dimacs CNF file, a transformation which
+Utilities to apply to a dimacs CNF file, a transformation which
 increase the hardness of the formula
 
 Accept a cnf in dimacs format in input
@@ -19,6 +14,14 @@ Copyright (C) 2013, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
+
+from __future__ import print_function
+import os
+
+from .. import available_transform
+from ..transformation import transform_compressed_clauses,StopClauses
+from . import dimacs2compressed_clauses
+
 
 import sys
 
@@ -63,11 +66,10 @@ def setup_command_line(parser):
                         type=argparse.FileType('r',0),
                         metavar="<input>",
                         default='-',
-                        help="""Input file. The input formula is read as a dimacs CNF file file instead of
-                        standard input. Setting '<input>' to '-' is
-                        another way to read from standard
-                        input.  (default: -)
-                        """)
+                        help="""Input file. The input formula is read as a dimacs CNF file file
+                        instead of standard input. Setting '<input>'
+                        to '-' is another way to read from standard
+                        input. (default: -) """)
 
     parser.add_argument('--output','-o',
                         type=argparse.FileType('wb',0),
@@ -80,14 +82,41 @@ def setup_command_line(parser):
                         (default: -)
                         """)
 
-    parser.add_argument('--noheader', '-n',action='store_false',dest='header',
-                        help="""Do not output the preamble, so that formula generation is faster (one
-                        pass on the data).""")
+    parser.add_argument('--noheader',
+                        '-n',action='store_false',dest='header',
+                        help="""Do not output the preamble, so that
+                        formula generation is faster (one pass on the
+                        data).""")
 
 
 ### Produce the dimacs output from the data
-def dimacstransform(inputfile, method, rank, output, header=True):
+def dimacstransform(inputfile, method, hardness, output, header=True):
+    """Applies the transformation to a DIMACS file. 
 
+    Parameters
+    ----------
+    inputfile : file
+        a file object containing the DIMACS CNF formula
+
+    method: string
+        the name of the transformation method
+
+    hardness: int or None
+        the hardness parameter. If None, then the default for the
+        transformation method is used.
+
+    output : file
+        the place where to print the output to.
+ 
+    header: boolean
+        if `False` only the clauses will be printed. This is fast but 
+        does not produce a proper DIMACS file.
+
+    Returns
+    -------
+        an object with two fields: `variables` and `clauses` with 
+        the number of variables and clauses in the output formula
+     """
     # Generate the basic formula
     if header:
         
