@@ -35,27 +35,6 @@ except ImportError:
     exit(-1)
 
 
-#################################################################
-#          Command line tool follows
-#################################################################
-
-
-class HelpTransformAction(argparse.Action):
-    def __init__(self, **kwargs):
-        super(HelpTransformAction, self).__init__(**kwargs)
-
-    def __call__(self, parser, namespace, value, option_string=None):
-        print("""
-        Formula transformations available
-        """)
-        for k,entry in available_transform().iteritems():
-            print("{}\t:  {}".format(k,entry[0]))
-        print("\n")
-        sys.exit(0)
-
-###
-### Command line helpers
-###
 
 def setup_command_line(parser):
     """Setup general command line options
@@ -71,8 +50,9 @@ def setup_command_line(parser):
                         Transformation method the CNF formula to make it harder.
                         """)
 
-    parser.add_argument('--hardness','-H',
+    parser.add_argument('hardness',
                         metavar="<hardness>",
+                        nargs='?',
                         type=int,
                         default=None,
                         help="""
@@ -133,7 +113,7 @@ def dimacstransform(inputfile, method, rank, output, header=True):
             # clauses cached in memory
             print("c Formula transformed with method '{}' or rank {}\nc".format(method,rank),
                   file=output)
-            print("\n".join("c"+line for line in o_header.split('\n')),
+            print("\n".join(("c "+line).rstrip() for line in o_header.split('\n')[:-1]),
                   file=output)
             print("p cnf {} {}".format(cnfinfo.variables,cnfinfo.clauses),
                   file=output)
