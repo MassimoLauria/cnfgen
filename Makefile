@@ -4,7 +4,7 @@ VIRTUALENV = $(HOME)/.virtualenvs/$(PROJECT)-venv
 
 all : test
 
-.PHONY: test install package dist devbuild docbuild editor-tools doc-tools venv
+.PHONY: test install package upload devinstall docbuild editor-tools doc-tools venv
 
 test: venv
 	. $(VIRTUALENV)/bin/activate && \
@@ -24,7 +24,7 @@ clean:
 package: clean
 	python setup.py sdist bdist_wheel
 
-dist: package
+upload: package
 	twine upload dist/*
 
 
@@ -32,11 +32,11 @@ dist: package
 #
 # Develop
 # 
-devbuild: venv
+devinstall: venv
 	. $(VIRTUALENV)/bin/activate && \
 	python setup.py install
 
-docbuild: devbuild
+docbuild: devinstall
 	. $(VIRTUALENV)/bin/activate && \
 	sphinx-apidoc -o docs cnfformula && \
 	$(MAKE) -C docs html

@@ -25,6 +25,7 @@ import sys
 # Python 2.6 does not have argparse library
 try:
     import argparse
+    from argparse import RawDescriptionHelpFormatter
 except ImportError:
     print("Sorry: %s requires `argparse` library, which is missing.\n"%__progname__,file=sys.stderr)
     print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
@@ -62,41 +63,20 @@ def setup_command_line(parser):
     Arguments:
     - `parser`: parser to fill with options
     """
-    parser.add_argument('--output','-o',
-                        type=argparse.FileType('wb',0),
-                        metavar="<output>",
-                        default='-',
-                        help="""Output file. The formula is saved
-                        on file instead of being sent to standard
-                        output. Setting '<output>' to '-' is another
-                        way to send the formula to standard output.
-                        (default: -)
-                        """)
-
-    g=parser.add_mutually_exclusive_group()
-    g.add_argument('--noheader', '-n',action='store_false',dest='header',
-                   help="""Do not output the preamble, so that formula generation is faster (one
-                           pass on the data).""")
-    parser.add_argument('--Transform','-T',
-                        metavar="<transformation method>",
+    parser.add_argument('transformation',
+                        metavar="<method>",
                         choices=available_transform().keys(),
                         default='none',
                         help="""
-                        Transform the CNF formula to make it harder.
-                        See `--help-transformation` for more informations
+                        Transformation method the CNF formula to make it harder.
                         """)
-    parser.add_argument('--Tarity','-Ta',
-                        metavar="<transformation arity>",
+
+    parser.add_argument('--hardness','-H',
+                        metavar="<hardness>",
                         type=int,
                         default=None,
                         help="""
                         Hardness parameter for the transformation procedure.
-                        See `--help-transform` for more informations
-                        """)
-    parser.add_argument('--help-transform',nargs=0,action=HelpTransformAction,help="""
-                        Formula can be made harder applying some
-                        so called "transformation procedures".
-                        This gives information about the implemented transformation.
                         """)
 
     parser.add_argument('--input','-i',
@@ -108,6 +88,21 @@ def setup_command_line(parser):
                         another way to read from standard
                         input.  (default: -)
                         """)
+
+    parser.add_argument('--output','-o',
+                        type=argparse.FileType('wb',0),
+                        metavar="<output>",
+                        default='-',
+                        help="""Output file. The formula is saved
+                        on file instead of being sent to standard
+                        output. Setting '<output>' to '-' is another
+                        way to send the formula to standard output.
+                        (default: -)
+                        """)
+
+    parser.add_argument('--noheader', '-n',action='store_false',dest='header',
+                        help="""Do not output the preamble, so that formula generation is faster (one
+                        pass on the data).""")
 
 
 ### Produce the dimacs output from the data
@@ -167,13 +162,26 @@ signal.signal(signal.SIGINT, signal_handler)
 def command_line_utility(argv=sys.argv):
 
     # Parse the command line arguments
-    parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]))
+    help_epilogue = "Available transformations:\n\n" + \
+                    "\n".join("  {}\t:  {}".format(k,entry[0])
+                              for k,entry in available_transform().iteritems()) 
+    
+
+    parser=argparse.ArgumentParser(prog   = os.path.basename(argv[0]),
+                                   epilog = help_epilogue ,
+                                   formatter_class = RawDescriptionHelpFormatter)
+
+
     setup_command_line(parser)
 
     # Process the options
     args=parser.parse_args(argv[1:])
 
-    dimacstransform(args.input, args.Transform, args.Tarity, args.output, args.header)
+    dimacstransform(args.input,
+                    args.transformation,
+                    args.hardness,
+                    args.output,
+                    args.header)
 
 ### Launcher
 if __name__ == '__main__':
