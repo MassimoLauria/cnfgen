@@ -2,6 +2,7 @@ from cnfformula import CNF
 from cnfformula.families import PigeonholePrinciple, GraphPigeonholePrinciple
 
 from . import TestCNFBase
+from .test_commandline_helper import TestCommandline
 
 import unittest
 import networkx as nx
@@ -107,7 +108,7 @@ class TestPigeonholePrinciple(TestCNFBase):
         -3 -4 0
         """
         self.assertCnfEqualsDimacs(F,dimacs)
-
+        
 def complete_bipartite_graph_proper(n,m):
     g = nx.complete_bipartite_graph(n,m)
     values = {k:v for (k,v) in enumerate([0]*n + [1]*m)}
@@ -140,3 +141,28 @@ class TestGraphPigeonholePrinciple(TestCNFBase):
             for onto in (True,False):
                 F = GraphPigeonholePrinciple(graph,functional,onto)
                 self.assertCnfEqual(F,G)
+
+class TestPigeonholePrincipleCommandline(TestCommandline):
+    def test_parameters(self):
+        for pigeons in range(2,5):
+            for holes in range(2,5):
+                for functional in (True,False):
+                    for onto in (True,False):
+                        parameters = ["php", pigeons, holes]
+                        if functional : parameters.append("--functional")
+                        if onto : parameters.append("--onto")
+                        F = PigeonholePrinciple(pigeons,holes,functional,onto)
+                        self.checkFormula(F, parameters)
+
+class TestGraphPigeonholePrincipleCommandline(TestCommandline):
+    def test_complete(self):
+        for pigeons in range(2,5):
+            for holes in range(2,5):
+                for functional in (True,False):
+                    for onto in (True,False):
+                        parameters = ["gphp", "--bcomplete", pigeons, holes]
+                        if functional : parameters.append("--functional")
+                        if onto : parameters.append("--onto")
+                        graph = complete_bipartite_graph_proper(pigeons,holes)
+                        F = GraphPigeonholePrinciple(graph,functional,onto)
+                        self.checkFormula(F, parameters)
