@@ -142,8 +142,8 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
         else:
             formula_name="Graph pigeonhole principle"
 
-    Left  =  [v for v in graph.nodes() if graph.node[v]["bipartite"]==0]
-    Right =  [v for v in graph.nodes() if graph.node[v]["bipartite"]==1]
+    Left  =  [v for v in graph.nodes() if graph.node[v].get("bipartite")==0]
+    Right =  [v for v in graph.nodes() if graph.node[v].get("bipartite")==1]
             
     # Clause generator
     def _GPHP_clause_generator(G,functional,onto):
