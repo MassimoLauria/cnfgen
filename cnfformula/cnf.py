@@ -468,7 +468,7 @@ class CNF(object):
 
         # Clauses
         for cls in self._clauses:
-            output.write("\n" + " ".join([str(l) for l in cls]) + " 0")
+            output.write("\n" + " ".join([str(l) for l in cls + (0,)]))
 
     def latex(self, export_header=True, full_document=False, extra_text=None):
         """Output a LaTeX version of the CNF formula
