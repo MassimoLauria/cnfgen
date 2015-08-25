@@ -19,22 +19,24 @@ def load_formula_generators():
     
     import pkgutil
     import sys
-    import cnfformula.families
+    from .families import __path__ as bpath
+    from .families import __name__ as bname
+    from .families import is_cnf_generator
     
     loot = {}
     
-    for loader, module_name, _ in  pkgutil.walk_packages(cnfformula.families.__path__):
-        module_name = cnfformula.families.__name__+"."+module_name
+    for loader, module_name, _ in  pkgutil.walk_packages(bpath):
+        module_name = bname+"."+module_name
         module = loader.find_module(module_name).load_module(module_name)
         for objname in dir(module):
             obj = getattr(module, objname)
-            if cnfformula.families.is_cnf_generator(obj):
+            if is_cnf_generator(obj):
                 loot[objname] = obj
 
     # Load the formula generators in the `cnfformula` namespace
     self_ref = sys.modules[__name__]
     self_ref.__dict__.update(loot)
-    __all__.extend(loot.keys())
+    __all__.extend(name for name in loot.keys() if name not in __all__)
 
 
 # do the actual loading
