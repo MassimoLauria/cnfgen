@@ -6,9 +6,8 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-
+import cnfformula
 from cnfformula import CNF
-from cnfformula.cmdline import is_formula_cmdhelper    
 
 from textwrap import dedent
 from itertools import combinations
@@ -54,7 +53,7 @@ def RamseyLowerBoundFormula(s,k,N):
 
 ### Formula families
     
-    
+@cnfformula.cmdline.register_cnfgen_subcommand
 class RamseyCmdHelper(object):
     """Command line helper for RamseyNumber formulas
     """

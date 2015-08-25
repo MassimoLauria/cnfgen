@@ -3,9 +3,10 @@
 """Implementation of simple formulas
 """
 
+import cnfformula
 from cnfformula.cnf import CNF
-from cnfformula.cmdline import is_formula_cmdhelper
 
+@cnfformula.cmdline.register_cnfgen_subcommand
 class OR(object):
     """Command line helper for a single clause formula
     """
@@ -38,7 +39,7 @@ class OR(object):
                           " and {} negative literals".format(args.P,args.N))
 
 
-
+@cnfformula.cmdline.register_cnfgen_subcommand
 class AND(object):
     """Command line helper for a 1-CNF (i.e. conjunction)
     """
@@ -69,7 +70,7 @@ class AND(object):
                    header="""Singleton clauses: {} positive and {} negative""".format(args.P,args.N))
 
 
-
+@cnfformula.cmdline.register_cnfgen_subcommand
 class EMPTY(object):
     """Command line helper for the empty CNF (no clauses)
     """
@@ -92,6 +93,7 @@ class EMPTY(object):
         """
         return CNF()
 
+@cnfformula.cmdline.register_cnfgen_subcommand
 class EMPTY_CLAUSE(object):
     """Command line helper for the contradiction (one empty clauses)  
     """
@@ -113,10 +115,4 @@ class EMPTY_CLAUSE(object):
              command line options
         """
         return CNF([[]])
-
-
-assert is_formula_cmdhelper(AND)
-assert is_formula_cmdhelper(OR)
-assert is_formula_cmdhelper(EMPTY)
-assert is_formula_cmdhelper(EMPTY_CLAUSE)
 

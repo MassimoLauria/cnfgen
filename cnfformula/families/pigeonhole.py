@@ -6,9 +6,10 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
+import cnfformula
+
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import BipartiteGraphHelper
-from cnfformula.cmdline import is_formula_cmdhelper
 
 from itertools import combinations
 
@@ -176,8 +177,7 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     return gphp
 
 
-
-
+@cnfformula.cmdline.register_cnfgen_subcommand
 class PHPCmdHelper(object):
     """Command line helper for the Pigeonhole principle CNF"""
     
@@ -211,7 +211,7 @@ class PHPCmdHelper(object):
                                    onto=args.onto)
 
 
-
+@cnfformula.cmdline.register_cnfgen_subcommand
 class GPHPCmdHelper:
     """Command line helper for the Pigeonhole principle on graphs"""
 
@@ -246,5 +246,3 @@ class GPHPCmdHelper:
 
 
 
-assert is_formula_cmdhelper(PHPCmdHelper)
-assert is_formula_cmdhelper(GPHPCmdHelper)

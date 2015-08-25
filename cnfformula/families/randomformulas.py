@@ -6,9 +6,8 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-
+import cnfformula
 from cnfformula import CNF
-from cnfformula.cmdline import is_formula_cmdhelper    
 
 
 
@@ -78,7 +77,7 @@ def RandomKCNF(k, n, m, seed=None):
     return F
  
 
-
+@cnfformula.cmdline.register_cnfgen_subcommand
 class RandCmdHelper(object):
     """Command line helper for random formulas
     """
@@ -105,5 +104,3 @@ class RandCmdHelper(object):
         """
         return RandomKCNF(args.k,args.n,args.m)
 
-
-assert is_formula_cmdhelper(RandCmdHelper)

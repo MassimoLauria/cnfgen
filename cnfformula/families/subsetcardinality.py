@@ -6,10 +6,9 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-
+import cnfformula
 from cnfformula import CNF
 
-from cnfformula.cmdline import is_formula_cmdhelper
 from cnfformula.cmdline import BipartiteGraphHelper
 
 from cnfformula.cnf import loose_majority_constraint,loose_minority_constraint
@@ -94,7 +93,7 @@ def SubsetCardinalityFormula(B):
 
 
 
-
+@cnfformula.cmdline.register_cnfgen_subcommand
 class SCCmdHelper(object):
     name='subsetcard'
     description='subset cardinality formulas'
@@ -108,6 +107,3 @@ class SCCmdHelper(object):
         B = BipartiteGraphHelper.obtain_graph(args)
         return SubsetCardinalityFormula(B)
 
-
-    
-assert is_formula_cmdhelper(SCCmdHelper)

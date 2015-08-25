@@ -6,9 +6,11 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
+
+import cnfformula
+
 from cnfformula import CNF
 
-from cnfformula.cmdline import is_formula_cmdhelper
 from cnfformula.cmdline import SimpleGraphHelper
 
 from cnfformula.cnf import equal_to_constraint
@@ -139,7 +141,7 @@ def EvenColoringFormula(G):
     return F
 
 
-
+@cnfformula.cmdline.register_cnfgen_subcommand
 class KColorCmdHelper(object):
     """Command line helper for k-color formula
     """
@@ -169,6 +171,7 @@ class KColorCmdHelper(object):
 
 
 
+@cnfformula.cmdline.register_cnfgen_subcommand
 class ECCmdHelper(object):
     name='ec'
     description='even coloring formulas'
@@ -182,7 +185,3 @@ class ECCmdHelper(object):
     def build_cnf(args):
         G = SimpleGraphHelper.obtain_graph(args) 
         return EvenColoringFormula(G)
-
-    
-assert is_formula_cmdhelper(KColorCmdHelper)
-assert is_formula_cmdhelper(ECCmdHelper)

@@ -6,10 +6,8 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-
+import cnfformula
 from cnfformula import CNF
-
-from cnfformula.cmdline import is_formula_cmdhelper
 from cnfformula.cmdline import SimpleGraphHelper
 
 from itertools import combinations,product
@@ -192,7 +190,7 @@ def RamseyWitnessFormula(G,k,s):
     return SubgraphFormula(G,[complete_graph(k)])
 
 
-
+@cnfformula.cmdline.register_cnfgen_subcommand
 class KCliqueCmdHelper(object):
     """Command line helper for k-clique formula
     """
@@ -221,6 +219,7 @@ class KCliqueCmdHelper(object):
         return CliqueFormula(G,args.k)
 
 
+@cnfformula.cmdline.register_cnfgen_subcommand
 class RWCmdHelper(object):
     """Command line helper for ramsey graph formula
     """
@@ -252,7 +251,3 @@ class RWCmdHelper(object):
         return SubgraphFormula(G,[complete_graph(args.k),
                                   empty_graph(args.s)])
 
-
-    
-assert is_formula_cmdhelper(KCliqueCmdHelper)
-assert is_formula_cmdhelper(RWCmdHelper)

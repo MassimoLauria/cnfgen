@@ -8,6 +8,8 @@ https://github.com/MassimoLauria/cnfgen.git
 
 from __future__ import print_function
 
+import cnfformula
+
 from cnfformula.cnf import CNF
 from cnfformula.graphs import is_dag,enumerate_vertices
 
@@ -15,7 +17,6 @@ from itertools import product
 from collections import OrderedDict
 
 from cnfformula.cmdline import DirectedAcyclicGraphHelper
-from cnfformula.cmdline import is_formula_cmdhelper
 
 
 import sys
@@ -181,6 +182,7 @@ def StoneFormula(D,nstones):
 
 
 
+@cnfformula.cmdline.register_cnfgen_subcommand
 class PebblingCmdHelper:
     """Command line helper for pebbling formulas
     """
@@ -210,6 +212,7 @@ class PebblingCmdHelper:
             print("\nError: input graph must be directed and acyclic.",file=sys.stderr)
             sys.exit(-1)
 
+@cnfformula.cmdline.register_cnfgen_subcommand
 class StoneCmdHelper:
     """Command line helper for stone formulas
     """
@@ -240,7 +243,3 @@ class StoneCmdHelper:
         except ValueError:
             print("\nError: Input graph must be a DAG, and a non negative # of stones.",file=sys.stderr)
             sys.exit(-1)
-            
-
-assert is_formula_cmdhelper(PebblingCmdHelper)
-assert is_formula_cmdhelper(StoneCmdHelper)

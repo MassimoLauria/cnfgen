@@ -6,9 +6,9 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
+import cnfformula
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
-from cnfformula.cmdline import is_formula_cmdhelper
 
 from itertools import combinations,permutations
 
@@ -133,6 +133,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
     return gop
 
 
+@cnfformula.cmdline.register_cnfgen_subcommand
 class OPCmdHelper(object):
     """Command line helper for Ordering principle formulas
     """
@@ -166,6 +167,7 @@ class OPCmdHelper(object):
         return OrderingPrinciple(args.N,args.total,args.smart,args.plant,args.knuth)
 
 
+@cnfformula.cmdline.register_cnfgen_subcommand
 class GOPCmdHelper(object):
     """Command line helper for Graph Ordering principle formulas
     """
@@ -201,7 +203,3 @@ class GOPCmdHelper(object):
         return GraphOrderingPrinciple(G,args.total,args.smart,args.plant,args.knuth)
 
 
-
-
-assert is_formula_cmdhelper(OPCmdHelper)
-assert is_formula_cmdhelper(GOPCmdHelper)

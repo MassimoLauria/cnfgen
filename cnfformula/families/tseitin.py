@@ -6,10 +6,8 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-
+import cnfformula
 from cnfformula import CNF
-
-from cnfformula.cmdline import is_formula_cmdhelper
 from cnfformula.cmdline import SimpleGraphHelper
 
 from cnfformula.cnf import parity_constraint
@@ -52,6 +50,7 @@ def TseitinFormula(graph,charges=None):
     return tse
 
 
+@cnfformula.cmdline.register_cnfgen_subcommand
 class TseitinCmdHelper(object):
     """Command line helper for Tseitin  formulas
     """
@@ -106,5 +105,3 @@ class TseitinCmdHelper(object):
                 raise ValueError('Illegal charge specification on command line')
 
         return TseitinFormula(G,charge)
-
-assert is_formula_cmdhelper(TseitinCmdHelper)

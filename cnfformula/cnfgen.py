@@ -39,11 +39,6 @@ import sys
 import random
 
 from . import TransformFormula,available_transform
-from .cmdline import is_formula_cmdhelper
-
-import pkgutil
-import cnfformula.families
-
 
 # Python 2.6 does not have argparse library
 try:
@@ -136,26 +131,29 @@ def setup_command_line_args(parser):
                          This gives information about the implemented transformation.
                          """)
 
-
 ###
 ### Explore the cnfformula.families modules to find formula implementations
 ###
 
-def find_formula_families():
+def find_formula_subcommands():
     """Look in cnfformula.families package for implementations of CNFs"""
+
+    
+    import pkgutil
+    from .        import families
+    from .cmdline import is_cnfgen_subcommand
 
     result = []
     
-    for loader, module_name, _ in  pkgutil.walk_packages(cnfformula.families.__path__):
-        module_name = cnfformula.families.__name__+"."+module_name
+    for loader, module_name, _ in  pkgutil.walk_packages(families.__path__):
+        module_name = families.__name__+"."+module_name
         module = loader.find_module(module_name).load_module(module_name)
         for objname in dir(module):
             obj = getattr(module, objname)
-            if is_formula_cmdhelper(obj):
+            if is_cnfgen_subcommand(obj):
                 result.append(obj)
     result.sort(key=lambda x: x.name)
     return result
-    
 
 
 
@@ -198,7 +196,7 @@ def command_line_utility(argv=sys.argv):
 
     # Sub command lines setup 
     subparsers=parser.add_subparsers(title="Available formula types",metavar='<formula type>')
-    for sc in find_formula_families():
+    for sc in find_formula_subcommands():
         p=subparsers.add_parser(sc.name,help=sc.description)
         sc.setup_command_line(p)
         p.set_defaults(subcommand=sc)

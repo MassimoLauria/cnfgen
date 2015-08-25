@@ -7,9 +7,9 @@ https://github.com/MassimoLauria/cnfgen.git
 """
 
 
-from cnfformula import CNF
+import cnfformula
 
-from cnfformula.cmdline import is_formula_cmdhelper
+from cnfformula import CNF
 from cnfformula.cmdline import SimpleGraphHelper
 
 from cnfformula.cnf import equal_to_constraint
@@ -94,6 +94,7 @@ def PerfectMatchingPrinciple(graph):
 
 
 
+@cnfformula.cmdline.register_cnfgen_subcommand
 class ParityCmdHelper(object):
     """Command line helper for Parity Principle formulas
     """
@@ -114,6 +115,7 @@ class ParityCmdHelper(object):
         return CountingPrinciple(args.N,2)
 
 
+@cnfformula.cmdline.register_cnfgen_subcommand
 class PMatchingCmdHelper(object):
     """Command line helper for Perfect Matching Principle formulas
     """
@@ -136,6 +138,7 @@ class PMatchingCmdHelper(object):
         return PerfectMatchingPrinciple(G)
 
 
+@cnfformula.cmdline.register_cnfgen_subcommand
 class CountingCmdHelper:
     """Command line helper for Counting Principle formulas
     """
@@ -162,6 +165,3 @@ class CountingCmdHelper:
         return CountingPrinciple(args.M,args.p)
 
     
-assert is_formula_cmdhelper(ParityCmdHelper)
-assert is_formula_cmdhelper(PMatchingCmdHelper)
-assert is_formula_cmdhelper(CountingCmdHelper)

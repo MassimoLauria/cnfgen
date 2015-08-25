@@ -23,20 +23,24 @@ from .graphs import bipartite_random_left_regular,bipartite_random_regular
 import sys
 
 
-__all__ = [ "is_formula_cmdhelper",
+__all__ = [ "register_cnfgen_subcommand","is_cnfgen_subcommand",
             "DirectedAcyclicGraphHelper", "SimpleGraphHelper", "BipartiteGraphHelper"]
 
 
+### Formula family subcommands
+def register_cnfgen_subcommand(cls):
+    """Register the object as a formula subcommand
 
+    CNFgen command line tool invokes subcommands to generate formula
+    families. This class decorator is used to declare that a class is
+    indeed the implementation of a formula generator subcommand.
+    In this way CNFgen setup code will automatically find it and
+    integrate it into the CNFgen command line interface.
 
-def is_formula_cmdhelper(obj):
-    """Test whether the object is a formula command line helper
+    The class argument is tested to check whether it is a suitable
+    implementation of a CNFgen subcommand.
 
-    Any object that passes this test should be a suitable
-    implementation of a CNFgen subcommand that generates
-    a formula family.
-
-    In particular the object must have four attributes
+    In particular the class must have four attributes
     
     + ``name`` the name of the CNF formula 
     + ``description`` a short description of the formulas
@@ -52,19 +56,39 @@ def is_formula_cmdhelper(obj):
 
     Parameters
     ----------
-    obj : any
-        the object to test
+    class : any
+        the class to test
 
     Returns
     -------
     None
 
     """
-    return \
-        hasattr(obj,'build_cnf') and \
-        hasattr(obj,'setup_command_line') and \
-        hasattr(obj,'name') and \
-        hasattr(obj,'description')
+    assert \
+        hasattr(cls,'build_cnf') and \
+        hasattr(cls,'setup_command_line') and \
+        hasattr(cls,'name') and \
+        hasattr(cls,'description')
+
+    setattr(cls,"_is_cnfgen_subcommand",True)
+    return cls
+
+def is_cnfgen_subcommand(cls):
+    """The is the object is a registered CNFgen subcommand
+
+    Parameters
+    ----------
+    class : any
+        the class to test
+
+    Returns
+    -------
+    None
+
+    """
+    return hasattr(cls,"_is_cnfgen_subcommand")
+
+
 
 
 ### Graph readers/generators
