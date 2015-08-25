@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
-import unittest
 import cnfformula.cnfgen as cnfgen
 
-class TestCnfgen(unittest.TestCase):
+from .test_commandline_helper import TestCommandline, stderr_redirector
+
+class TestCnfgen(TestCommandline):
     def test_empty(self):
-        with self.assertRaises(SystemExit) as cm:
-            cnfgen.command_line_utility(["cnfgen"])
-        self.assertNotEqual(cm.exception.code, 0)
+        self.checkCrash([])
 
     def test_help(self):
         with self.assertRaises(SystemExit) as cm:
@@ -26,11 +25,7 @@ class TestCnfgen(unittest.TestCase):
             self.assertEqual(cm.exception.code, 0)
 
     def test_nonformula_empty(self):
-        with self.assertRaises(SystemExit) as cm:
-            cnfgen.command_line_utility(["cnfgen", "spam"])
-        self.assertNotEqual(cm.exception.code, 0)
+        self.checkCrash(["spam"])
 
     def test_nonformula_help(self):
-        with self.assertRaises(SystemExit) as cm:
-            cnfgen.command_line_utility(["cnfgen", "spam", "-h"])
-        self.assertNotEqual(cm.exception.code, 0)
+        self.checkCrash(["spam", "-h"])
