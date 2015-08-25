@@ -29,7 +29,7 @@ try: # NetworkX >= 1.10
     bipartite_random_graph      = networkx.bipartite.random_graph
     bipartite_gnml_random_graph = networkx.bipartite.gnmk_random_graph
 
-except ImportError: # Networkx < 1.10
+except AttributeError: # Networkx < 1.10
     
     from networkx import complete_bipartite_graph
     from networkx import bipartite_random_graph
