@@ -1,0 +1,12 @@
+language: python
+python:
+  - "2.7"
+# dependencies
+env:
+  - NETWORKX_VERSION=1.9.1
+  - NETWORKX_VERSION=1.10
+install:
+  - pip install -q networkx==$NETWORKX_VERSION
+  - python setup.py -q install
+# command to run tests
+script: nosetests
