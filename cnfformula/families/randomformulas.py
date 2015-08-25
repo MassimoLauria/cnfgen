@@ -57,25 +57,29 @@ def RandomKCNF(k, n, m, seed=None):
         random.seed(seed)
 
 
-    if k>n or n<0 or m<0 or k<0:
+    if n<0 or m<0 or k<0:
         raise ValueError("Parameters must be non-negatives.")
+
+    if k>n:
+        raise ValueError("Clauses cannot have more {} literals.".format(n))
         
     F = CNF()
     F.header = "Random {}-CNF over {} variables and {} clauses\n".format(k,n,m) + F.header
-    
-    for variable in xrange(1,n+1):
-        F.add_variable(variable)
+
+    indices = xrange(1,n+1) 
+    for i in indices:
+        F.add_variable('x_{0}'.format(i))
 
     clauses = set()
     t = 0
     while len(clauses)<m and t < 10*m:
         t += 1
-        clauses.add(tuple((random.choice([True,False]),x+1)
-                      for x in sorted(random.sample(xrange(n),k))))
+        clauses.add(tuple((random.choice([True,False]),'x_{0}'.format(i))
+                          for i in sorted(random.sample(indices,k))))
     if len(clauses)<m:
         raise RuntimeError("Sampling is taking too long. Maybe the requested formula is too dense.")
     for clause in clauses:
-        F.add_clause(list(clause))
+        F.add_clause(list(clause),strict=True)
 
     return F
  
