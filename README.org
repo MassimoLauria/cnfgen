@@ -4,6 +4,8 @@
 
 * CNFgen formula generator and tools
 
+  [[https://travis-ci.org/MassimoLauria/cnfgen.svg?branch=master]]
+
   This repository provides the command
 
   - =cnfgen= formula generator;
