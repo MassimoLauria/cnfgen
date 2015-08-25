@@ -55,13 +55,16 @@ def SubgraphFormula(graph,templates):
     else:
         selectors=['c_{{{}}}'.format(i) for i in range(len(templates))]
 
+    for s in selectors:
+        F.add_variable(s)
+        
     if len(selectors)>1:
 
         # Exactly one of the graphs must be selected as subgraph
-        F.add_clause([(True,v) for v in selectors])
+        F.add_clause([(True,v) for v in selectors],strict=True)
 
         for (a,b) in combinations(selectors):
-            F.add_clause( [ (False,a), (False,b) ] )
+            F.add_clause( [ (False,a), (False,b) ], strict=True )
 
     # comment the formula accordingly
     if len(selectors)>1:
@@ -84,12 +87,12 @@ def SubgraphFormula(graph,templates):
 
     # each vertex has an image...
     for i in range(k):
-        F.add_clause([(True,"S_{{{0}}}{{{1}}}".format(i,j)) for j in range(N)])
+        F.add_clause([(True,"S_{{{0}}}{{{1}}}".format(i,j)) for j in range(N)],strict=True)
 
     # ...and exactly one
     for i,(a,b) in product(range(k),combinations(range(N),2)):
         F.add_clause([(False,"S_{{{0}}}{{{1}}}".format(i,a)),
-                      (False,"S_{{{0}}}{{{1}}}".format(i,b))  ])
+                      (False,"S_{{{0}}}{{{1}}}".format(i,b))  ], strict = True)
 
  
     # Mapping is strictly monotone increasing (so it is also injective)
@@ -98,7 +101,7 @@ def SubgraphFormula(graph,templates):
 
     for (a,b),(i,j) in localmaps:
         F.add_clause([(False,"S_{{{0}}}{{{1}}}".format(min(a,b),max(i,j))),
-                      (False,"S_{{{0}}}{{{1}}}".format(max(a,b),min(i,j)))  ])
+                      (False,"S_{{{0}}}{{{1}}}".format(max(a,b),min(i,j)))  ],strict=True)
 
 
     # The selectors choose a template subgraph.  A mapping must map
@@ -140,7 +143,7 @@ def SubgraphFormula(graph,templates):
             # if it is not, add the corresponding
             F.add_clause(activation_prefixes[i] + \
                          [(False,"S_{{{0}}}{{{1}}}".format(min(i1,i2),min(j1,j2))),
-                          (False,"S_{{{0}}}{{{1}}}".format(max(i1,i2),max(j1,j2))) ])
+                          (False,"S_{{{0}}}{{{1}}}".format(max(i1,i2),max(j1,j2))) ],strict=True)
 
     return F
 
@@ -190,7 +193,7 @@ def RamseyWitnessFormula(G,k,s):
     a CNF object
 
     """
-    return SubgraphFormula(G,[complete_graph(k)])
+    return SubgraphFormula(G,[complete_graph(k),empty_graph(s)])
 
 
 @cnfformula.cmdline.register_cnfgen_subcommand

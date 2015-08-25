@@ -98,9 +98,13 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     php.header="{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes)\
         + php.header
 
+    for p in xrange(1,pigeons+1):
+        for h in xrange(1,holes+1):
+            php.add_variable('p_{{{0},{1}}}'.format(p,h))
+    
     clauses=_PHP_clause_generator(pigeons,holes,functional,onto)
     for c in clauses:
-        php.add_clause(c)
+        php.add_clause(c,strict=True)
 
     return php
 
@@ -172,9 +176,14 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     gphp=CNF()
     gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)
 
+    for p in Left:
+        for h in graph.adj[p]:
+            gphp.add_variable('p_{{{0},{1}}}'.format(p,h))
+
+    
     clauses=_GPHP_clause_generator(graph,functional,onto)
     for c in clauses:
-        gphp.add_clause(c)
+        gphp.add_clause(c,strict=True)
 
     return gphp
 

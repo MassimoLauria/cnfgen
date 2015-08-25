@@ -65,10 +65,10 @@ def PebblingFormula(digraph):
 
         # If predecessors are pebbled the vertex must be pebbled
         pred=sorted(digraph.predecessors(v),key=lambda x:position[x])
-        peb.add_clause([(False,p) for p in pred]+[(True,v)])
+        peb.add_clause([(False,p) for p in pred]+[(True,v)],strict=True)
 
         if digraph.out_degree(v)==0: #the sink
-            peb.add_clause([(False,v)])
+            peb.add_clause([(False,v)],strict=True)
 
     return peb
 
@@ -171,14 +171,14 @@ def StoneFormula(D,nstones):
                 cnf.add_clause([(False, "P_{{{0},{1}}}".format(p,s)) for (p,s) in zip(pred,stones_tuple)] +
                                [(False, "P_{{{0},{1}}}".format(v,j))] +
                                [(False, "R_{{{0}}}".format(s)) for s in _uniqify_list(stones_tuple)] +
-                               [(True,  "R_{{{0}}}".format(j))])
+                               [(True,  "R_{{{0}}}".format(j))],
+                               strict=True)
         
         if D.out_degree(v)==0: #the sink
             for j in stones:
-                cnf.add_clause([
-                    (False,"P_{{{0},{1}}}".format(v,j)),
-                    (False,"R_{{{0}}}".format(j))
-                ])
+                cnf.add_clause([ (False,"P_{{{0},{1}}}".format(v,j)),
+                                 (False,"R_{{{0}}}".format(j))],
+                               strict = True)
 
     return cnf
 

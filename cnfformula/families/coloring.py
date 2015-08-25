@@ -15,7 +15,7 @@ from cnfformula.cmdline  import register_cnfgen_subcommand
 from cnfformula.families import register_cnf_generator
 
 from itertools import combinations
-
+import collections
 
 
 @register_cnf_generator
@@ -71,14 +71,14 @@ def GraphColoringFormula(G,colors,functional=True):
             for (c1,c2) in combinations(colors,2):
                 col.add_clause([
                     (False,'x_{{{0},{1}}}'.format(vertex,c1)),
-                    (False,'x_{{{0},{1}}}'.format(vertex,c2))])
+                    (False,'x_{{{0},{1}}}'.format(vertex,c2))],strict=True)
 
     # This is a legal coloring
     for (v1,v2) in G.edges():
         for c in colors:
             col.add_clause([
                 (False,'x_{{{0},{1}}}'.format(v1,c)),
-                (False,'x_{{{0},{1}}}'.format(v2,c))])
+                (False,'x_{{{0},{1}}}'.format(v2,c))],strict=True)
             
     return col
 

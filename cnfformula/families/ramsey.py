@@ -32,13 +32,19 @@ def RamseyLowerBoundFormula(s,k,N):
         """ % (N,s,k)) + ram.header
 
     #
+    # One variable per edge (indices are ordered)
+    #
+    for edge in combinations(xrange(1,N+1),2):
+        ram.add_variable('e_{{{0},{1}}}'.format(*edge))
+    
+    #
     # No independent set of size s
     #
     for vertex_set in combinations(xrange(1,N+1),s):
         clause=[]
         for edge in combinations(vertex_set,2):
             clause += [(True,'e_{{{0},{1}}}'.format(*edge))]
-        ram.add_clause(clause)
+        ram.add_clause(clause,strict=True)
 
     #
     # No clique of size k
@@ -47,7 +53,7 @@ def RamseyLowerBoundFormula(s,k,N):
         clause=[]
         for edge in combinations(vertex_set,2):
             clause+=[(False,'e_{{{0},{1}}}'.format(*edge))]
-        ram.add_clause(clause)
+        ram.add_clause(clause,strict=True)
 
     return ram
 

@@ -93,21 +93,31 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
         if smart:
             # Optimized version if smart representation of totality is used
             for (v1, v2, v3) in combinations(V, 3):
+
                 gop.add_clause([(True,  'x_{{{0},{1}}}'.format(v1, v2)),
                                 (True,  'x_{{{0},{1}}}'.format(v2, v3)),
-                                (False, 'x_{{{0},{1}}}'.format(v1, v3))])
+                                (False, 'x_{{{0},{1}}}'.format(v1, v3))],
+                               strict=True)
+                
                 gop.add_clause([(False, 'x_{{{0},{1}}}'.format(v1, v2)),
                                 (False, 'x_{{{0},{1}}}'.format(v2, v3)),
-                                (True,  'x_{{{0},{1}}}'.format(v1, v3))])
+                                (True,  'x_{{{0},{1}}}'.format(v1, v3))],
+                               strict=True)
+
         elif total:
             # With totality we still need just two axiom per triangle
             for (v1, v2, v3) in combinations(V, 3):
+                
                 gop.add_clause([(False, 'x_{{{0},{1}}}'.format(v1, v2)),
                                 (False, 'x_{{{0},{1}}}'.format(v2, v3)),
-                                (False, 'x_{{{0},{1}}}'.format(v3, v1))])
+                                (False, 'x_{{{0},{1}}}'.format(v3, v1))],
+                               strict=True)
+
                 gop.add_clause([(False, 'x_{{{0},{1}}}'.format(v1, v3)),
                                 (False, 'x_{{{0},{1}}}'.format(v3, v2)),
-                                (False, 'x_{{{0},{1}}}'.format(v2, v1))])
+                                (False, 'x_{{{0},{1}}}'.format(v2, v1))],
+                               strict=True)
+
         else:
             for (v1, v2, v3) in permutations(V, 3):
 
@@ -120,19 +130,22 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
 
                 gop.add_clause([(False, 'x_{{{0},{1}}}'.format(v1, v2)),
                                 (False, 'x_{{{0},{1}}}'.format(v2, v3)),
-                                (True,  'x_{{{0},{1}}}'.format(v1, v3))])
+                                (True,  'x_{{{0},{1}}}'.format(v1, v3))],
+                               strict=True)
 
     if not smart:
         # Antisymmetry axioms (useless for 'smart' representation)
         for (v1, v2) in combinations(V, 2):
             gop.add_clause([(False, 'x_{{{0},{1}}}'.format(v1, v2)),
-                            (False, 'x_{{{0},{1}}}'.format(v2, v1))])
+                            (False, 'x_{{{0},{1}}}'.format(v2, v1))],
+                           strict=True)
 
         # Totality axioms (useless for 'smart' representation)
         if total:
             for (v1, v2) in combinations(V, 2):
                 gop.add_clause([(True, 'x_{{{0},{1}}}'.format(v1, v2)),
-                                (True, 'x_{{{0},{1}}}'.format(v2, v1))])
+                                (True, 'x_{{{0},{1}}}'.format(v2, v1))],
+                               strict=True)
 
     return gop
 

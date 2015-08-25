@@ -303,8 +303,8 @@ class CNF(object):
     #
 
     def add_clause(self,clause,
-                   literal_repetitions=True,
-                   opposite_literals=True,
+                   literal_repetitions=False,
+                   opposite_literals=False,
                    auto_variables=True,
                    strict=False):
         """Add a clause to the CNF.
@@ -340,14 +340,14 @@ class CNF(object):
 
             Useful for sanity check. If the flag is `False` and the
             clause contain two copies of the same literal, then
-            `ValueError` is raised. (default: True)
+            `ValueError` is raised. (default: False)
 
         opposite_literals: Optional[bool]
             True if and only if the clause can have opposite literal.
 
             Useful for sanity check. If the flag is `False` and the
             clause contain two opposite literals, then `ValueError`
-            is raised. (default: True)
+            is raised. (default: False)
 
         auto_variables: Optional[bool]
             If `True` the clause can contain new variables.

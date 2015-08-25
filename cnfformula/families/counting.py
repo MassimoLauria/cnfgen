@@ -38,7 +38,7 @@ def CountingPrinciple(M,p):
         return "Y_{{"+",".join("{0}".format(v) for v in tpl)+"}}"
 
     # Incidence lists
-    incidence=[[] for x in range(M)]
+    incidence=[[] for _ in range(M)]
     for tpl in combinations(range(M),p):
         for i in tpl:
             incidence[i].append(tpl)

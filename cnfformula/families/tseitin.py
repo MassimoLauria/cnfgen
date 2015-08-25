@@ -49,7 +49,7 @@ def TseitinFormula(graph,charges=None):
         # produce all clauses and save half of them
         names = [ "E_{{{0},{1}}}".format(*sorted(e)) for e in graph.edges_iter(v) ]
         for cls in parity_constraint(names,c):
-            tse.add_clause(list(cls))
+            tse.add_clause(list(cls),strict=True)
 
     return tse
 

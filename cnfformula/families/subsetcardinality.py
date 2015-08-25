@@ -79,16 +79,20 @@ def SubsetCardinalityFormula(B):
             return 'x_{{{0},{1}}}'.format(u,v)
         else:
             return 'x_{{{0},{1}}}'.format(v,u)
-    
+
+    for u in Left:
+        for e in B.edges(u):
+            ssc.add_variable(var_name(*e))
+        
     for u in Left:
         edge_vars = [ var_name(*e) for e in B.edges(u) ]
         for cls in loose_minority_constraint(edge_vars):
-            ssc.add_clause(cls)
+            ssc.add_clause(cls,strict=True)
 
     for v in Right:
         edge_vars = [ var_name(*e) for e in B.edges(v) ]
         for cls in loose_majority_constraint(edge_vars):
-            ssc.add_clause(cls)
+            ssc.add_clause(cls,strict=True)
     
     return ssc
 
