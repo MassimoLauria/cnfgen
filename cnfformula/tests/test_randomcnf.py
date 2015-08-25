@@ -1,4 +1,4 @@
-from cnfformula.families import RandomKCNF
+from cnfformula import RandomKCNF
 
 from . import TestCNFBase
 

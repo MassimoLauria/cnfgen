@@ -1,8 +1,9 @@
-from cnfformula.families import PebblingFormula
+
+import cnfformula
+from cnfformula import PebblingFormula
 
 from . import TestCNFBase
 
-import cnfformula
 
 import unittest
 import networkx as nx

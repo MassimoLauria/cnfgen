@@ -1,5 +1,5 @@
 from cnfformula import CNF
-from cnfformula.families import PigeonholePrinciple, GraphPigeonholePrinciple
+from cnfformula import PigeonholePrinciple, GraphPigeonholePrinciple
 
 from . import TestCNFBase
 

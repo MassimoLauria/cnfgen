@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-
 from cnfformula import CNF
-from cnfformula.families import GraphAutomorphism,GraphIsomorphism
+from cnfformula import GraphAutomorphism,GraphIsomorphism
 
 from . import TestCNFBase
 

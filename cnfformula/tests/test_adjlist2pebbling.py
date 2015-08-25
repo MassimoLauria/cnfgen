@@ -5,7 +5,7 @@ from . import TestCNFBase
 import cnfformula
 import cnfformula.cnfgen as cnfgen
 from cnfformula.graphs import readGraph
-from cnfformula.families import PebblingFormula
+from cnfformula import PebblingFormula
 
 import StringIO
 
