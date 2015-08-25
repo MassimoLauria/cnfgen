@@ -13,8 +13,9 @@ https://github.com/MassimoLauria/cnfgen.git
 
 
 from __future__ import print_function
-from itertools import product,combinations
-
+from itertools import product
+from itertools import combinations
+from collections import Counter
 
 _default_header=r"""Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
@@ -301,7 +302,11 @@ class CNF(object):
     # High level API: build the CNF
     #
 
-    def add_clause(self,clause,strict=False):
+    def add_clause(self,clause,
+                   literal_repetitions=True,
+                   opposite_literals=True,
+                   auto_variables=True,
+                   strict=False):
         """Add a clause to the CNF.
 
         The clause must be well formatted. Otherwise it raises
@@ -314,15 +319,52 @@ class CNF(object):
         of variables  of the CNF,  in the  order of appearance  in the
         clauses.
 
-        Arguments:
-        - `clause`: a clause with k literals is a list with k pairs.
-                    First coords are the polarities, second coords are
-                    utf8 encoded strings with variable names.
+        Paramenters
+        -----------
+        clause: List[(bool,str)] 
+            the clause to be added in the CNF
 
-        - `strict`: if true the clause must not contain new variables.
-                    By default this is false, and new variables will
-                    be included in the formula. If that is true and a clause
-                    contains an unknow variables, `ValueError` is raised.
+            A clause with k literals is a list with k pairs.
+            First coords are the polarities, second coords are utf8
+            encoded strings with variable names.
+
+            Clause may contain repeated or opposite literal, but this
+            behavior can be modified by the optional flags. 
+
+            Clauses are added with repetition, i.e. if the same clause
+            is added twice then it will occur twice in the
+            formula too.
+
+        literal_repetitions: Optional[bool]
+            True if and only if the clause can have repeated literal.
+
+            Useful for sanity check. If the flag is `False` and the
+            clause contain two copies of the same literal, then
+            `ValueError` is raised. (default: True)
+
+        opposite_literals: Optional[bool]
+            True if and only if the clause can have opposite literal.
+
+            Useful for sanity check. If the flag is `False` and the
+            clause contain two opposite literals, then `ValueError`
+            is raised. (default: True)
+
+        auto_variables: Optional[bool]
+            If `True` the clause can contain new variables.
+
+            New variables occurring in the clause will be added to the
+            formula, unless the flag is `False`. In that case when
+            a clause contains an unknow variables, `ValueError` is
+            raised. (default: True)
+
+        
+        strict: Optional[bool]
+            If `True` impose restrictions on the clause
+
+            Setting this to `True` is equivalent to set
+            `literal_repetitions`, `opposite_literals`,
+            `auto_variables` to `False`. In case of conflicting
+            setting, the more restrictive one hold.
         """
         assert self._coherent
 
@@ -332,18 +374,36 @@ class CNF(object):
         except TypeError:
             raise TypeError("%s is not a well formatted clause" %clause)
 
+        # Activate the most restrictive setting
+        literal_repetitions = literal_repetitions and (not strict)
+        opposite_literals   = opposite_literals and (not strict)
+        auto_variables      = auto_variables and (not strict) 
+        
         # Add all missing variables
         try:
             for _, var in clause:
                 if var in self._name2index:
                     continue
-                if strict:
+                if not auto_variables:
                     raise ValueError("The clause contains an illegal variable %s" % var)
                 else:
                     self.add_variable(var)
         except TypeError:
             raise TypeError("%s is not a well formatted clause" %clause)
 
+        # Check literal repetitions
+        if (not literal_repetitions) and max(Counter(clause).values() + [0])>1:
+            counter  = Counter(clause)
+            repeated = [l for (l,c) in counter.iteritems() if c>1]
+            raise ValueError("Forbidden repeated literals %s" % repeated)
+
+        # Check opposite literals
+        if not opposite_literals:
+            positive     = [v for (p,v) in clause if p ]
+            intersection = [v for (p,v) in clause if not p and v in positive]
+            if len(intersection):
+                raise ValueError("Forbidden opposite literals for variables %s" % intersection)
+        
         # Add the compressed clause
         self._clauses.append( self._compress_clause(clause) )
 
