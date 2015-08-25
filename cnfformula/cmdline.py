@@ -23,13 +23,13 @@ from .graphs import supported_formats as graph_formats
 from .graphs import readGraph,writeGraph
 from .graphs import bipartite_random_left_regular,bipartite_random_regular
 
-try: # NetworkX > 1.10
+try: # NetworkX >= 1.10
 
     complete_bipartite_graph    = networkx.bipartite.complete_bipartite_graph
     bipartite_random_graph      = networkx.bipartite.random_graph
     bipartite_gnml_random_graph = networkx.bipartite.gnmk_random_graph
 
-except ImportError: # Networkx 1.9
+except ImportError: # Networkx < 1.10
     
     from networkx import complete_bipartite_graph
     from networkx import bipartite_random_graph
