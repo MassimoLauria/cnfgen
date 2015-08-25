@@ -6,11 +6,14 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-import cnfformula
-from cnfformula import CNF
+from cnfformula.cnf import CNF
+
+import cnfformula.cmdline
+import cnfformula.families
 
 
 
+@cnfformula.families.register_cnf_generator
 def RandomKCNF(k, n, m, seed=None):
     """Build a random k-CNF
 

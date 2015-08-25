@@ -6,14 +6,18 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-import cnfformula
-from cnfformula import CNF
-from cnfformula.cmdline import SimpleGraphHelper
-
+from cnfformula.cnf import CNF
 from cnfformula.cnf import parity_constraint
 
-import random
+from cnfformula.cmdline import SimpleGraphHelper
 
+
+import random
+import cnfformula.cmdline
+import cnfformula.families
+
+
+@cnfformula.families.register_cnf_generator
 def TseitinFormula(graph,charges=None):
     """Build a Tseitin formula based on the input graph.
 

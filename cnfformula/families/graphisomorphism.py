@@ -6,9 +6,11 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-import cnfformula
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
+
+from cnfformula.cmdline  import register_cnfgen_subcommand
+from cnfformula.families import register_cnf_generator
 
 from itertools import combinations
 
@@ -19,6 +21,7 @@ def _graph_isomorphism_var(u, v):
     """Standard variable name"""
     return "x_{{{0},{1}}}".format(u, v)
 
+@register_cnf_generator
 def GraphIsomorphism(G1, G2):
     """Graph Isomorphism formula
 
@@ -76,6 +79,7 @@ def GraphIsomorphism(G1, G2):
 
     return F
 
+@register_cnf_generator
 def GraphAutomorphism(G):
     """Graph Automorphism formula
 
@@ -105,7 +109,7 @@ def GraphAutomorphism(G):
 
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
+@register_cnfgen_subcommand
 class GAutoCmdHelper(object):
     """Command line helper for Graph Automorphism formula
     """
@@ -134,7 +138,7 @@ class GAutoCmdHelper(object):
 
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
+@register_cnfgen_subcommand
 class GIsoCmdHelper(object):
     """Command line helper for Graph Isomorphism formula
     """

@@ -6,14 +6,15 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-import cnfformula
-
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import BipartiteGraphHelper
 
+import cnfformula.cmdline
+import cnfformula.families
+
 from itertools import combinations
 
-
+@cnfformula.families.register_cnf_generator
 def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     """Pigeonhole Principle CNF formula
 
@@ -103,6 +104,7 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
 
     return php
 
+@cnfformula.families.register_cnf_generator
 def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     """Graph Pigeonhole Principle CNF formula
 

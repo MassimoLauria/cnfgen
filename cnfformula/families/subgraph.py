@@ -6,9 +6,11 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-import cnfformula
-from cnfformula import CNF
+from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
+
+import cnfformula.families
+import cnfformula.cmdline
 
 from itertools import combinations,product
 from networkx  import complete_graph
@@ -16,7 +18,7 @@ from networkx  import empty_graph
 
 from textwrap import dedent
 
-
+@cnfformula.families.register_cnf_generator
 def SubgraphFormula(graph,templates):
     """Test whether a graph contains one of the templates.
 
@@ -144,6 +146,7 @@ def SubgraphFormula(graph,templates):
 
 
 
+@cnfformula.families.register_cnf_generator
 def CliqueFormula(G,k):
     """Test whether a graph contains one of the templates.
 
@@ -164,7 +167,7 @@ def CliqueFormula(G,k):
     """
     return SubgraphFormula(G,[complete_graph(k)])
 
-
+@cnfformula.families.register_cnf_generator
 def RamseyWitnessFormula(G,k,s):
     """Test whether a graph contains one of the templates.
 

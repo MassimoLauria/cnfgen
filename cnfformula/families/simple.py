@@ -3,8 +3,9 @@
 """Implementation of simple formulas
 """
 
-import cnfformula
 from cnfformula.cnf import CNF
+
+import cnfformula.cmdline
 
 @cnfformula.cmdline.register_cnfgen_subcommand
 class OR(object):

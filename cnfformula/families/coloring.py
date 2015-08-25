@@ -7,16 +7,18 @@ https://github.com/MassimoLauria/cnfgen.git
 """
 
 
-import cnfformula
-
-from cnfformula import CNF
-
+from cnfformula.cnf import CNF
+from cnfformula.cnf import equal_to_constraint
 from cnfformula.cmdline import SimpleGraphHelper
 
-from cnfformula.cnf import equal_to_constraint
+from cnfformula.cmdline  import register_cnfgen_subcommand
+from cnfformula.families import register_cnf_generator
+
 from itertools import combinations
 
 
+
+@register_cnf_generator
 def GraphColoringFormula(G,colors,functional=True):
     """Generates the clauses for colorability formula
 
@@ -82,7 +84,7 @@ def GraphColoringFormula(G,colors,functional=True):
 
 
 
-
+@register_cnf_generator
 def EvenColoringFormula(G):
     """Even coloring formula
 
@@ -141,7 +143,7 @@ def EvenColoringFormula(G):
     return F
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
+@register_cnfgen_subcommand
 class KColorCmdHelper(object):
     """Command line helper for k-color formula
     """
@@ -171,7 +173,7 @@ class KColorCmdHelper(object):
 
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
+@register_cnfgen_subcommand
 class ECCmdHelper(object):
     name='ec'
     description='even coloring formulas'

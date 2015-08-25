@@ -8,7 +8,6 @@ https://github.com/MassimoLauria/cnfgen.git
 
 from __future__ import print_function
 
-import cnfformula
 
 from cnfformula.cnf import CNF
 from cnfformula.graphs import is_dag,enumerate_vertices
@@ -18,6 +17,8 @@ from collections import OrderedDict
 
 from cnfformula.cmdline import DirectedAcyclicGraphHelper
 
+import cnfformula.families
+import cnfformula.cmdline
 
 import sys
 
@@ -31,7 +32,7 @@ def _uniqify_list(x):
 
 
 
-
+@cnfformula.families.register_cnf_generator
 def PebblingFormula(digraph):
     """Pebbling formula
 
@@ -73,6 +74,7 @@ def PebblingFormula(digraph):
 
 
 
+@cnfformula.families.register_cnf_generator
 def StoneFormula(D,nstones):
     """Stones formulas
 

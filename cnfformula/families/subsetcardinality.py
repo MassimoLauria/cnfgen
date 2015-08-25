@@ -6,13 +6,15 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-import cnfformula
-from cnfformula import CNF
+from cnfformula.cnf import CNF
+from cnfformula.cnf import loose_majority_constraint,loose_minority_constraint
 
 from cnfformula.cmdline import BipartiteGraphHelper
 
-from cnfformula.cnf import loose_majority_constraint,loose_minority_constraint
+import cnfformula.families
+import cnfformula.cmdline
 
+@cnfformula.families.register_cnf_generator
 def SubsetCardinalityFormula(B):
     r"""SubsetCardinalityFormula
 

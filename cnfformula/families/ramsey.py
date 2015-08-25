@@ -6,13 +6,15 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-import cnfformula
-from cnfformula import CNF
+from cnfformula.cnf import CNF
+
+import cnfformula.cmdline
+import cnfformula.families
 
 from textwrap import dedent
 from itertools import combinations
 
-
+@cnfformula.families.register_cnf_generator
 def RamseyLowerBoundFormula(s,k,N):
     """Formula claiming that Ramsey number r(s,k) > N
 

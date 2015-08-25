@@ -6,14 +6,18 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-import cnfformula
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
+
+import cnfformula.cmdline  
+import cnfformula.families
+
 
 from itertools import combinations,permutations
 
 import networkx
 
+@cnfformula.families.register_cnf_generator
 def OrderingPrinciple(size,total=False,smart=False,plant=False,knuth=0):
     """Generates the clauses for ordering principle
 
@@ -29,7 +33,7 @@ def OrderingPrinciple(size,total=False,smart=False,plant=False,knuth=0):
 
 
 
-
+@cnfformula.families.register_cnf_generator
 def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
     """Generates the clauses for graph ordering principle
 

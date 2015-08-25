@@ -27,9 +27,10 @@ __all__ = [ "register_cnfgen_subcommand","is_cnfgen_subcommand",
             "DirectedAcyclicGraphHelper", "SimpleGraphHelper", "BipartiteGraphHelper"]
 
 
-### Formula family subcommands
+__cnfgen_subcommand_mark = "_is_cnfgen_subcommand"
+
 def register_cnfgen_subcommand(cls):
-    """Register the object as a formula subcommand
+    """Register the class as a formula subcommand
 
     CNFgen command line tool invokes subcommands to generate formula
     families. This class decorator is used to declare that a class is
@@ -59,10 +60,15 @@ def register_cnfgen_subcommand(cls):
     class : any
         the class to test
 
+    
     Returns
     -------
     None
 
+    Raises
+    ------
+    AssertionError 
+        when the class is not formula subcommand
     """
     assert \
         hasattr(cls,'build_cnf') and \
@@ -70,11 +76,11 @@ def register_cnfgen_subcommand(cls):
         hasattr(cls,'name') and \
         hasattr(cls,'description')
 
-    setattr(cls,"_is_cnfgen_subcommand",True)
+    setattr(cls,__cnfgen_subcommand_mark,True)
     return cls
 
 def is_cnfgen_subcommand(cls):
-    """The is the object is a registered CNFgen subcommand
+    """Test whether the object is a registered CNFgen subcommand
 
     Parameters
     ----------
@@ -83,10 +89,9 @@ def is_cnfgen_subcommand(cls):
 
     Returns
     -------
-    None
-
+    bool
     """
-    return hasattr(cls,"_is_cnfgen_subcommand")
+    return hasattr(cls,__cnfgen_subcommand_mark)
 
 
 

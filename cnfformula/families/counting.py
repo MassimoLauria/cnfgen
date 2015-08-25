@@ -6,17 +6,17 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
-
-import cnfformula
-
-from cnfformula import CNF
+from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
+
+from cnfformula.cmdline  import register_cnfgen_subcommand
+from cnfformula.families import register_cnf_generator
 
 from cnfformula.cnf import equal_to_constraint
 from itertools import combinations
 
 
-
+@register_cnf_generator
 def CountingPrinciple(M,p):
     """Generates the clauses for the counting matching principle.
     
@@ -54,6 +54,7 @@ def CountingPrinciple(M,p):
     return cnf
 
 
+@register_cnf_generator
 def PerfectMatchingPrinciple(graph):
     """Generates the clauses for the graph perfect matching principle.
     
@@ -94,7 +95,7 @@ def PerfectMatchingPrinciple(graph):
 
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
+@register_cnfgen_subcommand
 class ParityCmdHelper(object):
     """Command line helper for Parity Principle formulas
     """
@@ -115,7 +116,7 @@ class ParityCmdHelper(object):
         return CountingPrinciple(args.N,2)
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
+@register_cnfgen_subcommand
 class PMatchingCmdHelper(object):
     """Command line helper for Perfect Matching Principle formulas
     """
@@ -138,7 +139,7 @@ class PMatchingCmdHelper(object):
         return PerfectMatchingPrinciple(G)
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
+@register_cnfgen_subcommand
 class CountingCmdHelper:
     """Command line helper for Counting Principle formulas
     """
