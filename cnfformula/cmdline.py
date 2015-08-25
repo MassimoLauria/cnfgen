@@ -13,14 +13,28 @@ https://github.com/MassimoLauria/cnfgen.git
 
 from __future__ import print_function
 
+    
+import sys
 import argparse
 
-import networkx 
+import networkx
+
 from .graphs import supported_formats as graph_formats
 from .graphs import readGraph,writeGraph
 from .graphs import bipartite_random_left_regular,bipartite_random_regular
 
-import sys
+try: # NetworkX > 1.10
+
+    complete_bipartite_graph    = networkx.bipartite.complete_bipartite_graph
+    bipartite_random_graph      = networkx.bipartite.random_graph
+    bipartite_gnml_random_graph = networkx.bipartite.gnmk_random_graph
+
+except ImportError: # Networkx 1.9
+    
+    from networkx import complete_bipartite_graph
+    from networkx import bipartite_random_graph
+    from networkx import bipartite_gnmk_random_graph
+
 
 
 __all__ = [ "register_cnfgen_subcommand","is_cnfgen_subcommand",
@@ -461,15 +475,16 @@ class BipartiteGraphHelper(GraphHelper):
         Arguments:
         - `args`: command line options
         """
+
         if hasattr(args,'bp') and args.bp:
 
             l,r,p = args.bp
-            G=networkx.bipartite_random_graph(l,r,p)
+            G=bipartite_random_graph(l,r,p)
 
         elif hasattr(args,'bm') and args.bm:
 
             l,r,m = args.bm
-            G=networkx.bipartite_gnmk_random_graph(l,r,m)
+            G=bipartite_gnmk_random_graph(l,r,m)
 
         elif hasattr(args,'bd') and args.bd:
 
@@ -484,7 +499,7 @@ class BipartiteGraphHelper(GraphHelper):
         elif hasattr(args,'bcomplete') and args.bcomplete:
             
             l,r = args.bcomplete
-            G=networkx.complete_bipartite_graph(l,r)
+            G=complete_bipartite_graph(l,r)
 
         elif getattr(args,'graphformat'):
 
