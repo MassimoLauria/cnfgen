@@ -15,11 +15,11 @@ class TestCnfgen(unittest.TestCase):
         self.assertEqual(cm.exception.code, 0)
 
     def test_find_formula_families(self):
-        subcommands = cnfgen.find_formula_families()
+        subcommands = cnfgen.find_formula_subcommands()
         self.assertNotEqual(subcommands[:],[])
         
     def test_subformulas_help(self):
-        subcommands = cnfgen.find_formula_families()
+        subcommands = cnfgen.find_formula_subcommands()
         for sc in subcommands:
             with self.assertRaises(SystemExit) as cm:
                 cnfgen.command_line_utility(["cnfgen", sc.name, "-h"])
