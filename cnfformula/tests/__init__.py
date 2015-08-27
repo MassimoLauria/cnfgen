@@ -35,8 +35,12 @@ class TestCNFBase(unittest.TestCase):
         if have_satsolver():
             result, _ = is_satisfiable(formula)
             assert result
+        else:
+            self.skipTest("No usable solver found.")
 
     def assertUNSAT(self, formula):
         if have_satsolver():
             result, _ = is_satisfiable(formula)
             assert not result
+        else:
+            self.skipTest("No usable solver found.")
