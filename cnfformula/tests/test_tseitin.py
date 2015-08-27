@@ -47,3 +47,34 @@ class TestTseitin(TestCNFBase):
         graph.add_edges_from(((0,1),(0,1)))
         F = TseitinFormula(graph)
         self.assertCnfEqualsDimacs(F,dimacs)
+
+    def test_star(self):
+        graph=nx.star_graph(10)
+        F = TseitinFormula(graph)
+        self.assertEquals(len(list(F.variables())),10)
+        self.assertEquals(len(list(F.clauses())),2**9+10)
+        self.assertEquals(len([C for C in F.clauses() if len(C)==10]),2**9)
+        self.assertEquals(len([C for C in F.clauses() if len(C)==1]),10)
+        for C in F.clauses():
+            if len(C)==1:
+                self.assertFalse(C[0][0])
+
+    def test_charge_even(self):
+        graph=nx.star_graph(10)
+        F = TseitinFormula(graph,[0]*11)
+        for C in F.clauses():
+            if len(C)==1:
+                self.assertFalse(C[0][0])
+
+    def test_charge_odd(self):
+        graph=nx.star_graph(10)
+        F = TseitinFormula(graph,[1]*11)
+        for C in F.clauses():
+            if len(C)==1:
+                self.assertTrue(C[0][0])
+
+    def test_charge_first(self):
+        graph=nx.star_graph(10)
+        F = TseitinFormula(graph,[1])
+        G = TseitinFormula(graph)
+        self.assertCnfEqual(F,G)
