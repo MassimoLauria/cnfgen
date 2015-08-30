@@ -178,7 +178,48 @@ class DirectedAcyclicGraphHelper(GraphHelper):
                         default='autodetect',
                         help="Format of the DAG file. (default: autodetect)")
 
- 
+
+    @staticmethod
+    def pyramid(height):
+        D=networkx.DiGraph()
+        D.name='Pyramid of height {}'.format(height)
+        D.ordered_vertices=[]
+
+        # vertices
+        X=[ [('x_{{{},{}}}'.format(h,i),h,i) for i in range(height-h+1)] \
+            for h in range(height+1) ]
+
+        for layer in X:
+            for (name,h,i) in layer:
+                D.add_node(name,rank=(h,i))
+                D.ordered_vertices.append(name)
+
+        # edges
+        for h in range(1,len(X)):
+            for i in range(len(X[h])):
+                D.add_edge(X[h-1][i][0]  ,X[h][i][0])
+                D.add_edge(X[h-1][i+1][0],X[h][i][0])
+
+        return D
+
+    @staticmethod
+    def complete_binary_tree(height):
+        D=networkx.DiGraph()
+        D.name='Complete binary tree of height {}'.format(height)
+        D.ordered_vertices=[]
+        # vertices
+        vert=['v_{}'.format(i) for i in range(1,2*(2**height))]
+        for w in vert:
+            D.add_node(w)
+            D.ordered_vertices.append(w)
+        # edges
+        N=len(vert)-1
+        for i in range(len(vert)//2):
+            D.add_edge(vert[N-2*i-1],vert[N-i])
+            D.add_edge(vert[N-2*i-2],vert[N-i])
+
+        return D
+
     @staticmethod
     def obtain_graph(args):
         """Produce a DAG from either input or library
@@ -186,40 +227,12 @@ class DirectedAcyclicGraphHelper(GraphHelper):
         if args.tree is not None:
             assert args.tree > 0
 
-            D=networkx.DiGraph()
-            D.ordered_vertices=[]
-            # vertices
-            vert=['v_{}'.format(i) for i in range(1,2*(2**args.tree))]
-            for w in vert:
-                D.add_node(w)
-                D.ordered_vertices.append(w)
-            # edges
-            N=len(vert)-1
-            for i in range(len(vert)//2):
-                D.add_edge(vert[N-2*i-1],vert[N-i])
-                D.add_edge(vert[N-2*i-2],vert[N-i])
+            D = DirectedAcyclicGraphHelper.complete_binary_tree(args.tree)
 
         elif args.pyramid is not None:
             assert args.pyramid > 0
 
-            D=networkx.DiGraph()
-            D.name='Pyramid of height {}'.format(args.pyramid)
-            D.ordered_vertices=[]
-
-            # vertices
-            X=[ [('x_{{{},{}}}'.format(h,i),h,i) for i in range(args.pyramid-h+1)] \
-                for h in range(args.pyramid+1) ]
-
-            for layer in X:
-                for (name,h,i) in layer:
-                    D.add_node(name,rank=(h,i))
-                    D.ordered_vertices.append(name)
-
-            # edges
-            for h in range(1,len(X)):
-                for i in range(len(X[h])):
-                    D.add_edge(X[h-1][i][0]  ,X[h][i][0])
-                    D.add_edge(X[h-1][i+1][0],X[h][i][0])
+            D = DirectedAcyclicGraphHelper.pyramid(args.pyramid)
 
         elif args.graphformat is not None:
 
