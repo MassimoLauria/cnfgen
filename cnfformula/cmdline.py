@@ -112,6 +112,14 @@ def is_cnfgen_subcommand(cls):
 
 ### Graph readers/generators
 
+def positive_int(string):
+    """Type checker for positive integers
+    """
+    value = int(string)
+    if (value<=0) : raise ValueError('integer is not positive: {}'.format(value))
+    return value
+
+
 class GraphHelper(object):
     """Command Line helper for reading graphs
     """
@@ -148,10 +156,10 @@ class DirectedAcyclicGraphHelper(GraphHelper):
                         help="""Read the DAG from <input>. Setting '<input>' to '-' is another way
                         to read from standard input. (default: -) """)
 
-        gr.add_argument('--tree',type=int,action='store',metavar="<height>",
+        gr.add_argument('--tree',type=positive_int,action='store',metavar="<height>",
                             help="rooted tree digraph")
 
-        gr.add_argument('--pyramid',type=int,action='store',metavar="<height>",
+        gr.add_argument('--pyramid',type=positive_int,action='store',metavar="<height>",
                             help="pyramid digraph")
 
         gr=parser.add_argument_group("I/O options")
@@ -175,7 +183,8 @@ class DirectedAcyclicGraphHelper(GraphHelper):
     def obtain_graph(args):
         """Produce a DAG from either input or library
         """
-        if hasattr(args,'tree') and args.tree>0:
+        if args.tree is not None:
+            assert args.tree > 0
 
             D=networkx.DiGraph()
             D.ordered_vertices=[]
@@ -190,7 +199,8 @@ class DirectedAcyclicGraphHelper(GraphHelper):
                 D.add_edge(vert[N-2*i-1],vert[N-i])
                 D.add_edge(vert[N-2*i-2],vert[N-i])
 
-        elif hasattr(args,'pyramid') and args.pyramid>0:
+        elif args.pyramid is not None:
+            assert args.pyramid > 0
 
             D=networkx.DiGraph()
             D.name='Pyramid of height {}'.format(args.pyramid)
@@ -211,7 +221,7 @@ class DirectedAcyclicGraphHelper(GraphHelper):
                     D.add_edge(X[h-1][i][0]  ,X[h][i][0])
                     D.add_edge(X[h-1][i+1][0],X[h][i][0])
 
-        elif args.graphformat:
+        elif args.graphformat is not None:
 
             try:
                 D=readGraph(args.input,"dag",args.graphformat)
@@ -222,7 +232,7 @@ class DirectedAcyclicGraphHelper(GraphHelper):
             raise RuntimeError("Invalid graph specification on command line")
 
         # Output the graph is requested
-        if hasattr(args,'savegraph') and args.savegraph:
+        if args.savegraph is not None:
             writeGraph(D,
                        args.savegraph,
                        "dag",
@@ -259,12 +269,11 @@ class SimpleGraphHelper(GraphHelper):
 
         class IntFloat(argparse.Action):
             def __call__(self, parser, args, values, option_string = None):
-                v=ValueError('n must be integer and p must be a float between 0 and 1')
                 try:
-                    n, p = int(values[0]),float(values[1])
+                    n, p = positive_int(values[0]),float(values[1])
                     if p>1.0 or p<0: raise ValueError('p must be a float between 0 and 1')
-                except ValueError:
-                    raise v
+                except ValueError as e:
+                    raise argparse.ArgumentError(self,e.message)
                 setattr(args, self.dest, (n,p))
 
         gr=gr.add_mutually_exclusive_group(required=required)
@@ -282,23 +291,23 @@ class SimpleGraphHelper(GraphHelper):
                             help="random graph according to G(n,p) model (i.e. independent edges)")
 
 
-        gr.add_argument('--gnm'+suffix,type=int,nargs=2,action='store',metavar=('n','m'),
+        gr.add_argument('--gnm'+suffix,type=positive_int,nargs=2,action='store',metavar=('n','m'),
                             help="random graph according to G(n,m) model (i.e. m random edges)")
 
-        gr.add_argument('--gnd'+suffix,type=int,nargs=2,action='store',metavar=('n','d'),
+        gr.add_argument('--gnd'+suffix,type=positive_int,nargs=2,action='store',metavar=('n','d'),
                             help="random d-regular graph according to G(n,d) model (i.e. d random edges per vertex)")
 
-        gr.add_argument('--grid'+suffix,type=int,nargs='+',action='store',metavar=('d1','d2'),
+        gr.add_argument('--grid'+suffix,type=positive_int,nargs='+',action='store',metavar=('d1','d2'),
                         help="n-dimensional grid of dimension d1 x d2 x ... ")
 
-        gr.add_argument('--torus'+suffix,type=int,nargs='+',action='store',metavar=('d1','d2'),
+        gr.add_argument('--torus'+suffix,type=positive_int,nargs='+',action='store',metavar=('d1','d2'),
                         help="n-dimensional torus grid of dimensions d1 x d2 x ... x dn")
 
-        gr.add_argument('--complete'+suffix,type=int,action='store',metavar="<N>",
+        gr.add_argument('--complete'+suffix,type=positive_int,action='store',metavar="<N>",
                             help="complete graph on N vertices")
 
         gr=parser.add_argument_group("Modifications for input graph "+suffix)
-        gr.add_argument('--plantclique'+suffix,type=int,action='store',metavar="<k>",
+        gr.add_argument('--plantclique'+suffix,type=positive_int,action='store',metavar="<k>",
                             help="choose k vertices at random and add all edges among them")
 
         gr=parser.add_argument_group("I/O options for graph "+suffix)
@@ -326,36 +335,36 @@ class SimpleGraphHelper(GraphHelper):
         Arguments:
         - `args`: command line options
         """
-        if hasattr(args,'gnd'+suffix) and getattr(args,'gnd'+suffix):
+        if getattr(args,'gnd'+suffix) is not None:
 
             n,d = getattr(args,'gnd'+suffix)
             if (n*d)%2 == 1:
                 raise ValueError("n * d must be even")
             G=networkx.random_regular_graph(d,n)
 
-        elif hasattr(args,'gnp'+suffix) and getattr(args,'gnp'+suffix):
+        elif getattr(args,'gnp'+suffix) is not None:
 
             n,p = getattr(args,'gnp'+suffix)
             G=networkx.gnp_random_graph(n,p)
 
-        elif hasattr(args,'gnm'+suffix) and getattr(args,'gnm'+suffix):
+        elif getattr(args,'gnm'+suffix) is not None:
 
             n,m = getattr(args,'gnm'+suffix)
             G=networkx.gnm_random_graph(n,m)
 
-        elif hasattr(args,'grid'+suffix) and getattr(args,'grid'+suffix):
+        elif getattr(args,'grid'+suffix) is not None:
 
             G=networkx.grid_graph(getattr(args,'grid'+suffix))
 
-        elif hasattr(args,'torus'+suffix) and getattr(args,'torus'+suffix):
+        elif getattr(args,'torus'+suffix) is not None:
             
             G=networkx.grid_graph(getattr(args,'torus'+suffix),periodic=True)
 
-        elif hasattr(args,'complete'+suffix) and getattr(args,'complete'+suffix)>0:
+        elif getattr(args,'complete'+suffix) is not None:
 
             G=networkx.complete_graph(getattr(args,'complete'+suffix))
 
-        elif getattr(args,'graphformat'+suffix):
+        elif getattr(args,'graphformat'+suffix) is not None:
 
             try:
                 G=readGraph(getattr(args,'input'+suffix),
@@ -370,7 +379,7 @@ class SimpleGraphHelper(GraphHelper):
             raise RuntimeError("Invalid graph specification on command line")
 
         # Graph modifications
-        if hasattr(args,'plantclique'+suffix) and getattr(args,'plantclique'+suffix)>1:
+        if getattr(args,'plantclique'+suffix)>1:
 
             clique=random.sample(G.nodes(),getattr(args,'plantclique'+suffix))
 
@@ -378,7 +387,7 @@ class SimpleGraphHelper(GraphHelper):
                 G.add_edge(v,w)
 
         # Output the graph is requested
-        if hasattr(args,'savegraph'+suffix) and getattr(args,'savegraph'+suffix):
+        if getattr(args,'savegraph'+suffix) is not None:
             writeGraph(G,
                        getattr(args,'savegraph'+suffix),
                        'simple',
@@ -401,26 +410,22 @@ class BipartiteGraphHelper(GraphHelper):
 
         class IntIntFloat(argparse.Action):
             def __call__(self, parser, args, values, option_string = None):
-                l,r,p = int(values[0]),int(values[1]),float(values[2])
-                if not isinstance(l,int):
-                    raise ValueError('l must be an integer')
-                if not isinstance(r,int):
-                    raise ValueError('r must be an integer')
-                if not (isinstance(p,float) and p<=1.0 and p>=0):
-                    raise ValueError('p must be an float between 0 and 1')
+                try:
+                    l,r,p = positive_int(values[0]),positive_int(values[1]),float(values[2])
+                    if not (0.0 <= p <= 1.0):
+                        raise ValueError('p must be a float between 0 and 1')
+                except ValueError as e:
+                    raise argparse.ArgumentError(self,e.message)
                 setattr(args, self.dest, (l,r,p))
 
         class BipartiteRegular(argparse.Action):
             def __call__(self, parser, args, values, option_string = None):
-                l,r,d = int(values[0]),int(values[1]),int(values[2])
-                if not isinstance(l,int):
-                    raise ValueError('l must be an integer')
-                if not isinstance(r,int):
-                    raise ValueError('r must be an integer')
-                if not isinstance(d,int):
-                    raise ValueError('d must be an integer')
-                if (d*l % r) != 0 :
-                    raise ValueError('In a regular bipartite graph, r must divide d*l.')
+                try:
+                    l,r,d = positive_int(values[0]),positive_int(values[1]),positive_int(values[2])
+                    if (d*l % r) != 0 :
+                        raise ValueError('In a regular bipartite graph, r must divide d*l.')
+                except ValueError as e:
+                    raise argparse.ArgumentError(self,e.message)
                 setattr(args, self.dest, (l,r,d))
 
         gr=parser.add_argument_group("Read/Write the underlying bipartite graph")
@@ -443,16 +448,16 @@ class BipartiteGraphHelper(GraphHelper):
                 help="random bipartite graph according with independent edges)")
 
 
-        gr.add_argument('--bm',type=int,nargs=3,action='store',metavar=('l','r','m'),
+        gr.add_argument('--bm',type=positive_int,nargs=3,action='store',metavar=('l','r','m'),
                 help="random bipartite graph, with m random edges")
 
-        gr.add_argument('--bd',type=int,nargs=3,action='store',metavar=('l','r','d'),
+        gr.add_argument('--bd',type=positive_int,nargs=3,action='store',metavar=('l','r','d'),
                 help="random bipartite d-left-regular graph, with d random edges per left vertex)")
 
         gr.add_argument('--bregular',nargs=3,action=BipartiteRegular,metavar=('l','r','d'),
                 help="random (l,r)-bipartite regular graph, with d edges per left vertex.")
 
-        gr.add_argument('--bcomplete',type=int,nargs=2,action='store',metavar=('l','r'),
+        gr.add_argument('--bcomplete',type=positive_int,nargs=2,action='store',metavar=('l','r'),
                 help="complete bipartite graph")
 
         gr=parser.add_argument_group("I/O options")
@@ -476,32 +481,32 @@ class BipartiteGraphHelper(GraphHelper):
         - `args`: command line options
         """
 
-        if hasattr(args,'bp') and args.bp:
+        if args.bp is not None:
 
             l,r,p = args.bp
             G=bipartite_random_graph(l,r,p)
 
-        elif hasattr(args,'bm') and args.bm:
+        elif args.bm is not None:
 
             l,r,m = args.bm
             G=bipartite_gnmk_random_graph(l,r,m)
 
-        elif hasattr(args,'bd') and args.bd:
+        elif args.bd is not None:
 
             l,r,d = args.bd
             G=bipartite_random_left_regular(l,r,d)
 
-        elif hasattr(args,'bregular') and args.bregular:
+        elif args.bregular is not None:
 
             l,r,d = args.bregular
             G=bipartite_random_regular(l,r,d)
 
-        elif hasattr(args,'bcomplete') and args.bcomplete:
+        elif args.bcomplete is not None:
             
             l,r = args.bcomplete
             G=complete_bipartite_graph(l,r)
 
-        elif getattr(args,'graphformat'):
+        elif args.graphformat is not None:
 
             try:
                 G=readGraph(args.input, "bipartite", args.graphformat)
@@ -517,7 +522,7 @@ class BipartiteGraphHelper(GraphHelper):
         graphs._bipartite_nx_workaroud(G)
         
         # Output the graph is requested
-        if hasattr(args,'savegraph') and args.savegraph:
+        if args.savegraph is not None:
             writeGraph(G,
                        args.savegraph,
                        'bipartite',
