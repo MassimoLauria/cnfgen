@@ -16,6 +16,8 @@ import random
 import cnfformula.cmdline
 import cnfformula.families
 
+def edgename(e):
+    return "E_{{{0},{1}}}".format(*sorted(e))
 
 @cnfformula.families.register_cnf_generator
 def TseitinFormula(graph,charges=None):
@@ -40,14 +42,14 @@ def TseitinFormula(graph,charges=None):
 
     # init formula
     tse=CNF()
-    for e in graph.edges():
-        tse.add_variable("E_{{{0},{1}}}".format(*sorted(e)))
+    for e in sorted(graph.edges(),key=sorted):
+        tse.add_variable(edgename(e))
 
     # add constraints
     for v,c in zip(V,charges):
         
         # produce all clauses and save half of them
-        names = [ "E_{{{0},{1}}}".format(*sorted(e)) for e in graph.edges_iter(v) ]
+        names = [ edgename(e) for e in graph.edges_iter(v) ]
         for cls in parity_constraint(names,c):
             tse.add_clause(list(cls),strict=True)
 
