@@ -18,11 +18,16 @@ import sys
 import argparse
 
 import networkx
+import random
+
+from itertools import combinations
 
 from .graphs import supported_formats as graph_formats
 from .graphs import readGraph,writeGraph
 from .graphs import bipartite_random_left_regular,bipartite_random_regular
 from .graphs import dag_complete_binary_tree,dag_pyramid
+
+
 
 try: # NetworkX >= 1.10
 

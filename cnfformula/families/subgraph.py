@@ -12,7 +12,10 @@ from cnfformula.cmdline import SimpleGraphHelper
 import cnfformula.families
 import cnfformula.cmdline
 
-from itertools import combinations,product
+from itertools import combinations
+from itertools import product
+from itertools import combinations_with_replacement
+
 from networkx  import complete_graph
 from networkx  import empty_graph
 
