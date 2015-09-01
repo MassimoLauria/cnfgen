@@ -266,27 +266,29 @@ class SimpleGraphHelper(GraphHelper):
                         """)
 
         gr.add_argument('--gnp'+suffix,nargs=2,action=IntFloat,metavar=('n','p'),
-                            help="random graph according to G(n,p) model (i.e. independent edges)")
+                        help="random graph according to G(n,p) model (i.e. independent edges)")
 
 
         gr.add_argument('--gnm'+suffix,type=positive_int,nargs=2,action='store',metavar=('n','m'),
-                            help="random graph according to G(n,m) model (i.e. m random edges)")
+                        help="random graph according to G(n,m) model (i.e. m random edges)")
 
         gr.add_argument('--gnd'+suffix,type=positive_int,nargs=2,action='store',metavar=('n','d'),
-                            help="random d-regular graph according to G(n,d) model (i.e. d random edges per vertex)")
+                        help="random d-regular graph according to G(n,d) model (i.e. d random edges per vertex)")
 
-        gr.add_argument('--grid'+suffix,type=positive_int,nargs='+',action='store',metavar=('d1','d2'),
+        gr.add_argument('--grid'+suffix,type=positive_int,nargs='+',action='store',
+                        metavar=('d1','d2'),
                         help="n-dimensional grid of dimension d1 x d2 x ... ")
 
-        gr.add_argument('--torus'+suffix,type=positive_int,nargs='+',action='store',metavar=('d1','d2'),
+        gr.add_argument('--torus'+suffix,type=positive_int,nargs='+',action='store',
+                        metavar=('d1','d2'),
                         help="n-dimensional torus grid of dimensions d1 x d2 x ... x dn")
 
         gr.add_argument('--complete'+suffix,type=positive_int,action='store',metavar="<N>",
-                            help="complete graph on N vertices")
+                        help="complete graph on N vertices")
 
         gr=parser.add_argument_group("Modifications for input graph "+suffix)
         gr.add_argument('--plantclique'+suffix,type=positive_int,action='store',metavar="<k>",
-                            help="choose k vertices at random and add all edges among them")
+                        help="choose k vertices at random and add all edges among them")
 
         gr=parser.add_argument_group("I/O options for graph "+suffix)
         gr.add_argument('--savegraph'+suffix,'-sg'+suffix,
@@ -351,7 +353,7 @@ class SimpleGraphHelper(GraphHelper):
             except ValueError,e:
                 print("ERROR ON '{}'. {}".format(
                     getattr(args,'input'+suffix).name,e),
-                    file=sys.stderr)
+                      file=sys.stderr)
                 exit(-1)
         else:
             raise RuntimeError("Invalid graph specification on command line")
@@ -390,7 +392,7 @@ class BipartiteGraphHelper(GraphHelper):
             def __call__(self, parser, args, values, option_string = None):
                 try:
                     l,r,p = positive_int(values[0]),positive_int(values[1]),float(values[2])
-                    if not (0.0 <= p <= 1.0):
+                    if not 0.0 <= p <= 1.0:
                         raise ValueError('p must be a float between 0 and 1')
                 except ValueError as e:
                     raise argparse.ArgumentError(self,e.message)
@@ -423,28 +425,28 @@ class BipartiteGraphHelper(GraphHelper):
 
                 
         gr.add_argument('--bp',nargs=3,action=IntIntFloat,metavar=('l','r','p'),
-                help="random bipartite graph according with independent edges)")
+                        help="random bipartite graph according with independent edges)")
 
 
         gr.add_argument('--bm',type=positive_int,nargs=3,action='store',metavar=('l','r','m'),
-                help="random bipartite graph, with m random edges")
+                        help="random bipartite graph, with m random edges")
 
         gr.add_argument('--bd',type=positive_int,nargs=3,action='store',metavar=('l','r','d'),
-                help="random bipartite d-left-regular graph, with d random edges per left vertex)")
+                        help="random bipartite d-left-regular graph, with d random edges per left vertex)")
 
         gr.add_argument('--bregular',nargs=3,action=BipartiteRegular,metavar=('l','r','d'),
-                help="random (l,r)-bipartite regular graph, with d edges per left vertex.")
+                        help="random (l,r)-bipartite regular graph, with d edges per left vertex.")
 
         gr.add_argument('--bcomplete',type=positive_int,nargs=2,action='store',metavar=('l','r'),
-                help="complete bipartite graph")
+                        help="complete bipartite graph")
 
         gr=parser.add_argument_group("I/O options")
         gr.add_argument('--savegraph','-sg',
-                            type=argparse.FileType('wb',0),
-                            metavar="<graph_file>",
-                            default=None,
-                            help="""Save the graph to <graph_file>. Setting '<graph_file>' to '-'sends
-                            the graph to standard output. (default: -) """)
+                        type=argparse.FileType('wb',0),
+                        metavar="<graph_file>",
+                        default=None,
+                        help="""Save the graph to <graph_file>. Setting '<graph_file>' to '-'sends
+                        the graph to standard output. (default: -) """)
         gr.add_argument('--graphformat','-gf',
                         choices=graph_formats()['bipartite'],
                         default='autodetect',
