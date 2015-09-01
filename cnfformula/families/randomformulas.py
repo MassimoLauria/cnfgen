@@ -42,9 +42,6 @@ def RandomKCNF(k, n, m, seed=None):
     repetition, meaning that whenever a randomly picked clause is
     already in the CNF, it is sampled again.
 
-    If the sampling takes too long (i.e. the space of possible clauses
-    is too small) then a ``RuntimeError`` is raised.
-
     Parameters
     ----------
     k : int
@@ -68,8 +65,6 @@ def RandomKCNF(k, n, m, seed=None):
     ------
     ValueError 
         when some paramenter is negative, or when k>n.
-    RuntimeError
-        the formula is too dense for the simple sampling process.
 
     """
     if seed:
