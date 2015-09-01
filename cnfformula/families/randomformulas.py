@@ -6,12 +6,32 @@ Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
+import itertools
+import random
+
 from cnfformula.cnf import CNF
 
 import cnfformula.cmdline
 import cnfformula.families
 
+def sample_clauses(k, indices, m):
+    clauses = set()
+    t = 0
+    while len(clauses)<m and t < 10*m:
+        t += 1
+        clauses.add(tuple((random.choice([True,False]),'x_{0}'.format(i))
+                          for i in sorted(random.sample(indices,k))))
+    if len(clauses)<m:
+        return sample_clauses_dense(k, indices, m)
+    return clauses
 
+def all_clauses(k, indices):
+    for domain in itertools.combinations(indices, k):
+        for polarity in itertools.product([True,False], repeat=3):
+            yield zip(polarity,('x_{0}'.format(i) for i in domain))
+
+def sample_clauses_dense(k, indices, m):
+    return random.sample(list(all_clauses(k, indices)), m)
 
 @cnfformula.families.register_cnf_generator
 def RandomKCNF(k, n, m, seed=None):
@@ -52,7 +72,6 @@ def RandomKCNF(k, n, m, seed=None):
         the formula is too dense for the simple sampling process.
 
     """
-    import random
     if seed:
         random.seed(seed)
 
@@ -69,16 +88,7 @@ def RandomKCNF(k, n, m, seed=None):
     indices = xrange(1,n+1) 
     for i in indices:
         F.add_variable('x_{0}'.format(i))
-
-    clauses = set()
-    t = 0
-    while len(clauses)<m and t < 10*m:
-        t += 1
-        clauses.add(tuple((random.choice([True,False]),'x_{0}'.format(i))
-                          for i in sorted(random.sample(indices,k))))
-    if len(clauses)<m:
-        raise RuntimeError("Sampling is taking too long. Maybe the requested formula is too dense.")
-    for clause in clauses:
+    for clause in sample_clauses(k, indices, m):
         F.add_clause(list(clause),strict=True)
 
     return F
