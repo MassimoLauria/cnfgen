@@ -1,6 +1,7 @@
 from cnfformula import TseitinFormula
 
 from . import TestCNFBase
+from test_commandline_helper import TestCommandline
 
 import unittest
 import networkx as nx
@@ -78,3 +79,11 @@ class TestTseitin(TestCNFBase):
         F = TseitinFormula(graph,[1])
         G = TseitinFormula(graph)
         self.assertCnfEqual(F,G)
+
+class TestTseitinCommandline(TestCommandline):
+    def test_parameters(self):
+        for sz in range(1,5):
+            parameters = ["tseitin", "--complete", sz]
+            graph=nx.complete_graph(sz)
+            F = TseitinFormula(graph)
+            self.checkFormula(F, parameters)
