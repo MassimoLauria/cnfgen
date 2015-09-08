@@ -1,11 +1,8 @@
-
-import cnfformula
-from cnfformula import PebblingFormula
+from cnfformula import CNF,PebblingFormula
 
 from . import TestCNFBase
+from test_commandline_helper import TestCommandline
 
-
-import unittest
 import networkx as nx
 
 class TestPebbling(TestCNFBase) :
@@ -13,7 +10,7 @@ class TestPebbling(TestCNFBase) :
         G=nx.DiGraph()
         peb = PebblingFormula(G)
         self.assertTrue(peb._check_coherence())
-        self.assertCnfEqual(peb,cnfformula.CNF())
+        self.assertCnfEqual(peb,CNF())
 
     def test_single_vertex(self) :
         G=nx.DiGraph()
@@ -54,6 +51,20 @@ class TestPebbling(TestCNFBase) :
         with self.assertRaises(ValueError) :
             PebblingFormula(G)
 
+class TestPebblingCommandline(TestCommandline):
+    def test_tree(self):
+        for sz in range(1,5):
+            G = nx.balanced_tree(2,sz,nx.DiGraph()).reverse()
+            G = nx.relabel_nodes(G,dict(zip(G.nodes(),reversed(G.nodes()))),True)
+            G.name = 'Complete binary tree of height {}'.format(sz)
+            F = PebblingFormula(G)
+            parameters = ["peb", "--tree", sz]
+            self.checkFormula(F, parameters)
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_pyramid(self):
+        G = nx.DiGraph()
+        G.add_edges_from([(1,4),(2,4),(2,5),(3,5),(4,6),(5,6)])
+        G.name = 'Pyramid of height 2'
+        F = PebblingFormula(G)
+        parameters = ["peb", "--pyramid", 2]
+        self.checkFormula(F, parameters)
