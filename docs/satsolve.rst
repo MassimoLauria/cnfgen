@@ -97,11 +97,3 @@ Reference
 .. [1] http://www.satlib.org/Benchmarks/SAT/satformat.ps
 .. [2] http://www.latex-project.org/ 
 .. [3] http://en.wikipedia.org/wiki/Proof_complexity
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
