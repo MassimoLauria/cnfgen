@@ -23,7 +23,8 @@ interface of a supported one.
 
 .. [1] NP-hardness is a fundamental  concept coming from computational
        complexity, which is  the mathematical study of how  hard is to
-       perform                  certain                  computations.
+       perform certain computations.
+       
        (https://en.wikipedia.org/wiki/NP-hardness)
        
-.. [2] http://www.satcompetition.org/
+.. [2] See http://www.satcompetition.org/ for SAT solver ranking.

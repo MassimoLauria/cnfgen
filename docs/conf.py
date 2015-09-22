@@ -52,7 +52,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'CNFgen'
-copyright = u'2015, Massimo Lauria'
+copyright = u'2012-2015, Massimo Lauria <lauria.massimo@gmail.com>'
 author = u'Massimo Lauria'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -86,7 +86,7 @@ exclude_patterns = ['_build']
 #default_role = None
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
-#add_function_parentheses = True
+add_function_parentheses = True
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
@@ -107,7 +107,6 @@ pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
-
 
 # -- Options for HTML output ----------------------------------------------
 
