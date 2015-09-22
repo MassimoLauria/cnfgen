@@ -5,24 +5,25 @@ Setup script for the CNFgen package
 
 from setuptools import setup, find_packages
 
+import cnfformula.prjdata as p
 
-setup(name='CNFgen',
-      version='0.5.4.5',
-      description='CNF formula generator',
-      author='Massimo Lauria',
-      author_email='lauria.massimo@gmail.com',
-      url='https://massimolauria.github.io/cnfgen',
-      # url='https://github.com/MassimoLauria/cnfgen',
-      packages = find_packages(".", exclude=["*.tests"]),
-      license='GPL-3',
-      entry_points={
-          'console_scripts': [
-              'cnfgen=cnfformula.cnfgen:command_line_utility',
-              'cnfshuffle=cnfformula.utils.cnfshuffle:command_line_utility',
-              'cnftransform=cnfformula.utils.dimacstransform:command_line_utility'],
-      },
-      install_requires=['networkx','pyparsing'],
-      # make some tests
-      test_suite='nose.collector',
-      tests_require=['nose']
-     )
+setup(
+    name         = p.__project_name__,
+    version      = p.__version__,
+    description  = p.__project_description__,
+    author       = p.__author__,
+    author_email = p.__author_email__,
+    url          = p.__url__,
+    license      = p.__license__,
+    packages     = find_packages(".", exclude=["*.tests"]),
+    entry_points={
+        'console_scripts': [
+            'cnfgen=cnfformula.cnfgen:command_line_utility',
+            'cnfshuffle=cnfformula.utils.cnfshuffle:command_line_utility',
+            'cnftransform=cnfformula.utils.dimacstransform:command_line_utility'],
+    },
+    install_requires=['networkx','pyparsing'],
+    # make some tests
+    test_suite='nose.collector',
+    tests_require=['nose']
+)

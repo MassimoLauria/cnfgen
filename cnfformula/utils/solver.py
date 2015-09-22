@@ -7,10 +7,6 @@ solvers installed on the machine. For the full list of supported
 solvers, see
 
   `cnfformula.utils.solver.supported_satsolvers`
-
-Copyright (C) 2015  Massimo Lauria <lauria@kth.se>
-https://github.com/MassimoLauria/cnfgen.git
-
 """
 
 __all__ = ["supported_satsolvers", "is_satisfiable", "have_satsolver"]

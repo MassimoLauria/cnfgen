@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 """CNF Formulas for Ramsey-like statements
-
-Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
-https://github.com/MassimoLauria/cnfgen.git
 """
 
 from cnfformula.cnf import CNF

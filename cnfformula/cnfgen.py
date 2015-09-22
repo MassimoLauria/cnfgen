@@ -7,16 +7,12 @@ order to  be printed  in dimacs  or LaTeX  formats. Such  formulas are
 ready to be  fed to sat solvers.  In particular  the module implements
 both a library of CNF generators and a command line utility.
 
-Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
-https://github.com/MassimoLauria/cnfgen.git
-
-
-Create you own CNFs:
+Create the CNFs:
 
 >>> from . import CNF
 >>> c=CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], \
           [(False,"x2"),(True,"x4")] ])
->>> print( c.dimacs(False) )
+>>> print( c.dimacs(export_header=False) )
 p cnf 4 2
 1 2 -3 0
 -2 4 0
@@ -24,7 +20,7 @@ p cnf 4 2
 You can add clauses later in the process:
 
 >>> c.add_clause( [(False,"x3"),(True,"x4"),(False,"x5")] )
->>> print( c.dimacs(add_header=False))
+>>> print( c.dimacs(export_header=False))
 p cnf 5 3
 1 2 -3 0
 -2 4 0

@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 """Implementation of formulas that check for subgraphs
-
-Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
-https://github.com/MassimoLauria/cnfgen.git
 """
 
 from cnfformula.cnf import CNF

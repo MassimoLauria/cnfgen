@@ -2,10 +2,6 @@
 # -*- coding:utf-8 -*-
 """Utilities to manage graph formats and graph files in order to build
 formulas that are graph based.
-
-Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
-https://github.com/MassimoLauria/cnfgen.git
-
 """
 
 from __future__ import print_function

@@ -22,11 +22,10 @@ from itertools import product
 from itertools import combinations
 from collections import Counter
 
-_default_header=r"""Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
-https://github.com/MassimoLauria/cnfgen.git
+from . import prjdata as pd
 
-"""
-
+_default_header="Generated with `cnfgen` (C) {}\n{}\n\n".format(pd.__copyright__,
+                                                                pd.__url__)
 
 class CNF(object):
     """Propositional formulas in conjunctive normal form.
@@ -482,10 +481,7 @@ class CNF(object):
         >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],\
                    [(False,"x_2"),(False,"x_4")], \
                    [(True,"x_2"),(True,"x_3"),(False,"x_4")]])
-        >>> print(c.dimacs())
-        c Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
-        c https://github.com/MassimoLauria/cnfgen.git
-        c
+        >>> print(c.dimacs(export_header=False))
         p cnf 4 3
         -1 2 -3 0
         -2 -4 0
@@ -570,10 +566,7 @@ class CNF(object):
         >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],\
                    [(False,"x_2"),(False,"x_4")], \
                    [(True,"x_2"),(True,"x_3"),(False,"x_4")]])
-        >>> print(c.latex())
-        % Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
-        % https://github.com/MassimoLauria/cnfgen.git
-        %
+        >>> print(c.latex(export_header=False))
         \\begin{align}
         &       \\left( {\\overline{x}_1} \\lor            {x_2} \\lor {\\overline{x}_3} \\right) \\\\
         & \\land \\left( {\\overline{x}_2} \\lor {\\overline{x}_4} \\right) \\\\

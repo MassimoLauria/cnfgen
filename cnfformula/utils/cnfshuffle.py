@@ -1,17 +1,11 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+"""Cnf formulas shuffling."""
 
 from __future__ import print_function
 
 import os
 
-__docstring__ =\
-"""Cnf formulas shuffling.
-
-Copyright (C) 2012, 2013, 2015  Massimo Lauria <lauria@kth.se>
-https://github.com/MassimoLauria/cnfgen.git
-
-"""
 
 import sys
 import random

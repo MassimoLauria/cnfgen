@@ -1,17 +1,12 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+"""Various utilities for the manipulation of the CNFs.
+"""
 
 from __future__ import print_function
 from ..cnf import CNF
 
 
-__docstring__ =\
-"""Various utilities for the manipulation of the CNFs.
-
-Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
-https://github.com/MassimoLauria/cnfgen.git
-
-"""
 
 def dimacs2compressed_clauses(file_handle):
     """

@@ -1,5 +1,14 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+"""Utilities to build dimacs encoding of pebbling formulas
+
+Accepts only the adjacency list graph format:
+
+ASSUMPTIONS: the graph is given with a line for each vertex, from
+sources to a *single sink*.
+
+CNF formulas interesting for proof complexity.
+"""
 
 from __future__ import print_function
 
@@ -9,20 +18,6 @@ from .. import available_transform
 from ..transformation import transform_compressed_clauses,StopClauses
 
 
-__docstring__ =\
-"""Utilities to build dimacs encoding of pebbling formulas
-
-Accepts only the adjacency list graph format:
-
-ASSUMPTIONS: the graph is given with a line for each vertex, from
-sources to a *single sink*.
-
-CNF formulas interesting for proof complexity.
-
-Copyright (C) 2012, 2013, 2015  Massimo Lauria <lauria@kth.se>
-https://github.com/MassimoLauria/cnfgen.git
-
-"""
 
 import sys
 import argparse

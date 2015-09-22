@@ -9,10 +9,6 @@ Utilities to apply to a dimacs CNF file, a transformation which
 increase the hardness of the formula
 
 Accept a cnf in dimacs format in input
-
-Copyright (C) 2013, 2015  Massimo Lauria <lauria@kth.se>
-https://github.com/MassimoLauria/cnfgen.git
-
 """
 
 from __future__ import print_function
