@@ -38,7 +38,7 @@ devinstall: venv
 
 docbuild: devinstall
 	. $(VIRTUALENV)/bin/activate && \
-	sphinx-apidoc -o docs cnfformula && \
+	sphinx-apidoc -e -o docs cnfformula && \
 	$(MAKE) -C docs html
 
 #

@@ -1,14 +1,19 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-"""Utilities to build CNF formulas interesting for proof complexity.
+"""Build and manipulate CNF formulas
 
-The module `cnfgen`  contains facilities to generate  cnf formulas, in
-order to  be printed  in dimacs  or LaTeX  formats. Such  formulas are
-ready to be  fed to sat solvers.  In particular  the module implements
-both a library of CNF generators and a command line utility.
+The module `contains facilities to generate cnf formulas, in
+order to be printed in DIMACS or LaTeX formats. Such formulas are
+ready to be fed to sat solvers.
 
-Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
+The module implements the `CNF` object, which is the main entry point
+to the `cnfformula` library. 
+
+
+
+Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
+
 """
 
 
@@ -52,7 +57,6 @@ class CNF(object):
     p cnf 4 2
     1 2 -3 0
     -2 4 0
-
     >>> c.add_clause( [(False,"x3"),(True,"x4"),(False,"x5")] )
     >>> print( c.dimacs(export_header=False))
     p cnf 5 3
@@ -319,9 +323,9 @@ class CNF(object):
         of variables  of the CNF,  in the  order of appearance  in the
         clauses.
 
-        Paramenters
-        -----------
-        clause: List[(bool,str)] 
+        Parameters
+        ----------
+        clause: list of (bool,str) 
             the clause to be added in the CNF
 
             A clause with k literals is a list with k pairs.
@@ -335,21 +339,21 @@ class CNF(object):
             is added twice then it will occur twice in the
             formula too.
 
-        literal_repetitions: Optional[bool]
+        literal_repetitions: bool, optional
             True if and only if the clause can have repeated literal.
 
             Useful for sanity check. If the flag is `False` and the
             clause contain two copies of the same literal, then
             `ValueError` is raised. (default: False)
 
-        opposite_literals: Optional[bool]
+        opposite_literals: bool, optional
             True if and only if the clause can have opposite literal.
 
             Useful for sanity check. If the flag is `False` and the
             clause contain two opposite literals, then `ValueError`
             is raised. (default: False)
 
-        auto_variables: Optional[bool]
+        auto_variables: bool, optional
             If `True` the clause can contain new variables.
 
             New variables occurring in the clause will be added to the
@@ -358,7 +362,7 @@ class CNF(object):
             raised. (default: True)
 
         
-        strict: Optional[bool]
+        strict: bool, optional
             If `True` impose restrictions on the clause
 
             Setting this to `True` is equivalent to set
@@ -737,8 +741,8 @@ class CNF(object):
 
         See Also
         --------
-        cnfformula.utils.solver.is_satisfiable
-        cnfformula.utils.solver.supported_satsolvers
+        cnfformula.utils.solver.is_satisfiable : implementation independent of CNF object.
+        cnfformula.utils.solver.supported_satsolvers : the SAT solver recognized by `cnfformula`.
 
         """
         from .utils import solver

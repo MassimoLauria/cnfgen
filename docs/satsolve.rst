@@ -1,22 +1,5 @@
-.. CNFgen documentation master file, created by
-   sphinx-quickstart on Tue May 26 17:12:40 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-.. toctree::
-   :hidden:
-   :maxdepth: 2
-
-   buildcnf
-   satsolve
-   families
-   graphs
-   transform
-   cnfgen
-   addfamily
-   
-Welcome to CNFgen's documentation!
-==================================
+Testing satisfiability
+===========================
 
 The main components of CNFgen are the ``cnfformula`` library and
 the ``cnfgen`` command line utility.

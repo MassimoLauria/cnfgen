@@ -276,7 +276,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   (master_doc, 'CNFgen', u'CNFgen Documentation',
-   author, 'CNFgen', 'One line description of project.',
+   author, 'CNFgen', 'CNF formula generator.',
    'Miscellaneous'),
 ]
 

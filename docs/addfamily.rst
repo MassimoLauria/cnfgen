@@ -1,22 +1,6 @@
-.. CNFgen documentation master file, created by
-   sphinx-quickstart on Tue May 26 17:12:40 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-.. toctree::
-   :hidden:
-   :maxdepth: 2
-
-   buildcnf
-   satsolve
-   families
-   graphs
-   transform
-   cnfgen
-   addfamily
    
-Welcome to CNFgen's documentation!
-==================================
+Adding a formula family to CNFgen
+=================================
 
 The main components of CNFgen are the ``cnfformula`` library and
 the ``cnfgen`` command line utility.
@@ -34,7 +18,7 @@ a document.  The library  contains many  generators for  formulas that
 encode various  combinatorial problems or  that come from  research in
 Proof Complexity [3]_.
 
-The  main  entry point  for  the  library is  the  ..py:cnfformula.CNF
+The main entry point for the library is the ..py:class cnfformula.CNF
 object. Let's see a simple example of its usage.
 
    >>> import cnfformula
@@ -114,11 +98,4 @@ Reference
 .. [1] http://www.satlib.org/Benchmarks/SAT/satformat.ps
 .. [2] http://www.latex-project.org/ 
 .. [3] http://en.wikipedia.org/wiki/Proof_complexity
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 

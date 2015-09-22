@@ -1,29 +1,7 @@
-.. CNFgen documentation master file, created by
-   sphinx-quickstart on Tue May 26 17:12:40 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-.. toctree::
-   :hidden:
-   :maxdepth: 2
-
-   buildcnf
-   satsolve
-   families
-   graphs
-   transform
-   cnfgen
-   addfamily
    
-Welcome to CNFgen's documentation!
-==================================
+How to build and use a CNF
+==========================
 
-The main components of CNFgen are the ``cnfformula`` library and
-the ``cnfgen`` command line utility.
-
-              
-The ``cnfformula`` library
---------------------------
 
 The ``cnfformula``  library is  capable to generate  CNFs (Conjunctive
 Normal Form) formulas, manipulate them and, when there is a SAT solver
@@ -114,11 +92,4 @@ Reference
 .. [1] http://www.satlib.org/Benchmarks/SAT/satformat.ps
 .. [2] http://www.latex-project.org/ 
 .. [3] http://en.wikipedia.org/wiki/Proof_complexity
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
