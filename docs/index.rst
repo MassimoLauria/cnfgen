@@ -4,8 +4,10 @@
    contain the root `toctree` directive.
 
 .. toctree::
+   :caption: Table of contents
    :hidden:
    :maxdepth: 2
+   :numbered:
 
    buildcnf
    satsolve
@@ -14,6 +16,7 @@
    transform
    cnfgen
    addfamily
+
    
 Welcome to CNFgen's documentation!
 ==================================

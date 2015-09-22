@@ -1,99 +1,29 @@
 Testing satisfiability
 ===========================
 
-The main components of CNFgen are the ``cnfformula`` library and
-the ``cnfgen`` command line utility.
+It is possible to test the  satisfiability of a CNF formula. We stress
+that testing satisfiability of a CNF is not at all considered to be an
+easy  task. In  full generality  the  problem is  NP-hard [1]_,  which
+essentially means that there are no fast algorithm to solve it.
 
-              
-The ``cnfformula`` library
---------------------------
+In practice many formula that come from industrial applications can be
+solved efficiently (i.e.  it is possible to rapidly  find a satisfying
+assignment). There  is a whole  pack of clever software  engineers and
+computer scientists that  compete to write the fastest  solver for CNF
+satisfiability (usually called a SAT solver). [2]_
 
-The ``cnfformula``  library is  capable to generate  CNFs (Conjunctive
-Normal Form) formulas, manipulate them and, when there is a SAT solver
-properly installed on your system, test their satisfiability. The CNFs
-can be saved on file in DIMACS format, which the standard input format
-for SAT  solvers [1]_, or  converted to LaTeX  [2]_ to be  included in
-a document.  The library  contains many  generators for  formulas that
-encode various  combinatorial problems or  that come from  research in
-Proof Complexity [3]_.
-
-The  main  entry point  for  the  library is  the  ..py:cnfformula.CNF
-object. Let's see a simple example of its usage.
-
-   >>> import cnfformula
-   >>> F = cnfformula.CNF()
-   >>> F.add_clause([(True,"X"),(False,"Y")])
-   >>> F.add_clause([(False,"X")])
-   >>> F.is_satisfiable()
-   (True, {'Y':False, 'X':False})
-   >>> F.add_clause([(True,"Y")])
-   >>> F.is_satisfiable()
-   (False, None)
-   >>> print F.dimacs()
-   c Generated with `cnfgen` (C) Massimo Lauria <lauria.massimo@gmail.com>
-   c https://github.com/MassimoLauria/cnfgen.git
-   c
-   p cnf 2 3
-   1 -2 0
-   -1 0
-   2 0
-   >>> print F.latex()
-   % Generated with `cnfgen` (C) Massimo Lauria <lauria.massimo@gmail.com>
-   % https://github.com/MassimoLauria/cnfgen.git
-   %
-   \begin{align}
-   &       \left(     {X} \lor \neg{Y} \right) \\
-   & \land \left( \neg{X} \right) \\
-   & \land \left(     {Y} \right)
-   \end{align}
-
-A typical  unsatisfiable formula  studied in  Proof Complexity  is the
-pigeonhole principle formula.
-
-   >>> from cnfformula import PigeonholePrinciple
-   >>> F = PigeonholePrinciple(5,4)
-   >>> print F.dimacs()
-   c Pigeonhole principle formula for 5 pigeons and 4 holes
-   c Generated with `cnfgen` (C) Massimo Lauria <lauria.massimo@gmail.com>
-   c https://github.com/MassimoLauria/cnfgen.git
-   c
-   p cnf 20 45
-   1 2 3 4 0
-   5 6 7 8 0
-   ...
-   -16 -20 0
-   >>> F.is_satisfiable()
-   (False, None)
-
-The ``cnfgen`` command line tool
---------------------------------
-
-The command line  tool is installed along  ``cnfformula`` package, and
-provides  a somehow  limited  interface to  the library  capabilities.
-It provides ways  to produce formulas in DIMACS and  LaTeX format from
-the command line. To produce a  pigeonhole principle from 5 pigeons to
-4 holes as in the previous example the command line is
-
-.. code-block:: shell
-                
-   $ cnfgen php 5 4
-   c Pigeonhole principle formula for 5 pigeons and 4 holes
-   c Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
-   c https://github.com/MassimoLauria/cnfgen.git
-   c
-   p cnf 20 45
-   1 2 3 4 0
-   5 6 7 8 0
-   ...
-   -16 -20 0
-   
-For a documentation on how to use ``cnfgen`` command please type
-``cnfgen  --help``  and for  further  documentation  about a  specific
-formula generator type ``cnfgen <generator_name> --help``.
+`CNFgen`  does not  implement  a SAT  solver, but  will  use the  ones
+installed in the  running environment. If any of  the supported solver
+is  found in  the  system  `CNFgen` will  use  it  behind the  scenes.
+Nevertheless it is always possible to force `CNFgen` a specific solver
+and a  specific command line  invocation. It  is also possible  to use
+a non supported  solver, as long as its interface  is identical to the
+interface of a supported one.
 
 
-Reference
----------
-.. [1] http://www.satlib.org/Benchmarks/SAT/satformat.ps
-.. [2] http://www.latex-project.org/ 
-.. [3] http://en.wikipedia.org/wiki/Proof_complexity
+.. [1] NP-hardness is a fundamental  concept coming from computational
+       complexity, which is  the mathematical study of how  hard is to
+       perform                  certain                  computations.
+       (https://en.wikipedia.org/wiki/NP-hardness)
+       
+.. [2] http://www.satcompetition.org/
