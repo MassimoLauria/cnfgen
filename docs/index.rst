@@ -24,13 +24,14 @@ The ``cnfformula`` library
 --------------------------
 
 The ``cnfformula``  library is  capable to generate  CNFs (Conjunctive
-Normal Form) formulas, manipulate them and, when there is a SAT solver
-properly installed on your system, test their satisfiability. The CNFs
-can be saved on file in DIMACS format, which the standard input format
-for SAT  solvers [1]_, or  converted to LaTeX  [2]_ to be  included in
-a document.  The library  contains many  generators for  formulas that
-encode various  combinatorial problems or  that come from  research in
-Proof Complexity [3]_.
+Normal   Form)  formulas,   manipulate   them  and,   when  there   is
+a  satisfiability  solver  (SAT  solver) properly  installed  on  your
+system, test  their satisfiability. The CNFs  can be saved on  file in
+DIMACS format, which  the standard input format for  SAT solvers [1]_,
+or converted to  LaTeX [2]_ to be included in  a document. The library
+contains   many   generators   for  formulas   that   encode   various
+combinatorial problems or that come  from research in Proof Complexity
+[3]_.
 
 The  main  entry point  for  the  library is  the  :py:class:`cnfformula.CNF`
 object. Let's see a simple example of its usage.
@@ -93,7 +94,7 @@ the command line. To produce a  pigeonhole principle from 5 pigeons to
                 
    $ cnfgen php 5 4
    c Pigeonhole principle formula for 5 pigeons and 4 holes
-   c Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
+   c Generated with `cnfgen` (C) Massimo Lauria <lauria.massimo@gmail.com>
    c https://github.com/MassimoLauria/cnfgen.git
    c
    p cnf 20 45
