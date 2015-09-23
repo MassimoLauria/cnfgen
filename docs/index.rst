@@ -1,16 +1,12 @@
-
-Welcome to CNFgen's documentation!
-==================================
-
-The main components of CNFgen are the ``cnfformula`` library and
-the ``cnfgen`` command line utility.
-
+.. Entry point document of CNFgen library documentation
+   
 .. toctree::
    :caption: Table of contents
    :hidden:
    :maxdepth: 2
    :numbered:
 
+   self
    buildcnf
    satsolve
    families
@@ -18,8 +14,14 @@ the ``cnfgen`` command line utility.
    transform
    cnfgen
    addfamily
+   
 
-              
+Welcome to CNFgen's documentation!
+==================================
+
+The main components of CNFgen are the ``cnfformula`` library and
+the ``cnfgen`` command line utility.
+
 The ``cnfformula`` library
 --------------------------
 
@@ -106,7 +108,6 @@ the command line. To produce a  pigeonhole principle from 5 pigeons to
 For a documentation on how to use ``cnfgen`` command please type
 ``cnfgen  --help``  and for  further  documentation  about a  specific
 formula generator type ``cnfgen <generator_name> --help``.
-
 
 Reference
 ---------
