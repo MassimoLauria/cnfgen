@@ -2,39 +2,38 @@
 How to build and use a CNF
 ==========================
 
-The  basic   entry  point  of  the   :py:mod:`cnfformula`  library  is
-:py:class:`cnfformula.CNF`,  which   is  the  representation   of  CNF
-formulas. Any  string (or actually  any `hashable` object) is  a valid
-name for  a variable, that can  be documented with an  additional (and
-optional) description.
+The    entry     point    to    :py:mod:`cnfformula`     library    is
+:py:class:`cnfformula.CNF`, which  is the data  structure representing
+CNF formulas. Any  string (actually any `hashable` object)  is a valid
+name  for  a variable,  that  can  be  optionally documented  with  an
+additional description.
 
    >>> from cnfformula import CNF
    >>> F = CNF()
    >>> F.add_variable("X",'this variable is the cause')
    >>> F.add_variable("Y",'this variable is the effect')
-   >>> F.add_variable("Z") # no variable description here
+   >>> F.add_variable("Z") # no description here
 
-Clauses are  represented as lists  of literals, where each  literal is
-either  positive  or  negative,  and  it  is  represented  as  ``(True
-,<varname>)`` or ``((False,  <varname>))``, respectively. The addition
-of variable and clauses can be interleaved.
+Clauses  are represented  as  lists of  literals,  where positive  and
+negative  literals   are  represented  as  ``(True   ,<varname>)``  or
+``(False, <varname>)``,  respectively. The  user can  interleave the
+addition of variables and clauses.
 
    >>> F.add_clause([(False,"X"),(True,"Y")])
    >>> F.add_variable("W")
    >>> F.add_clause([(False,"Z")])
 
-Now ``F`` encodes the formula 
+The CNF object ``F`` in the example now encodes the formula 
 
 .. math::
 
    ( \neg X \vee Y ) \wedge ( \neg Z)
    
 over variables  :math:`X`, :math:`Y`,  :math:`Z` and :math:`W`.  It is
-perfectly fine,  maybe wasteful though,  to add variables that  do not
-occur in  any clause. Vice versa,  it is possible to  add clauses that
-mention new  variables never  added before. In  that case  any unknown
-variable  is silently  added  to the  formula  (obviously without  any
-description).
+perfectly  fine to  add variables  that do  not occur  in any  clause.
+Vice versa, it is possible to add clauses that mention variables never
+seen before.  In that case any  unknown variable is silently  added to
+the formula (obviously without description).
 
    >>> G = CNF()
    >>> list(G.variables())
@@ -45,30 +44,34 @@ description).
    
 .. note::
 
-   By default the  :py:func:`cnfformula.CNF.add_clause` method forbids
-   a  clauses to  contain  the  same literal  twice  and  to have  two
-   opposite literlas (i.e.  a negative and a positive  literal one the
-   same variable).  Furthermore, as mention  before, it allows  to add
+   By   default   the   :py:func:`cnfformula.CNF.add_clause`   forbids
+   a  clauses to  contain  the  same literal  twice,  or  to have  two
+   opposite literals  (i.e. a negative  and a positive literal  on the
+   same variable). Furthermore, as mentioned  before, it allows to add
    clauses with unknown variables.
 
-   It is possible  to make the behavior either looser  or stricter, or
-   anything in between.  For example it is possible  to allow opposite
-   literals, but simultaneously forbid unknown variables.
+   It is  possible to  make change  this behavior,  for example  it is
+   possible  to allow  opposite  literals,  but simultaneously  forbid
+   unknown      variables.      See     the      documentation      of
+   :py:func:`cnfformula.CNF.add_clause` for further details.
 
-   See the  documentation of  :py:func:`cnfformula.CNF.add_clause` for
-   further details.
+Furthermore it is possible to  add clauses directly while constructing
+the CNF object. The code
 
-It is furthermore possible to  add clauses directly while constructing
-the object.
+   >>> H = CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], [(False,"x2"),(True,"x4")] ])
 
-   >>> H = CNF([ [(True,"x1"),(True,"x2"),(False,"x3"), [(False,"x2"),(True,"x4")] ])
+is essentially equivalent to
+
+   >>> H = CNF()
+   >>> H.add_clause([(True,"x1"),(True,"x2"),(False,"x3")])
+   >>> H.add_clause([(False,"x2"),(True,"x4")])
 
 
 Exporting formulas to DIMACS
 ----------------------------
 
 One of the main use of ``CNFgen``  is to produce formulas to be fed to
-SAT  solvers. These  solvers accept  the DIMACS  format for  CNF [1]_,
+SAT solvers. These solvers accept CNf formulas in DIMACS format [1]_,
 which can easily be obtained using :py:func:`cnfformula.CNF.dimacs`.
 
    >>> c=CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], [(False,"x2"),(True,"x4")] ])
@@ -84,8 +87,8 @@ which can easily be obtained using :py:func:`cnfformula.CNF.dimacs`.
    -3 4 -5 0
 
 The variables in  the DIMACS representation are  numbered according to
-the order of insertion. Adding  the variables explicitly before adding
-the clauses ensures a specific order.
+the order of  insertion. ``CNFgen`` does not  guarantee anything about
+this order, unless variables are added explicitly.
 
 Exporting formulas to LaTeX
 ----------------------------
@@ -115,6 +118,12 @@ which renders as
    & \land \left( {x_2} \lor {x_3} \lor {\overline{x}_4} \right)
    \end{align}
 
+Instead of  outputting just the LaTeX  rendering of the formula  it is
+possible  to produce  a full  LaTeX  document by  setting the  keyword
+argument   ``full_document``    to   ``True``    in   the    call   to
+:py:func:`cnfformula.CNF.latex`. The document is ready to be compiled.
+
+   
 Reference
 ---------
 .. [1] http://www.satlib.org/Benchmarks/SAT/satformat.ps
