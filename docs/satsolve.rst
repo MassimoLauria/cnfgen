@@ -14,7 +14,8 @@ assignment). There is  a whole community of  clever software engineers
 and computer scientists  that compete to write the  fastest solver for
 CNF satisfiability (usually  called a SAT solver)  [2]_. `CNFgen` does
 not  implement a  SAT  solver, but  uses behind  the  scenes the  ones
-installed in the running environment.
+installed in  the running environment.  If the formula  is satisfiable
+the value returned includes a satisfying assignment.
 
    >>> from cnfformula import CNF
    >>> F = CNF([ [(True,'X'),(False,'Y')], [(False,'X')] ])
