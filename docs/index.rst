@@ -25,15 +25,14 @@ the ``cnfgen`` command line utility.
 The ``cnfformula`` library
 --------------------------
 
-The ``cnfformula``  library is  capable to generate  CNFs (Conjunctive
-Normal   Form)  formulas,   manipulate   them  and,   when  there   is
-a  satisfiability  solver  (SAT  solver) properly  installed  on  your
-system, test  their satisfiability. The CNFs  can be saved on  file in
-DIMACS format, which  the standard input format for  SAT solvers [1]_,
-or converted to  LaTeX [2]_ to be included in  a document. The library
-contains   many   generators   for  formulas   that   encode   various
-combinatorial problems or that come  from research in Proof Complexity
-[3]_.
+The ``cnfformula``  library is capable to  generate Conjunctive Normal
+Form   (CNF)   formulas,   manipulate   them  and,   when   there   is
+a satisfiability (SAT) solver properly  installed on your system, test
+their satisfiability. The CNFs can be  saved on file in DIMACS format,
+which the standard input format for  SAT solvers [1]_, or converted to
+LaTeX [2]_  to be included  in a  document. The library  contains many
+generators for formulas that  encode various combinatorial problems or
+that come from research in Proof Complexity [3]_.
 
 The  main  entry point  for  the  library is  the  :py:class:`cnfformula.CNF`
 object. Let's see a simple example of its usage.
@@ -48,7 +47,7 @@ object. Let's see a simple example of its usage.
    >>> F.is_satisfiable()
    (False, None)
    >>> print F.dimacs()
-   c Generated with `cnfgen` (C) Massimo Lauria <lauria.massimo@gmail.com>
+   c Generated with `cnfgen` (C) 2012-2015 Massimo Lauria <lauria.massimo@gmail.com>
    c https://github.com/MassimoLauria/cnfgen.git
    c
    p cnf 2 3
@@ -56,7 +55,7 @@ object. Let's see a simple example of its usage.
    -1 0
    2 0
    >>> print F.latex()
-   % Generated with `cnfgen` (C) Massimo Lauria <lauria.massimo@gmail.com>
+   % Generated with `cnfgen` (C) 2012-2015 Massimo Lauria <lauria.massimo@gmail.com>
    % https://github.com/MassimoLauria/cnfgen.git
    %
    \begin{align}
@@ -72,7 +71,7 @@ pigeonhole principle formula.
    >>> F = PigeonholePrinciple(5,4)
    >>> print F.dimacs()
    c Pigeonhole principle formula for 5 pigeons and 4 holes
-   c Generated with `cnfgen` (C) Massimo Lauria <lauria.massimo@gmail.com>
+   c Generated with `cnfgen` (C) 2012-2015 Massimo Lauria <lauria.massimo@gmail.com>
    c https://github.com/MassimoLauria/cnfgen.git
    c
    p cnf 20 45
