@@ -29,6 +29,8 @@ def OrderingPrinciple(size,total=False,smart=False,plant=False,knuth=0):
     return GraphOrderingPrinciple(networkx.complete_graph(size),total,smart,plant,knuth)
 
 
+def varname(v1, v2):
+    return 'x_{{{0},{1}}}'.format(v1,v2)
 
 @cnfformula.families.register_cnf_generator
 def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
@@ -57,12 +59,18 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
     else:
         gop.header = name+".\n"+gop.header
 
-    #
-    # Non minimality axioms
-    #
 
     # Fix the vertex order
     V = graph.nodes()
+
+    # Add variables
+    iterator = combinations if smart else permutations
+    for v1,v2 in iterator(V,2):
+        gop.add_variable(varname(v1,v2))
+
+    #
+    # Non minimality axioms
+    #
 
     # Clause is generated in such a way that if totality is enforces,
     # every pair occurs with a specific orientation.
@@ -80,7 +88,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
                 clause += [(False, 'x_{{{0},{1}}}'.format(V[med], V[hi]))]
             else:
                 clause += [(True, 'x_{{{0},{1}}}'.format(V[hi], V[med]))]
-        gop.add_clause(clause)
+        gop.add_clause(clause, strict=True)
 
     #
     # Transitivity axiom
