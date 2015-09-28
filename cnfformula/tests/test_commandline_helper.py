@@ -37,6 +37,7 @@ class TestCommandline(unittest.TestCase):
 
     def checkCrash(self, parameters):
         parameters = ["cnfgen"] + parameters
+        parameters = [str(x) for x in parameters]
         f = StringIO()
         with stderr_redirector(f), self.assertRaises(SystemExit) as cm:
             cnfgen.command_line_utility(parameters)
