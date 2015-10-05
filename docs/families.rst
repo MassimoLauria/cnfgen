@@ -2,100 +2,85 @@
 Formula families
 ================
 
-The main components of CNFgen are the ``cnfformula`` library and
-the ``cnfgen`` command line utility.
-
-              
-The ``cnfformula`` library
---------------------------
-
-The ``cnfformula``  library is  capable to generate  CNFs (Conjunctive
-Normal Form) formulas, manipulate them and, when there is a SAT solver
-properly installed on your system, test their satisfiability. The CNFs
-can be saved on file in DIMACS format, which the standard input format
-for SAT  solvers [1]_, or  converted to LaTeX  [2]_ to be  included in
-a document.  The library  contains many  generators for  formulas that
-encode various  combinatorial problems or  that come from  research in
-Proof Complexity [3]_.
-
-The  main  entry point  for  the  library is  the  ..py:cnfformula.CNF
-object. Let's see a simple example of its usage.
+One of the most useful features of ``CNFgen`` is the implementation of
+several important families of CNF formulas, many of them either coming
+from  the  proof  complexity  literature or  encoding  some  important
+problem  from combinatorics.  The formula  are accessible  through the
+:py:mod:`cnfformula` package. See for example this construction of the
+pigeohole principle formula with 10 pigeons and 9 holes.
 
    >>> import cnfformula
-   >>> F = cnfformula.CNF()
-   >>> F.add_clause([(True,"X"),(False,"Y")])
-   >>> F.add_clause([(False,"X")])
-   >>> F.is_satisfiable()
-   (True, {'Y':False, 'X':False})
-   >>> F.add_clause([(True,"Y")])
-   >>> F.is_satisfiable()
-   (False, None)
-   >>> print F.dimacs()
-   c Generated with `cnfgen` (C) Massimo Lauria <lauria.massimo@gmail.com>
-   c https://github.com/MassimoLauria/cnfgen.git
-   c
-   p cnf 2 3
-   1 -2 0
-   -1 0
-   2 0
-   >>> print F.latex()
-   % Generated with `cnfgen` (C) Massimo Lauria <lauria.massimo@gmail.com>
-   % https://github.com/MassimoLauria/cnfgen.git
-   %
-   \begin{align}
-   &       \left(     {X} \lor \neg{Y} \right) \\
-   & \land \left( \neg{X} \right) \\
-   & \land \left(     {Y} \right)
-   \end{align}
-
-A typical  unsatisfiable formula  studied in  Proof Complexity  is the
-pigeonhole principle formula.
-
-   >>> from cnfformula import PigeonholePrinciple
-   >>> F = PigeonholePrinciple(5,4)
-   >>> print F.dimacs()
-   c Pigeonhole principle formula for 5 pigeons and 4 holes
-   c Generated with `cnfgen` (C) Massimo Lauria <lauria.massimo@gmail.com>
-   c https://github.com/MassimoLauria/cnfgen.git
-   c
-   p cnf 20 45
-   1 2 3 4 0
-   5 6 7 8 0
-   ...
-   -16 -20 0
+   >>> F = cnfformula.PigeonholePrinciple(10,9)
    >>> F.is_satisfiable()
    (False, None)
 
-The ``cnfgen`` command line tool
---------------------------------
 
-The command line  tool is installed along  ``cnfformula`` package, and
-provides  a somehow  limited  interface to  the library  capabilities.
-It provides ways  to produce formulas in DIMACS and  LaTeX format from
-the command line. To produce a  pigeonhole principle from 5 pigeons to
-4 holes as in the previous example the command line is
+Included formula families
+--------------------------
+.. unfortunately this list cannot be generated automatically.
 
-.. code-block:: shell
-                
-   $ cnfgen php 5 4
-   c Pigeonhole principle formula for 5 pigeons and 4 holes
-   c Generated with `cnfgen` (C) Massimo Lauria <lauria@kth.se>
-   c https://github.com/MassimoLauria/cnfgen.git
-   c
-   p cnf 20 45
-   1 2 3 4 0
-   5 6 7 8 0
-   ...
-   -16 -20 0
+.. toctree::
+   :titlesonly:
+
+   Counting formulas <cnfformula.families.counting>
+   Graph coloring <cnfformula.families.coloring>
+   Graph Isomorphism <cnfformula.families.graphisomorphism>
+   Ordering principles <cnfformula.families.ordering>
+   Pebbling formulas <cnfformula.families.pebbling>
+   Pigeonhole principle <cnfformula.families.pigeonhole>
+   Ramsey numbers <cnfformula.families.ramsey>
+   Random CNFs <cnfformula.families.randomformulas>
+   Clique and Subgraph formulas <cnfformula.families.subgraph>
+   Subset Cardinality <cnfformula.families.subsetcardinality>
+   Tseitin formula <cnfformula.families.tseitin>
+   Basic formulas <cnfformula.families.simple>
+
+
+Command line invocation
+-----------------------
+Furthermore it is possible to  generate the formulas directly from the
+command line. To list all formula families accessible from the command
+line just run the command ``cnfgen --help``. To get information about
+the specific command  line parameters for a formula  generator run the
+command ``cnfgen <generator_name> --help``.
+
+Recall the  example above, in  hich we produced a  pigeohole principle
+formula for 10  pigeons and 9 holes.  We can get the  same formula in
+DIMACS format with the following command line.
    
-For a documentation on how to use ``cnfgen`` command please type
-``cnfgen  --help``  and for  further  documentation  about a  specific
-formula generator type ``cnfgen <generator_name> --help``.
+.. code-block:: shell
 
-
-Reference
----------
-.. [1] http://www.satlib.org/Benchmarks/SAT/satformat.ps
-.. [2] http://www.latex-project.org/ 
-.. [3] http://en.wikipedia.org/wiki/Proof_complexity
-
+   $ cnfgen php 10 9
+   c Pigeonhole principle formula for 10 pigeons and 9 holes
+   c Generated with `cnfgen` (C) 2012-2015 Massimo Lauria <lauria.massimo@gmail.com>
+   c https://massimolauria.github.io/cnfgen
+   c
+   p cnf 90 415
+   1 2 3 4 5 6 7 8 9 0
+   10 11 12 13 14 15 16 17 18 0
+   19 20 21 22 23 24 25 26 27 0
+   28 29 30 31 32 33 34 35 36 0
+   37 38 39 40 41 42 43 44 45 0
+   46 47 48 49 50 51 52 53 54 0
+   55 56 57 58 59 60 61 62 63 0
+   64 65 66 67 68 69 70 71 72 0
+   73 74 75 76 77 78 79 80 81 0
+   82 83 84 85 86 87 88 89 90 0
+   -1 -10 0
+   -1 -19 0
+   -1 -28 0
+   -1 -37 0
+   -1 -46 0
+   -1 -55 0
+   -1 -64 0
+   -1 -73 0
+   -1 -82 0
+   -10 -19 0
+   -10 -28 0
+   -10 -37 0
+   -10 -46 0
+   ...
+   -72 -81 0
+   -72 -90 0
+   -81 -90 0
+                
