@@ -13,9 +13,8 @@ graphs. We use four different types of graphs in our formula families.
     they induce partial orderings.
 
 Most of the code manipulating graphs is due to the NetworkX_, which is
-used behind the  scene to generate particular graphs, and  to read and
-write    graphs   in    standard    file    formats.   The    function
-:py:func:`cnfformula.graphs.supported_formats`  lists the  file formats
+used        behind        the        scene.        The        function
+:py:func:`cnfformula.graphs.supported_formats` lists  the file formats
 available for each graph type.
 
    >>> from cnfformula.graphs import supported_formats
@@ -28,7 +27,7 @@ available for each graph type.
 The ``dot`` format  is from Graphviz_ and it is  available only if the
 optional ``pygraphviz`` package is installed  in the system. The Graph
 Modelling Language  (GML_) ``gml``  is the  current standard  in graph
-representation. The DIMACS_ (``dimacs``) format [#]_ is sometimes used
+representation. The DIMACS_ (``dimacs``) format [#]_ is used sometimes
 for programming  competitions or  in the theoretical  computer science
 community.  The ``adjlist``  and  ``matrix`` formats  are defined  and
 implemented inside ``CNFgen``.
