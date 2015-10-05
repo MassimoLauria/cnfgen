@@ -24,7 +24,7 @@ def sample_clauses(k, indices, m):
 
 def all_clauses(k, indices):
     for domain in itertools.combinations(indices, k):
-        for polarity in itertools.product([True,False], repeat=3):
+        for polarity in itertools.product([True,False], repeat=k):
             yield zip(polarity,('x_{0}'.format(i) for i in domain))
 
 def sample_clauses_dense(k, indices, m):
