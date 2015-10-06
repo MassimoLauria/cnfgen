@@ -52,10 +52,10 @@ except ImportError:
 # we put it by default for documentation purpose
 # notice that it is networkx itself that requires graphviz.
 try:
-    import pygraphviz
-    del pygraphviz
+    import pydot
+    del pydot
 except ImportError:
-    # print("WARNING: Missing 'pygraphviz' library: no support for 'dot' graph format.",
+    # print("WARNING: Missing 'pydot2' library: no support for 'dot' graph format.",
     #       file=sys.stderr)
     for k in _graphformats.values():
         try:

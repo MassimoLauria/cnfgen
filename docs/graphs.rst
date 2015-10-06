@@ -25,12 +25,12 @@ available for each graph type.
     'simple': ['adjlist', 'gml', 'dot', 'dimacs']}
 
 The ``dot`` format  is from Graphviz_ and it is  available only if the
-optional ``pygraphviz`` package is installed  in the system. The Graph
-Modelling Language  (GML_) ``gml``  is the  current standard  in graph
-representation. The DIMACS_ (``dimacs``) format [#]_ is used sometimes
-for programming  competitions or  in the theoretical  computer science
-community.  The ``adjlist``  and  ``matrix`` formats  are defined  and
-implemented inside ``CNFgen``.
+optional  ``pydot2``  python  package  is  installed  in  the  system.
+The Graph Modelling Language (GML_) ``gml`` is the current standard in
+graph  representation. The  DIMACS_ (``dimacs``)  format [2]_  is used
+sometimes for programming competitions  or in the theoretical computer
+science community. The ``adjlist``  and ``matrix`` formats are defined
+and implemented inside ``CNFgen``.
 
 .. note::
 
