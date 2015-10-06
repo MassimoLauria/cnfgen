@@ -100,8 +100,11 @@ def _process_graph_io_arguments(iofile,
 
     # Check/discover file format specification
     if file_format=='autodetect':
-        extension = os.path.splitext(iofile.name)[-1][1:]
-
+        try:
+            extension = os.path.splitext(iofile.name)[-1][1:]
+        except AttributeError:
+            raise ValueError("No file name corresponds to file handle. Can't guess a file format.")
+            
         if extension not in _graphformats[graph_type]:
             raise ValueError("Cannot guess a file format for {} graphs from \"{}\".".\
                              format(graph_type,iofile.name))
@@ -178,7 +181,10 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
 
     elif file_format=='gml':
 
-        G=grtype(networkx.read_gml(input_file))
+        try:
+            G=grtype(networkx.read_gml(input_file))
+        except networkx.NetworkXError,errmsg:
+            raise ValueError("[Parse error in GML input] {} ".format(errmsg))
 
     elif file_format=='adjlist':
 
@@ -193,13 +199,13 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
         G=_read_graph_matrix_format(input_file)
 
     else:
-        raise RuntimeError("Internal error, format {} not implemented".format(file_format))
+        raise RuntimeError("[Internal error] Format {} not implemented".format(file_format))
 
     if graph_type=="dag" and not is_dag(G):
-        raise ValueError("Input graph must be acyclic")
+        raise ValueError("[Input error] Graph must be acyclic")
 
     if graph_type=="bipartite" and not has_bipartition(G):
-        raise ValueError("Input Error: graph vertices miss the 'bipartite' 0,1 label.")
+        raise ValueError("[Input error] Graph vertices miss the 'bipartite' 0,1 label.")
         
     return G
 
@@ -250,7 +256,7 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
     elif file_format=='gml':
 
         networkx.write_gml(G,output_file)
-
+            
     elif file_format=='adjlist':
 
         _write_graph_adjlist_format(G,output_file)
@@ -264,7 +270,7 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
         _write_graph_matrix_format(G,output_file)
             
     else:
-        raise RuntimeError("Internal error, format {} not implemented".format(file_format))
+        raise RuntimeError("[Internal error] Format {} not implemented".format(file_format))
 
 #
 # test for dag / with caching
@@ -361,7 +367,7 @@ def _read_graph_adjlist_format(inputfile,graph_class=networkx.DiGraph):
                            networkx.MultiDiGraph,
                            networkx.Graph,
                            networkx.MultiGraph]:
-        raise ValueError("Internal error. Attempt to use an unsupported class for graph representation.")
+        raise ValueError("[Internal error] Attempt to use an unsupported class for graph representation.")
 
     
     G=graph_class()
@@ -389,11 +395,11 @@ def _read_graph_adjlist_format(inputfile,graph_class=networkx.DiGraph):
         if ':' not in l:
             # vertex number spec
             if nvertex>=0:
-                raise ValueError("Syntax error: "+
-                                 "line {} contains a second spec line.".format(i))
+                raise ValueError("[Syntax error] "+
+                                 "Line {} contains a second spec directive.".format(i))
             nvertex = int(l.strip())
             if nvertex<0:
-                raise ValueError("Input error: "+
+                raise ValueError("[Input error] "+
                                  "Non negative number of vertices expected at line {}.".format(i))
             continue
         
@@ -421,7 +427,7 @@ def _read_graph_adjlist_format(inputfile,graph_class=networkx.DiGraph):
         G.topologically_sorted = True
 
     if nvertex!=G.order():
-        raise ValueError("Input error: "+
+        raise ValueError("[Input error] "+
                          "{} vertices expected. Got {} instead.".format(nvertex,G.order()))
     return G
 
@@ -441,7 +447,7 @@ def _read_graph_dimacs_format(inputfile,graph_class=networkx.Graph):
                            networkx.MultiGraph,
                            networkx.DiGraph,
                            networkx.MultiDiGraph]:
-        raise ValueError("Internal error. Attempt to use an unsupported class for graph representation.")
+        raise ValueError("[Internal error] Attempt to use an unsupported class for graph representation.")
     
     G=graph_class()
     G.name=''
@@ -461,11 +467,11 @@ def _read_graph_dimacs_format(inputfile,graph_class=networkx.Graph):
         # parse spec line
         if l[0]=='p':
             if n>=0:
-                raise ValueError("Syntax error: "+
-                                 "line {} contains a second spec line.".format(i))
+                raise ValueError("[Syntax error] "+
+                                 "Line {} contains a second spec line.".format(i))
             _,fmt,nstr,mstr = l.split()
             if fmt!='edge':
-                raise ValueError("Input error: "+
+                raise ValueError("[Input error] "+
                                  "Dimacs \'edge\' format expected.")
             n = int(nstr)
             m = int(mstr)
@@ -479,7 +485,7 @@ def _read_graph_dimacs_format(inputfile,graph_class=networkx.Graph):
             G.add_edge(int(v),int(w))
 
     if m!=m_cnt:
-        raise ValueError("Syntax error: "+
+        raise ValueError("[Syntax error] "+
                          "{} edges were expected.".format(m))
        
     return G
@@ -536,8 +542,8 @@ def _read_graph_matrix_format(inputfile):
                 try:
                     num_buffer.extend( (int(lit),line_cnt) for lit in tokens )
                 except ValueError:
-                    raise ValueError("Syntax error: "+
-                                     "line {} contains a non numeric entry.".format(line_cnt))
+                    raise ValueError("[Syntax error] "+
+                                     "Line {} contains a non numeric entry.".format(line_cnt))
         
             yield num_buffer.pop(0)
 
@@ -564,14 +570,14 @@ def _read_graph_matrix_format(inputfile):
                 elif b==0:
                     pass
                 else:
-                    raise ValueError("Input error at line {}: only 0 or 1 are allowed".format(l))
+                    raise ValueError("[Input error at line {}] Only 0 or 1 are allowed".format(l))
     except StopIteration:
-        raise ValueError("Input error: unexpected end of the matrix")
+        raise ValueError("[Input error] Unexpected end of the matrix")
 
     # check that there are is no more data
     try:
         (b,l) = scanner.next()
-        raise ValueError("Input error at line {}: there are more than {}x{} entries".format(l,n,m))
+        raise ValueError("[Input error at line {}] There are more than {}x{} entries".format(l,n,m))
     except StopIteration:
         pass
     

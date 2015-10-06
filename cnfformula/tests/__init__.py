@@ -6,6 +6,16 @@ import textwrap
 from cnfformula import CNF
 from cnfformula.utils.solver import is_satisfiable, have_satsolver
 
+
+def example_filename(filename):
+    import os
+    import os.path
+    absfilename = os.path.join(os.getcwd(),'cnfformula','tests','testdata',filename)
+    if not os.path.isfile(absfilename):
+        raise ValueError("Test data file {} is missing.".format(filename))
+    else:
+        return absfilename
+
 class TestCNFBase(unittest.TestCase):
     """Base class for the test suite.
 
