@@ -3,7 +3,7 @@
 import unittest
 
 import cnfformula
-from cnfformula.graphs import readGraph
+from cnfformula.graphs import readGraph,writeGraph
 
 from StringIO import StringIO as sio
 import networkx as nx
@@ -116,3 +116,13 @@ class TestGraphIO(unittest.TestCase) :
             G = readGraph(ifile, graph_type='simple')
             self.assertEqual(G.order(), 3)
             self.assertEqual(len(G.edges()), 2)
+
+
+    def test_undoable_io(self) :
+
+        # assumes that 'does_not_exist.gml' does not exist in the working directory
+        self.assertRaises(IOError, readGraph, "does_not_exist.gml", graph_type='simple')
+
+        # assumes that '/does_not_exist.gml' is not writable
+        self.assertRaises(IOError, writeGraph, nx.Graph(),"/does_not_exist.gml", graph_type='simple')
+
