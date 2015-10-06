@@ -19,6 +19,11 @@ Included formula families
 --------------------------
 .. unfortunately this list cannot be generated automatically.
 
+All formula  generators are  accessible from  the :py:mod:`cnfformula`
+package, but their implementation  (and documentation) is split across
+the following modules. This makes it easy to
+`add new formula families. <addfamily.html>`_
+   
 .. toctree::
    :titlesonly:
 

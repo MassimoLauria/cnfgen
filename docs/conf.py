@@ -29,11 +29,15 @@ import cnfformula.prjdata as p
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.autosummary',
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.mathjax',
+    'sphinx.ext.intersphinx',
     'numpydoc',
 ]
+
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -44,7 +48,7 @@ templates_path = ['_templates']
 source_suffix = '.rst'
 
 # The encoding of source files.
-#source_encoding = 'utf-8-sig'
+source_encoding = 'utf-8'
 
 # The master toctree document.
 master_doc = 'index'
@@ -82,23 +86,34 @@ add_function_parentheses = True
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
-#add_module_names = True
+add_module_names = False
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
-#show_authors = False
+show_authors = True
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
-#modindex_common_prefix = []
+modindex_common_prefix=['cnfformula.']
+doctest_global_setup="import cnfformula"
+
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
+
+
+# Intersphinx mapping
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/2.7', None),
+    'networkx': ('https://networkx.github.io/', None),
+    'numpy' : ('http://docs.scipy.org/doc/numpy/', None)
+}
+
 
 # -- Options for HTML output ----------------------------------------------
 
