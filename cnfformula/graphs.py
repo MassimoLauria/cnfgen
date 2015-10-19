@@ -79,7 +79,7 @@ def _process_graph_io_arguments(iofile,
     if not isinstance(iofile,io.TextIOBase) and \
        not isinstance(iofile,file) and \
        not isinstance(iofile,StringIO.StringIO):
-        raise ValueError("The input source \"{}\" is not a file".format(iofile))
+        raise ValueError("The input source \"{}\" does not correspond to a file".format(iofile))
     
     # Check the graph type specification
     if graph_type not in _graphformats.keys():
@@ -139,15 +139,20 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
 
     Parameters
     -----------
-    file: file object
-        the input file from which the graph is read.
+    input_file: str, unicode or file-like object
+        the input file from which the graph is read. If it is a string
+        then the graph is read from a file with that string as
+        filename. Otherwise if the input_file is a file object (or
+        a text stream), the graph is read from there.
 
     graph_type: string in {"simple","digraph","dag","bipartite"}
-        see also ``cnfformula.graph.supported_formats()``
+        see also :py:func:`cnfformula.graph.supported_formats`
 
-    file_format: string
+    file_format: string, optional
         The file format that the parser should expect to receive.
-        See also ``cnfformula.graph.supported_formats()``
+        See also :py:func:`cnfformula.graph.supported_formats`. By default
+        is the first of the supported format for the value of
+        ``graph_type``.
     
     multi_edges: bool,optional
         are multiple edge allowed in the graph? By default this is not allowed.
@@ -161,15 +166,25 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
     Raises
     ------
     ValueError
-        raised when either ``input_file`` is not a file object, or 
-        ``graph_type`` and ``file_format`` are not valid choices
+        raised when either ``input_file`` is neither a file object
+        nor a string, or when ``graph_type`` and ``file_format`` are
+        invalid choices.
+
+    IOError
+        it is impossible to read the ``input_file`` 
 
     See Also
     --------
-    readGraph, is_dag, has_bipartition
+    writeGraph, is_dag, has_bipartition
 
     """
 
+    # file name instead of file object
+    if isinstance(input_file,(str,unicode)):
+        with open(input_file,'r') as file_handle:
+            return readGraph(file_handle,graph_type,file_format,multi_edges)
+
+    
     grtype, file_format = _process_graph_io_arguments(input_file,
                                                       graph_type,
                                                       file_format,
@@ -218,14 +233,17 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
     G : networkx.Graph (or similar)
 
     output_file: file object
-        the output file to which the graph is written.
+        the output file to which the graph is written. If it is a string
+        then the graph is written to a file with that string as
+        filename. Otherwise if ``output_file`` is a file object (or
+        a text stream), the graph is written there.
 
     graph_type: string in {"simple","digraph","dag","bipartite"}
-        see also ``cnfformula.graph.supported_formats()``
+        see also :py:func:`cnfformula.graph.supported_formats`
 
     file_format: string, optional
         The file format that the parser should expect to receive.
-        See also ``cnfformula.graph.supported_formats()``. By default
+        See also :py:func:`cnfformula.graph.supported_formats`. By default
         is the first of the supported format for the value of
         ``graph_type``.
     
@@ -236,14 +254,25 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
     Raises
     ------
     ValueError
-        raised when either ``output_file`` is not a file object, or 
-        ``graph_type`` and ``file_format`` are not valid choices.
+        raised when either ``output_file`` is neither a file object
+        nor a string, or when ``graph_type`` and ``file_format`` are
+        invalid choices.
+
+    IOError
+        it is impossible to write on the ``output_file`` 
 
     See Also
     --------
     readGraph
+
     """
 
+    # file name instead of file object
+    if isinstance(output_file,(str,unicode)):
+        with open(output_file,'w') as file_handle:
+            return writeGraph(G,file_handle,graph_type,file_format)
+
+    
     _,file_format = _process_graph_io_arguments(output_file,
                                                 graph_type,
                                                 file_format,

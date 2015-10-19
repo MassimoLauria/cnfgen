@@ -125,12 +125,14 @@ The  :py:mod:`cnfformula.graphs`  module  implements  a  graph  reader
 :py:mod:`cnfformula.graphs.readGraph`     and    a     graph    writer
 :py:mod:`cnfformula.graphs.writeGraph`  to  facilitate  graph  I/O.
 ..
-Both ``readGraph`` and ``writeGraph`` operate on
+Both  ``readGraph`` and  ``writeGraph`` operate  either on  filenames,
+encoded  as :py:class:`str`  or :py:class:`unicode`,  or otherwise  on
+file-like objects such as
 
    + standard file objects (including :py:obj:`sys.stdin` and :py:obj:`sys.stdout`);
-   + file-like string buffers :py:class:`StringIO.StringIO`;
+   + string buffers of type :py:class:`StringIO.StringIO`;
    + in-memory text streams that inherit from :py:class:`io.TextIOBase`.
-
+     
    >>> import sys
    >>> import networkx as nx
    >>> from cnfformula.graphs import readGraph, writeGraph
@@ -166,7 +168,24 @@ would check that.
    [...]
    ValueError: Input graph must be acyclic
 
+When the  file object has an  associated file name, it  is possible to
+omit the ``file_format`` argument. In this latter case the appropriate
+choice of format  will be guessed by the file  extension.
 
+   >>> with open("example.dot","w") as f: print >> f , "digraph A {1->2->3}"
+   >>> G = readGraph("example.dot",graph_type='dag')
+   >>> G.edges()
+   [('1', '2'), ('2', '3')]
+
+   >>> with open("example.gml","w") as f: print >> f , "digraph A {1->2->3}"
+   >>> G = readGraph("example.gml",graph_type='dag',file_format='dot')
+   >>> G.edges()
+   [('1', '2'), ('2', '3')]
+
+   >>> with open("example.gml","w") as f: print >> f , "digraph A {1->2->3}"
+   >>> G = readGraph("example.gml",graph_type='dag')
+   ValueError: [Parse error in GML input] expected ...
+ 
 Graph generators
 ----------------
 
