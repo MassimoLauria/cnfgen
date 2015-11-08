@@ -41,12 +41,21 @@ dimacs_path2 ="p edge 3 2\ne 1 2\ne 2 3\n"
 
 class TestGraphIO(unittest.TestCase) :
 
-    def test_low_level_pydot_read_path2(self) :
-
+    def check_pydot2(self):
         try:
             import pydot
+            # Distinguish pydot from pydot2 from version number
+            from distutils.version import StrictVersion
+            pydot_version = StrictVersion(pydot.__version__)
+            pydot2_version = StrictVersion("1.0.29")
+            if pydot_version < pydot2_version :
+                raise ImportError
         except ImportError:
             self.skipTest("PyDot2 not installed. Can't test DOT I/O")
+
+    def test_low_level_pydot_read_path2(self) :
+
+        self.check_pydot2()
 
         G = nx.Graph(nx.read_dot(sio(dot_path2)))
 
@@ -73,10 +82,7 @@ class TestGraphIO(unittest.TestCase) :
 
     def test_readGraph_dot_path2(self) :
 
-        try:
-            import pydot
-        except ImportError:
-            self.skipTest("PyDot2 not installed. Can't test DOT I/O")
+        self.check_pydot2()
 
         self.assertRaises(ValueError, readGraph, sio(dot_path2), graph_type='simple')
         G = readGraph(sio(dot_path2), graph_type='simple', file_format = 'dot')
@@ -100,10 +106,7 @@ class TestGraphIO(unittest.TestCase) :
 
     def test_readGraph_dot_path2_file(self) :
 
-        try:
-            import pydot
-        except ImportError:
-            self.skipTest("PyDot2 not installed. Can't test DOT I/O")
+        self.check_pydot2()
 
         with open(example_filename('path2.dot'),'r') as ifile:
 
