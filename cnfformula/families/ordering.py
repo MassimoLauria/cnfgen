@@ -157,7 +157,8 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
 @cnfformula.families.register_cnf_generator
 def DenseOrderingPrinciple(size):
     """Generates the clauses for dense ordering principle
-    
+
+    This ordering principle has been introduced in [2]_
 
     Arguments:
     - `size` : size of the domain
