@@ -10,7 +10,7 @@ import cnfformula.cmdline
 import cnfformula.families
 
 
-from itertools import combinations,permutations
+from itertools import combinations,permutations,product
 
 import networkx
 
@@ -154,6 +154,64 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
 
     return gop
 
+@cnfformula.families.register_cnf_generator
+def DenseOrderingPrinciple(size):
+    """Generates the clauses for dense ordering principle
+    Reference:
+    Albert Atserias and Victor Dalmau (2007).
+    A combinatorial characterization of resolution width
+
+    Arguments:
+    - `size` : size of the domain
+    """
+    graph = networkx.complete_graph(size)
+    gop = CNF()
+
+    # Describe the formula
+    name = "Dense linear ordering principle"
+
+    if hasattr(graph, 'name'):
+        gop.header = name+"\n on graph "+graph.name+"\n"+gop.header
+    else:
+        gop.header = name+".\n"+gop.header
+
+
+    # Fix the vertex order
+    V = graph.nodes()
+
+    def X(i,j): return 'x_{{{0},{1}}}'.format(i,j)
+    def Z(i,j,k): return 'z_{{{0},{1},{2}}}'.format(i,j,k)
+    for v1,v2 in product(V,V):
+        gop.add_variable(X(v1,v2))
+    for v1,v2,v3 in product(V,V,V):
+        gop.add_variable(Z(v1,v2,v3))
+
+    # (1) ~x[i,j] v ~x[j,i] for all (i,j).
+    for i,j in product(V,V):
+        gop.add_clause([(False, X(i,i))] if i==j\
+                else [(False, X(i,j)), (False, X(j,i))], strict=True)
+    # (2) x[i,j] v x[j,i] for all {i,j}
+    for i,j in combinations(V,2):
+        gop.add_clause([(True, X(i,j)), (True, X(j,i))], strict=True)
+    # (3) ~x[i,j] v ~x[j,k] v x[i,k] for all (i,j,k)
+    for i,j,k in product(V,V,V):
+        if i!=j and j!=k:
+            gop.add_clause([(False, X(i,j)), (False, X(j,k)), (True, X(i,k))], strict=True)
+    # (4) ~x[i,j] v ~x[j,k] v z[i,j,k] for all (i,j,k)
+    for i,j,k in product(V,V,V):
+        gop.add_clause([(False, X(i,i)), (True, Z(i,i,i))] if i==j and j==k\
+                else [(False, X(i,j)), (False, X(j,k)), (True, Z(i,j,k))], strict=True)
+    # (5) ~z[i,j,k] v x[i,j] for all (i,j,k)
+    for i,j,k in product(V,V,V):
+        gop.add_clause([(False, Z(i,j,k)), (True, X(i,j))], strict=True)
+    # (6) ~z[i,j,k] v x[j,k] for all (i,j,k)
+    for i,j,k in product(V,V,V):
+        gop.add_clause([(False, Z(i,j,k)), (True, X(j,k))], strict=True)
+    # (7) ~x[i,k] v z[i,1,k] v ... v z[i,n,k] (D[i,k]) for all (i,k)
+    for i,k in product(V,V):
+        gop.add_clause([(False, X(i,k))] + [(True, Z(i,j,k)) for j in V], strict=True)
+
+    return gop
 
 @cnfformula.cmdline.register_cnfgen_subcommand
 class OPCmdHelper(object):
