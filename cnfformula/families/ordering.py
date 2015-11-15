@@ -165,7 +165,7 @@ def DenseOrderingPrinciple(size):
     References
     ----------
     .. [1] A. Atserias and V. Dalmau
-    	   A combinatorial characterization of resolution width
+           A combinatorial characterization of resolution width
            Journal of Computer and System Sciences (2007)
 
     """
