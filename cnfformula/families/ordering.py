@@ -158,7 +158,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
 def DenseOrderingPrinciple(size):
     """Generates the clauses for dense ordering principle
 
-    This ordering principle has been introduced in [2]_
+    This ordering principle has been introduced in [1]_
 
     Arguments:
     - `size` : size of the domain
