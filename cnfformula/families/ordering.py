@@ -157,12 +157,17 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
 @cnfformula.families.register_cnf_generator
 def DenseOrderingPrinciple(size):
     """Generates the clauses for dense ordering principle
-    Reference:
-    Albert Atserias and Victor Dalmau (2007).
-    A combinatorial characterization of resolution width
+    
 
     Arguments:
     - `size` : size of the domain
+
+    References
+    ----------
+    .. [1] A. Atserias and V. Dalmau
+    	   A combinatorial characterization of resolution width
+           Journal of Computer and System Sciences (2007)
+
     """
     graph = networkx.complete_graph(size)
     gop = CNF()
