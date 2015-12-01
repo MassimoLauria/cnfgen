@@ -5,6 +5,7 @@
 
 from cnfformula.cnf import CNF
 from cnfformula.cnf import loose_majority_constraint,loose_minority_constraint
+from cnfformula.cnf import exactly_half_floor,exactly_half_ceil
 
 from cnfformula.cmdline import BipartiteGraphHelper
 
@@ -12,7 +13,7 @@ import cnfformula.families
 import cnfformula.cmdline
 
 @cnfformula.families.register_cnf_generator
-def SubsetCardinalityFormula(B):
+def SubsetCardinalityFormula(B, equalities = False):
     r"""SubsetCardinalityFormula
 
     Consider a bipartite graph :math:`B`. The CNF claims that at least half
@@ -38,7 +39,18 @@ def SubsetCardinalityFormula(B):
 
     .. math::
          
-         \sum_{i \in \Gamma(j)} x_{i,j} \geq \frac{|\Gamma(i)|}{2}.
+         \sum_{i \in \Gamma(j)} x_{i,j} \geq \frac{|\Gamma(j)|}{2}.
+
+    If the ``equalities`` flag is true, the constraints are instead
+    represented by equations.
+    
+    .. math::
+         
+         \sum_{j \in \Gamma(i)} x_{i,j} = \left\lfloor \frac{|\Gamma(i)|}{2} \right\rfloor
+
+    .. math::
+         
+         \sum_{i \in \Gamma(j)} x_{i,j} = \left\lceil \frac{|\Gamma(j)|}{2} \right\rceil.
 
     Parameters
     ----------
@@ -46,6 +58,10 @@ def SubsetCardinalityFormula(B):
         the graph vertices must have the 'bipartite' attribute
         set. Left vertices must have it set to 0 and the right ones to 1.
         Any vertex without the attribute is ignored.
+
+    equalities : boolean
+        use equations instead of inequalities to express the
+        cardinality constraints.  (default: False) 
 
     Returns
     -------
@@ -83,13 +99,23 @@ def SubsetCardinalityFormula(B):
         
     for u in Left:
         edge_vars = [ var_name(*e) for e in B.edges(u) ]
-        for cls in loose_minority_constraint(edge_vars):
-            ssc.add_clause(cls,strict=True)
+
+        if equalities:
+            for cls in exactly_half_floor(edge_vars):
+                ssc.add_clause(cls,strict=True)
+        else:
+            for cls in loose_minority_constraint(edge_vars):
+                ssc.add_clause(cls,strict=True)
 
     for v in Right:
         edge_vars = [ var_name(*e) for e in B.edges(v) ]
-        for cls in loose_majority_constraint(edge_vars):
-            ssc.add_clause(cls,strict=True)
+
+        if equalities:
+            for cls in exactly_half_ceil(edge_vars):
+                ssc.add_clause(cls,strict=True)
+        else:
+            for cls in loose_majority_constraint(edge_vars):
+                ssc.add_clause(cls,strict=True)
     
     return ssc
 
@@ -103,10 +129,13 @@ class SCCmdHelper(object):
 
     @staticmethod
     def setup_command_line(parser):
+
+        parser.add_argument('--equal','-e',default=False,action='store_true',
+                            help="encode cardinality constraints as equations")
         BipartiteGraphHelper.setup_command_line(parser)
 
     @staticmethod
     def build_cnf(args):
         B = BipartiteGraphHelper.obtain_graph(args)
-        return SubsetCardinalityFormula(B)
+        return SubsetCardinalityFormula(B,args.equal)
 
