@@ -186,13 +186,14 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
 
 
 @cnfformula.families.register_cnf_generator
-def RelativizedPigeonholePrinciple(pigeons,resting_places):
+def RelativizedPigeonholePrinciple(pigeons,holes,resting_places):
     """Relativized Pigeonhole Principle CNF formula
 
     A description can be found in [1]_
 
     Arguments:
     - `pigeons`: number of pigeons
+    - `holes`: number of holes
     - `resting_places`: number of resting places
 
     References
@@ -205,18 +206,15 @@ def RelativizedPigeonholePrinciple(pigeons,resting_places):
     formula_name="Relativized Pigeonhole principle"
 
     php=CNF()
-    php.header="{0} formula for {1} pigeons and {2} resting places\n".format(formula_name,pigeons,resting_places)\
+    php.header="{0} formula for {1} pigeons and {2} holes with {3} resting places\n".format(formula_name,pigeons,holes,resting_places)\
         + php.header
-
-    k = pigeons
-    n = resting_places
 
     def P(u,v): return 'p_{{{0},{1}}}'.format(u,v)
     def Q(v,w): return 'q_{{{0},{1}}}'.format(v,w)
     def R(v): return 'r_{{{0}}}'.format(v)
-    U = xrange(1, k + 1)
-    V = xrange(1, n + 1)
-    W = xrange(1, k)
+    U = xrange(1, 1 + pigeons)
+    V = xrange(1, 1 + resting_places)
+    W = xrange(1, 1 + holes)
     for u,v in product(U,V): php.add_variable(P(u,v))
     for v,w in product(V,W): php.add_variable(Q(v,w))
     for v in V: php.add_variable(R(v))
@@ -301,6 +299,34 @@ class GPHPCmdHelper:
         return GraphPigeonholePrinciple(G,
                                         functional=args.functional,
                                         onto=args.onto)
+
+
+@cnfformula.cmdline.register_cnfgen_subcommand
+class RPHPCmdHelper(object):
+    """Command line helper for the Relativized Pigeonhole principle CNF"""
+
+    name='rphp'
+    description='relativized pigeonhole principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for relativized pigeonhole principle formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('pigeons',metavar='<pigeons>',type=int,help="Number of pigeons")
+        parser.add_argument('holes',metavar='<holes>',type=int,help="Number of holes")
+        parser.add_argument('resting_places',metavar='<resting-places>',type=int,help="Number of resting places")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a RPHP formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        return RelativizedPigeonholePrinciple(args.pigeons, args.holes, args.resting_places)
 
 
 
