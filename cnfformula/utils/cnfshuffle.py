@@ -103,8 +103,14 @@ def command_line_utility(argv=sys.argv):
 
     # Parse the command line arguments
     progname=os.path.basename(argv[0])
-    parser = argparse.ArgumentParser(prog=progname, epilog="""
-    For more information type '%s <formula type> [--help | -h ]'
+    parser = argparse.ArgumentParser(prog=progname,
+                                     description="""
+    Reshuffle the input CNF. Returns a formula logically
+    equivalent to the input with random application of
+    (1) Polarity flips (2) Variable permutations (3) Clause permutations.
+    """,
+                                     epilog="""
+    For more information type '%s [--help | -h ]'
     """ % (progname))
 
     parser.add_argument('--output','-o',
