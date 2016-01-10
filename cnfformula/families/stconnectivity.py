@@ -56,6 +56,7 @@ def STConnFormula(graph, s_g, t_g, s_r, t_r):
 
     """
     V=sorted(graph.nodes())
+    s_g, t_g, s_r, t_r = V[s_g], V[t_g], V[s_r], V[t_r]
 
     # init formula
     formula = CNF()
@@ -77,3 +78,35 @@ def STConnFormula(graph, s_g, t_g, s_r, t_r):
             formula.add_clause([(False, edgename_g(e1)), (False, edgename_r(e2))])
 
     return formula
+
+
+@cnfformula.cmdline.register_cnfgen_subcommand
+class STConnCmdHelper(object):
+    """Command line helper for s-t connectivity formulas
+    """
+    name='stconn'
+    description='s-t connectivity formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for s-t connectivity formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('s_g',metavar='<s_g>',type=int,help="Source vertex of green path (ID, 0<=ID<=#vertices-1)")
+        parser.add_argument('t_g',metavar='<t_g>',type=int,help="Sink vertex of green path (ID, 0<=ID<=#vertices-1)")
+        parser.add_argument('s_r',metavar='<s_r>',type=int,help="Source vertex of red path (ID, 0<=ID<=#vertices-1)")
+        parser.add_argument('t_r',metavar='<t_r>',type=int,help="Sink vertex of red path (ID, 0<=ID<=#vertices-1)")
+        SimpleGraphHelper.setup_command_line(parser)
+
+    @staticmethod
+    def build_cnf(args):
+        """Build s-t connectivity formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        G = SimpleGraphHelper.obtain_graph(args)
+
+        return STConnFormula(G, args.s_g, args.t_g, args.s_r, args.t_r)
