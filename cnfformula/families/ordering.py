@@ -335,7 +335,7 @@ class DOPCmdHelper(object):
 
     @staticmethod
     def build_cnf(args):
-        """Build a Graph ordering principle formula according to the arguments
+        """Build a Dense ordering principle formula according to the arguments
 
         Arguments:
         - `args`: command line options
