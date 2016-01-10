@@ -83,3 +83,30 @@ def ThapenCPLSFormula(a, b, c):
         formula.add_clause(bin_ineq(u(x), y, log_c) + [(True, G[a - 1](x, y))], strict=True)
 
     return formula
+
+@cnfformula.cmdline.register_cnfgen_subcommand
+class ThapenCPLSCmdHelper(object):
+    """Command line helper for Thapen's size-width tradeoff formula"""
+
+    name='thapen'
+    description='Thapen\'s size-width tradeoff formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Thapen's size-width tradeoff formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('a',metavar='<a>',type=int,help="Number of levels")
+        parser.add_argument('b',metavar='<b>',type=int,help="Number of nodes per level in the graph")
+        parser.add_argument('c',metavar='<c>',type=int,help="Number of colours")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build Thapen's size-width tradeoff formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        return ThapenCPLSFormula(args.a, args.b, args.c)
