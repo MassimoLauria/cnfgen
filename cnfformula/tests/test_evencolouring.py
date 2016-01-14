@@ -23,7 +23,7 @@ class TestEvenColouring(TestCNFBase):
             graph = nx.cycle_graph(n)
             F = EvenColoringFormula(graph)
             G = TseitinFormula(graph,[1]*n)
-            self.assertCnfEquivalentModuloVariableNames(F,G)
+            self.assertCnfEquivalentModuloVariables(F,G)
 
 class TestEvenColouringCommandline(TestCommandline):
     def test_complete(self):
