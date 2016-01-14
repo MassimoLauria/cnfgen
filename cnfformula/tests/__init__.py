@@ -41,6 +41,11 @@ class TestCNFBase(unittest.TestCase):
     def assertCnfEquivalentModuloVariables(self, cnf1, cnf2):
         self.assertSetEqual(set(cnf1._clauses), set(cnf2._clauses))
 
+    def assertCnfEquivalentModuloVariableNames(self, cnf1, cnf2):
+        tovars1 = dict(zip(cnf2.variables(), cnf1.variables()))
+        clauses2 = [[(p,tovars1[v]) for p,v in C] for C in cnf2.clauses()]
+        self.assertSetSetEqual(cnf1.clauses(), clauses2)
+
     def assertSAT(self, formula):
         if have_satsolver():
             result, _ = is_satisfiable(formula)
