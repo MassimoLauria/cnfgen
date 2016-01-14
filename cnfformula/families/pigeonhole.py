@@ -4,6 +4,8 @@
 """
 
 from cnfformula.cnf import CNF
+from cnfformula.cnf import greater_or_equal_constraint
+from cnfformula.cnf import less_or_equal_constraint
 from cnfformula.cmdline import BipartiteGraphHelper
 
 import cnfformula.cmdline
@@ -58,6 +60,10 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     -6 -12 0
     -9 -12 0
     """
+
+    def var_name(p,h):
+        return 'p_{{{0},{1}}}'.format(p,h)
+    
     if functional:
         if onto:
             formula_name="Matching"
@@ -74,22 +80,18 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
         """Generator for the clauses"""
         # Pigeon axioms
         for p in xrange(1,pigeons+1):
-            yield [ (True,'p_{{{0},{1}}}'.format(p,h)) for h in xrange(1,holes+1)]
+            for C in greater_or_equal_constraint([var_name(p,h) for h in xrange(1,holes+1)], 1): yield C
         # Onto axioms
         if onto:
             for h in xrange(1,holes+1):
-                yield [ (True,'p_{{{0},{1}}}'.format(p,h)) for p in xrange(1,pigeons+1)]
+                for C in greater_or_equal_constraint([var_name(p,h) for p in xrange(1,pigeons+1)], 1): yield C
         # No conflicts axioms
         for h in xrange(1,holes+1):
-            for (p1,p2) in combinations(range(1,pigeons+1),2):
-                yield [ (False,'p_{{{0},{1}}}'.format(p1,h)),
-                        (False,'p_{{{0},{1}}}'.format(p2,h)) ]
+            for C in less_or_equal_constraint([var_name(p,h) for p in xrange(1,pigeons+1)],1): yield C
         # Function axioms
         if functional:
             for p in xrange(1,pigeons+1):
-                for (h1,h2) in combinations(range(1,holes+1),2):
-                    yield [ (False,'p_{{{0},{1}}}'.format(p,h1)),
-                            (False,'p_{{{0},{1}}}'.format(p,h2)) ]
+                for C in less_or_equal_constraint([var_name(p,h) for h in xrange(1,holes+1)],1): yield C
 
     php=CNF()
     php.header="{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes)\
@@ -97,7 +99,7 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
 
     for p in xrange(1,pigeons+1):
         for h in xrange(1,holes+1):
-            php.add_variable('p_{{{0},{1}}}'.format(p,h))
+            php.add_variable(var_name(p,h))
     
     clauses=_PHP_clause_generator(pigeons,holes,functional,onto)
     for c in clauses:
@@ -135,6 +137,10 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     1. Any vertex without the attribute is ignored.
 
     """
+
+    def var_name(p,h):
+        return 'p_{{{0},{1}}}'.format(p,h)
+
     if functional:
         if onto:
             formula_name="Graph matching"
@@ -153,29 +159,25 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     def _GPHP_clause_generator(G,functional,onto):
         # Pigeon axioms
         for p in Left:
-            yield [ (True,'p_{{{0},{1}}}'.format(p,h)) for h in G.adj[p]]
+            for C in greater_or_equal_constraint([var_name(p,h) for h in G.adj[p]], 1): yield C
         # Onto axioms
         if onto:
             for h in Right:
-                yield [ (True,'p_{{{0},{1}}}'.format(p,h)) for p in G.adj[h]]
+                for C in greater_or_equal_constraint([var_name(p,h) for p in G.adj[h]], 1): yield C
         # No conflicts axioms
         for h in Right:
-            for (p1,p2) in combinations(G.adj[h],2):
-                yield [ (False,'p_{{{0},{1}}}'.format(p1,h)),
-                        (False,'p_{{{0},{1}}}'.format(p2,h)) ]
+            for C in less_or_equal_constraint([var_name(p,h) for p in G.adj[h]],1): yield C
         # Function axioms
         if functional:
             for p in Left:
-                for (h1,h2) in combinations(G.adj[p],2):
-                    yield [ (False,'p_{{{0},{1}}}'.format(p,h1)),
-                            (False,'p_{{{0},{1}}}'.format(p,h2)) ]
+                for C in less_or_equal_constraint([var_name(p,h) for h in G.adj[p]],1): yield C
 
     gphp=CNF()
     gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)
 
     for p in Left:
         for h in graph.adj[p]:
-            gphp.add_variable('p_{{{0},{1}}}'.format(p,h))
+            gphp.add_variable(var_name(p,h))
 
     
     clauses=_GPHP_clause_generator(graph,functional,onto)
