@@ -15,7 +15,7 @@ additional description.
    >>> F.add_variable("Z") # no description here
 
 Clauses  are represented  as  lists of  literals,  where positive  and
-negative  literals   are  represented  as  ``(True   ,<varname>)``  or
+negative literals are represented as ``(True, <varname>)`` or
 ``(False, <varname>)``,  respectively. The  user can  interleave the
 addition of variables and clauses.
 

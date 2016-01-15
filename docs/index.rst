@@ -47,7 +47,7 @@ object. Let's see a simple example of its usage.
    >>> F.is_satisfiable()
    (False, None)
    >>> print F.dimacs()
-   c Generated with `cnfgen` (C) 2012-2015 Massimo Lauria <lauria.massimo@gmail.com>
+   c Generated with `cnfgen` (C) 2012-2016 Massimo Lauria <lauria.massimo@gmail.com>
    c https://github.com/MassimoLauria/cnfgen.git
    c
    p cnf 2 3
@@ -55,7 +55,7 @@ object. Let's see a simple example of its usage.
    -1 0
    2 0
    >>> print F.latex()
-   % Generated with `cnfgen` (C) 2012-2015 Massimo Lauria <lauria.massimo@gmail.com>
+   % Generated with `cnfgen` (C) 2012-2016 Massimo Lauria <lauria.massimo@gmail.com>
    % https://github.com/MassimoLauria/cnfgen.git
    %
    \begin{align}
@@ -71,7 +71,7 @@ pigeonhole principle formula.
    >>> F = PigeonholePrinciple(5,4)
    >>> print F.dimacs()
    c Pigeonhole principle formula for 5 pigeons and 4 holes
-   c Generated with `cnfgen` (C) 2012-2015 Massimo Lauria <lauria.massimo@gmail.com>
+   c Generated with `cnfgen` (C) 2012-2016 Massimo Lauria <lauria.massimo@gmail.com>
    c https://github.com/MassimoLauria/cnfgen.git
    c
    p cnf 20 45

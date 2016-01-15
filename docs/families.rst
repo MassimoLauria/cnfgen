@@ -57,7 +57,7 @@ DIMACS format with the following command line.
 
    $ cnfgen php 10 9
    c Pigeonhole principle formula for 10 pigeons and 9 holes
-   c Generated with `cnfgen` (C) 2012-2015 Massimo Lauria <lauria.massimo@gmail.com>
+   c Generated with `cnfgen` (C) 2012-2016 Massimo Lauria <lauria.massimo@gmail.com>
    c https://massimolauria.github.io/cnfgen
    c
    p cnf 90 415
