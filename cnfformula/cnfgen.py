@@ -209,7 +209,7 @@ def command_line_utility(argv=sys.argv):
         cnf = args.subcommand.build_cnf(args)
     except ValueError as e:
         print(e, file=sys.stderr)
-        exit(os.EX_DATAERR)
+        sys.exit(os.EX_DATAERR)
     if args.Transform == 'none':
         tcnf = cnf
     else:
