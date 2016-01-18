@@ -5,6 +5,7 @@
 
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import BipartiteGraphHelper
+from cnfformula.graphs import bipartite_sets
 
 import cnfformula.cmdline
 import cnfformula.families
@@ -132,7 +133,7 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
 
     Remark: the graph vertices must have the 'bipartite' attribute
     set. Left vertices must have it set to 0 and the right ones to
-    1. Any vertex without the attribute is ignored.
+    1. A KeyException is raised otherwise.
 
     """
     if functional:
@@ -146,9 +147,8 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
         else:
             formula_name="Graph pigeonhole principle"
 
-    Left  =  [v for v in graph.nodes() if graph.node[v].get("bipartite")==0]
-    Right =  [v for v in graph.nodes() if graph.node[v].get("bipartite")==1]
-            
+    Left, Right = bipartite_sets(graph)
+
     # Clause generator
     def _GPHP_clause_generator(G,functional,onto):
         # Pigeon axioms
