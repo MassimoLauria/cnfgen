@@ -217,7 +217,7 @@ class StoneCmdHelper:
     """
     name='stone'
     description='stone formula'
-    docstring = StoneFormula.__doc__
+    __doc__ = StoneFormula.__doc__
     
     @staticmethod
     def setup_command_line(parser):
