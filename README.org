@@ -6,6 +6,8 @@
 
   [[https://travis-ci.org/MassimoLauria/cnfgen.svg?branch=master]]
 
+  http://cnfgen.readthedocs.org/en/latest/?badge=latest
+  
   This repository provides the command
 
   - =cnfgen= formula generator;
