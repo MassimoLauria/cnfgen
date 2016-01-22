@@ -12,7 +12,7 @@ from cnfformula.graphs import bipartite_sets
 import cnfformula.cmdline
 import cnfformula.families
 
-from itertools import combinations
+from itertools import combinations,product
 
 @cnfformula.families.register_cnf_generator
 def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
@@ -187,6 +187,54 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     return gphp
 
 
+@cnfformula.families.register_cnf_generator
+def RelativizedPigeonholePrinciple(pigeons,holes,resting_places):
+    """Relativized Pigeonhole Principle CNF formula
+
+    A description can be found in [1]_
+
+    Arguments:
+    - `pigeons`: number of pigeons
+    - `holes`: number of holes
+    - `resting_places`: number of resting places
+
+    References
+    ----------
+    .. [1] A. Atserias, M. Lauria and J. Nordström
+           Narrow Proofs May Be Maximally Long
+           IEEE Conference on Computational Complexity 2014
+
+    """
+    formula_name="Relativized Pigeonhole principle"
+
+    php=CNF()
+    php.header="{0} formula for {1} pigeons and {2} holes with {3} resting places\n".format(formula_name,pigeons,holes,resting_places)\
+        + php.header
+
+    def P(u,v): return 'p_{{{0},{1}}}'.format(u,v)
+    def Q(v,w): return 'q_{{{0},{1}}}'.format(v,w)
+    def R(v): return 'r_{{{0}}}'.format(v)
+    U = xrange(1, 1 + pigeons)
+    V = xrange(1, 1 + resting_places)
+    W = xrange(1, 1 + holes)
+    for u,v in product(U,V): php.add_variable(P(u,v))
+    for v,w in product(V,W): php.add_variable(Q(v,w))
+    for v in V: php.add_variable(R(v))
+
+    # NOTE: the order of ranges in the products are chosen such that related clauses appear after each other
+    # (3.1a) p[u,1] v p[u,2] v ... v p[u,n] for all u \in [k]
+    for u in U: php.add_clause([(True, P(u,v)) for v in V], strict=True)
+    # (3.1b) ~p[u,v] v ~p[u',v] for all u, u' \in [k], u != u', v \in [n]
+    for (v, (u, u_)) in product(V, combinations(U, 2)): php.add_clause([(False, P(u,v)), (False, P(u_,v))], strict=True)
+    # (3.1c) ~p[u,v] v r[v] for all u \in [k], v \in [n]
+    for (v, u) in product(V, U): php.add_clause([(False, P(u,v)), (True, R(v))], strict=True)
+    # (3.1d) ~r[v] v q[v,1] v ... v q[v,k-1] for all v \in [n]
+    for v in V: php.add_clause([(False, R(v))] + [(True, Q(v,w)) for w in W], strict=True)
+    # (3.1e) ~r[v] v ~r[v'] v ~q[v,w] v ~q[v',w] for all v, v' \in [n], v != v', w \in [k-1]
+    for (w, (v, v_)) in product(W, combinations(V, 2)): php.add_clause([(False, R(v)), (False, R(v_)), (False, Q(v,w)), (False, Q(v_,w))], strict=True)
+
+    return php
+
 @cnfformula.cmdline.register_cnfgen_subcommand
 class PHPCmdHelper(object):
     """Command line helper for the Pigeonhole principle CNF"""
@@ -253,6 +301,34 @@ class GPHPCmdHelper:
         return GraphPigeonholePrinciple(G,
                                         functional=args.functional,
                                         onto=args.onto)
+
+
+@cnfformula.cmdline.register_cnfgen_subcommand
+class RPHPCmdHelper(object):
+    """Command line helper for the Relativized Pigeonhole principle CNF"""
+
+    name='rphp'
+    description='relativized pigeonhole principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for relativized pigeonhole principle formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('pigeons',metavar='<pigeons>',type=int,help="Number of pigeons")
+        parser.add_argument('holes',metavar='<holes>',type=int,help="Number of holes")
+        parser.add_argument('resting_places',metavar='<resting-places>',type=int,help="Number of resting places")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a RPHP formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        return RelativizedPigeonholePrinciple(args.pigeons, args.holes, args.resting_places)
 
 
 
