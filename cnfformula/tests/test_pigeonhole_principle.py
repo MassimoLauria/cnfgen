@@ -1,13 +1,11 @@
+import networkx as nx
+
 from cnfformula import CNF
 from cnfformula import PigeonholePrinciple, GraphPigeonholePrinciple
 
 from . import TestCNFBase
 from .test_commandline_helper import TestCommandline
-
-import unittest
-import networkx as nx
-from itertools import permutations, product, chain
-from .satisfiable import evaluate_cnf
+from .test_graph_helper import complete_bipartite_graph_proper
 
 class TestPigeonholePrinciple(TestCNFBase):
     def test_empty(self):
@@ -110,41 +108,7 @@ class TestPigeonholePrinciple(TestCNFBase):
         -3 -4 0
         """
         self.assertCnfEqualsDimacs(F,dimacs)
-
-    def test_one_pigeon_unmatched(self):
-        pigeons = 6
-        holes = 5
-        F = PigeonholePrinciple(pigeons, holes)
-        for pi in permutations(range(pigeons),holes):
-            assignment = {
-                'p_{{{0},{1}}}'.format(p+1,h+1) : (pi[h]==p)
-                for p,h in product(range(pigeons),range(holes))
-            }
-            satisfied,falsified,undefined = evaluate_cnf(F,assignment)
-            self.assertEquals(len(falsified),1)
-            self.assertEquals(len(undefined),0)
-
-    def test_one_hole_overfull(self):
-        pigeons = 5
-        holes = 4
-        F = PigeonholePrinciple(pigeons, holes)
-        for extra in range(holes):
-            destinations = chain(range(holes),[extra])
-            for pi in permutations(destinations):
-                assignment = {
-                    'p_{{{0},{1}}}'.format(p+1,h+1) : (pi[p]==h)
-                    for p,h in product(range(pigeons),range(holes))
-                }
-                satisfied,falsified,undefined = evaluate_cnf(F,assignment)
-                self.assertEquals(len(falsified),1)
-                self.assertEquals(len(undefined),0)
-
-def complete_bipartite_graph_proper(n,m):
-    g = nx.complete_bipartite_graph(n,m)
-    values = {k:v for (k,v) in enumerate([0]*n + [1]*m)}
-    nx.set_node_attributes(g, 'bipartite', values)
-    return g
-
+        
 class TestGraphPigeonholePrinciple(TestCNFBase):
     def test_empty(self):
         G = CNF()
@@ -165,12 +129,11 @@ class TestGraphPigeonholePrinciple(TestCNFBase):
                         self.assertCnfEquivalentModuloVariables(F,G)
 
     def test_not_bipartite(self):
-        G = CNF()
         graph = nx.complete_graph(3)
         for functional in (True,False):
             for onto in (True,False):
-                F = GraphPigeonholePrinciple(graph,functional,onto)
-                self.assertCnfEqual(F,G)
+                with self.assertRaises(KeyError):
+                    GraphPigeonholePrinciple(graph,functional,onto)
 
 class TestPigeonholePrincipleCommandline(TestCommandline):
     def test_parameters(self):
@@ -196,3 +159,7 @@ class TestGraphPigeonholePrincipleCommandline(TestCommandline):
                         graph = complete_bipartite_graph_proper(pigeons,holes)
                         F = GraphPigeonholePrinciple(graph,functional,onto)
                         self.checkFormula(F, parameters)
+
+    def test_not_bipartite(self):
+        parameters = ["gphp", "--complete", "3"]
+        self.checkCrash(parameters)
