@@ -9,6 +9,8 @@ from cnfformula.cnf import exactly_half_floor,exactly_half_ceil
 
 from cnfformula.cmdline import BipartiteGraphHelper
 
+from cnfformula.graphs import bipartite_sets
+
 import cnfformula.families
 import cnfformula.cmdline
 
@@ -57,7 +59,7 @@ def SubsetCardinalityFormula(B, equalities = False):
     B : networkx.Graph
         the graph vertices must have the 'bipartite' attribute
         set. Left vertices must have it set to 0 and the right ones to 1.
-        Any vertex without the attribute is ignored.
+        A KeyException is raised otherwise.
 
     equalities : boolean
         use equations instead of inequalities to express the
@@ -80,8 +82,7 @@ def SubsetCardinalityFormula(B, equalities = False):
            Theory and Applications of Satisfiability Testing--SAT 2010(2010)
 
     """
-    Left  =  [v for v in B.nodes() if B.node[v]["bipartite"]==0]
-    Right =  [v for v in B.nodes() if B.node[v]["bipartite"]==1]
+    Left, Right = bipartite_sets(B)
             
     ssc=CNF()
     ssc.header="Subset cardinality formula for graph {0}\n".format(B.name)

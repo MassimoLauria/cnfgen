@@ -350,6 +350,11 @@ def has_bipartition(G):
     
     return True
 
+def bipartite_sets(G):
+    Left  =  [v for v,d in G.nodes(data=True) if d['bipartite']==0]
+    Right =  [v for v,d in G.nodes(data=True) if d['bipartite']==1]
+    return Left, Right
+
 
 #
 # Use, when possible, a fixed vertex order
