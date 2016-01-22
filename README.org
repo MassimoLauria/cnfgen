@@ -19,7 +19,7 @@
 
   - =cnftransform= apply litfing or substitution; 
 
-  - =kthgraph2pebformula= make pebbling formula from a DAG.
+#  - =kthgraph2pebformula= make pebbling formula from a DAG.
 
   You  can get  a brief  help on  how to  use these  tools by  running
   =<program_name> --help= from the command line.
