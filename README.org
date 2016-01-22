@@ -4,11 +4,9 @@
 
 * CNFgen formula generator and tools
 
-  [[https://travis-ci.org/MassimoLauria/cnfgen][file:[[https://travis-ci.org/MassimoLauria/cnfgen.svg?branch=master]]]]
+  [[https://travis-ci.org/MassimoLauria/cnfgen][file:https://travis-ci.org/MassimoLauria/cnfgen.svg?branch=master]]
 
-  file:[[https://travis-ci.org/MassimoLauria/cnfgen.svg?branch=master]]
-
-  http://cnfgen.readthedocs.org/en/latest/?badge=latest
+  [[http://cnfgen.readthedocs.org/en/latest/?badge=latest][file:http://readthedocs.org/projects/cnfgen/badge/?version=latest]]
   
   This repository provides the command
 
