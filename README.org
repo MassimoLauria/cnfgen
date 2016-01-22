@@ -4,9 +4,13 @@
 
 * CNFgen formula generator and tools
 
-  [[https://travis-ci.org/MassimoLauria/cnfgen][file:https://travis-ci.org/MassimoLauria/cnfgen.svg?branch=master]]
 
 #+begin_html
+   <a href='https://travis-ci.org/MassimoLauria/cnfgen'>
+       <img
+       src='https://travis-ci.org/MassimoLauria/cnfgen.svg?branch=master'
+       alt='Build Status' />
+   </a>
    <a href='http://cnfgen.readthedocs.org/en/latest/?badge=latest'>
        <img
        src='http://readthedocs.org/projects/cnfgen/badge/?version=latest'
