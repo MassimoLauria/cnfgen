@@ -512,7 +512,7 @@ class BipartiteGraphHelper(GraphHelper):
         if args.plantbiclique is not None:
             l,r = args.plantbiclique
             left,right = bipartite_sets(G)
-            if l > len(left) or l > len(right) :
+            if l > len(left) or r > len(right) :
                 raise ValueError("Clique cannot be larger than graph")
 
             left = random.sample(left, l)
