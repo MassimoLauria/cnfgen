@@ -113,6 +113,12 @@ class TransformedCNF(CNF):
         CNF.__init__(self,[],header=cnf._header)
 
         # Load original variable names
+        #
+        # For n variables we get
+        #
+        # varadditional = [None, F1, F2,..., Fn]
+        # substitution  = [None, F1, F2,..., Fn, -Fn, -F(n-1), ..., -F2, -F1]
+        #
         variablenames = [None]+list(self._orig_cnf.variables())
         substitutions = [None]*(2*len(variablenames)-1)
         varadditional = [None]*(len(variablenames))

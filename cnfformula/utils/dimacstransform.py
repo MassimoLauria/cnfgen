@@ -124,7 +124,7 @@ def dimacstransform(inputfile, method, hardness, output, header=True):
 
     o_header,_,o_clauses = dimacs2compressed_clauses(inputfile)
 
-    cls_iter=transform_compressed_clauses(o_clauses,method,rank)
+    cls_iter=transform_compressed_clauses(o_clauses,method,hardness)
 
     try:
 
@@ -136,7 +136,7 @@ def dimacstransform(inputfile, method, hardness, output, header=True):
 
         if header:
             # clauses cached in memory
-            print("c Formula transformed with method '{}' or rank {}\nc".format(method,rank),
+            print("c Formula transformed with method '{}' and parameter {}\nc".format(method,hardness),
                   file=output)
             print("\n".join(("c "+line).rstrip() for line in o_header.split('\n')[:-1]),
                   file=output)
