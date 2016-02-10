@@ -138,8 +138,13 @@ def dimacstransform(inputfile, method, hardness, output, header=True):
             # clauses cached in memory
             print("c Formula transformed with method '{}' and parameter {}\nc".format(method,hardness),
                   file=output)
-            print("\n".join(("c "+line).rstrip() for line in o_header.split('\n')[:-1]),
-                  file=output)
+
+            lines=o_header.split('\n')[:-1]
+
+            if len(lines)>0:
+                print("\n".join(("c "+line).rstrip() for line in lines),
+                      file=output)
+                
             print("p cnf {} {}".format(cnfinfo.variables,cnfinfo.clauses),
                   file=output)
             output.write(output_cache.getvalue())
