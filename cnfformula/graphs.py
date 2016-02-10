@@ -79,7 +79,7 @@ def _process_graph_io_arguments(iofile,
     if not isinstance(iofile,io.TextIOBase) and \
        not isinstance(iofile,file) and \
        not isinstance(iofile,StringIO.StringIO):
-        raise ValueError("The input source \"{}\" does not correspond to a file".format(iofile))
+        raise ValueError("The IO stream \"{}\" does not correspond to a file".format(iofile))
     
     # Check the graph type specification
     if graph_type not in _graphformats.keys():
@@ -103,7 +103,7 @@ def _process_graph_io_arguments(iofile,
         try:
             extension = os.path.splitext(iofile.name)[-1][1:]
         except AttributeError:
-            raise ValueError("No file name corresponds to file handle. Can't guess a file format.")
+            raise ValueError("No file name corresponds to IO stream. Can't guess a file format.")
             
         if extension not in _graphformats[graph_type]:
             raise ValueError("Cannot guess a file format for {} graphs from \"{}\".".\
@@ -151,8 +151,7 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
     file_format: string, optional
         The file format that the parser should expect to receive.
         See also :py:func:`cnfformula.graph.supported_formats`. By default
-        is the first of the supported format for the value of
-        ``graph_type``.
+        it tries to autodetect it from the file name extension (when applicable).
     
     multi_edges: bool,optional
         are multiple edge allowed in the graph? By default this is not allowed.
@@ -244,8 +243,7 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
     file_format: string, optional
         The file format that the parser should expect to receive.
         See also :py:func:`cnfformula.graph.supported_formats`. By default
-        is the first of the supported format for the value of
-        ``graph_type``.
+        it tries to autodetect it from the file name extension (when applicable).
     
     Returns
     -------
