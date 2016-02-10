@@ -11,7 +11,7 @@ to the `cnfformula` library.
 
 
 
-Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria.massimo@gmail.com>
+Copyright (C) 2012, 2013, 2014, 2015, 2016  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -24,8 +24,8 @@ from collections import Counter
 
 from . import prjdata as pd
 
-_default_header="Generated with `cnfgen` (C) {}\n{}\n\n".format(pd.__copyright__,
-                                                                pd.__url__)
+_default_header="Generated with `cnfgen`\n(C) {}\n{}\n\n".format(pd.__copyright__,
+                                                                 pd.__url__)
 
 class CNF(object):
     """Propositional formulas in conjunctive normal form.

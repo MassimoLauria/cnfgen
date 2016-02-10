@@ -35,9 +35,10 @@ class OR(object):
         """
         clause = [ (True,"x_{}".format(i)) for i in range(args.P) ] + \
                  [ (False,"y_{}".format(i)) for i in range(args.N) ]
-        return CNF([clause],
-                   header="Single clause with {} positive"
-                          " and {} negative literals".format(args.P,args.N))
+        orcnf =  CNF([clause])
+        orcnf.header = "Clause with {} positive and {} negative literals\n\n".format(args.P,args.N) + \
+                       orcnf.header
+        return orcnf
 
 
 @cnfformula.cmdline.register_cnfgen_subcommand
@@ -67,8 +68,10 @@ class AND(object):
         """
         clauses = [ [(True,"x_{}".format(i))] for i in range(args.P) ] + \
                   [ [(False,"y_{}".format(i))] for i in range(args.N) ]
-        return CNF(clauses,
-                   header="""Singleton clauses: {} positive and {} negative""".format(args.P,args.N))
+        andcnf =  CNF(clauses)
+        andcnf.header = "Singleton clauses: {} positive and {} negative\n\n""".format(args.P,args.N) +\
+                        andcnf.header
+        return andcnf
 
 
 @cnfformula.cmdline.register_cnfgen_subcommand

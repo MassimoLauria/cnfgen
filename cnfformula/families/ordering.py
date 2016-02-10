@@ -55,9 +55,9 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
         name = name + "(compact representation)"
 
     if hasattr(graph, 'name'):
-        gop.header = name+"\n on graph "+graph.name+"\n"+gop.header
+        gop.header = name+"\n on graph "+graph.name+".\n\n"+gop.header
     else:
-        gop.header = name+".\n"+gop.header
+        gop.header = name+".\n\n"+gop.header
 
 
     # Fix the vertex order

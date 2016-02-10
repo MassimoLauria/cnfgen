@@ -49,9 +49,9 @@ def GraphColoringFormula(G,colors,functional=True):
     name="graph colorability"
     
     if hasattr(G,'name'):
-        col.header=name+" of graph:\n"+G.name+"\n"+col.header
+        col.header=name+" of graph:\n"+G.name+".\n\n"+col.header
     else:
-        col.header=name+".\n"+col.header
+        col.header=name+".\n\n"+col.header
 
     # Fix the vertex order
     V=G.nodes()
