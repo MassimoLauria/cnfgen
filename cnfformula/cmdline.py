@@ -16,6 +16,7 @@ from __future__ import print_function
     
 import sys
 import argparse
+import math
 
 import networkx
 import random
@@ -291,6 +292,9 @@ class SimpleGraphHelper(GraphHelper):
         gr.add_argument('--plantclique'+suffix,type=positive_int,action='store',metavar="<k>",
                         help="choose k vertices at random and add all edges among them")
 
+        gr.add_argument('--newedges'+suffix,type=positive_int,action='store',metavar="<m>",
+                        help="add m new random edges")
+
         gr=parser.add_argument_group("I/O options for graph "+suffix)
         gr.add_argument('--savegraph'+suffix,'-sg'+suffix,
                             type=argparse.FileType('wb',0),
@@ -370,6 +374,30 @@ class SimpleGraphHelper(GraphHelper):
             for v,w in combinations(clique,2):
                 G.add_edge(v,w)
 
+        if getattr(args,'newedges'+suffix) is not None:
+            m = getattr(args,'newedges'+suffix)
+            n = G.order()
+            l = n*(n-1)/2 - G.size()
+            if m > l:
+                raise ValueError("Cannot fit {} new edges in {} spots".format(m,l))
+
+            if hasattr(G, 'name'):
+                G.name = "{} with {} new random edges".format(G.name,m)
+            
+            vertices = G.nodes()
+            if m < l * (1-math.exp(-1)):
+                for i in range(m):
+                    while True:
+                        v = random.choice(vertices)
+                        w = random.choice(vertices)
+                        if v != w and not G.has_edge(v,w):
+                            G.add_edge(v,w)
+                            break
+            else:
+                non_edges = list(networkx.non_edges(G))
+                new_edges = random.sample(non_edges,m)
+                G.add_edges_from(new_edges)
+
         # Output the graph is requested
         if getattr(args,'savegraph'+suffix) is not None:
             writeGraph(G,
@@ -448,6 +476,8 @@ class BipartiteGraphHelper(GraphHelper):
         gr.add_argument('--plantbiclique',type=positive_int,nargs=2,action='store',metavar=('l','r'),
                         help="choose l left vertices and r right vertices at random and add all edges among them")
 
+        gr.add_argument('--newedges',type=positive_int,action='store',metavar='m',
+                        help="add m new random edges")
 
         gr=parser.add_argument_group("I/O options")
         gr.add_argument('--savegraph','-sg',
@@ -524,7 +554,31 @@ class BipartiteGraphHelper(GraphHelper):
             for v,w in product(left,right):
                 G.add_edge(v,w)
 
-        
+        if args.newedges is not None:
+            m = args.newedges
+            n = G.order()
+            left, right = bipartite_sets(G)
+            l = len(left)*len(right) - G.size()
+            if m > l:
+                raise ValueError("Cannot fit {} new edges in {} spots".format(m,l))
+
+            if hasattr(G, 'name'):
+                G.name = "{} with {} new random edges".format(G.name,m)
+            
+            if m < l * (1-math.exp(-1)):
+                for i in range(m):
+                    while True:
+                        v = random.choice(left)
+                        w = random.choice(right)
+                        if not G.has_edge(v,w):
+                            G.add_edge(v,w)
+                            break
+            else:
+                non_edges = set(product(left,right)) - set(G.edges_iter())
+                new_edges = random.sample(non_edges,m)
+                G.add_edges_from(new_edges)
+
+
         # Output the graph is requested
         if args.savegraph is not None:
             writeGraph(G,
