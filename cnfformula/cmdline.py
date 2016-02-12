@@ -360,8 +360,11 @@ class SimpleGraphHelper(GraphHelper):
 
         # Graph modifications
         if getattr(args,'plantclique'+suffix)>1:
+            cliquesize = getattr(args,'plantclique'+suffix)
+            if cliquesize > G.order() :
+                raise ValueError("Clique cannot be larger than graph")
 
-            clique=random.sample(G.nodes(),getattr(args,'plantclique'+suffix))
+            clique=random.sample(G.nodes(),cliquesize)
 
             for v,w in combinations(clique,2):
                 G.add_edge(v,w)
