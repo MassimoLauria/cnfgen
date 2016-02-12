@@ -53,7 +53,7 @@ def is_cnf_batch(cls):
     return hasattr(cls,__cnf_batch_mark)
 
 
-def find_formula_batches():
+def available_batches():
     """Look in cnfformula.batches package for implementations of CNF batches"""
     
     import pkgutil
@@ -70,12 +70,14 @@ def find_formula_batches():
     result.sort(key=lambda x: x.name)
     return result
 
+
+
 def run(args):
     """Run the appropriate CNF batch generator"""
     
     old_rng_state = random.getstate()
 
-    collection = [ obj for obj in find_formula_batches() if obj.name == args.collection ]
+    collection = [ obj for obj in available_batches() if obj.name == args.collection ]
                    
     if len(collection) == 0:
         raise ValueError("No collection of CNFs with that name.")
@@ -84,6 +86,11 @@ def run(args):
         raise RuntimeError("[Internal Error] Multiple collections of CNFs with the same name.")
 
     # Run the generator
+    print("""
+Running a CNFgen in batch mode: collection <{}>
+"{}"
+""".format(collection[0].name,collection[0].description))
+
     collection[0].run()
     
     random.setstate(old_rng_state)

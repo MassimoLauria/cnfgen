@@ -153,29 +153,6 @@ def find_formula_subcommands():
     return result
 
 ###
-### Explore the cnfformula.batches modules to find CNF batches implementations
-###
-
-def find_formula_batches():
-    """Look in cnfformula.batches package for implementations of CNF batches"""
-
-    
-    import pkgutil
-    from .batches import is_cnf_batch
-
-    result = []
-    
-    for loader, module_name, _ in  pkgutil.walk_packages(batches.__path__):
-        module_name = batches.__name__+"."+module_name
-        module = loader.find_module(module_name).load_module(module_name)
-        for objname in dir(module):
-            obj = getattr(module, objname)
-            if is_cnf_batch(obj):
-                result.append(obj)
-    result.sort(key=lambda x: x.name)
-    return result
-
-###
 ### Register signals
 ###
 import signal
@@ -222,17 +199,19 @@ def command_line_utility(argv=sys.argv):
         p.set_defaults(subcommand=sc)
 
     # Setup of the BATCH command
-    def batchlist():
-        """Produce a documentation friendly list of avaiable CNF batches"""
-        msg=["Available collections:"]
-        for cnfbatch in find_formula_batches():
-            msg.append("    {} \t\t{}".format(cnfbatch.name,cnfbatch.description))
-        return "\n".join(msg)
+
+    batchlist="\n".join(["Available collections:\n"] + \
+                        ["    {} \t\t{}".format(b.name,b.description) for b in batches.available_batches()])
+
     batchparser=subparsers.add_parser("BATCH",
                                       help="(Special) Preset collections of CNFs in DIMACS format",
-                                      epilog=batchlist(),
+                                      epilog=batchlist,
                                       formatter_class=argparse.RawTextHelpFormatter)
-    batchparser.add_argument('collection',type=str,metavar='<collection>',
+    batchparser.add_argument('collection',
+                             type=str,
+                             metavar='<collection>',
+                             nargs='?',
+                             default=None,
                              help="Which collection of CNFs do you want to produce?")
     batchparser.set_defaults(subcommand=batches.run)
     
@@ -243,12 +222,19 @@ def command_line_utility(argv=sys.argv):
     if hasattr(args,'seed') and args.seed:
         random.seed(args.seed)
 
-    # Run a batch CNF generator if asked
-    if args.subcommand==batches.run:
-        batches.run(args)
-        return
+    # Option 1. Run a batch generator
+    try:
+        if args.subcommand==batches.run:
+            if args.collection is None:
+                batchparser.print_help()
+                sys.exit(os.EX_USAGE)
+            batches.run(args)
+            return
+    except ValueError as e:
+        print(e, file=sys.stderr)
+        sys.exit(os.EX_DATAERR)
     
-    # Generate the formula
+    # Option 2. Run a batch generator
     try:
         cnf = args.subcommand.build_cnf(args)
     except ValueError as e:
