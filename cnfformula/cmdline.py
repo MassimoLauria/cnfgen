@@ -20,11 +20,12 @@ import argparse
 import networkx
 import random
 
-from itertools import combinations
+from itertools import combinations, product
 
 from .graphs import supported_formats as graph_formats
 from .graphs import readGraph,writeGraph
 from .graphs import bipartite_random_left_regular,bipartite_random_regular
+from .graphs import bipartite_sets
 from .graphs import dag_complete_binary_tree,dag_pyramid
 
 
@@ -360,8 +361,11 @@ class SimpleGraphHelper(GraphHelper):
 
         # Graph modifications
         if getattr(args,'plantclique'+suffix)>1:
+            cliquesize = getattr(args,'plantclique'+suffix)
+            if cliquesize > G.order() :
+                raise ValueError("Clique cannot be larger than graph")
 
-            clique=random.sample(G.nodes(),getattr(args,'plantclique'+suffix))
+            clique=random.sample(G.nodes(),cliquesize)
 
             for v,w in combinations(clique,2):
                 G.add_edge(v,w)
@@ -440,6 +444,11 @@ class BipartiteGraphHelper(GraphHelper):
         gr.add_argument('--bcomplete',type=positive_int,nargs=2,action='store',metavar=('l','r'),
                         help="complete bipartite graph")
 
+        gr=parser.add_argument_group("Modifications for input graph")
+        gr.add_argument('--plantbiclique',type=positive_int,nargs=2,action='store',metavar=('l','r'),
+                        help="choose l left vertices and r right vertices at random and add all edges among them")
+
+
         gr=parser.add_argument_group("I/O options")
         gr.add_argument('--savegraph','-sg',
                         type=argparse.FileType('wb',0),
@@ -500,6 +509,21 @@ class BipartiteGraphHelper(GraphHelper):
         # Ensure the bipartite labels
         from cnfformula import graphs
         graphs._bipartite_nx_workaroud(G)
+
+
+        # Graph modifications
+        if args.plantbiclique is not None:
+            l,r = args.plantbiclique
+            left,right = bipartite_sets(G)
+            if l > len(left) or r > len(right) :
+                raise ValueError("Clique cannot be larger than graph")
+
+            left = random.sample(left, l)
+            right = random.sample(right, r)
+
+            for v,w in product(left,right):
+                G.add_edge(v,w)
+
         
         # Output the graph is requested
         if args.savegraph is not None:
