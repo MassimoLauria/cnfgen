@@ -1,0 +1,28 @@
+#+LANGUAGE:    en
+#+OPTIONS:     H:2 num:nil toc:nil \n:nil @:t ::t |:t ^:t f:t TeX:t
+
+* Credits
+
+The athor of =CNFgen= is
+
+  + Massimo Lauria =<lauria.massimo@gmail.com>=
+
+A special thanks goes to
+
+  + Marc Vinyals =<vinyals@csc.kth.se>=
+
+for major contributions and for most of the test  code. Other important
+contributions are due to
+
+  + Jan Elffers =<elffers@kth.se>=
+
+  + Jakob Nordström =<jakobn@kth.se>=
+
+
+** Grants
+   
+   A large part  of this work was  done at the KTH  Royal Institute of
+   Technology, with funds from the European Research Council under the
+   European Union's  Seventh Framework Programme  (FP7/2007--2013) ERC
+   grant agreement no.~279611.
+   
