@@ -75,8 +75,6 @@ def available_batches():
 def run(args):
     """Run the appropriate CNF batch generator"""
     
-    old_rng_state = random.getstate()
-
     collection = [ obj for obj in available_batches() if obj.name == args.collection ]
                    
     if len(collection) == 0:
@@ -90,6 +88,12 @@ def run(args):
 Running a CNFgen in batch mode: collection <{}>
 "{}"
 """.format(collection[0].name,collection[0].description))
+
+    # Important: save RNG state, set a fixed seed, then reload state.
+
+    old_rng_state = random.getstate()
+
+    random.seed(collection[0].random_seed)
 
     collection[0].run()
     

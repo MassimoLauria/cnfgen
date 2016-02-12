@@ -3,7 +3,7 @@
 """Collection of XORified pyramid formulas.
 """
 
-from cnfformula.cnfgen import command_line_utility
+from cnfformula.cnfgen import command_line_utility as cmd
 from cnfformula.batches import register_cnf_batch
 
 @register_cnf_batch
@@ -17,5 +17,12 @@ class PyramidXO2(object):
     @classmethod
     def run(cls):
 
-        for h in xrange(2,10):
-            command_line_utility(["cnfgen","-o","pyrxor2-{}".format(h),"-T","xor","-Ta","2","peb","--pyramid",h])
+        print("""Generating pebbling formula over pyramid graphs. 
+
+In each formula we substitute variables with XOR of two distinct
+corresponding variables. """)
+
+        for h in xrange(10,101,10):
+            fname = "pyrxor2h{}.cnf".format(h)
+            print("-- "+ fname)
+            cmd(["cnfgen","-o",fname,"-T","xor","-Ta","2","peb","--pyramid",str(h)])
