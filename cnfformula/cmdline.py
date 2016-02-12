@@ -6,7 +6,7 @@ CNFgen has many command line entry points to its functionality, and
 some of them expose the same functionality over and over. This module
 contains useful common components.
 
-Copyright (C) 2012, 2013, 2014, 2015  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2014, 2015, 2016  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -33,7 +33,7 @@ try: # NetworkX >= 1.10
 
     complete_bipartite_graph    = networkx.bipartite.complete_bipartite_graph
     bipartite_random_graph      = networkx.bipartite.random_graph
-    bipartite_gnml_random_graph = networkx.bipartite.gnmk_random_graph
+    bipartite_gnmk_random_graph = networkx.bipartite.gnmk_random_graph
 
 except AttributeError: # Networkx < 1.10
     
