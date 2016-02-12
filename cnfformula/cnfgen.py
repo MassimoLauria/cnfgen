@@ -35,7 +35,8 @@ import sys
 import random
 
 from . import TransformFormula,available_transform
-
+from . import batches
+    
 # Python 2.6 does not have argparse library
 try:
     import argparse
@@ -151,7 +152,28 @@ def find_formula_subcommands():
     result.sort(key=lambda x: x.name)
     return result
 
+###
+### Explore the cnfformula.batches modules to find CNF batches implementations
+###
 
+def find_formula_batches():
+    """Look in cnfformula.batches package for implementations of CNF batches"""
+
+    
+    import pkgutil
+    from .batches import is_cnf_batch
+
+    result = []
+    
+    for loader, module_name, _ in  pkgutil.walk_packages(batches.__path__):
+        module_name = batches.__name__+"."+module_name
+        module = loader.find_module(module_name).load_module(module_name)
+        for objname in dir(module):
+            obj = getattr(module, objname)
+            if is_cnf_batch(obj):
+                result.append(obj)
+    result.sort(key=lambda x: x.name)
+    return result
 
 ###
 ### Register signals
@@ -190,13 +212,30 @@ def command_line_utility(argv=sys.argv):
     """)
     setup_command_line_args(parser)
 
-    # Sub command lines setup 
+    # Setup subcommands
     subparsers=parser.add_subparsers(title="Available formula types",metavar='<formula type>')
+    
+    # Setup of formula generators subcommands 
     for sc in find_formula_subcommands():
         p=subparsers.add_parser(sc.name,help=sc.description)
         sc.setup_command_line(p)
         p.set_defaults(subcommand=sc)
 
+    # Setup of the BATCH command
+    def batchlist():
+        """Produce a documentation friendly list of avaiable CNF batches"""
+        msg=["Available collections:"]
+        for cnfbatch in find_formula_batches():
+            msg.append("    {} \t\t{}".format(cnfbatch.name,cnfbatch.description))
+        return "\n".join(msg)
+    batchparser=subparsers.add_parser("BATCH",
+                                      help="(Special) Preset collections of CNFs in DIMACS format",
+                                      epilog=batchlist(),
+                                      formatter_class=argparse.RawTextHelpFormatter)
+    batchparser.add_argument('collection',type=str,metavar='<collection>',
+                             help="Which collection of CNFs do you want to produce?")
+    batchparser.set_defaults(subcommand=batches.run)
+    
     # Process the options
     args=parser.parse_args(argv[1:])
 
@@ -204,6 +243,11 @@ def command_line_utility(argv=sys.argv):
     if hasattr(args,'seed') and args.seed:
         random.seed(args.seed)
 
+    # Run a batch CNF generator if asked
+    if args.subcommand==batches.run:
+        batches.run(args)
+        return
+    
     # Generate the formula
     try:
         cnf = args.subcommand.build_cnf(args)
