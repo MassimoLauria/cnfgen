@@ -234,7 +234,7 @@ def command_line_utility(argv=sys.argv):
         print(e, file=sys.stderr)
         sys.exit(os.EX_DATAERR)
     
-    # Option 2. Run a batch generator
+    # Option 2. Use a standard formula generator
     try:
         cnf = args.subcommand.build_cnf(args)
     except ValueError as e:
