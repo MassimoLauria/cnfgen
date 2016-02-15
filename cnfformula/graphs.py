@@ -693,8 +693,7 @@ def _write_graph_matrix_format(G,output_file):
         file handle of the output
     """
 
-    Left  =  [v for v in G.nodes() if G.node[v]["bipartite"]==0]
-    Right =  [v for v in G.nodes() if G.node[v]["bipartite"]==1]
+    Left,Right = bipartite_sets(G)
 
     print("{} {}".format(len(Left),len(Right)),file=output_file)
     for u in Left:
@@ -942,3 +941,96 @@ def dag_complete_binary_tree(height):
         D.add_edge(vert[N-2*i-2],vert[N-i])
 
     return D
+
+def sample_missing_edges(G,m, seed=None):
+    """Sample m pairs of missing edges in G
+
+    If :math:`G` is not complete and has at least :math:`m` missing edges, :math:`m` of them are sampled.
+    
+    Parameters
+    ----------
+    G : networkx.Graph 
+        a graph with at least :math:`m` missing edges
+    m : int 
+       the number of missing edges to sample
+    seed : hashable object
+       seed of random generator
+
+    Returns
+    -------
+    list of edges
+
+    Raises
+    ------
+    ValueError 
+        if :math:`G` doesn't have :math:`m` missing edges
+    RuntimeError 
+        Sampling failure in the sparse case
+
+    
+    """
+
+    import random
+    if seed:
+        random.seed(seed)
+
+        
+    from itertools import combinations
+
+    if m < 0:
+        raise ValueError("You can only sample a non negative number of edges.")
+
+    
+    total_number_of_edges=None
+    
+    if has_bipartition(G):
+        
+        Left,Right = bipartite_sets(G)
+        total_number_of_edges = len(Left)*len(Right) 
+
+        def edge_sampler():
+            u = random.sample(Left,1)[0]
+            v = random.sample(Right,1)[0]
+            return (u,v)
+
+        def available_edges():
+            return [(u,v) for u in Left for v in Right if not G.has_edge(u,v)]
+
+    else:
+
+        total_number_of_edges = G.order()*(G.order()-1)/2 
+
+        def edge_sampler():
+            return random.sample(G.nodes(),2)
+
+        def available_edges():
+            return [(u,v) for (u,v) in combinations(G.nodes(),2) if not G.has_edge(u,v)]
+
+
+    number_avaiable_edges = total_number_of_edges - G.number_of_edges()
+ 
+    if number_avaiable_edges < m:
+        raise ValueError("The graph does not have {} missing edges to sample.".format(m))
+
+    if G.number_of_edges() + m >=  total_number_of_edges / 2:
+        # Large density case: enumerate missing edges and sample.
+        return random.sample(available_edges(),m)
+
+    else:
+        # Sparse case: sample and retry
+        missing_edges=[]
+
+        for _ in xrange(100*m):
+
+            if len(missing_edges) >= m:
+                break
+
+            u,v = edge_sampler()
+            if not G.has_edge(u,v):
+                missing_edges.append( (u,v) )
+                
+        if len(missing_edges) >= m:
+            return missing_edges
+        else:
+            raise RuntimeError("Improbable failure at sampling missing edges in a sparse graph.")
+    

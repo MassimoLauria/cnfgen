@@ -27,6 +27,7 @@ from .graphs import readGraph,writeGraph
 from .graphs import bipartite_random_left_regular,bipartite_random_regular
 from .graphs import bipartite_sets
 from .graphs import dag_complete_binary_tree,dag_pyramid
+from .graphs import sample_missing_edges
 
 
 
@@ -291,6 +292,9 @@ class SimpleGraphHelper(GraphHelper):
         gr.add_argument('--plantclique'+suffix,type=positive_int,action='store',metavar="<k>",
                         help="choose k vertices at random and add all edges among them")
 
+        gr.add_argument('--addedges'+suffix,type=positive_int,action='store',metavar="<k>",
+                        help="add k NEW random edges to the graph (applied last)")
+
         gr=parser.add_argument_group("I/O options for graph "+suffix)
         gr.add_argument('--savegraph'+suffix,'-sg'+suffix,
                             type=argparse.FileType('wb',0),
@@ -370,6 +374,10 @@ class SimpleGraphHelper(GraphHelper):
             for v,w in combinations(clique,2):
                 G.add_edge(v,w)
 
+        if getattr(args,'addedges'+suffix)>0:
+            k = getattr(args,'addedges'+suffix)
+            G.add_edges_from(sample_missing_edges(G,k))
+
         # Output the graph is requested
         if getattr(args,'savegraph'+suffix) is not None:
             writeGraph(G,
@@ -448,6 +456,8 @@ class BipartiteGraphHelper(GraphHelper):
         gr.add_argument('--plantbiclique',type=positive_int,nargs=2,action='store',metavar=('l','r'),
                         help="choose l left vertices and r right vertices at random and add all edges among them")
 
+        gr.add_argument('--addedges',type=positive_int,action='store',metavar="<k>",
+                        help="add k NEW random edges to the graph (applied last)")
 
         gr=parser.add_argument_group("I/O options")
         gr.add_argument('--savegraph','-sg',
@@ -524,7 +534,11 @@ class BipartiteGraphHelper(GraphHelper):
             for v,w in product(left,right):
                 G.add_edge(v,w)
 
-        
+        if args.addedges is not None:
+            k = args.addedges
+            G.add_edges_from(sample_missing_edges(G,k))
+            
+            
         # Output the graph is requested
         if args.savegraph is not None:
             writeGraph(G,
