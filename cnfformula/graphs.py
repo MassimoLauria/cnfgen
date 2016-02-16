@@ -974,8 +974,7 @@ def sample_missing_edges(G,m, seed=None):
     if seed:
         random.seed(seed)
 
-        
-    from itertools import combinations
+    from networkx import non_edges
 
     if m < 0:
         raise ValueError("You can only sample a non negative number of edges.")
@@ -1004,7 +1003,7 @@ def sample_missing_edges(G,m, seed=None):
             return random.sample(G.nodes(),2)
 
         def available_edges():
-            return [(u,v) for (u,v) in combinations(G.nodes(),2) if not G.has_edge(u,v)]
+            return list(non_edges(G))
 
 
     number_avaiable_edges = total_number_of_edges - G.number_of_edges()
@@ -1018,7 +1017,7 @@ def sample_missing_edges(G,m, seed=None):
 
     else:
         # Sparse case: sample and retry
-        missing_edges=[]
+        missing_edges=set()
 
         for _ in xrange(100*m):
 
@@ -1026,8 +1025,10 @@ def sample_missing_edges(G,m, seed=None):
                 break
 
             u,v = edge_sampler()
-            if not G.has_edge(u,v):
-                missing_edges.append( (u,v) )
+            if (u,v) not in missing_edges and \
+               (v,u) not in missing_edges and \
+               not G.has_edge(u,v):
+                missing_edges.add( (u,v) )
                 
         if len(missing_edges) >= m:
             return missing_edges

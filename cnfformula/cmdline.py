@@ -377,6 +377,8 @@ class SimpleGraphHelper(GraphHelper):
         if getattr(args,'addedges'+suffix)>0:
             k = getattr(args,'addedges'+suffix)
             G.add_edges_from(sample_missing_edges(G,k))
+            if hasattr(G, 'name'):
+                G.name = "{} with {} new random edges".format(G.name,k)
 
         # Output the graph is requested
         if getattr(args,'savegraph'+suffix) is not None:
@@ -535,8 +537,13 @@ class BipartiteGraphHelper(GraphHelper):
                 G.add_edge(v,w)
 
         if args.addedges is not None:
+
             k = args.addedges
+
             G.add_edges_from(sample_missing_edges(G,k))
+
+            if hasattr(G, 'name'):
+                G.name = "{} with {} new random edges".format(G.name,k)
             
             
         # Output the graph is requested
