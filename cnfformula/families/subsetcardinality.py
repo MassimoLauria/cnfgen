@@ -35,24 +35,24 @@ def SubsetCardinalityFormula(B, equalities = False):
 
     .. math::
          
-         \sum_{j \in \Gamma(i)} x_{i,j} \leq \frac{|\Gamma(i)|}{2}
+         \sum_{j \in \Gamma(i)} x_{i,j} \geq \frac{|\Gamma(i)|}{2}
 
     For every right vertex j with neighborhood :math:`\Gamma(j)`
 
     .. math::
          
-         \sum_{i \in \Gamma(j)} x_{i,j} \geq \frac{|\Gamma(j)|}{2}.
+         \sum_{i \in \Gamma(j)} x_{i,j} \leq \frac{|\Gamma(j)|}{2}.
 
     If the ``equalities`` flag is true, the constraints are instead
     represented by equations.
     
     .. math::
          
-         \sum_{j \in \Gamma(i)} x_{i,j} = \left\lfloor \frac{|\Gamma(i)|}{2} \right\rfloor
+         \sum_{j \in \Gamma(i)} x_{i,j} = \left\lceil \frac{|\Gamma(i)|}{2} \right\rceil
 
     .. math::
          
-         \sum_{i \in \Gamma(j)} x_{i,j} = \left\lceil \frac{|\Gamma(j)|}{2} \right\rceil.
+         \sum_{i \in \Gamma(j)} x_{i,j} = \left\lfloor \frac{|\Gamma(j)|}{2} \right\rfloor .
 
     Parameters
     ----------
@@ -102,20 +102,20 @@ def SubsetCardinalityFormula(B, equalities = False):
         edge_vars = [ var_name(*e) for e in B.edges(u) ]
 
         if equalities:
-            for cls in exactly_half_floor(edge_vars):
+            for cls in exactly_half_ceil(edge_vars):
                 ssc.add_clause(cls,strict=True)
         else:
-            for cls in loose_minority_constraint(edge_vars):
+            for cls in loose_majority_constraint(edge_vars):
                 ssc.add_clause(cls,strict=True)
 
     for v in Right:
         edge_vars = [ var_name(*e) for e in B.edges(v) ]
 
         if equalities:
-            for cls in exactly_half_ceil(edge_vars):
+            for cls in exactly_half_floor(edge_vars):
                 ssc.add_clause(cls,strict=True)
         else:
-            for cls in loose_majority_constraint(edge_vars):
+            for cls in loose_minority_constraint(edge_vars):
                 ssc.add_clause(cls,strict=True)
     
     return ssc
