@@ -25,10 +25,10 @@ class TestSubsetCardinality(TestCNFBase):
         F = SubsetCardinalityFormula(graph)
         dimacs = """\
         p cnf 4 4
-        -1 -2 0
-        -3 -4 0
-        1 3 0
-        2 4 0
+        1 2 0
+        3 4 0
+        -1 -3 0
+        -2 -4 0
         """
         self.assertCnfEqualsDimacs(F,dimacs)
 
@@ -37,15 +37,15 @@ class TestSubsetCardinality(TestCNFBase):
         F = SubsetCardinalityFormula(graph)
         dimacs = """\
         p cnf 6 9
-        -1 -2 0
-        -1 -3 0
-        -2 -3 0
-        -4 -5 0
-        -4 -6 0
-        -5 -6 0
-        1 4 0
-        2 5 0
-        3 6 0
+        1 2 0
+        1 3 0
+        2 3 0
+        4 5 0
+        4 6 0
+        5 6 0
+        -1 -4 0
+        -2 -5 0
+        -3 -6 0
         """
         self.assertCnfEqualsDimacs(F,dimacs)
 
@@ -54,24 +54,24 @@ class TestSubsetCardinality(TestCNFBase):
         F = SubsetCardinalityFormula(graph)
         dimacs = """\
         p cnf 9 18
-        -1 -2 0
-        -1 -3 0
-        -2 -3 0
-        -4 -5 0
-        -4 -6 0
-        -5 -6 0
-        -7 -8 0
-        -7 -9 0
-        -8 -9 0
-        1 4 0
-        1 7 0
-        4 7 0
-        2 5 0
-        2 8 0
-        5 8 0
-        3 6 0
-        3 9 0
-        6 9 0
+        1 2 0
+        1 3 0
+        2 3 0
+        4 5 0
+        4 6 0
+        5 6 0
+        7 8 0
+        7 9 0
+        8 9 0
+        -1 -4 0
+        -1 -7 0
+        -4 -7 0
+        -2 -5 0
+        -2 -8 0
+        -5 -8 0
+        -3 -6 0
+        -3 -9 0
+        -6 -9 0
         """
         self.assertCnfEqualsDimacs(F,dimacs)        
         
