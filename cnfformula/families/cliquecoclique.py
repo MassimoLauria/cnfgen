@@ -32,11 +32,11 @@ def CliqueCoclique(n,m):
 
     """
 
-    def var_name_p(i,j):
+    def P(i,j):
         return 'p_{{{0},{1}}}'.format(i,j)
-    def var_name_q(k,i):
+    def Q(k,i):
         return 'q_{{{0},{1}}}'.format(k,i)
-    def var_name_r(i,l):
+    def R(i,l):
         return 'r_{{{0},{1}}}'.format(i,l)
     
     formula=CNF()
@@ -44,30 +44,28 @@ def CliqueCoclique(n,m):
         + formula.header
 
     for i in range(1,n+1):
-        for j in range(1,n+1):
-            if i!=j: formula.add_variable(var_name_p(i,j))
+        for j in range(i+1,n+1):
+            formula.add_variable(P(i,j))
     for k in range(1,m+1):
         for i in range(1,n+1):
-            formula.add_variable(var_name_q(k,i))
-    for i in range(1,m+1):
+            formula.add_variable(Q(k,i))
+    for i in range(1,n+1):
         for ell in range(1,m):
-            formula.add_variable(var_name_r(i,ell))
-    print(list(combinations(range(1,n+1),2)))
-    print(list(permutations(range(1,n+1),2)))
+            formula.add_variable(R(i,ell))
     for k in range(1,m+1):
-        formula.add_clause([(True, var_name_q(k,i)) for i in range(1,n+1)], strict=True)
-    for k in range(1,m+1):
-        for i,j in combinations(range(1,n+1),2):
-            formula.add_clause([(False, var_name_q(k,i)), (False, var_name_q(k,j))])
+        formula.add_clause([(True, Q(k,i)) for i in range(1,n+1)], strict=True)
+    for i in range(1,n+1):
+        for k,k_ in combinations(range(1,m+1),2):
+            formula.add_clause([(False, Q(k,i)), (False, Q(k_,i))], strict=True)
     for i,j in combinations(range(1,n+1),2):
         for k,k_ in permutations(range(1,m+1),2):
-            formula.add_clause([(True, var_name_p(i,j)), (False, var_name_q(k,i)), (False, var_name_q(k_,j))])
+            formula.add_clause([(True, P(i,j)), (False, Q(k,i)), (False, Q(k_,j))], strict=True)
     for i in range(1,n+1):
-        formula.add_clause([var_name_r(i,ell) for ell in range(1,m)])
+        formula.add_clause([(True, R(i,ell)) for ell in range(1,m)], strict=True)
     for i,j in combinations(range(1,n+1),2):
         for ell in range(1,m):
-            formula.add_clause([(False, var_name_p(i,j)), (False, var_name_r(i,ell)), (False, var_name_r(j,ell))])
-
+            formula.add_clause([(False, P(i,j)), (False, R(i,ell)), (False, R(j,ell))], strict=True)
+    #print(formula.clauses())
     return formula
 
 @cnfformula.cmdline.register_cnfgen_subcommand
