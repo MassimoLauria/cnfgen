@@ -52,16 +52,24 @@ def CliqueCoclique(n,m):
     for i in range(1,n+1):
         for ell in range(1,m):
             formula.add_variable(R(i,ell))
+    # some vertex is k'th member of clique
     for k in range(1,m+1):
         formula.add_clause([(True, Q(k,i)) for i in range(1,n+1)], strict=True)
+    # k'th clique member is uniquely defined
+    for k in range(1,m+1):
+        for i,j in combinations(range(1,n+1),2):
+            formula.add_clause([(False, Q(k,i)), (False, Q(k,j))], strict=True)
+    # clique members are connected by edges
     for i in range(1,n+1):
         for k,k_ in combinations(range(1,m+1),2):
             formula.add_clause([(False, Q(k,i)), (False, Q(k_,i))], strict=True)
     for i,j in combinations(range(1,n+1),2):
         for k,k_ in permutations(range(1,m+1),2):
             formula.add_clause([(True, P(i,j)), (False, Q(k,i)), (False, Q(k_,j))], strict=True)
+    # every vertex i has a colour
     for i in range(1,n+1):
         formula.add_clause([(True, R(i,ell)) for ell in range(1,m)], strict=True)
+    # neighbours have distinct colours
     for i,j in combinations(range(1,n+1),2):
         for ell in range(1,m):
             formula.add_clause([(False, P(i,j)), (False, R(i,ell)), (False, R(j,ell))], strict=True)
