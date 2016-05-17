@@ -140,6 +140,9 @@ def command_line_utility(argv=sys.argv):
                         another way to read from standard input.
                         (default: -)
                         """)
+    parser.add_argument('--no-polarity-flips',action='store_true',dest='no_polarity_flips',help="No polarity flips")
+    parser.add_argument('--no-variable-permutations',action='store_true',dest='no_variable_permutations',help="No variable permutations")
+    parser.add_argument('--no-clause-permutations',action='store_true',dest='no_clause_permutations',help="No clause permutations")
 
     g=parser.add_mutually_exclusive_group()
     g.add_argument('--verbose', '-v',action='store_true',default=True,
@@ -156,7 +159,10 @@ def command_line_utility(argv=sys.argv):
         random.seed(args.seed)
 
     input_cnf = dimacs2cnf(args.input)
-    output_cnf = cnfshuffle(input_cnf)
+    output_cnf = cnfshuffle(input_cnf,
+                                   variable_permutation=None if not args.no_variable_permutations else list(input_cnf.variables()),
+                                   clause_permutation=None if not args.no_clause_permutations else range(len(input_cnf)),
+                                   polarity_flip=None if not args.no_polarity_flips else [1]*len(list(input_cnf.variables())))
     output_cnf._dimacs_dump_clauses(output=args.output,
                                    export_header=args.verbose)
 
@@ -167,3 +173,4 @@ def command_line_utility(argv=sys.argv):
 ### Launcher
 if __name__ == '__main__':
     command_line_utility(sys.argv)
+
