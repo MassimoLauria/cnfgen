@@ -48,20 +48,93 @@ except ImportError:
           file=sys.stderr)
     exit(-1)
 
-# remove dot format if graphviz is not installed
-# we put it by default for documentation purpose
-# notice that it is networkx itself that requires graphviz.
-try:
-    import pydot
-    del pydot
-except ImportError:
-    # print("WARNING: Missing 'pydot2' library: no support for 'dot' graph format.",
-    #       file=sys.stderr)
+
+def has_dot_library():
+    """Test the presence of a library that supports dot format
+
+    Old version of NetworkX have use `pydot', while new versions use
+    `pydotplus`.
+
+    read_dot and write_dot exposed in the
+    main package. This is not true anymore in NetworkX 1.11.
+
+    Furthermore the position of the `read_dot` and `write_dot` have been
+    moved around between versions.
+
+    The function returns the available reader and writer, and
+    furthermore it cleans up the list of supported format from any
+    reference to dot format, in case of missing library.
+
+    """
+    try:
+        # newer version of networkx
+        from networkx import nx_pydot
+        import pydotplus
+        del pydotplus
+        return True
+    except ImportError:
+        pass
+
+    try:
+        # older version of networkx
+        from networkx import read_dot,write_dot
+        import pydot
+        del pydot
+        return True
+    except ImportError:
+        pass
+
+    return False
+
+# Check that DOT is a supported format
+if not has_dot_library():
     for k in _graphformats.values():
         try:
             k.remove('dot')
         except ValueError:
             pass
+
+
+def find_read_dot():
+    """Look for the implementation of 'read_dot' in NetworkX
+
+    The position inside the NetworkX library depends on its version.
+    """
+
+    try:
+        from networkx import nx_pydot
+        return networkx.nx_pydot.read_dot
+    except ImportError:
+        pass
+
+    try:
+        from networkx import read_dot
+        return read_dot
+    except ImportError:
+        pass
+
+    raise RuntimeError("We can't find an implementation of 'read_dot' in NetworkX")
+
+
+    
+def find_write_dot():
+    """Look for the implementation of 'write_dot' in NetworkX
+
+    The position inside the NetworkX library depends on its version.
+    """    
+    try:
+        from networkx import nx_pydot
+        return networkx.nx_pydot.write_dot
+    except ImportError:
+        pass
+
+    try:
+        from networkx import write_dot
+        return write_dot
+    except ImportError:
+        pass
+    
+    raise RuntimeError("We can't find an implementation of 'write_dot' in NetworkX")
 
 
 #################################################################
@@ -191,7 +264,7 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
 
     if file_format=='dot':
 
-        G=grtype(networkx.read_dot(input_file))
+        G=grtype(find_read_dot()(input_file))
 
     elif file_format=='gml':
 
@@ -278,7 +351,7 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
     
     if file_format=='dot':
 
-        networkx.write_dot(G,output_file)
+        find_write_dot()(G,output_file)
 
     elif file_format=='gml':
 
