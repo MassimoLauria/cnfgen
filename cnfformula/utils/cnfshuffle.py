@@ -107,7 +107,7 @@ def command_line_utility(argv=sys.argv):
                                      description="""
     Reshuffle the input CNF. Returns a formula logically
     equivalent to the input with random application of
-    (1) Polarity flips (2) Variable permutations (3) Clause permutations.
+    (1) Polarity flips (2) Variables permutation (3) Clauses permutation.
     """,
                                      epilog="""
     For more information type '%s [--help | -h ]'
@@ -141,8 +141,8 @@ def command_line_utility(argv=sys.argv):
                         (default: -)
                         """)
     parser.add_argument('--no-polarity-flips',action='store_true',dest='no_polarity_flips',help="No polarity flips")
-    parser.add_argument('--no-variable-permutations',action='store_true',dest='no_variable_permutations',help="No variable permutations")
-    parser.add_argument('--no-clause-permutations',action='store_true',dest='no_clause_permutations',help="No clause permutations")
+    parser.add_argument('--no-variables-permutation',action='store_true',dest='no_variable_permutations',help="No permutation of variables")
+    parser.add_argument('--no-clauses-permutation',action='store_true',dest='no_clause_permutations',help="No permutation of clauses")
 
     g=parser.add_mutually_exclusive_group()
     g.add_argument('--verbose', '-v',action='store_true',default=True,
