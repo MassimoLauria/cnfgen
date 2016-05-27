@@ -76,9 +76,14 @@ def has_dot_library():
         pass
 
     try:
-        # older version of networkx
+        # older version of networkx but we still require pydot > 10.28
         from networkx import read_dot,write_dot
         import pydot
+        from distutils.version import StrictVersion
+        pydot_current_version     = StrictVersion(pydot.__version__)
+        pydot_good_enough_version = StrictVersion("1.0.29")
+        if pydot_current_version < pydot_good_enough_version:
+            raise ImportError
         del pydot
         return True
     except ImportError:

@@ -42,18 +42,6 @@ dimacs_path2 ="p edge 3 2\ne 1 2\ne 2 3\n"
 
 class TestGraphIO(unittest.TestCase) :
 
-    # def check_pydot2(self):
-    #     try:
-    #         import pydot
-    #         # Distinguish pydot from pydot2 from version number
-    #         from distutils.version import StrictVersion
-    #         pydot_version = StrictVersion(pydot.__version__)
-    #         pydot2_version = StrictVersion("1.0.29")
-    #         if pydot_version < pydot2_version :
-    #             raise ImportError
-    #     except ImportError:
-    #         self.skipTest("PyDot2 not installed. Can't test DOT I/O for NetworkX <= 1.10")
-
     def test_low_level_dot_read_path2(self) :
 
         if not has_dot_library():
