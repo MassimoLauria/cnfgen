@@ -5,6 +5,7 @@ python:
 env:
   - NETWORKX_VERSION=1.9.0
   - NETWORKX_VERSION=1.10
+  - NETWORKX_VERSION=1.11
 install:
   - pip install -q networkx==$NETWORKX_VERSION
   - pip install -r requirements.txt
