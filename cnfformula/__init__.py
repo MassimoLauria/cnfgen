@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
 from cnfformula.cnf import CNF
-from cnfformula.transformation import TransformFormula
-from cnfformula.transformation import available as available_transform
 
 
-__all__ = ["CNF","TransformFormula","available_transform"]
+__all__ = ["CNF"]
 
 
 def load_formula_generators():
