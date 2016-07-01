@@ -19,9 +19,9 @@ __all__ = ["supported_formats",
 
 
 _graphformats = { 
-    'dag':   ['adjlist','gml','dot'],
-    'digraph': ['adjlist','gml','dot','dimacs'],
-    'simple': ['adjlist','gml','dot','dimacs'],
+    'dag':   ['kthlist','gml','dot'],
+    'digraph': ['kthlist','gml','dot','dimacs'],
+    'simple': ['kthlist','gml','dot','dimacs'],
     'bipartite': ['matrix','gml','dot']
     }
 
@@ -278,9 +278,9 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
         except networkx.NetworkXError,errmsg:
             raise ValueError("[Parse error in GML input] {} ".format(errmsg))
 
-    elif file_format=='adjlist':
+    elif file_format=='kthlist':
 
-        G=_read_graph_adjlist_format(input_file,grtype)
+        G=_read_graph_kthlist_format(input_file,grtype)
 
     elif file_format=='dimacs':
 
@@ -362,9 +362,9 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
 
         networkx.write_gml(G,output_file)
             
-    elif file_format=='adjlist':
+    elif file_format=='kthlist':
 
-        _write_graph_adjlist_format(G,output_file)
+        _write_graph_kthlist_format(G,output_file)
 
     elif file_format=='dimacs':
 
@@ -455,9 +455,9 @@ def enumerate_vertices(graph):
 # In-house parsers
 #
 
-# kth reader
-def _read_graph_adjlist_format(inputfile,graph_class=networkx.DiGraph):
-    """Read a graph from file, in the adjacency lists format.
+# kth graph format reader
+def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph):
+    """Read a graph from file, in the KTH reverse adjacency lists format.
 
     If the vertices are listed from to sources to the sinks, then the
     graph is marked as topologically sorted, and any DAG test will be
@@ -698,8 +698,8 @@ def _read_graph_matrix_format(inputfile):
 #
 # In-house graph writers
 #
-def _write_graph_adjlist_format(G,output_file):
-    """Wrire a graph to a file, in the adjacency lists format.
+def _write_graph_kthlist_format(G,output_file):
+    """Wrire a graph to a file, in the KTH reverse adjacency lists format.
     
     Parameters
     ----------

@@ -128,7 +128,7 @@ def pebbling_formula_compressed_clauses(adjfile):
 
 
 ### Produce the dimacs output from the data
-def adjlist2pebbling(inputfile, method, rank, output, header=True):
+def kthlist2pebbling(inputfile, method, rank, output, header=True):
     # Build the lifting mechanism
 
     # Generate the basic formula
@@ -198,7 +198,7 @@ def command_line_utility(argv=sys.argv):
     # Process the options
     args=parser.parse_args(argv[1:])
 
-    adjlist2pebbling(args.input, args.Transform, args.Tarity, args.output, args.header)
+    kthlist2pebbling(args.input, args.Transform, args.Tarity, args.output, args.header)
 
 ### Launcher
 if __name__ == '__main__':
