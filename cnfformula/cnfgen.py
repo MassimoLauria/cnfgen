@@ -34,8 +34,6 @@ import os
 import sys
 import random
 
-from . import TransformFormula,available_transform
-
 # Python 2.6 does not have argparse library
 try:
     import argparse
@@ -93,29 +91,6 @@ def setup_command_line_args(parser):
     g.add_argument('--quiet', '-q',action='store_false',dest='verbose',
                    help="""Output just the formula with no header.""")
 
-###
-### Explore the cnfformula.families modules to find formula implementations
-###
-
-def find_formula_subcommands():
-    """Look in cnfformula.families package for implementations of CNFs"""
-
-    
-    import pkgutil
-    from .        import families
-    from .cmdline import is_cnfgen_subcommand
-
-    result = []
-    
-    for loader, module_name, _ in  pkgutil.walk_packages(families.__path__):
-        module_name = families.__name__+"."+module_name
-        module = loader.find_module(module_name).load_module(module_name)
-        for objname in dir(module):
-            obj = getattr(module, objname)
-            if is_cnfgen_subcommand(obj):
-                result.append(obj)
-    result.sort(key=lambda x: x.name)
-    return result
 
 
 
@@ -148,26 +123,38 @@ def command_line_utility(argv=sys.argv):
         The list of token with the command line arguments/options.
     """
 
+
+    # Formula generators cmdline setup 
+    from cnfformula import families
+    from cnfformula.cmdline import is_cnfgen_subcommand
+    from cnfformula import transformations
+    from cnfformula.cmdline import is_cnf_transformation_subcommand
+    from cnfformula.cmdline import find_methods_in_package
+
+    
     # Cmdline parser for formula transformations
     t_parser = argparse.ArgumentParser(usage=os.path.basename(argv[0]) + " ..."
                                        +" [-T <transformation> <params> -T <transformation> <params> ...]",
-                                       add_help=False,
                                        epilog="""Each <transformation> has its own command line arguments and options.
                                        For more information type 'cnfgen ... -T <transformation> [--help | -h]'
 
                                        """)
     
     t_subparsers = t_parser.add_subparsers(title="Available formula transformation",metavar="<transformation>")
-    for key,value in available_transform().items():
-        p=t_subparsers.add_parser(key,help=value[0])
-        p.set_defaults(transformation=key)
-        p.add_argument('parameter',
-                       metavar="<parameter>",
-                       type=int,
-                       nargs='?',
-                       action='store',
-                       default=value[2])
-
+    # for key,value in available_transform().items():
+    #     p=t_subparsers.add_parser(key,help=value[0])
+    #     p.set_defaults(transformation=key)
+    #     p.add_argument('parameter',
+    #                    metavar="<parameter>",
+    #                    type=int,
+    #                    nargs='?',
+    #                    action='store',
+    #                    default=value[2])
+    for sc in find_methods_in_package(transformations,is_cnf_transformation_subcommand):
+        p=t_subparsers.add_parser(sc.name,help=sc.description)
+        sc.setup_command_line(p)
+        p.set_defaults(transformation=sc)
+    
     # Main cmdline setup
     parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),
                                    formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -183,9 +170,9 @@ a sequence of transformations.
     setup_command_line_args(parser)
     
         
-    # Formula generators cmdline setup 
+    
     subparsers=parser.add_subparsers(title="Available formula types",metavar='<formula type>')
-    for sc in find_formula_subcommands():
+    for sc in find_methods_in_package(families,is_cnfgen_subcommand):
         p=subparsers.add_parser(sc.name,help=sc.description)
         sc.setup_command_line(p)
         p.set_defaults(generator=sc)
@@ -227,14 +214,8 @@ a sequence of transformations.
 
 
     # Apply the sequence of transformations
-    old_cnf = None
     for argdict in t_args:
-        if argdict.transformation == 'none':
-            old_cnf = cnf
-            cnf     = cnf 
-        else:
-            old_cnf = cnf
-            cnf     = TransformFormula(old_cnf,argdict.transformation,argdict.parameter)
+        cnf = argdict.transformation.transform_cnf(cnf,argdict)
         
     # Output
     if args.output_format == 'latex':
