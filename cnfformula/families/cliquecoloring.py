@@ -43,7 +43,7 @@ def CliqueColoring(n,k,c):
 
     References
     ----------
-    .. [1] Pavel Pudlak
+    .. [1] Pavel Pudlak.
            Lower bounds for resolution and cutting plane proofs and
            monotone computations.
            Journal of Symbolic Logic (1997)
@@ -132,4 +132,3 @@ class CliqueColoringCmdHelper(object):
         - `args`: command line options
         """
         return CliqueColoring(args.n,args.k,args.c)
-        

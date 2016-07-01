@@ -37,6 +37,7 @@ the following modules. This makes it easy to
    Random CNFs <cnfformula.families.randomformulas>
    Clique and Subgraph formulas <cnfformula.families.subgraph>
    Subset Cardinality <cnfformula.families.subsetcardinality>
+   Clique-Coloring formulas <cnfformula.families.cliquecoloring>
    Tseitin formula <cnfformula.families.tseitin>
    Basic formulas <cnfformula.families.simple>
 
