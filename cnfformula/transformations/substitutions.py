@@ -9,7 +9,7 @@ from cnfformula.cnf import parity_constraint
 from cnfformula.cmdline  import register_cnf_transformation_subcommand
 from cnfformula.transformations import register_cnf_transformation
 
-from itertools import combinations,product
+from itertools import combinations,product,permutations
 
 #
 # Transformation of a list of clauses
@@ -199,8 +199,8 @@ class TransformedCNF(CNF):
         return [ [ (polarity,name) ] ]
 
 
-
-class IfThenElse(TransformedCNF):
+@register_cnf_transformation
+class IfThenElseSubstitution(TransformedCNF):
     """Transformed formula: substitutes variable with a three variables
     if-then-else
     """
@@ -235,7 +235,8 @@ class IfThenElse(TransformedCNF):
         return [ [ (False,X) , (polarity,Y) ] , [ (True, X) , (polarity,Z) ] ]
 
 
-class Majority(TransformedCNF):
+@register_cnf_transformation
+class MajoritySubstitution(TransformedCNF):
     """Transformed formula: substitutes variable with a Majority
     """
     def __init__(self, cnf, rank):
@@ -278,7 +279,8 @@ class Majority(TransformedCNF):
         return [ s for s in binom(lit,witness) ]
 
 
-class InnerOr(TransformedCNF):
+@register_cnf_transformation
+class OrSubstitution(TransformedCNF):
     """Transformed formula: substitutes variable with a OR
     """
     def __init__(self, cnf, rank):
@@ -313,7 +315,8 @@ class InnerOr(TransformedCNF):
             return [ [(False,name)] for name in names ]
 
 
-class Equality(TransformedCNF):
+@register_cnf_transformation
+class AllEqualSubstitution(TransformedCNF):
     """Transformed formula: substitutes variable with 'all equals'
     """
     def __init__(self, cnf, rank):
@@ -348,7 +351,8 @@ class Equality(TransformedCNF):
         else:
             return [[ (False,a) for a in names ] , [ (True,a) for a in names ] ] # at least a true and a false variable.
 
-class NonEquality(Equality):
+@register_cnf_transformation
+class NotAllEqualSubstitution(AllEqualSubstitution):
     """Transformed formula: substitutes variable with 'not all equals'
     """
     def __init__(self, cnf, rank):
@@ -359,7 +363,7 @@ class NonEquality(Equality):
         - `cnf`: the original cnf
         - `rank`: how many variables in each or
         """
-        Equality.__init__(self,cnf,rank)
+        AllEqualSubstitution.__init__(self,cnf,rank)
 
         self._header="N"+self._header
 
@@ -372,10 +376,10 @@ class NonEquality(Equality):
 
         Returns: a list of clauses
         """
-        return Equality.transform_a_literal(self,not polarity,varname)
+        return AllEqualSubstitution.transform_a_literal(self,not polarity,varname)
 
-        
-class InnerXor(TransformedCNF):
+@register_cnf_transformation
+class XorSubstitution(TransformedCNF):
     """Transformed formula: substitutes variable with a XOR
     """
     def __init__(self, cnf, rank):
@@ -405,8 +409,8 @@ class InnerXor(TransformedCNF):
         names = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
         return parity_constraint(names,polarity)
 
-
-class Lifting(TransformedCNF):
+@register_cnf_transformation
+class FormulaLifting(TransformedCNF):
     """Formula lifting: Y variable select X values
     """
     def __init__(self, cnf, rank):
@@ -456,7 +460,9 @@ class Lifting(TransformedCNF):
                              (polarity,"X_{{{}}}^{}".format(varname,i)) ])
         return clauses
 
-class One(TransformedCNF):
+
+@register_cnf_transformation
+class ExactlyOneSubstitution(TransformedCNF):
     """Transformed formula: exactly one variable is true
     """
     def __init__(self, cnf, rank):
@@ -524,7 +530,7 @@ def TransformFormula(cnf,t_method,t_arity=None):
 # Command line helpers for these substitutions
 #
 @register_cnf_transformation_subcommand
-class NoSubstitution:
+class NoSubstitutionCmd:
     name='none'
     description='no transformation'
 
@@ -537,7 +543,7 @@ class NoSubstitution:
         return F
 
 @register_cnf_transformation_subcommand
-class OrSubstitution:
+class OrSubstitutionCmd:
     name='or'
     description='substitute variable x with OR(x1,x2,...,xN)'
 
@@ -547,10 +553,10 @@ class OrSubstitution:
 
     @staticmethod
     def transform_cnf(F,args):
-        return  InnerOr(F,args.N)
+        return  OrSubstitution(F,args.N)
 
 @register_cnf_transformation_subcommand
-class XorSubstitution:
+class XorSubstitutionCmd:
     name='xor'
     description='substitute variable x with XOR(x1,x2,...,xN)'
 
@@ -560,10 +566,10 @@ class XorSubstitution:
 
     @staticmethod
     def transform_cnf(F,args):
-        return  InnerXor(F,args.N)
+        return  XorSubstitution(F,args.N)
 
 @register_cnf_transformation_subcommand
-class EqSubstitution:
+class AllEqualsSubstitutionCmd:
     name='eq'
     description='substitute variable x with predicate x1==x2==...==xN (i.e. all equals)'
 
@@ -573,10 +579,10 @@ class EqSubstitution:
 
     @staticmethod
     def transform_cnf(F,args):
-        return  Equality(F,args.N)
+        return  AllEqualSubstitution(F,args.N)
 
 @register_cnf_transformation_subcommand
-class NeqSubstitution:
+class NeqSubstitutionCmd:
     name='neq'
     description='substitute variable x with predicate |{x1,x2,...,xN}|>1 (i.e. not all equals)'
 
@@ -586,7 +592,7 @@ class NeqSubstitution:
 
     @staticmethod
     def transform_cnf(F,args):
-        return  NonEquality(F,args.N)
+        return  NotAllEqualSubstitution(F,args.N)
 
 @register_cnf_transformation_subcommand
 class MajSubstitution:
@@ -602,7 +608,7 @@ class MajSubstitution:
         return  Majority(F,args.N)
 
 @register_cnf_transformation_subcommand
-class IfThenElseSubstitution:
+class IfThenElseSubstitutionCmd:
     name='ite'
     description='substitute variable x with predicate "if X then Y else Z"'
 
@@ -612,10 +618,10 @@ class IfThenElseSubstitution:
     
     @staticmethod
     def transform_cnf(F,args):
-        return  IfThenElse(F)
+        return  IfThenElseSubstitution(F)
 
 @register_cnf_transformation_subcommand
-class ExactlyOneSubstitution:
+class ExactlyOneSubstitutionCmd:
     name='one'
     description='substitute variable x with predicate x1+x2+...+xN = 1'
 
@@ -625,7 +631,7 @@ class ExactlyOneSubstitution:
     
     @staticmethod
     def transform_cnf(F,args):
-        return  One(F,args.N)
+        return  ExactlyOneSubstitution(F,args.N)
 
 
 
@@ -633,7 +639,7 @@ class ExactlyOneSubstitution:
 # another file. Unfortunately there is a lot of dependency from
 # this one.
 @register_cnf_transformation_subcommand
-class LiftingApplication:
+class FormulaLiftingCmd:
     """Lifting 
     """
     name='lift'
@@ -645,5 +651,5 @@ class LiftingApplication:
     
     @staticmethod
     def transform_cnf(F,args):
-        return  Lifting(F,args.N)
+        return FormulaLifting(F,args.N)
 

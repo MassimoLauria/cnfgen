@@ -185,13 +185,16 @@ def is_cnf_transformation_subcommand(cls):
 
 
 
-def find_methods_in_package(package,test):
+def find_methods_in_package(package,test, sortkey=None):
     """Explore a package for functions and methods that implement a specific test"""
 
     
     import pkgutil
 
     result = []
+
+    if sortkey == None :
+        sortkey = lambda x : x
     
     for loader, module_name, _ in  pkgutil.walk_packages(package.__path__):
         module_name = package.__name__+"."+module_name
@@ -200,7 +203,7 @@ def find_methods_in_package(package,test):
             obj = getattr(module, objname)
             if test(obj):
                 result.append(obj)
-    result.sort(key=lambda x: x.name)
+    result.sort(key=sortkey)
     return result
             
 

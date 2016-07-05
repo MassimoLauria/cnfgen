@@ -140,17 +140,11 @@ def command_line_utility(argv=sys.argv):
 
                                        """)
     
-    t_subparsers = t_parser.add_subparsers(title="Available formula transformation",metavar="<transformation>")
-    # for key,value in available_transform().items():
-    #     p=t_subparsers.add_parser(key,help=value[0])
-    #     p.set_defaults(transformation=key)
-    #     p.add_argument('parameter',
-    #                    metavar="<parameter>",
-    #                    type=int,
-    #                    nargs='?',
-    #                    action='store',
-    #                    default=value[2])
-    for sc in find_methods_in_package(transformations,is_cnf_transformation_subcommand):
+    t_subparsers = t_parser.add_subparsers(title="Available formula transformation",
+                                           metavar="<transformation>")
+    for sc in find_methods_in_package(transformations,
+                                      is_cnf_transformation_subcommand,
+                                      sortkey=lambda x:x.name):
         p=t_subparsers.add_parser(sc.name,help=sc.description)
         sc.setup_command_line(p)
         p.set_defaults(transformation=sc)
@@ -172,7 +166,9 @@ a sequence of transformations.
         
     
     subparsers=parser.add_subparsers(title="Available formula types",metavar='<formula type>')
-    for sc in find_methods_in_package(families,is_cnfgen_subcommand):
+    for sc in find_methods_in_package(families,
+                                      is_cnfgen_subcommand,
+                                      sortkey=lambda x:x.name):
         p=subparsers.add_parser(sc.name,help=sc.description)
         sc.setup_command_line(p)
         p.set_defaults(generator=sc)
