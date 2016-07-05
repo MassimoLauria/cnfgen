@@ -368,7 +368,6 @@ def is_satisfiable(F, cmd=None, sameas=None):
 
     Examples
     --------
-    >>> F = CNF()
     >>> F.is_satisfiable()                                              # doctest: +SKIP
     >>> F.is_satisfiable(cmd='minisat -no-pre')                         # doctest: +SKIP
     >>> F.is_satisfiable(cmd='glucose -pre')                            # doctest: +SKIP
