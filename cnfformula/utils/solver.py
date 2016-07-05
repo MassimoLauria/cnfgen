@@ -354,40 +354,41 @@ def is_satisfiable(F, cmd=None, sameas=None):
     no command line is specified, the known solvers are tried in
     succession until one is found.
 
-    Arguments:
+    Parameters
     ----------
-    `F`: a CNF formula object
+    F: a CNF formula object
        check the satisfiablility of this formula
-    `cmd`: string,optional
+    cmd: string,optional
        the actual command line used to invoke the SAT solver
-    `sameas`: string, optional
+    sameas: string, optional
        use the interface of one of the supported solvers, indicated in
        input. Useful when the solver ont the command line is not supported.
 
-    Example:
+    Examples
     --------
-    is_satisfiable(F)
-    is_satisfiable(F,cmd='minisat -no-pre')
-    is_satisfiable(F,cmd='glucose -pre')
-    is_satisfiable(F,cmd='lingeling --plain')
-    is_satisfiable(F,cmd='sat4j')
-    is_satisfiable(F,cmd='my-hacked-minisat -pre',sameas='minisat')
-    is_satisfiable(F,cmd='patched-lingeling',sameas='lingeling')
+    >>> is_satisfiable(F)
+    >>> is_satisfiable(F,cmd='minisat -no-pre')
+    >>> is_satisfiable(F,cmd='glucose -pre')
+    >>> is_satisfiable(F,cmd='lingeling --plain')
+    >>> is_satisfiable(F,cmd='sat4j')
+    >>> is_satisfiable(F,cmd='my-hacked-minisat -pre',sameas='minisat')
+    >>> is_satisfiable(F,cmd='patched-lingeling',sameas='lingeling')
 
-    Returns:
-    --------
+    Returns
+    -------
     A pair (answer,witness) where answer is either True when F is
     satisfiable, or False otherwise. If F is satisfiable the witness
     is a satisfiable assignment in form of a dictionary, otherwise it
     is None.
 
-    Raises:
-    -------
-    `RuntimeError` if it is not possible to correctly invoke the
-    solver needed.
-    `ValueError` if `sameas` is set and is not the name of a supported
-    solver.
-    `TypeError` if F is not a CNF object.
+    Raises
+    ------
+    RuntimeError
+       if it is not possible to correctly invoke the solver needed.
+    ValueError 
+       if `sameas` is set and does not match the name of a supported solver.
+    TypeError
+       if F is not a CNF object.
     
     Supported solvers:
     ------------------
