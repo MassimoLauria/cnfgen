@@ -15,21 +15,14 @@ def load_formula_generators():
     function decorator.
     """
     
-    import pkgutil
     import sys
-    from .families import __path__ as bpath
-    from .families import __name__ as bname
-    from .families import is_cnf_generator
+    from cnfformula import families
+    from cnfformula.cmdline import find_methods_in_package
+    from cnfformula.families import is_cnf_generator
+
+    loot = dict( (g.__name__, g)
+                 for g in find_methods_in_package(families,is_cnf_generator))
     
-    loot = {}
-    
-    for loader, module_name, _ in  pkgutil.walk_packages(bpath):
-        module_name = bname+"."+module_name
-        module = loader.find_module(module_name).load_module(module_name)
-        for objname in dir(module):
-            obj = getattr(module, objname)
-            if is_cnf_generator(obj):
-                loot[objname] = obj
 
     # Load the formula generators in the `cnfformula` namespace
     self_ref = sys.modules[__name__]
@@ -37,6 +30,31 @@ def load_formula_generators():
     __all__.extend(name for name in loot.keys() if name not in __all__)
 
 
-# do the actual loading
-load_formula_generators()
 
+
+def load_formula_transformations():
+    """Load CNF transformations from `cnfformula.transformations`.
+
+    This code explores the submodules of `cnfformula.transformations` and
+    load the formula transformations, or at least the objects marked as
+    such with the `cnfformula.transformations.register_cnf_transformation`
+    function decorator.
+    """
+    
+    import sys
+    from cnfformula import transformations
+    from cnfformula.cmdline import find_methods_in_package
+    from cnfformula.transformations import is_cnf_transformation
+
+    loot = dict( (g.__name__, g)
+                 for g in find_methods_in_package(transformations,is_cnf_transformation))
+    
+
+    # Load the formula object into the namespace
+    self_ref = sys.modules[__name__]
+    self_ref.__dict__.update(loot)
+    __all__.extend(name for name in loot.keys() if name not in __all__)
+
+
+load_formula_generators()
+load_formula_transformations()
