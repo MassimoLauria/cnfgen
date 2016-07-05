@@ -14,8 +14,6 @@ Accept a cnf in dimacs format in input
 from __future__ import print_function
 import os
 
-from .. import available_transform
-from ..transformation import transform_compressed_clauses,StopClauses
 from . import dimacs2compressed_clauses
 
 

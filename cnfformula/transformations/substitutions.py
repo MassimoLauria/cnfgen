@@ -11,104 +11,16 @@ from cnfformula.transformations import register_cnf_transformation
 
 from itertools import combinations,product,permutations
 
-#
-# Transformation of a list of clauses
-#
-class StopClauses(StopIteration):
-    """Exception raised when an iterator of clauses finish.
-
-    Attributes:
-        variables -- number of variables in the clause stream
-        clauses   -- number of clauses streamed
-    """
-    def __init__(self, variables, clauses):
-        self.variables = variables
-        self.clauses = clauses
-
-
-def transform_compressed_clauses(clauses,method='none',rank=None):
-    """
-    Build a new CNF with by appling a transformation the old CNF. It
-    works on the compressed representation of a CNF: both input and
-    output of this transformation is a list of tuples of literals
-    represented as integer.
-
-    E.g. [(-1,2,3), (-2,1,5), (3,4,5)]
-
-    Arguments:
-    - `clauses`: a sequence of clause in DIMACS format
-    """
-
-    # Use a dummy lifting operation to get information about the
-    # lifting structure.
-    poslift=None
-    neglift=None
-    
-    dummycnf=CNF([[(True, "x")]])
-    dummycnf=TransformFormula(dummycnf,method,rank)
-
-    varlift    =dummycnf.transform_variable_preamble("x")
-    poslift    =dummycnf.transform_a_literal(True,"x")
-    neglift    =dummycnf.transform_a_literal(False,"x")
-
-    varlift    = [list(dummycnf._compress_clause(cls)) for cls in varlift ]
-    poslift    = [list(dummycnf._compress_clause(cls)) for cls in poslift ]
-    neglift    = [list(dummycnf._compress_clause(cls)) for cls in neglift ]
-    offset     = len(list(dummycnf.variables()))
-
-    # information about the input formula
-    input_variables = 0
-
-    output_clauses   = 0
-    output_variables = 0
-
-    def substitute(literal):
-        if literal>0:
-            var=literal
-            lift=poslift
-        else:
-            var=-literal
-            lift=neglift
-
-        substitute.max=max(var,substitute.max)
-        return [[ (l/abs(l))*offset*(var-1)+l for l in cls ] for cls in lift]
-
-    substitute.max=0
-           
-    for cls in clauses:
-
-        # a substituted clause is the OR of the substituted literals
-        domains=[ substitute(lit) for lit in cls ]
-        domains=tuple(domains)
-
-        for clause_tuple in product(*domains):
-            output_clauses +=1
-            yield [lit for clause in clause_tuple for lit in clause ]
-
-    # count the variables
-    input_variables  = substitute.max
-    output_variables = input_variables*offset
-
-    for i in xrange(input_variables):
-        for cls in varlift:
-            output_clauses += 1
-            yield [ (l/abs(l))*offset*i+l for l in cls ]
-
-    raise StopClauses(output_variables,output_clauses)
-
-
 ###
-### Transformation of CNFs
+### Substitions
 ###
 
-class TransformedCNF(CNF):
-    """Transformed formula
-
-    A formula is modified (usually made harder).
+class BaseSubstitution(CNF):
+    """Apply a substitution to a formula
     """
 
-    def __init__(self, cnf,rank=1):
-        """Build a new CNF with by maniputation of the old CNF
+    def __init__(self, cnf):
+        """Build a new CNF substituting variables
 
         Arguments:
         - `cnf`: the original cnf
@@ -200,7 +112,7 @@ class TransformedCNF(CNF):
 
 
 @register_cnf_transformation
-class IfThenElseSubstitution(TransformedCNF):
+class IfThenElseSubstitution(BaseSubstitution):
     """Transformed formula: substitutes variable with a three variables
     if-then-else
     """
@@ -214,7 +126,7 @@ class IfThenElseSubstitution(TransformedCNF):
         """
         self._rank = rank
 
-        TransformedCNF.__init__(self,cnf)
+        BaseSubstitution.__init__(self,cnf)
 
         self._header="If-Then-Else substituted formula\n\n".format(self._rank) \
             +self._header
@@ -236,7 +148,7 @@ class IfThenElseSubstitution(TransformedCNF):
 
 
 @register_cnf_transformation
-class MajoritySubstitution(TransformedCNF):
+class MajoritySubstitution(BaseSubstitution):
     """Transformed formula: substitutes variable with a Majority
     """
     def __init__(self, cnf, rank):
@@ -249,7 +161,7 @@ class MajoritySubstitution(TransformedCNF):
         """
         self._rank = rank
 
-        TransformedCNF.__init__(self,cnf)
+        BaseSubstitution.__init__(self,cnf)
 
         self._header="Majority {} substituted formula\n\n".format(self._rank) \
             +self._header
@@ -280,7 +192,7 @@ class MajoritySubstitution(TransformedCNF):
 
 
 @register_cnf_transformation
-class OrSubstitution(TransformedCNF):
+class OrSubstitution(BaseSubstitution):
     """Transformed formula: substitutes variable with a OR
     """
     def __init__(self, cnf, rank):
@@ -293,7 +205,7 @@ class OrSubstitution(TransformedCNF):
         """
         self._rank = rank
 
-        TransformedCNF.__init__(self,cnf)
+        BaseSubstitution.__init__(self,cnf)
 
         self._header="OR {} substituted formula\n\n".format(self._rank) \
             +self._header
@@ -316,7 +228,7 @@ class OrSubstitution(TransformedCNF):
 
 
 @register_cnf_transformation
-class AllEqualSubstitution(TransformedCNF):
+class AllEqualSubstitution(BaseSubstitution):
     """Transformed formula: substitutes variable with 'all equals'
     """
     def __init__(self, cnf, rank):
@@ -329,7 +241,7 @@ class AllEqualSubstitution(TransformedCNF):
         """
         self._rank = rank
 
-        TransformedCNF.__init__(self,cnf)
+        BaseSubstitution.__init__(self,cnf)
 
         self._header="EQ {} substituted formula\n\n".format(self._rank) \
             +self._header
@@ -379,7 +291,7 @@ class NotAllEqualSubstitution(AllEqualSubstitution):
         return AllEqualSubstitution.transform_a_literal(self,not polarity,varname)
 
 @register_cnf_transformation
-class XorSubstitution(TransformedCNF):
+class XorSubstitution(BaseSubstitution):
     """Transformed formula: substitutes variable with a XOR
     """
     def __init__(self, cnf, rank):
@@ -392,7 +304,7 @@ class XorSubstitution(TransformedCNF):
         """
         self._rank = rank
 
-        TransformedCNF.__init__(self,cnf)
+        BaseSubstitution.__init__(self,cnf)
 
         self._header="XOR {} substituted formula\n\n".format(self._rank) \
             +self._header
@@ -410,7 +322,7 @@ class XorSubstitution(TransformedCNF):
         return parity_constraint(names,polarity)
 
 @register_cnf_transformation
-class FormulaLifting(TransformedCNF):
+class FormulaLifting(BaseSubstitution):
     """Formula lifting: Y variable select X values
     """
     def __init__(self, cnf, rank):
@@ -422,7 +334,7 @@ class FormulaLifting(TransformedCNF):
         """
         self._rank = rank
 
-        TransformedCNF.__init__(self,cnf)
+        BaseSubstitution.__init__(self,cnf)
 
         self._header="Formula with lifting with selectors over {} values\n\n".format(self._rank) \
             +self._header
@@ -462,7 +374,7 @@ class FormulaLifting(TransformedCNF):
 
 
 @register_cnf_transformation
-class ExactlyOneSubstitution(TransformedCNF):
+class ExactlyOneSubstitution(BaseSubstitution):
     """Transformed formula: exactly one variable is true
     """
     def __init__(self, cnf, rank):
@@ -475,7 +387,7 @@ class ExactlyOneSubstitution(TransformedCNF):
         """
         self._rank = rank
 
-        TransformedCNF.__init__(self,cnf)
+        BaseSubstitution.__init__(self,cnf)
 
         self._header="Formula transformed by \"exactly one\""+ \
                      " substitution over {} values\n\n".format(self._rank) \
@@ -505,25 +417,6 @@ class ExactlyOneSubstitution(TransformedCNF):
                 clauses.append([(False,name)]+
                                [(True,other) for other in varnames if other!=name])
         return clauses
-
-
-def TransformFormula(cnf,t_method,t_arity=None):
-    """Transform a formula using one of the known methods
-    
-    Arguments:
-    - `cnf`: the formula to be transformed
-    - `t_method`: a string naming the transformation method
-    - `t_rank`: the arity of the transformation method
-    """
-    implemented_transformations=available()
-    if not t_method in implemented_transformations:
-        raise ValueError("There is no implementation for transformation {}".format(t_method))
-    
-    method=implemented_transformations[t_method][1]
-    arity=t_arity or implemented_transformations[t_method][2]
-
-    return method(cnf,arity)
-
 
 
 #
@@ -605,7 +498,7 @@ class MajSubstitution:
 
     @staticmethod
     def transform_cnf(F,args):
-        return  Majority(F,args.N)
+        return  MajoritySubstitution(F,args.N)
 
 @register_cnf_transformation_subcommand
 class IfThenElseSubstitutionCmd:

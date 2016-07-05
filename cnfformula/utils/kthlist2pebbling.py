@@ -14,31 +14,15 @@ from __future__ import print_function
 
 import os
 
-from .. import available_transform
-from ..transformation import transform_compressed_clauses,StopClauses
-
-
-
+import cnfformula
 import sys
 import argparse
+from itertools import product
 
 #################################################################
 #          Command line tool follows
 #################################################################
 
-
-class HelpTransformAction(argparse.Action):
-    def __init__(self, **kwargs):
-        super(HelpTransformAction, self).__init__(**kwargs)
-
-    def __call__(self, parser, namespace, value, option_string=None):
-        print("""
-        Formula transformations available
-        """)
-        for k,entry in available_transform().iteritems():
-            print("{}\t:  {}".format(k,entry[0]))
-        print("\n")
-        sys.exit(0)
 
 ###
 ### Command line helpers
@@ -60,33 +44,6 @@ def setup_command_line(parser):
                         way to send the formula to standard output.
                         (default: -)
                         """)
-
-    g=parser.add_mutually_exclusive_group()
-    g.add_argument('--noheader', '-n',action='store_false',dest='header',
-                   help="""Do not output the preamble, so that formula generation is faster (one
-                           pass on the data).""")
-    parser.add_argument('--Transform','-T',
-                        metavar="<transformation method>",
-                        choices=available_transform().keys(),
-                        default='none',
-                        help="""
-                        Transform the CNF formula to make it harder.
-                        See `--help-transformation` for more informations
-                        """)
-    parser.add_argument('--Tarity','-Ta',
-                        metavar="<transformation arity>",
-                        type=int,
-                        default=None,
-                        help="""
-                        Hardness parameter for the transformation procedure.
-                        See `--help-transform` for more informations
-                        """)
-    parser.add_argument('--help-transform',nargs=0,action=HelpTransformAction,help="""
-                        Formula can be made harder applying some
-                        so called "transformation procedures".
-                        This gives information about the implemented transformation.
-                        """)
-
     parser.add_argument('--input','-i',
                         type=argparse.FileType('r',0),
                         metavar="<input>",
@@ -97,6 +54,21 @@ def setup_command_line(parser):
                         input.  (default: -)
                         """)
 
+
+    
+    # Cmdline parser for formula transformations    
+    from cnfformula import transformations
+    from cnfformula.cmdline import is_cnf_transformation_subcommand
+    from cnfformula.cmdline import find_methods_in_package
+
+    subparsers = parser.add_subparsers(title="Available transformation",
+                                       metavar="<transformation>")
+    for sc in find_methods_in_package(transformations,
+                                      is_cnf_transformation_subcommand,
+                                      sortkey=lambda x:x.name):
+        p=subparsers.add_parser(sc.name,help=sc.description)
+        sc.setup_command_line(p)
+        p.set_defaults(transformation=sc)
 
 def pebbling_formula_compressed_clauses(adjfile):
     """
@@ -127,41 +99,106 @@ def pebbling_formula_compressed_clauses(adjfile):
     yield [-target]
 
 
+def transform_compressed_clauses(clauses,pattern):
+    """Apply to clauses the transformation applied to a pattern formula
+
+    Build new clauses by appling exactly the same transformation
+    applied to a pattern CNF. It works on the compressed
+    representation the clauses: both input and output of this
+    transformation is a list of tuples of literals represented
+    as integer.
+
+    E.g. [(-1,2,3), (-2,1,5), (3,4,5)]
+
+    Very HACKING implementation
+
+    Parameters
+    ----------
+    clauses: list(tuple(int))
+        a sequence of clause in compressed format
+
+    pattern : a CNF 
+        this CNF must have been subjected to the same transformation, and 
+        the transformed formula must have at least a variable
+    """
+
+    # We need one variable from the pattern
+    assert len(list(pattern._orig_cnf.variables()))>0
+    pattern_var = list(pattern._orig_cnf.variables())[0]
+    
+    varlift    =pattern.transform_variable_preamble(pattern_var)
+    poslift    =pattern.transform_a_literal(True, pattern_var)
+    neglift    =pattern.transform_a_literal(False,pattern_var)
+
+    varlift    = [list(pattern._compress_clause(cls)) for cls in varlift ]
+    poslift    = [list(pattern._compress_clause(cls)) for cls in poslift ]
+    neglift    = [list(pattern._compress_clause(cls)) for cls in neglift ]
+    offset     = len(list(pattern.variables()))
+
+    # information about the input formula
+    input_variables = 0
+
+    output_clauses   = 0
+    output_variables = 0
+
+    def substitute(literal):
+        if literal>0:
+            var=literal
+            lift=poslift
+        else:
+            var=-literal
+            lift=neglift
+
+        substitute.max=max(var,substitute.max)
+        return [[ (l/abs(l))*offset*(var-1)+l for l in cls ] for cls in lift]
+
+    substitute.max=0
+           
+    for cls in clauses:
+
+        # a substituted clause is the OR of the substituted literals
+        domains=[ substitute(lit) for lit in cls ]
+        domains=tuple(domains)
+
+        for clause_tuple in product(*domains):
+            output_clauses +=1
+            yield [lit for clause in clause_tuple for lit in clause ]
+
+    # count the variables
+    input_variables  = substitute.max
+    output_variables = input_variables*offset
+
+    for i in xrange(input_variables):
+        for cls in varlift:
+            output_clauses += 1
+            yield [ (l/abs(l))*offset*i+l for l in cls ]
+
+
 ### Produce the dimacs output from the data
-def kthlist2pebbling(inputfile, method, rank, output, header=True):
+def kthlist2pebbling(inputfile, output, args):
     # Build the lifting mechanism
 
     # Generate the basic formula
-    if header:
-        
-        from cStringIO import StringIO
-        output_cache=StringIO()
+    from cStringIO import StringIO
+    output_cache=StringIO()
 
-    else:
-        output_cache=output
-        
+    pattern = args.transformation.transform_cnf(
+        cnfformula.CNF([[(True,'y')]]),
+        args)
+    
     cls_iter=transform_compressed_clauses(
         pebbling_formula_compressed_clauses(inputfile),
-        method,rank)
+        pattern)
 
-    try:
-
-        while True:
-            cls = cls_iter.next()
-            print(" ".join([str(l) for l in cls])+" 0",file=output_cache)
+    for cls in cls_iter:
+        print(" ".join([str(l) for l in cls])+" 0",file=output_cache)
             
-    except StopClauses as cnfinfo:
+    # except StopClauses as cnfinfo:
 
-        if header:
-            # clauses cached in memory
-            print("p cnf {} {}".format(cnfinfo.variables,cnfinfo.clauses),
-                  file=output)
-            output.write(output_cache.getvalue())
-
-        else:
-            # clauses have been already sent to output
-            pass    
-        return cnfinfo
+    #     print("p cnf {} {}".format(cnfinfo.variables,cnfinfo.clauses),
+    #           file=output)
+    output.write(output_cache.getvalue())
+    #return cnfinfo
 
 ###
 ### Register signals
@@ -180,26 +217,13 @@ signal.signal(signal.SIGINT, signal_handler)
 ###
 def command_line_utility(argv=sys.argv):
 
-    # Python 2.6 does not have argparse library
-    try:
-        import argparse
-    except ImportError:
-        print("Sorry: %s requires `argparse` library, which is missing.\n"%argv[0],file=sys.stderr)
-        print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
-        print(" * http://pypi.python.org/pypi/argparse",file=sys.stderr)
-        print(" * http://code.google.com/p/argparse",file=sys.stderr)
-        print("",file=sys.stderr)
-        exit(-1)
-
     # Parse the command line arguments
     parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]))
     setup_command_line(parser)
-
-    # Process the options
     args=parser.parse_args(argv[1:])
 
-    kthlist2pebbling(args.input, args.Transform, args.Tarity, args.output, args.header)
-
+    kthlist2pebbling(args.input, args.output, args)
+    
 ### Launcher
 if __name__ == '__main__':
     command_line_utility(sys.argv)
