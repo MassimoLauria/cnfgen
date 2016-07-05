@@ -690,8 +690,8 @@ class CNF(object):
         is possible to indicate which interface to use, or more
         specifically which known solver interface to mimic.
 
-        >>> F.is_satisfiable(F,cmd='minisat-style-solver',sameas='minisat')  # doctest: +SKIP
-        >>> F.is_satisfiable(F,cmd='dimacs-style-solver',sameas='lingeling') # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='minisat-style-solver',sameas='minisat')  # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='dimacs-style-solver',sameas='lingeling') # doctest: +SKIP
 
         Parameters
         ----------
