@@ -18,9 +18,9 @@ def _load_formula_generators():
     """
     
     import sys
-    from cnfformula import families
-    from cnfformula.cmdline import find_methods_in_package
-    from cnfformula.families import is_cnf_generator
+    from . import families
+    from .cmdline import find_methods_in_package
+    from .families import is_cnf_generator
 
     loot = dict( (g.__name__, g)
                  for g in find_methods_in_package(families,is_cnf_generator))
@@ -44,9 +44,9 @@ def _load_formula_transformations():
     """
     
     import sys
-    from cnfformula import transformations
-    from cnfformula.cmdline import find_methods_in_package
-    from cnfformula.transformations import is_cnf_transformation
+    from . import transformations
+    from .cmdline import find_methods_in_package
+    from .transformations import is_cnf_transformation
 
     loot = dict( (g.__name__, g)
                  for g in find_methods_in_package(transformations,is_cnf_transformation))
