@@ -198,7 +198,10 @@ def find_methods_in_package(package,test, sortkey=None):
     
     for loader, module_name, _ in  pkgutil.walk_packages(package.__path__):
         module_name = package.__name__+"."+module_name
-        module = loader.find_module(module_name).load_module(module_name)
+        if module_name in sys.modules:
+            module = sys.modules[module_name]
+        else:
+            module = loader.find_module(module_name).load_module(module_name)
         for objname in dir(module):
             obj = getattr(module, objname)
             if test(obj):
