@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-from cnfformula.cnf import CNF
+from .cnf import CNF
+from .graphs import readGraph,writeGraph
+from .cnfgen import command_line_utility as cnfgen
 
 
-__all__ = ["CNF"]
+__all__ = ["CNF","readGraph","writeGraph"]
 
 
-def load_formula_generators():
+def _load_formula_generators():
     """Load CNF generators from `cnfformula.families`.
 
     This code explores the submodules of `cnfformula.families` and
@@ -32,7 +34,7 @@ def load_formula_generators():
 
 
 
-def load_formula_transformations():
+def _load_formula_transformations():
     """Load CNF transformations from `cnfformula.transformations`.
 
     This code explores the submodules of `cnfformula.transformations` and
@@ -56,5 +58,5 @@ def load_formula_transformations():
     __all__.extend(name for name in loot.keys() if name not in __all__)
 
 
-load_formula_generators()
-load_formula_transformations()
+_load_formula_generators()
+_load_formula_transformations()
