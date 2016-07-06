@@ -6,6 +6,7 @@ from .test_commandline_helper import TestCommandline
 
 import unittest
 import networkx as nx
+import sys
 
 class TestOrderingPrinciple(TestCNFBase):
     def test_empty(self):
@@ -50,17 +51,17 @@ class TestOrderingPrincipleCommandline(TestCommandline):
                 for smart in (True,False):
                     for plant in (True,False):
                         for knuth in (0,2,3):
-                            parameters = ["op", elements]
+                            parameters = ["cnfgen","op", elements]
                             if total : parameters.append("--total")
                             if smart : parameters.append("--smart")
                             if plant : parameters.append("--plant")
                             if knuth : parameters.append("--knuth{}".format(knuth))
                             switches = len(filter(None,(total,smart,knuth)))
                             if (switches>1) :
-                                self.checkCrash(parameters)
+                                self.checkCrash(sys.stdin,parameters)
                             else :
                                 F = OrderingPrinciple(elements,total,smart,plant,knuth)
-                                self.checkFormula(F, parameters)
+                                self.checkFormula(sys.stdin,F, parameters)
 
 class TestGraphOrderingPrincipleCommandline(TestCommandline):
     def test_complete(self):
@@ -69,15 +70,15 @@ class TestGraphOrderingPrincipleCommandline(TestCommandline):
                 for smart in (True,False):
                     for plant in (True,False):
                         for knuth in (0,2,3):
-                            parameters = ["gop", "--complete", elements]
+                            parameters = ["cnfgen","gop", "--complete", elements]
                             if total : parameters.append("--total")
                             if smart : parameters.append("--smart")
                             if plant : parameters.append("--plant")
                             if knuth : parameters.append("--knuth{}".format(knuth))
                             switches = len(filter(None,(total,smart,knuth)))
                             if (switches>1) :
-                                self.checkCrash(parameters)
+                                self.checkCrash(sys.stdin,parameters)
                             else :
                                 graph = nx.complete_graph(elements)
                                 F = GraphOrderingPrinciple(graph,total,smart,plant,knuth)
-                                self.checkFormula(F, parameters)
+                                self.checkFormula(sys.stdin,F, parameters)

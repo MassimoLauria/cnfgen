@@ -1,5 +1,6 @@
 import networkx as nx
 
+import sys
 from cnfformula import CNF
 from cnfformula import SubsetCardinalityFormula
 
@@ -79,11 +80,11 @@ class TestSubsetCardinalityCommandline(TestCommandline):
     def test_complete(self):
         for rows in range(2,5):
             for columns in range(2,5):
-                parameters = ["subsetcard", "--bcomplete", rows, columns]
+                parameters = ["cnfgen","subsetcard", "--bcomplete", rows, columns]
                 graph = complete_bipartite_graph_proper(rows, columns)
                 F = SubsetCardinalityFormula(graph)
-                self.checkFormula(F, parameters)
+                self.checkFormula(sys.stdin,F, parameters)
 
     def test_not_bipartite(self):
-        parameters = ["subsetcard", "--complete", "3"]
-        self.checkCrash(parameters)
+        parameters = ["cnfgen","subsetcard", "--complete", "3"]
+        self.checkCrash(sys.stdin, parameters)

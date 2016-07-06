@@ -1,5 +1,6 @@
 import networkx as nx
 
+import sys
 from cnfformula import CNF
 from cnfformula import PigeonholePrinciple, GraphPigeonholePrinciple
 
@@ -141,11 +142,11 @@ class TestPigeonholePrincipleCommandline(TestCommandline):
             for holes in range(2,5):
                 for functional in (True,False):
                     for onto in (True,False):
-                        parameters = ["php", pigeons, holes]
+                        parameters = ["cnfgen", "php", pigeons, holes]
                         if functional : parameters.append("--functional")
                         if onto : parameters.append("--onto")
                         F = PigeonholePrinciple(pigeons,holes,functional,onto)
-                        self.checkFormula(F, parameters)
+                        self.checkFormula(sys.stdin,F, parameters)
 
 class TestGraphPigeonholePrincipleCommandline(TestCommandline):
     def test_complete(self):
@@ -153,13 +154,13 @@ class TestGraphPigeonholePrincipleCommandline(TestCommandline):
             for holes in range(2,5):
                 for functional in (True,False):
                     for onto in (True,False):
-                        parameters = ["gphp", "--bcomplete", pigeons, holes]
+                        parameters = ["cnfgen","gphp", "--bcomplete", pigeons, holes]
                         if functional : parameters.append("--functional")
                         if onto : parameters.append("--onto")
                         graph = complete_bipartite_graph_proper(pigeons,holes)
                         F = GraphPigeonholePrinciple(graph,functional,onto)
-                        self.checkFormula(F, parameters)
+                        self.checkFormula(sys.stdin,F, parameters)
 
     def test_not_bipartite(self):
-        parameters = ["gphp", "--complete", "3"]
-        self.checkCrash(parameters)
+        parameters = ["cnfgen","gphp", "--complete", "3"]
+        self.checkCrash(sys.stdin,parameters)

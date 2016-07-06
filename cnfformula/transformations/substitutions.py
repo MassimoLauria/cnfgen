@@ -126,7 +126,8 @@ class IfThenElseSubstitution(BaseSubstitution):
         """
         self._rank = rank
 
-        BaseSubstitution.__init__(self,cnf)
+        super(IfThenElseSubstitution,self).__init__(cnf)
+
 
         self._header="If-Then-Else substituted formula\n\n".format(self._rank) \
             +self._header
@@ -161,7 +162,7 @@ class MajoritySubstitution(BaseSubstitution):
         """
         self._rank = rank
 
-        BaseSubstitution.__init__(self,cnf)
+        super(MajoritySubstitution,self).__init__(cnf)
 
         self._header="Majority {} substituted formula\n\n".format(self._rank) \
             +self._header
@@ -205,7 +206,7 @@ class OrSubstitution(BaseSubstitution):
         """
         self._rank = rank
 
-        BaseSubstitution.__init__(self,cnf)
+        super(OrSubstitution,self).__init__(cnf)
 
         self._header="OR {} substituted formula\n\n".format(self._rank) \
             +self._header
@@ -241,7 +242,7 @@ class AllEqualSubstitution(BaseSubstitution):
         """
         self._rank = rank
 
-        BaseSubstitution.__init__(self,cnf)
+        super(AllEqualSubstitution,self).__init__(cnf)
 
         self._header="EQ {} substituted formula\n\n".format(self._rank) \
             +self._header
@@ -275,7 +276,7 @@ class NotAllEqualSubstitution(AllEqualSubstitution):
         - `cnf`: the original cnf
         - `rank`: how many variables in each or
         """
-        AllEqualSubstitution.__init__(self,cnf,rank)
+        super(NotAllEqualSubstitution,self).__init__(cnf,rank)
 
         self._header="N"+self._header
 
@@ -304,7 +305,7 @@ class XorSubstitution(BaseSubstitution):
         """
         self._rank = rank
 
-        BaseSubstitution.__init__(self,cnf)
+        super(XorSubstitution,self).__init__(cnf)
 
         self._header="XOR {} substituted formula\n\n".format(self._rank) \
             +self._header
@@ -334,7 +335,7 @@ class FormulaLifting(BaseSubstitution):
         """
         self._rank = rank
 
-        BaseSubstitution.__init__(self,cnf)
+        super(FormulaLifting,self).__init__(cnf)
 
         self._header="Formula with lifting with selectors over {} values\n\n".format(self._rank) \
             +self._header
@@ -387,7 +388,7 @@ class ExactlyOneSubstitution(BaseSubstitution):
         """
         self._rank = rank
 
-        BaseSubstitution.__init__(self,cnf)
+        super(ExactlyOneSubstitution,self).__init__(cnf)
 
         self._header="Formula transformed by \"exactly one\""+ \
                      " substitution over {} values\n\n".format(self._rank) \

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import cnfformula.cnfgen as cnfgen
 import cnfformula.transformations as transformations
 import cnfformula.cmdline as cmdline
@@ -8,7 +9,7 @@ from .test_commandline_helper import TestCommandline, stderr_redirector
 
 class TestCnfgen(TestCommandline):
     def test_empty(self):
-        self.checkCrash([])
+        self.checkCrash(sys.stdin,["cnfgen"])
 
     def test_help(self):
         with self.assertRaises(SystemExit) as cm:
@@ -29,7 +30,7 @@ class TestCnfgen(TestCommandline):
             self.assertEqual(cm.exception.code, 0)
 
     def test_nonformula_empty(self):
-        self.checkCrash(["spam"])
+        self.checkCrash(sys.stdin,["cnfgen","peb","--tree",2,"-T","spam"])
 
     def test_nonformula_help(self):
-        self.checkCrash(["spam", "-h"])
+        self.checkCrash(sys.stdin,["cnfgen","peb","--tree",2,"-T","spam", "-h"])
