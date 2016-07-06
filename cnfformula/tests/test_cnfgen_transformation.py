@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+
 import cnfformula.cnfgen as cnfgen
 import cnfformula.transformations as transformations
 import cnfformula.cmdline as cmdline

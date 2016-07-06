@@ -547,3 +547,131 @@ class FormulaLiftingCmd:
     def transform_cnf(F,args):
         return FormulaLifting(F,args.N)
 
+
+#
+# Command line helpers for these substitutions
+#
+@register_cnf_transformation_subcommand
+class NoSubstitutionCmd:
+    name='none'
+    description='no transformation'
+
+    @staticmethod
+    def setup_command_line(parser):
+        pass
+
+    @staticmethod
+    def transform_cnf(F,args):
+        return F
+
+@register_cnf_transformation_subcommand
+class OrSubstitutionCmd:
+    name='or'
+    description='substitute variable x with OR(x1,x2,...,xN)'
+
+    @staticmethod
+    def setup_command_line(parser):
+        parser.add_argument('N',type=int,nargs='?',default=2,action='store',help="arity (default: 2)")
+
+    @staticmethod
+    def transform_cnf(F,args):
+        return  OrSubstitution(F,args.N)
+
+@register_cnf_transformation_subcommand
+class XorSubstitutionCmd:
+    name='xor'
+    description='substitute variable x with XOR(x1,x2,...,xN)'
+
+    @staticmethod
+    def setup_command_line(parser):
+        parser.add_argument('N',type=int,nargs='?',default=2,action='store',help="arity (default: 2)")
+
+    @staticmethod
+    def transform_cnf(F,args):
+        return  XorSubstitution(F,args.N)
+
+@register_cnf_transformation_subcommand
+class AllEqualsSubstitutionCmd:
+    name='eq'
+    description='substitute variable x with predicate x1==x2==...==xN (i.e. all equals)'
+
+    @staticmethod
+    def setup_command_line(parser):
+        parser.add_argument('N',type=int,nargs='?',default=2,action='store',help="arity (default: 3)")
+
+    @staticmethod
+    def transform_cnf(F,args):
+        return  AllEqualSubstitution(F,args.N)
+
+@register_cnf_transformation_subcommand
+class NeqSubstitutionCmd:
+    name='neq'
+    description='substitute variable x with predicate |{x1,x2,...,xN}|>1 (i.e. not all equals)'
+
+    @staticmethod
+    def setup_command_line(parser):
+        parser.add_argument('N',type=int,nargs='?',default=2,action='store',help="arity (default: 3)")
+
+    @staticmethod
+    def transform_cnf(F,args):
+        return  NotAllEqualSubstitution(F,args.N)
+
+@register_cnf_transformation_subcommand
+class MajSubstitution:
+    name='maj'
+    description='substitute variable x with predicate Majority(x1,x2,...,xN)'
+
+    @staticmethod
+    def setup_command_line(parser):
+        parser.add_argument('N',type=int,nargs='?',default=2,action='store',help="arity (default: 3)")
+
+    @staticmethod
+    def transform_cnf(F,args):
+        return  Majority(F,args.N)
+
+@register_cnf_transformation_subcommand
+class IfThenElseSubstitutionCmd:
+    name='ite'
+    description='substitute variable x with predicate "if X then Y else Z"'
+
+    @staticmethod
+    def setup_command_line(parser):
+        pass
+    
+    @staticmethod
+    def transform_cnf(F,args):
+        return  IfThenElseSubstitution(F)
+
+@register_cnf_transformation_subcommand
+class ExactlyOneSubstitutionCmd:
+    name='one'
+    description='substitute variable x with predicate x1+x2+...+xN = 1'
+
+    @staticmethod
+    def setup_command_line(parser):
+        parser.add_argument('N',type=int,nargs='?',default=2,action='store',help="arity (default: 3)")
+    
+    @staticmethod
+    def transform_cnf(F,args):
+        return  ExactlyOneSubstitution(F,args.N)
+
+
+
+# Technically lifting is not a substitution, therefore it should be in
+# another file. Unfortunately there is a lot of dependency from
+# this one.
+@register_cnf_transformation_subcommand
+class FormulaLiftingCmd:
+    """Lifting 
+    """
+    name='lift'
+    description='one dimensional lifting  x -->  x1 y1  OR ... OR xN yN, with y1+..+yN = 1'
+
+    @staticmethod
+    def setup_command_line(parser):
+        parser.add_argument('N',type=int,nargs='?',default=2,action='store',help="arity (default: 3)")
+    
+    @staticmethod
+    def transform_cnf(F,args):
+        return FormulaLifting(F,args.N)
+
