@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Utilities to build dimacs encoding of pebbling formulas
 
-Accepts only the adjacency list graph format:
+Accepts only the kthlist graph format:
 
 ASSUMPTIONS: the graph is given with a line for each vertex, from
 sources to a *single sink*.
@@ -87,7 +87,7 @@ signal.signal(signal.SIGINT, signal_handler)
 ###
 ### Main program
 ###
-def kthlist2pebbling(argv=sys.argv):
+def command_line_utility(argv=sys.argv):
 
     # Parse the command line arguments
     parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]))
@@ -99,7 +99,7 @@ def kthlist2pebbling(argv=sys.argv):
     Fstart = cnfformula.PebblingFormula(G)
 
     Ftransform = args.transformation.transform_cnf(Fstart,args)
-    print(Ftransform.dimacs())
+    print(Ftransform.dimacs(),file=args.output)
     
 ### Launcher
 if __name__ == '__main__':
