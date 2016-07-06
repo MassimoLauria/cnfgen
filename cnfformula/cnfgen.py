@@ -125,11 +125,11 @@ def command_line_utility(argv=sys.argv):
 
 
     # Formula generators cmdline setup 
-    from cnfformula import families
-    from cnfformula.cmdline import is_cnfgen_subcommand
-    from cnfformula import transformations
-    from cnfformula.cmdline import is_cnf_transformation_subcommand
-    from cnfformula.cmdline import find_methods_in_package
+    import families
+    import transformations
+    from .cmdline import is_cnfgen_subcommand
+    from .cmdline import is_cnf_transformation_subcommand
+    from .cmdline import find_methods_in_package
 
     
     # Cmdline parser for formula transformations

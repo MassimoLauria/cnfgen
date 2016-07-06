@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from cStringIO import StringIO
 import sys
 
-import cnfformula.cnfgen as cnfgen
+from cnfformula import cnfgen
 
 @contextmanager
 def stdout_redirector(stream):
@@ -39,7 +39,7 @@ def stdin_redirector(stream):
     
 class TestCommandline(unittest.TestCase):
     
-    def checkFormula(self, indata, expected_cnf, args, cmdline=cnfgen.command_line_utility):
+    def checkFormula(self, indata, expected_cnf, args, cmdline=cnfgen):
         """Test that a formula generation process produces the expected formula.
 
         This calls a function that execute a generation process using
@@ -83,7 +83,7 @@ class TestCommandline(unittest.TestCase):
                 
         self.assertEqual(f.getvalue(),expected_cnf.dimacs()+'\n')
 
-    def checkCrash(self, indata, args, cmdline=cnfgen.command_line_utility):
+    def checkCrash(self, indata, args, cmdline=cnfgen):
         parameters = [str(x) for x in args]
         f = StringIO()
         with stdin_redirector(indata),stderr_redirector(f), self.assertRaises(SystemExit) as cm:
