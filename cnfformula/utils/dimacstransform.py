@@ -89,4 +89,4 @@ def command_line_utility(argv=sys.argv):
     
 ### Launcher
 if __name__ == '__main__':
-    dimacstransform(sys.argv)
+    command_line_utility(sys.argv)
