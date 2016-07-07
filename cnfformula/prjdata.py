@@ -7,8 +7,8 @@ __author__              = 'Massimo Lauria'
 __author_email__        = 'lauria.massimo@gmail.com'
 __aurhor_string__       = __author__ + ' <' + __author_email__ + '>'
 
-__version_short__       = '0.5.5'
-__version_long__        = '0.5.5.2'
+__version_short__       = '0.6.0'
+__version_long__        = '0.6.0.0'
 __version__             = __version_long__
 
 __copyright__           = '2012-2016 '+ __author__ + ' <' + __author_email__ + '>'
