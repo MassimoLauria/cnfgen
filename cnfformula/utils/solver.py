@@ -358,24 +358,23 @@ def is_satisfiable(F, cmd=None, sameas=None):
     ----------
     F: a CNF formula object
        check the satisfiablility of this formula
-    
+
     cmd: string,optional
        the actual command line used to invoke the SAT solver
-    
+
     sameas: string, optional
        use the interface of one of the supported solvers, indicated in
        input. Useful when the solver ont the command line is not supported.
 
     Examples
     --------
-    >>> F.is_satisfiable()                                              # doctest: +SKIP
-    >>> F.is_satisfiable(cmd='minisat -no-pre')                         # doctest: +SKIP
-    >>> F.is_satisfiable(cmd='glucose -pre')                            # doctest: +SKIP
-    >>> F.is_satisfiable(cmd='lingeling --plain')                       # doctest: +SKIP
-    >>> F.is_satisfiable(cmd='sat4j')                                   # doctest: +SKIP
-    >>> F.is_satisfiable(cmd='my-hacked-minisat -pre',sameas='minisat') # doctest: +SKIP
-    >>> F.is_satisfiable(cmd='patched-lingeling',sameas='lingeling')    # doctest: +SKIP
-
+    >>> is_satisfiable(F)                                               # doctest: +SKIP
+    >>> is_satisfiable(F,cmd='minisat -no-pre')                         # doctest: +SKIP
+    >>> is_satisfiable(F,cmd='glucose -pre')                            # doctest: +SKIP
+    >>> is_satisfiable(F,cmd='lingeling --plain')                       # doctest: +SKIP
+    >>> is_satisfiable(F,cmd='sat4j')                                   # doctest: +SKIP
+    >>> is_satisfiable(F,cmd='my-hacked-minisat -pre',sameas='minisat') # doctest: +SKIP
+    >>> is_satisfiable(F,cmd='patched-lingeling',sameas='lingeling')    # doctest: +SKIP
 
     Returns
     -------
@@ -409,8 +408,8 @@ def is_satisfiable(F, cmd=None, sameas=None):
     For the supported solver we can pick the right interface, but for
     other solvers it is impossible to guess. We suggest to use one of
 
-    is_satisfiable(F,cmd='minisat-style-solver',sameas='minisat')
-    is_satisfiable(F,cmd='dimacs-style-solver',sameas='lingeling')
+    >>> is_satisfiable(F,cmd='minisat-style-solver',sameas='minisat')  # doctest: +SKIP
+    >>> is_satisfiable(F,cmd='dimacs-style-solver',sameas='lingeling') # doctest: +SKIP
     """
 
     # Public API. Check the arguments
