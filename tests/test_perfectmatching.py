@@ -1,4 +1,5 @@
 import networkx as nx
+import sys
 
 from cnfformula import CNF
 from cnfformula import PerfectMatchingPrinciple, GraphPigeonholePrinciple, TseitinFormula
@@ -38,7 +39,7 @@ class TestPerfectMatching(TestCNFBase):
 class TestPerfectMatchingCommandline(TestCommandline):
     def test_complete(self):
         for n in range(2,5):
-            parameters = ["matching", "--complete", n]
+            parameters = ["cnfgen", "matching", "--complete", n]
             graph = nx.complete_graph(n)
             F = PerfectMatchingPrinciple(graph)
-            self.checkFormula(F, parameters)
+            self.checkFormula(sys.stdin,F, parameters)

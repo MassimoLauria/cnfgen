@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Utilities to build dimacs encoding of pebbling formulas
 
-Accepts only the adjacency list graph format:
+Accepts only the kthlist graph format:
 
 ASSUMPTIONS: the graph is given with a line for each vertex, from
 sources to a *single sink*.
@@ -14,11 +14,8 @@ from __future__ import print_function
 
 import os
 
-from .. import available_transform
-from ..transformation import transform_compressed_clauses,StopClauses
-
-
-
+import cnfformula
+import cnfformula.graphs as graphs
 import sys
 import argparse
 
@@ -26,19 +23,6 @@ import argparse
 #          Command line tool follows
 #################################################################
 
-
-class HelpTransformAction(argparse.Action):
-    def __init__(self, **kwargs):
-        super(HelpTransformAction, self).__init__(**kwargs)
-
-    def __call__(self, parser, namespace, value, option_string=None):
-        print("""
-        Formula transformations available
-        """)
-        for k,entry in available_transform().iteritems():
-            print("{}\t:  {}".format(k,entry[0]))
-        print("\n")
-        sys.exit(0)
 
 ###
 ### Command line helpers
@@ -60,33 +44,6 @@ def setup_command_line(parser):
                         way to send the formula to standard output.
                         (default: -)
                         """)
-
-    g=parser.add_mutually_exclusive_group()
-    g.add_argument('--noheader', '-n',action='store_false',dest='header',
-                   help="""Do not output the preamble, so that formula generation is faster (one
-                           pass on the data).""")
-    parser.add_argument('--Transform','-T',
-                        metavar="<transformation method>",
-                        choices=available_transform().keys(),
-                        default='none',
-                        help="""
-                        Transform the CNF formula to make it harder.
-                        See `--help-transformation` for more informations
-                        """)
-    parser.add_argument('--Tarity','-Ta',
-                        metavar="<transformation arity>",
-                        type=int,
-                        default=None,
-                        help="""
-                        Hardness parameter for the transformation procedure.
-                        See `--help-transform` for more informations
-                        """)
-    parser.add_argument('--help-transform',nargs=0,action=HelpTransformAction,help="""
-                        Formula can be made harder applying some
-                        so called "transformation procedures".
-                        This gives information about the implemented transformation.
-                        """)
-
     parser.add_argument('--input','-i',
                         type=argparse.FileType('r',0),
                         metavar="<input>",
@@ -98,70 +55,22 @@ def setup_command_line(parser):
                         """)
 
 
-def pebbling_formula_compressed_clauses(adjfile):
-    """
-    Read a graph from file, in the adjacency lists format. And output the list of
-    compressed clauses representing the pebbling formula.
-
-    The vertices MUST be listed from to sources to the *A SINGLE
-    SINK*.  In a topologically sorted fashion.
     
-    Arguments:
-    - `inputfile`:  file handle of the input
+    # Cmdline parser for formula transformations    
+    from cnfformula import transformations
+    from cnfformula.cmdline import is_cnf_transformation_subcommand
+    from cnfformula.cmdline import find_methods_in_package
 
-    """
-
-    for l in adjfile.readlines():
-        
-        # ignore comments
-        if l[0]=='c':
-            continue
-
-        if ':' not in l:
-            continue # vertex number spec
-
-        target,sources=l.split(':')
-        target=int(target.strip())
-        yield [ -int(i) for i in sources.split() ]+[target]
-
-    yield [-target]
+    subparsers = parser.add_subparsers(title="Available transformation",
+                                       metavar="<transformation>")
+    for sc in find_methods_in_package(transformations,
+                                      is_cnf_transformation_subcommand,
+                                      sortkey=lambda x:x.name):
+        p=subparsers.add_parser(sc.name,help=sc.description)
+        sc.setup_command_line(p)
+        p.set_defaults(transformation=sc)
 
 
-### Produce the dimacs output from the data
-def kthlist2pebbling(inputfile, method, rank, output, header=True):
-    # Build the lifting mechanism
-
-    # Generate the basic formula
-    if header:
-        
-        from cStringIO import StringIO
-        output_cache=StringIO()
-
-    else:
-        output_cache=output
-        
-    cls_iter=transform_compressed_clauses(
-        pebbling_formula_compressed_clauses(inputfile),
-        method,rank)
-
-    try:
-
-        while True:
-            cls = cls_iter.next()
-            print(" ".join([str(l) for l in cls])+" 0",file=output_cache)
-            
-    except StopClauses as cnfinfo:
-
-        if header:
-            # clauses cached in memory
-            print("p cnf {} {}".format(cnfinfo.variables,cnfinfo.clauses),
-                  file=output)
-            output.write(output_cache.getvalue())
-
-        else:
-            # clauses have been already sent to output
-            pass    
-        return cnfinfo
 
 ###
 ### Register signals
@@ -180,26 +89,18 @@ signal.signal(signal.SIGINT, signal_handler)
 ###
 def command_line_utility(argv=sys.argv):
 
-    # Python 2.6 does not have argparse library
-    try:
-        import argparse
-    except ImportError:
-        print("Sorry: %s requires `argparse` library, which is missing.\n"%argv[0],file=sys.stderr)
-        print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
-        print(" * http://pypi.python.org/pypi/argparse",file=sys.stderr)
-        print(" * http://code.google.com/p/argparse",file=sys.stderr)
-        print("",file=sys.stderr)
-        exit(-1)
-
     # Parse the command line arguments
     parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]))
     setup_command_line(parser)
-
-    # Process the options
     args=parser.parse_args(argv[1:])
 
-    kthlist2pebbling(args.input, args.Transform, args.Tarity, args.output, args.header)
+    G = graphs.readGraph(args.input,"dag",file_format="kthlist")
 
+    Fstart = cnfformula.PebblingFormula(G)
+
+    Ftransform = args.transformation.transform_cnf(Fstart,args)
+    print(Ftransform.dimacs(),file=args.output)
+    
 ### Launcher
 if __name__ == '__main__':
     command_line_utility(sys.argv)

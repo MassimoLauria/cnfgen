@@ -1,4 +1,5 @@
 import networkx as nx
+import sys
 
 from cnfformula import CNF
 from cnfformula import EvenColoringFormula, TseitinFormula
@@ -28,12 +29,12 @@ class TestEvenColouring(TestCNFBase):
 class TestEvenColouringCommandline(TestCommandline):
     def test_complete(self):
         for n in range(3,8,2):
-            parameters = ["ec", "--complete", n]
+            parameters = ["cnfgen","ec", "--complete", n]
             graph = nx.complete_graph(n)
             F = EvenColoringFormula(graph)
-            self.checkFormula(F, parameters)
+            self.checkFormula(sys.stdin,F, parameters)
 
     def test_odd_degree(self):
         for n in range(4,7,2):
-            parameters = ["ec", "--complete", n]
-            self.checkCrash(parameters)
+            parameters = ["cnfgen","ec", "--complete", n]
+            self.checkCrash(sys.stdin,parameters)

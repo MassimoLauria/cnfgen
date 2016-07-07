@@ -34,8 +34,6 @@ import os
 import sys
 import random
 
-from . import TransformFormula,available_transform
-
 # Python 2.6 does not have argparse library
 try:
     import argparse
@@ -52,19 +50,6 @@ except ImportError:
 #          Command line tool follows
 #################################################################
 
-
-class HelpTransformAction(argparse.Action):
-    def __init__(self, **kwargs):
-        super(HelpTransformAction, self).__init__(**kwargs)
-
-    def __call__(self, parser, namespace, value, option_string=None):
-        print("""
-        Formula transformations available
-        """)
-        for k,entry in available_transform().iteritems():
-            print("{}\t:  {}".format(k,entry[0]))
-        print("\n")
-        sys.exit(0)
 
 ###
 ### Command line helpers
@@ -105,51 +90,7 @@ def setup_command_line_args(parser):
                    help="""Output formula header and comments.""")
     g.add_argument('--quiet', '-q',action='store_false',dest='verbose',
                    help="""Output just the formula with no header.""")
-    parser.add_argument('--Transform','-T',
-                        metavar="<transformation method>",
-                        choices=available_transform().keys(),
-                        default='none',
-                        help="""
-                        Transform the CNF formula to make it harder.
-                        See `--help-transform` for more information
-                        """)
-    parser.add_argument('--Tarity','-Ta',
-                        metavar="<transformation arity>",
-                        type=int,
-                        default=None,
-                        help="""
-                        Hardness parameter for the transformation procedure.
-                        See `--help-transform` for more informations
-                        """)
-    parser.add_argument('--help-transform',nargs=0,action=HelpTransformAction,help="""
-                         Formula can be made harder applying some
-                         so called "transformation procedures".
-                         This gives information about the implemented transformation.
-                         """)
 
-###
-### Explore the cnfformula.families modules to find formula implementations
-###
-
-def find_formula_subcommands():
-    """Look in cnfformula.families package for implementations of CNFs"""
-
-    
-    import pkgutil
-    from .        import families
-    from .cmdline import is_cnfgen_subcommand
-
-    result = []
-    
-    for loader, module_name, _ in  pkgutil.walk_packages(families.__path__):
-        module_name = families.__name__+"."+module_name
-        module = loader.find_module(module_name).load_module(module_name)
-        for objname in dir(module):
-            obj = getattr(module, objname)
-            if is_cnfgen_subcommand(obj):
-                result.append(obj)
-    result.sort(key=lambda x: x.name)
-    return result
 
 
 
@@ -182,23 +123,79 @@ def command_line_utility(argv=sys.argv):
         The list of token with the command line arguments/options.
     """
 
-    # Main command line setup
-    parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),
-                                   epilog="""
-    Each <formula type> has its own command line arguments and options.
-    For more information type 'cnfgen <formula type> [--help | -h ]'
-    """)
-    setup_command_line_args(parser)
 
-    # Sub command lines setup 
+    # Formula generators cmdline setup 
+    import families
+    import transformations
+    from .cmdline import is_cnfgen_subcommand
+    from .cmdline import is_cnf_transformation_subcommand
+    from .cmdline import find_methods_in_package
+
+    
+    # Cmdline parser for formula transformations
+    t_parser = argparse.ArgumentParser(usage=os.path.basename(argv[0]) + " ..."
+                                       +" [-T <transformation> <params> -T <transformation> <params> ...]",
+                                       epilog="""Each <transformation> has its own command line arguments and options.
+                                       For more information type 'cnfgen ... -T <transformation> [--help | -h]'
+
+                                       """)
+    
+    t_subparsers = t_parser.add_subparsers(title="Available formula transformation",
+                                           metavar="<transformation>")
+    for sc in find_methods_in_package(transformations,
+                                      is_cnf_transformation_subcommand,
+                                      sortkey=lambda x:x.name):
+        p=t_subparsers.add_parser(sc.name,help=sc.description)
+        sc.setup_command_line(p)
+        p.set_defaults(transformation=sc)
+    
+    # Main cmdline setup
+    parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),
+                                   formatter_class=argparse.RawDescriptionHelpFormatter,
+                                   epilog=
+"""Each <formula type> has its own command line arguments and options.
+For more information type 'cnfgen <formula type> [--help | -h ]'.
+Furthermore it is possible to postprocess the formula by applying
+a sequence of transformations.
+
+"""+t_parser.format_help())
+    
+
+    setup_command_line_args(parser)
+    
+        
+    
     subparsers=parser.add_subparsers(title="Available formula types",metavar='<formula type>')
-    for sc in find_formula_subcommands():
+    for sc in find_methods_in_package(families,
+                                      is_cnfgen_subcommand,
+                                      sortkey=lambda x:x.name):
         p=subparsers.add_parser(sc.name,help=sc.description)
         sc.setup_command_line(p)
-        p.set_defaults(subcommand=sc)
+        p.set_defaults(generator=sc)
 
-    # Process the options
-    args=parser.parse_args(argv[1:])
+   
+        
+    # Split the command line into formula generation and transformation
+    # applications
+    def splitlist(L,key):
+        argbuffer=[]
+        for e in L:
+            if e == key:
+                yield argbuffer
+                argbuffer = []
+            else:
+                argbuffer.append(e)
+        yield argbuffer
+
+    cmd_chunks = list(splitlist(argv,"-T"))
+    generator_cmd = cmd_chunks[0][1:]
+    transformation_cmds = cmd_chunks[1:]
+    
+    # Parse the various component of the command line
+    args=parser.parse_args(generator_cmd)
+    t_args=[]
+    for cmd in transformation_cmds:
+        t_args.append(t_parser.parse_args(cmd))
 
     # If necessary, init the random generator
     if hasattr(args,'seed') and args.seed:
@@ -206,14 +203,15 @@ def command_line_utility(argv=sys.argv):
 
     # Generate the formula
     try:
-        cnf = args.subcommand.build_cnf(args)
+        cnf = args.generator.build_cnf(args)
     except ValueError as e:
         print(e, file=sys.stderr)
         sys.exit(os.EX_DATAERR)
-    if args.Transform == 'none':
-        tcnf = cnf
-    else:
-        tcnf = TransformFormula(cnf,args.Transform,args.Tarity)
+
+
+    # Apply the sequence of transformations
+    for argdict in t_args:
+        cnf = argdict.transformation.transform_cnf(cnf,argdict)
         
     # Output
     if args.output_format == 'latex':
@@ -227,14 +225,14 @@ def command_line_utility(argv=sys.argv):
                              "\\begin{lstlisting}[breaklines,basicstyle=\\small]\n" +\
                              args.subcommand.docstring+ \
                              "\\end{lstlisting}\n"
-        output = tcnf.latex(export_header=args.verbose,
+        output = cnf.latex(export_header=args.verbose,
                             full_document=True,extra_text=cmdline_descr)
         
     elif args.output_format == 'dimacs':
-        output = tcnf.dimacs(export_header=args.verbose)
+        output = cnf.dimacs(export_header=args.verbose)
 
     else:
-        output = tcnf.dimacs(export_header=args.verbose)
+        output = cnf.dimacs(export_header=args.verbose)
 
     print(output,file=args.output)
 

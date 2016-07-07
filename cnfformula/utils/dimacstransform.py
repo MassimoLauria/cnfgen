@@ -14,26 +14,12 @@ Accept a cnf in dimacs format in input
 from __future__ import print_function
 import os
 
-from .. import available_transform
-from ..transformation import transform_compressed_clauses,StopClauses
-from . import dimacs2compressed_clauses
+from . import dimacs2cnf
 
 
 import sys
-
-# Python 2.6 does not have argparse library
-try:
-    import argparse
-    from argparse import RawDescriptionHelpFormatter
-except ImportError:
-    print("Sorry: %s requires `argparse` library, which is missing.\n"%__progname__,file=sys.stderr)
-    print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
-    print(" * http://pypi.python.org/pypi/argparse",file=sys.stderr)
-    print(" * http://code.google.com/p/argparse",file=sys.stderr)
-    print("",file=sys.stderr)
-    exit(-1)
-
-
+import argparse
+import cnfformula
 
 def setup_command_line(parser):
     """Setup general command line options
@@ -41,23 +27,6 @@ def setup_command_line(parser):
     Arguments:
     - `parser`: parser to fill with options
     """
-    parser.add_argument('transformation',
-                        metavar="<method>",
-                        choices=available_transform().keys(),
-                        default='none',
-                        help="""
-                        Transformation method the CNF formula to make it harder.
-                        """)
-
-    parser.add_argument('hardness',
-                        metavar="<hardness>",
-                        nargs='?',
-                        type=int,
-                        default=None,
-                        help="""
-                        Hardness parameter for the transformation procedure.
-                        """)
-
     parser.add_argument('--input','-i',
                         type=argparse.FileType('r',0),
                         metavar="<input>",
@@ -78,81 +47,20 @@ def setup_command_line(parser):
                         (default: -)
                         """)
 
-    parser.add_argument('--noheader',
-                        '-n',action='store_false',dest='header',
-                        help="""Do not output the preamble, so that
-                        formula generation is faster (one pass on the
-                        data).""")
+    # Cmdline parser for formula transformations    
+    from cnfformula import transformations
+    from cnfformula.cmdline import is_cnf_transformation_subcommand
+    from cnfformula.cmdline import find_methods_in_package
 
+    subparsers = parser.add_subparsers(title="Available transformation",
+                                       metavar="<transformation>")
+    for sc in find_methods_in_package(transformations,
+                                      is_cnf_transformation_subcommand,
+                                      sortkey=lambda x:x.name):
+        p=subparsers.add_parser(sc.name,help=sc.description)
+        sc.setup_command_line(p)
+        p.set_defaults(transformation=sc)
 
-### Produce the dimacs output from the data
-def dimacstransform(inputfile, method, hardness, output, header=True):
-    """Applies the transformation to a DIMACS file. 
-
-    Parameters
-    ----------
-    inputfile : file
-        a file object containing the DIMACS CNF formula
-
-    method: string
-        the name of the transformation method
-
-    hardness: int or None
-        the hardness parameter. If None, then the default for the
-        transformation method is used.
-
-    output : file
-        the place where to print the output to.
- 
-    header: boolean
-        if `False` only the clauses will be printed. This is fast but 
-        does not produce a proper DIMACS file.
-
-    Returns
-    -------
-        an object with two fields: `variables` and `clauses` with 
-        the number of variables and clauses in the output formula
-     """
-    # Generate the basic formula
-    if header:
-        
-        from cStringIO import StringIO
-        output_cache=StringIO()
-
-    else:
-        output_cache=output
-
-    o_header,_,o_clauses = dimacs2compressed_clauses(inputfile)
-
-    cls_iter=transform_compressed_clauses(o_clauses,method,hardness)
-
-    try:
-
-        while True:
-            cls = cls_iter.next()
-            print(" ".join([str(l) for l in cls])+" 0",file=output_cache)
-            
-    except StopClauses as cnfinfo:
-
-        if header:
-            # clauses cached in memory
-            print("c Formula transformed with method '{}' and parameter {}\nc".format(method,hardness),
-                  file=output)
-
-            lines=o_header.split('\n')[:-1]
-
-            if len(lines)>0:
-                print("\n".join(("c "+line).rstrip() for line in lines),
-                      file=output)
-                
-            print("p cnf {} {}".format(cnfinfo.variables,cnfinfo.clauses),
-                  file=output)
-            output.write(output_cache.getvalue())
-
-        else:
-            # clauses have been already sent to output
-            pass    
-        return cnfinfo
 
 ###
 ### Register signals
@@ -171,28 +79,14 @@ signal.signal(signal.SIGINT, signal_handler)
 ###
 def command_line_utility(argv=sys.argv):
 
-    # Parse the command line arguments
-    help_epilogue = "Available transformations:\n\n" + \
-                    "\n".join("  {}\t:  {}".format(k,entry[0])
-                              for k,entry in available_transform().iteritems()) 
-    
-
-    parser=argparse.ArgumentParser(prog   = os.path.basename(argv[0]),
-                                   epilog = help_epilogue ,
-                                   formatter_class = RawDescriptionHelpFormatter)
-
-
+    parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]))
     setup_command_line(parser)
-
-    # Process the options
     args=parser.parse_args(argv[1:])
+    F = dimacs2cnf(args.input)
+    G = args.transformation.transform_cnf(F,args)
+    print(G.dimacs(),file=args.output)
 
-    dimacstransform(args.input,
-                    args.transformation,
-                    args.hardness,
-                    args.output,
-                    args.header)
-
+    
 ### Launcher
 if __name__ == '__main__':
-    command_line_utility(sys.argv)
+    dimacstransform(sys.argv)

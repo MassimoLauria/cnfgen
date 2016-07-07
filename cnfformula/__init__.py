@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-from cnfformula.cnf import CNF
-from cnfformula.transformation import TransformFormula
-from cnfformula.transformation import available as available_transform
+from .cnf import CNF
+from .graphs import readGraph,writeGraph
+from .cnfgen import command_line_utility as cnfgen
 
 
-__all__ = ["CNF","TransformFormula","available_transform"]
+__all__ = ["CNF","readGraph","writeGraph"]
 
 
-def load_formula_generators():
+def _load_formula_generators():
     """Load CNF generators from `cnfformula.families`.
 
     This code explores the submodules of `cnfformula.families` and
@@ -17,21 +17,14 @@ def load_formula_generators():
     function decorator.
     """
     
-    import pkgutil
     import sys
-    from .families import __path__ as bpath
-    from .families import __name__ as bname
+    from . import families
+    from .cmdline import find_methods_in_package
     from .families import is_cnf_generator
+
+    loot = dict( (g.__name__, g)
+                 for g in find_methods_in_package(families,is_cnf_generator))
     
-    loot = {}
-    
-    for loader, module_name, _ in  pkgutil.walk_packages(bpath):
-        module_name = bname+"."+module_name
-        module = loader.find_module(module_name).load_module(module_name)
-        for objname in dir(module):
-            obj = getattr(module, objname)
-            if is_cnf_generator(obj):
-                loot[objname] = obj
 
     # Load the formula generators in the `cnfformula` namespace
     self_ref = sys.modules[__name__]
@@ -39,6 +32,31 @@ def load_formula_generators():
     __all__.extend(name for name in loot.keys() if name not in __all__)
 
 
-# do the actual loading
-load_formula_generators()
 
+
+def _load_formula_transformations():
+    """Load CNF transformations from `cnfformula.transformations`.
+
+    This code explores the submodules of `cnfformula.transformations` and
+    load the formula transformations, or at least the objects marked as
+    such with the `cnfformula.transformations.register_cnf_transformation`
+    function decorator.
+    """
+    
+    import sys
+    from . import transformations
+    from .cmdline import find_methods_in_package
+    from .transformations import is_cnf_transformation
+
+    loot = dict( (g.__name__, g)
+                 for g in find_methods_in_package(transformations,is_cnf_transformation))
+    
+
+    # Load the formula object into the namespace
+    self_ref = sys.modules[__name__]
+    self_ref.__dict__.update(loot)
+    __all__.extend(name for name in loot.keys() if name not in __all__)
+
+
+_load_formula_generators()
+_load_formula_transformations()

@@ -1,5 +1,5 @@
 from cnfformula import CNF,PebblingFormula
-
+import sys
 from . import TestCNFBase
 from test_commandline_helper import TestCommandline
 
@@ -58,13 +58,11 @@ class TestPebblingCommandline(TestCommandline):
             G = nx.relabel_nodes(G,dict(zip(G.nodes(),reversed(G.nodes()))),True)
             G.name = 'Complete binary tree of height {}'.format(sz)
             F = PebblingFormula(G)
-            parameters = ["peb", "--tree", sz]
-            self.checkFormula(F, parameters)
+            self.checkFormula(sys.stdin,F, ["cnfgen","peb", "--tree", sz])
 
     def test_pyramid(self):
         G = nx.DiGraph()
         G.add_edges_from([(1,4),(2,4),(2,5),(3,5),(4,6),(5,6)])
         G.name = 'Pyramid of height 2'
         F = PebblingFormula(G)
-        parameters = ["peb", "--pyramid", 2]
-        self.checkFormula(F, parameters)
+        self.checkFormula(sys.stdin,F, ["cnfgen","peb", "--pyramid", 2])

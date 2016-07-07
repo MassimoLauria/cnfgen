@@ -116,6 +116,101 @@ def is_cnfgen_subcommand(cls):
     return hasattr(cls,__cnfgen_subcommand_mark)
 
 
+__cnf_transformation_subcommand_mark = "_is_cnf_transformation_subcommand"
+
+def register_cnf_transformation_subcommand(cls):
+    """Register the class as a transformation subcommand
+
+    CNFgen command line tool invokes subcommands to apply
+    transformations to formula families. This class decorator is used
+    to declare that a class is indeed the implementation of a formula
+    transformation subcommand. In this way CNFgen setup code will
+    automatically find it and integrate it into the CNFgen command
+    line interface.
+
+    The class argument is tested to check whether it is a suitable
+    implementation of a CNFgen subcommand.
+
+    In particular the class must have four attributes
+    
+    + ``name`` the name of the CNF transformation
+    + ``description`` a short description of the transformation
+    + ``setup_command_line`` a method that takes a command line parser object and populates it with appropriate options.
+    + ``transform_cnf`` a method that takes a CNF, the arguments and produce a new CNF.
+
+    The parser expected by ``setup_command_line(parser)`` in such as the one produced by
+    ``argparse.ArgumentParser``.
+
+    The arguments for ``transform_cnf(F,args)`` are a CNF, and the dictionary of flags and
+    options parsed from the command line as produced by ``args=parser.parse_args``
+
+    Parameters
+    ----------
+    class : any
+        the class to test
+
+    
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    AssertionError 
+        when the class is not a transformation subcommand
+
+    """
+    assert \
+        hasattr(cls,'transform_cnf') and \
+        hasattr(cls,'setup_command_line') and \
+        hasattr(cls,'name') and \
+        hasattr(cls,'description')
+
+    setattr(cls,__cnf_transformation_subcommand_mark,True)
+    return cls
+
+def is_cnf_transformation_subcommand(cls):
+    """Test whether the object is a registered CNFgen transformation
+
+    Parameters
+    ----------
+    class : any
+        the class to test
+
+    Returns
+    -------
+    bool
+    """
+    return hasattr(cls,__cnf_transformation_subcommand_mark)
+
+
+
+def find_methods_in_package(package,test, sortkey=None):
+    """Explore a package for functions and methods that implement a specific test"""
+
+    
+    import pkgutil
+
+    result = []
+
+    if sortkey == None :
+        sortkey = lambda x : x
+    
+    for loader, module_name, _ in  pkgutil.walk_packages(package.__path__):
+        module_name = package.__name__+"."+module_name
+        if module_name in sys.modules:
+            module = sys.modules[module_name]
+        else:
+            module = loader.find_module(module_name).load_module(module_name)
+        for objname in dir(module):
+            obj = getattr(module, objname)
+            if test(obj):
+                result.append(obj)
+    result.sort(key=sortkey)
+    return result
+            
+
+
 
 
 ### Graph readers/generators
