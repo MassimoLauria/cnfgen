@@ -27,7 +27,7 @@ class BaseSubstitution(CNF):
         """
         assert cnf._coherent
         self._orig_cnf = cnf
-        CNF.__init__(self,[],header=cnf._header)
+        super(BaseSubstitution,self).__init__([],header=cnf._header)
 
         # Load original variable names
         #
@@ -124,8 +124,9 @@ class IfThenElseSubstitution(BaseSubstitution):
         - `cnf`: the original cnf
         - `rank`: ignored
         """
-        super(IfThenElseSubstitution,self).__init__(cnf)
         self._rank = rank
+
+        super(IfThenElseSubstitution,self).__init__(cnf)
 
         self._header="If-Then-Else substituted formula\n\n".format(self._rank) \
             +self._header
@@ -202,12 +203,15 @@ class OrSubstitution(BaseSubstitution):
         - `cnf`: the original cnf
         - `rank`: how many variables in each or
         """
+        self._rank = rank
+
         super(OrSubstitution,self).__init__(cnf)
 
-        self._rank = rank
         self._header="OR {} substituted formula\n\n".format(self._rank) \
             +self._header
 
+        
+        
     def transform_a_literal(self, polarity,varname):
         """Substitute a positive literal with an OR,
         and negative literals with its negation.
