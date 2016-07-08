@@ -10,6 +10,58 @@ import cnfformula.families
 
 from textwrap import dedent
 from itertools import combinations
+from math import sqrt
+
+@cnfformula.families.register_cnf_generator
+def PythagoreanTriples(N):
+    """There is a Pythagorean triples free coloring on N 
+    
+    The formula claims that it is possible to bicolor the numbers from
+    1 to :math:`N` so that there  is no monochromatic triplet 
+    :math:`(x,y,z)` so that :math:`x^2+y^2=z^2`.
+
+    Parameters
+    ----------
+    N  : int
+         size of the interval
+
+    Return
+    ------
+    A CNF object
+
+    Raises
+    ------
+    ValueError
+       Parameters are not positive integers
+
+    """
+
+    ptn=CNF()
+
+    ptn.header=dedent("""
+It is possible to bicolor the numbers from
+1 to {} so that there  is no monochromatic triplets
+(x,y,z) such that x^2+y^2=z^2
+
+""".format(N)) + ptn.header
+
+    def V(i):
+        return "x_{{{}}}".format(i)
+
+    # Variables represent the coloring of the number
+    for i in xrange(1,N+1):
+        ptn.add_variable(V(i))
+
+        
+    for x,y in combinations(range(1,N+1),2):
+        z = int(sqrt(x**2 +  y**2))
+        if z <=N and z**2 == x**2 + y**2:
+            ptn.add_clause([ (True, V(x)), (True, V(y)), (True, V(z))],strict=True)
+            ptn.add_clause([ (False,V(x)), (False,V(y)), (False,V(z))],strict=True)
+
+    return ptn
+
+
 
 @cnfformula.families.register_cnf_generator
 def RamseyLowerBoundFormula(s,k,N):
@@ -84,5 +136,31 @@ class RamseyCmdHelper(object):
         - `args`: command line options
         """
         return RamseyLowerBoundFormula(args.s, args.k, args.N)
+
+
+@cnfformula.cmdline.register_cnfgen_subcommand
+class PTNCmdHelper(object):
+    """Command line helper for RamseyNumber formulas
+    """
+    name='ptn'
+    description='Bicoloring of N with no monochromatic Pythagorean Triples'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Ramsey formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('N',metavar='<N>',type=int,help="Size of the domain")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a Ramsey formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        return PythagoreanTriples(args.N)
 
 
