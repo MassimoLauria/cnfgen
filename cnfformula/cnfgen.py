@@ -219,11 +219,11 @@ a sequence of transformations.
             "\\begin{lstlisting}[breaklines]\n" + \
             "$ cnfgen " + " ".join(argv[1:]) + "\n" + \
             "\\end{lstlisting}\n"
-        if hasattr(args.subcommand,"docstring"):
+        if hasattr(args.generator,"docstring"):
             cmdline_descr += \
                              "\\noindent\\textbf{Docstring:}\n" +\
                              "\\begin{lstlisting}[breaklines,basicstyle=\\small]\n" +\
-                             args.subcommand.docstring+ \
+                             args.generator.docstring+ \
                              "\\end{lstlisting}\n"
         output = cnf.latex(export_header=args.verbose,
                             full_document=True,extra_text=cmdline_descr)
