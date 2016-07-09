@@ -34,6 +34,11 @@ def PythagoreanTriples(N):
     ValueError
        Parameters are not positive integers
 
+    References
+    ----------
+    .. [1] M. J. Heule, O. Kullmann, and V. W. Marek. 
+           Solving and verifying the boolean pythagorean triples problem via cube-and-conquer. 
+           arXiv preprint arXiv:1605.00723, 2016.
     """
 
     ptn=CNF()
@@ -140,14 +145,14 @@ class RamseyCmdHelper(object):
 
 @cnfformula.cmdline.register_cnfgen_subcommand
 class PTNCmdHelper(object):
-    """Command line helper for RamseyNumber formulas
+    """Command line helper for PTN formulas
     """
     name='ptn'
     description='Bicoloring of N with no monochromatic Pythagorean Triples'
 
     @staticmethod
     def setup_command_line(parser):
-        """Setup the command line options for Ramsey formula
+        """Setup the command line options for PTN formula
 
         Arguments:
         - `parser`: parser to load with options.
