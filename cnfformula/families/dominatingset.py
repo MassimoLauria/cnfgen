@@ -11,7 +11,7 @@ from cnfformula.cmdline import SimpleGraphHelper
 from cnfformula.cmdline  import register_cnfgen_subcommand
 from cnfformula.families import register_cnf_generator
 
-from itertools import combinations,product
+from itertools import combinations,combinations_with_replacement,product
 
 
 @register_cnf_generator
@@ -87,7 +87,7 @@ def DominatingSet(G,d, alternative = False):
             for i,j in combinations(range(1,d+1),2):
                 F.add_clause([(False,D(v)),(False,M(v,i)),(False,M(v,j))])
     else:
-        for i,j in combinations(range(1,d+1),2):
+        for i,j in combinations_with_replacement(range(1,d+1),2):
             i,j = min(i,j),max(i,j)
             for u,v in combinations(V,2):
                 u,v = max(u,v),min(u,v)
