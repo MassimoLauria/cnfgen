@@ -113,7 +113,7 @@ def DominatingSet(G,d, alternative = False):
 class DominatingSetCmdHelper(object):
     """Command line helper for k-dominating set
     """
-    name='dominating'
+    name='domset'
     description='k-Dominating set'
 
     @staticmethod
