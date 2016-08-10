@@ -15,7 +15,7 @@ setup(
     author_email = p.__author_email__,
     url          = p.__url__,
     license      = p.__license__,
-    packages     = find_packages(".", exclude=["*.tests"]),
+    packages     = find_packages(".", exclude=["tests"]),
     entry_points={
         'console_scripts': [
             'cnfgen=cnfformula.cnfgen:command_line_utility',
