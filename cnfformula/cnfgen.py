@@ -60,6 +60,8 @@ def setup_command_line_args(parser):
     Arguments:
     - `parser`: parser to fill with options
     """
+    from cnfformula.prjdata import __version__
+    parser.add_argument('-V', '--version', action='version', version="%(prog)s ("+__version__+")")
     parser.add_argument('--output','-o',
                         type=argparse.FileType('wb',0),
                         metavar="<output>",
