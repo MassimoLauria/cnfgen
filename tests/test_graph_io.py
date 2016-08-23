@@ -38,7 +38,19 @@ gml_path2 = """
 
 dimacs_path2 ="p edge 3 2\ne 1 2\ne 2 3\n"
 
+kthlist_non_bipartite="""
+5
+1: 2 3
+5: 3 4
+4: 5
+"""
 
+kthlist_non_dag="""
+3
+1: 2
+2: 3
+3: 1
+"""
 
 class TestGraphIO(unittest.TestCase) :
 
@@ -95,6 +107,22 @@ class TestGraphIO(unittest.TestCase) :
         G = readGraph(sio(dimacs_path2), graph_type='simple', file_format = 'dimacs')
         self.assertEqual(G.order(), 3)
         self.assertEqual(len(G.edges()), 2)
+
+    def test_readGraph_kthlist_non_dag(self) :
+
+        self.assertRaises(ValueError, readGraph, sio(kthlist_non_dag), graph_type='digraph')
+        self.assertRaises(ValueError, readGraph, sio(kthlist_non_dag), graph_type='dag',file_format = 'kthlist')
+        G = readGraph(sio(kthlist_non_dag), graph_type='digraph', file_format = 'kthlist')
+        self.assertEqual(G.order(), 3)
+        self.assertEqual(len(G.edges()), 3)
+
+    def test_readGraph_kthlist_non_bipartite(self) :
+
+        self.assertRaises(ValueError, readGraph, sio(kthlist_non_bipartite), graph_type='bipartite')
+        self.assertRaises(ValueError, readGraph, sio(kthlist_non_bipartite), graph_type='bipartite',file_format = 'kthlist')
+        G = readGraph(sio(kthlist_non_bipartite), graph_type='simple', file_format = 'kthlist')
+        self.assertEqual(G.order(), 5)
+        self.assertEqual(len(G.edges()), 4)
 
     def test_readGraph_dot_path2_file(self) :
 

@@ -22,7 +22,7 @@ _graphformats = {
     'dag':   ['kthlist','gml','dot'],
     'digraph': ['kthlist','gml','dot','dimacs'],
     'simple': ['kthlist','gml','dot','dimacs'],
-    'bipartite': ['matrix','gml','dot']
+    'bipartite': ['kthlist','matrix','gml','dot']
     }
 
 def supported_formats():
@@ -280,7 +280,7 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
 
     elif file_format=='kthlist':
 
-        G=_read_graph_kthlist_format(input_file,grtype)
+        G=_read_graph_kthlist_format(input_file,grtype, bipartition = (graph_type == 'bipartite'))
 
     elif file_format=='dimacs':
 
@@ -456,13 +456,19 @@ def enumerate_vertices(graph):
 #
 
 # kth graph format reader
-def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph):
+def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartition = False):
     """Read a graph from file, in the KTH reverse adjacency lists format.
 
     If the vertices are listed from to sources to the sinks, then the
     graph is marked as topologically sorted, and any DAG test will be
     answered without running any visit to the graph. Otherwise no
     assumption is made.
+
+    If the file is supposed to represent a bipartite graph (i.e.
+    when `bipartition` parameters is true) then each target node of an
+    edge will be part of the left side and and each source node will
+    be on the right side. Vertices that are never named are considered
+    to be isolated vertices on the right side.
     
     Parameters
     ----------
@@ -472,6 +478,10 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph):
     graph_class: class object
         the graph class to read, one of networkx.DiGraph (default)
         networkx.MultiDiGraph networkx.Graph networkx.MultiGraph
+
+    bipartition : boolean
+        enforce that each edge (u,v) is such that u in in the left size
+
     """
     if not graph_class in [networkx.DiGraph,
                            networkx.MultiDiGraph,
@@ -519,14 +529,29 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph):
 
         # Load vertices in the graph
         if target not in G:
+
             G.add_node(target)
+            if bipartition:
+                G.node[target]['bipartite']=0
             G.ordered_vertices.append(target)
+
+        elif bipartition and G.node[target]['bipartite']==1:
+            raise ValueError("[Input error] "+
+                             "Graph is bipartite and vertex {} occurs on the both sides.".format(target))
+            
 
         for vertex in sources:
             if vertex not in G:
-                topologically_sorted_input = False
+
+                topologically_sorted_input = False 
                 G.add_node(vertex)
+                if bipartition:
+                    G.node[vertex]['bipartite']=1
                 G.ordered_vertices.append(vertex)
+
+            elif bipartition and G.node[vertex]['bipartite']==0:
+                raise ValueError("[Input error] "+
+                                 "Graph is bipartite and vertex {} occurs on both sides.".format(vertex))
               
         # after vertices, add the edges
         for s in sources:
