@@ -86,7 +86,7 @@ def _satsolve_filein_fileout(F, cmd='minisat'):
 
     if len(output) == 0:
 
-        raise RuntimeError("Error during SAT solver call.\n")
+        raise RuntimeError("Error during SAT solver call: {}.\n".format(" ".join([cmd,cnf.name, sat.name])))
 
     elif output[0] == 'SAT':
 
@@ -102,7 +102,7 @@ def _satsolve_filein_fileout(F, cmd='minisat'):
 
     else:
 
-        raise RuntimeError("Error during SAT solver call.\n")
+        raise RuntimeError("Error during SAT solver call: {}.\n".format(" ".join([cmd,cnf.name, sat.name])))
 
     return (result, result and witness or None)
 
@@ -191,7 +191,7 @@ def _satsolve_stdin_stdout(F, cmd='lingeling'):
                         for el in line.split() if el != "v" and el != "0"]
 
     if result is None:
-        raise RuntimeError("Error during SAT solver call.\n")
+        raise RuntimeError("Error during SAT solver call: {}.\n".format(cmd))
 
     # Now witness is a list [v1,v2,...,vn] where vi is either -i or
     # +i, to represent the assignment. We translate this to our
@@ -274,8 +274,8 @@ def _satsolve_filein_stdout(F, cmd='sat4j'):
                         for el in line.split() if el != "v" and el != "0"]
 
     if result is None:
-        raise RuntimeError("Error during SAT solver call.\n")
-
+        raise RuntimeError("Error during SAT solver call: {}.\n".format(cmd+" "+cnf.name))
+        
     # Now witness is a list [v1,v2,...,vn] where vi is either -i or
     # +i, to represent the assignment. We translate this to our
     # desired output.
@@ -294,7 +294,7 @@ _SATSOLVER_INTERFACE = {
     'march': _satsolve_filein_stdout,
     'cryptominisat': _satsolve_stdin_stdout,
     'minisat': _satsolve_filein_fileout,
-    'glucose': _satsolve_filein_fileout,
+    'glucose': _satsolve_stdin_stdout,
     'sat4j': _satsolve_filein_stdout,
 }
 
