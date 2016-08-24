@@ -5,6 +5,7 @@ import unittest
 import cnfformula
 from cnfformula.graphs import readGraph,writeGraph,supported_formats
 from cnfformula.graphs import find_read_dot,has_dot_library
+from cnfformula.graphs import bipartite_sets
 
 from StringIO import StringIO as sio
 import networkx as nx
@@ -43,6 +44,7 @@ kthlist_non_bipartite="""
 1: 2 3
 5: 3 4
 4: 5
+2: 3
 """
 
 kthlist_non_dag="""
@@ -50,6 +52,13 @@ kthlist_non_dag="""
 1: 2
 2: 3
 3: 1
+"""
+kthlist_bipartite="""
+5
+1: 2 
+2: 1
+3: 
+4: 1
 """
 
 class TestGraphIO(unittest.TestCase) :
@@ -122,7 +131,15 @@ class TestGraphIO(unittest.TestCase) :
         self.assertRaises(ValueError, readGraph, sio(kthlist_non_bipartite), graph_type='bipartite',file_format = 'kthlist')
         G = readGraph(sio(kthlist_non_bipartite), graph_type='simple', file_format = 'kthlist')
         self.assertEqual(G.order(), 5)
-        self.assertEqual(len(G.edges()), 4)
+        self.assertEqual(len(G.edges()), 5)
+
+    def test_readGraph_kthlist_bipartite(self) :
+
+        G = readGraph(sio(kthlist_bipartite), graph_type='bipartite', file_format = 'kthlist')
+        self.assertEqual(G.order(), 5)
+        L,R=bipartite_sets(G)
+        self.assertEqual(len(L),2)
+        self.assertEqual(len(R),3)
 
     def test_readGraph_dot_path2_file(self) :
 

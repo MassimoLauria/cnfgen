@@ -9,7 +9,7 @@ from __future__ import print_function
 
 __all__ = ["supported_formats",
            "readGraph","writeGraph",
-           "is_dag","has_bipartition","enumerate_vertices",
+           "is_dag","has_bipartition","enumerate_vertices","enumerate_edges","neighbors",
            "bipartite_random_left_regular", "bipartite_random_regular",
            "dag_complete_binary_tree", "dag_pyramid"]
 
@@ -427,8 +427,8 @@ def has_bipartition(G):
     return True
 
 def bipartite_sets(G):
-    Left  =  [v for v,d in G.nodes(data=True) if d['bipartite']==0]
-    Right =  [v for v,d in G.nodes(data=True) if d['bipartite']==1]
+    Left  =  sorted([v for v,d in G.nodes(data=True) if d['bipartite']==0])
+    Right =  sorted([v for v,d in G.nodes(data=True) if d['bipartite']==1])
     return Left, Right
 
 
@@ -436,21 +436,47 @@ def bipartite_sets(G):
 # Use, when possible, a fixed vertex order
 #
 def enumerate_vertices(graph):
-    """Compute an ordered list of vertices of `graph`
+    """Return the ordered list of vertices of `graph`
 
-    If the graph as the field `ordered_vertices` use it. Otherwise
-    give an arbitrary vertex sequence.
-
-    Arguments:
-    - `graph`: input graph
+    Parameters
+    ----------
+    graph : input graph
     """
     if hasattr(graph,"ordered_vertices"):
         assert graph.order()==len(graph.ordered_vertices)
         assert set(graph.nodes())==set(graph.ordered_vertices)
         return graph.ordered_vertices
     else:
-        return graph.nodes()
+        setattr(graph,"ordered_vertices",sorted(graph.nodes()))
+        return graph.ordered_vertices
 
+def enumerate_edges(graph):
+    """Return the ordered list of edges of `graph`
+
+    Parameters
+    ----------
+    graph : input graph
+    """
+    if hasattr(graph,"ordered_edges"):
+        assert set(graph.edges())==set(graph.ordered_edges)
+        return graph.ordered_edges
+    else:
+        setattr(graph,"ordered_edges",sorted(graph.edges()))
+        return graph.ordered_edges
+
+    
+def neighbors(graph,v):
+    """Return the ordered list of neighbors ov a vertex
+
+    Parameters
+    ----------
+    graph : input graph
+
+    v : vertex
+    """
+    return sorted(graph.neighbors(v))
+
+    
 #
 # In-house parsers
 #
@@ -500,7 +526,7 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
     # vertex number
     nvertex=-1
     vertex_cnt=-1
-
+    
     for i,l in enumerate(inputfile.readlines()):
         
         # add the comment to the header
@@ -521,46 +547,60 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
             if nvertex<0:
                 raise ValueError("[Input error] "+
                                  "Non negative number of vertices expected at line {}.".format(i))
+            G.add_nodes_from(range(1,nvertex+1))
+            G.ordered_vertices=range(1,nvertex+1)
             continue
-        
+
+        # Load edges from this line
         target,sources=l.split(':')
         target=int(target.strip())
         sources=[int(s) for s in sources.split()]
 
-        # Load vertices in the graph
-        if target not in G:
-
-            G.add_node(target)
-            if bipartition:
-                G.node[target]['bipartite']=0
-            G.ordered_vertices.append(target)
-
-        elif bipartition and G.node[target]['bipartite']==1:
+        if target < 1 or target > nvertex:
             raise ValueError("[Input error] "+
-                             "Graph is bipartite and vertex {} occurs on the both sides.".format(target))
-            
+                             "Vertex ID out of range [1,{}] expected at line {}.".format(nvertex,i))
 
-        for vertex in sources:
-            if vertex not in G:
+        if len([x for x in sources if x < 1 or x > nvertex]):
+            raise ValueError("[Input error] "+
+                             "Vertex ID out of range [1,{}] expected at line {}.".format(nvertex,i))
 
+        # Vertices should appear in increasing order if the graph is topologically sorted
+        for s in sources:
+            if s <= target:
                 topologically_sorted_input = False 
-                G.add_node(vertex)
-                if bipartition:
-                    G.node[vertex]['bipartite']=1
-                G.ordered_vertices.append(vertex)
 
-            elif bipartition and G.node[vertex]['bipartite']==0:
+        # Check the bi-coloring on both side
+        if bipartition:
+            colors = [ G.node[s]['bipartite'] for s in sources if 'bipartite' in G.node[s] ]
+
+            if 'bipartite' in G.node[target]:
+                colors += [ 1 - G.node[target]['bipartite'] ]
+
+            if len(set(colors))>1:
                 raise ValueError("[Input error] "+
-                                 "Graph is bipartite and vertex {} occurs on both sides.".format(vertex))
+                                 "Greedy bicoloring incompatible with edges in line {}.".format(i))
+
+            default_color = 0 if len(colors)==0 else 1-colors[0]
+            G.node[target]['bipartite'] = default_color
+            for s in sources:
+                G.node[s]['bipartite'] = 1-default_color
+                
               
         # after vertices, add the edges
         for s in sources:
             G.add_edge(s,target)
 
+    # label the bipartition on residual vertices
+    if bipartition:
+        for v in G.ordered_vertices:
+            if 'bipartite' not in G.node[v]:
+                G.node[v]['bipartite']=1
+
+            
     # cache the information that the graph is topologically sorted.
     if topologically_sorted_input:
         G.topologically_sorted = True
-
+        
     if nvertex!=G.order():
         raise ValueError("[Input error] "+
                          "{} vertices expected. Got {} instead.".format(nvertex,G.order()))
