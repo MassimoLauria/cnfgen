@@ -106,6 +106,21 @@ def signal_handler(insignal, frame):
 
 signal.signal(signal.SIGINT,signal_handler)
 
+
+def search_cmdline_input_file(list_args):
+    """Look for input file arguments in the command line
+
+    Parameters
+    ----------
+    list_args : list of parsed command lines
+    """
+    for l in list_args:
+        data = vars(l).iteritems()
+        data = [ v for k,v in data if not k.startswith("_")]
+        data = [ f for f in data if isinstance(f,file)]
+        data = [ f for f in data if (f != sys.stdin) and f.mode=='r']
+    return data
+
 ###
 ### Main program
 ###
@@ -226,11 +241,13 @@ a sequence of transformations.
                               "\\begin{lstlisting}[breaklines,basicstyle=\\small]",
                               args.generator.docstring,
                               "\\end{lstlisting}"]
-        if hasattr(args.input,"name") and args.input != sys.stdin:
-            args.input.seek(0,0)
-            cmdline_descr += ["\\noindent\\textbf{Input file \\texttt{%s}}"%args.input.name,
+
+
+        for f in search_cmdline_input_file([args]+t_args):
+            f.seek(0,0)
+            cmdline_descr += ["\\noindent\\textbf{Input file \\texttt{%s}}"%f.name,
                               "\\begin{lstlisting}[breaklines,basicstyle=\\small]" ] + \
-                              args.input.readlines() + \
+                              f.readlines() + \
                               ["\\end{lstlisting}"]
 
         output = cnf.latex(export_header=args.verbose,
