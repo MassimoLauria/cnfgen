@@ -961,28 +961,7 @@ def bipartite_random_regular(l,r,d,seed=None):
                 return bipartite_random_regular(l,r,d)
 
     return G
-
-def _bipartite_nx_workaroud(G):
-    """Workaround for bipartition labels
-
-    The complete bipartite graph does not set the bipartite vertex
-    labels appropriately.
-
-    ..note:: 
-        This will be superfluous in Networkx 2.0, since the bug was fixed there.
-    """
-    if G.name[:24] !='complete_bipartite_graph':
-        return G
-
-    right_start = min(G.adj[0])
     
-    # Mark the bipartition
-    for i in range(0,right_start):
-        G.add_node(i,bipartite=0)
-    for i in range(right_start,G.order()):
-        G.add_node(i,bipartite=1)
-
-
 
 def dag_pyramid(height):
     """Generates the pyramid DAG

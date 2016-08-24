@@ -601,7 +601,12 @@ class BipartiteGraphHelper(GraphHelper):
             
             l,r = args.bcomplete
             G=complete_bipartite_graph(l,r)
-
+            # Workaround: the bipartite labels are missing in old version of networkx
+            for i in range(0,l):
+                G.add_node(i,bipartite=0)
+            for i in range(l+1,l+r):
+                G.add_node(i,bipartite=1)
+            
         elif args.graphformat is not None:
 
             try:
@@ -613,10 +618,7 @@ class BipartiteGraphHelper(GraphHelper):
         else:
             raise RuntimeError("Invalid graph specification on command line")
             
-        # Ensure the bipartite labels
-        from cnfformula import graphs
-        graphs._bipartite_nx_workaroud(G)
-
+        
 
         # Graph modifications
         if args.plantbiclique is not None:
