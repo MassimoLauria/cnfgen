@@ -419,7 +419,8 @@ def has_bipartition(G):
     """
     try: 
         for n in G.nodes():
-            if not G.node[n]['bipartite'] in [0,1]:
+            # Accept both string and int representation
+            if not G.node[n]['bipartite'] in [0,1,'0','1']:
                 return False
     except KeyError:
         return False
@@ -427,8 +428,8 @@ def has_bipartition(G):
     return True
 
 def bipartite_sets(G):
-    Left  =  sorted([v for v,d in G.nodes(data=True) if d['bipartite']==0])
-    Right =  sorted([v for v,d in G.nodes(data=True) if d['bipartite']==1])
+    Left  =  sorted([v for v,d in G.nodes(data=True) if d['bipartite'] in [0,'0'] ])
+    Right =  sorted([v for v,d in G.nodes(data=True) if d['bipartite'] in [1,'1'] ])
     return Left, Right
 
 
