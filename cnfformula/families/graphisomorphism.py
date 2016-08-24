@@ -9,7 +9,8 @@ from cnfformula.cmdline import SimpleGraphHelper
 from cnfformula.cmdline  import register_cnfgen_subcommand
 from cnfformula.families import register_cnf_generator
 
-from itertools import combinations
+from cnfformula.graphs import enumerate_vertices
+from itertools import combinations,product
 
 
 
@@ -42,32 +43,33 @@ def GraphIsomorphism(G1, G2):
     F.header = "Graph Isomorphism problem between graphs " +\
                G1.name + " and " + G2.name + "\n" + F.header
 
-    pairs = [(u, v) for u in G1.nodes() for v in G2.nodes()]
+    U=enumerate_vertices(G1)
+    V=enumerate_vertices(G2)
     var = _graph_isomorphism_var
 
-    for (u, v) in pairs:
+    for (u, v) in product(U,V):
         F.add_variable(var(u, v))
 
     # Defined on both side
-    for u in G1.nodes():
-        F.add_clause([(True, var(u, v)) for v in G2.nodes()], strict=True)
+    for u in U:
+        F.add_clause([(True, var(u, v)) for v in V], strict=True)
 
-    for v in G2.nodes():
-        F.add_clause([(True, var(u, v)) for u in G1.nodes()], strict=True)
+    for v in V:
+        F.add_clause([(True, var(u, v)) for u in U], strict=True)
 
     # Injective on both sides
-    for u in G1.nodes():
-        for v1, v2 in combinations(G2.nodes(), 2):
+    for u in U:
+        for v1, v2 in combinations(V, 2):
             F.add_clause([(False, var(u, v1)),
                           (False, var(u, v2))], strict=True)
-    for v in G2.nodes():
-        for u1, u2 in combinations(G1.nodes(), 2):
+    for v in V:
+        for u1, u2 in combinations(U, 2):
             F.add_clause([(False, var(u1, v)),
                           (False, var(u2, v))], strict=True)
 
     # Edge consistency
-    for u1, u2 in combinations(G1.nodes(), 2):
-        for v1, v2 in combinations(G2.nodes(), 2):
+    for u1, u2 in combinations(U, 2):
+        for v1, v2 in combinations(V, 2):
             if G1.has_edge(u1, u2) != G2.has_edge(v1, v2):
                 F.add_clause([(False, var(u1, v1)),
                               (False, var(u2, v2))], strict=True)
@@ -100,7 +102,7 @@ def GraphAutomorphism(G):
 
     var = _graph_isomorphism_var
 
-    F.add_clause([(False, var(u, u)) for u in G.nodes()], strict=True)
+    F.add_clause([(False, var(u, u)) for u in enumerate_vertices(G)], strict=True)
 
     return F
 

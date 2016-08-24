@@ -10,6 +10,7 @@ from cnfformula.cmdline  import register_cnfgen_subcommand
 from cnfformula.families import register_cnf_generator
 
 from cnfformula.cnf import equal_to_constraint
+from cnfformula.graphs import enumerate_vertices,neighbors
 from itertools import combinations
 
 
@@ -52,14 +53,15 @@ def CountingPrinciple(M,p):
 
 
 @register_cnf_generator
-def PerfectMatchingPrinciple(graph):
+def PerfectMatchingPrinciple(G):
     """Generates the clauses for the graph perfect matching principle.
     
     The principle claims that there is a way to select edges to such
     that all vertices have exactly one incident edge set to 1.
 
-    Arguments:
-    - `graph`  : undirected graph
+    Parameters
+    ----------
+    G : undirected graph
 
     """
     cnf=CNF()
@@ -67,8 +69,8 @@ def PerfectMatchingPrinciple(graph):
     # Describe the formula
     name="Perfect Matching Principle"
     
-    if hasattr(graph,'name'):
-        cnf.header=name+" of graph:\n"+graph.name+"\n"+cnf.header
+    if hasattr(G,'name'):
+        cnf.header=name+" of graph:\n"+G.name+"\n"+cnf.header
     else:
         cnf.header=name+".\n"+cnf.header
 
@@ -79,9 +81,9 @@ def PerfectMatchingPrinciple(graph):
             return 'x_{{{0},{1}}}'.format(v,u)
             
     # Each vertex has exactly one edge set to one.
-    for v in graph.nodes():
+    for v in enumerate_vertices(G):
 
-        edge_vars = [var_name(u,v) for u in graph.adj[v]]
+        edge_vars = [var_name(u,v) for u in neighbors(G,v)]
 
         for cls in equal_to_constraint(edge_vars,1):
             cnf.add_clause(cls)

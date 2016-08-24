@@ -12,6 +12,7 @@ import cnfformula.cmdline
 from itertools import combinations
 from itertools import product
 from itertools import combinations_with_replacement
+from cnfformula.graphs import enumerate_vertices
 
 from networkx  import complete_graph
 from networkx  import empty_graph
@@ -121,13 +122,13 @@ def SubgraphFormula(graph,templates):
 
 
     # maps must preserve the structure of the template graph
-    gV = graph.nodes()
+    gV = enumerate_vertices(graph)
 
     for i in range(len(templates)):
 
 
         k  = templates[i].order()
-        tV = templates[i].nodes()
+        tV = enumerate_vertices(templates[i])
 
         localmaps = product(combinations(range(k),2),
                             combinations(range(N),2))

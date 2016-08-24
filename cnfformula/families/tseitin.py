@@ -7,7 +7,7 @@ from cnfformula.cnf import CNF
 from cnfformula.cnf import parity_constraint
 
 from cnfformula.cmdline import SimpleGraphHelper
-
+from cnfformula.graphs import enumerate_vertices,neighbors
 
 import random
 import cnfformula.cmdline
@@ -27,7 +27,7 @@ def TseitinFormula(graph,charges=None):
     - `graph`: input graph
     - `charges': odd or even charge for each vertex
     """
-    V=sorted(graph.nodes())
+    V=enumerate_vertices(graph)
 
     if charges==None:
         charges=[1]+[0]*(len(V)-1)             # odd charge on first vertex
@@ -46,7 +46,7 @@ def TseitinFormula(graph,charges=None):
     for v,c in zip(V,charges):
         
         # produce all clauses and save half of them
-        names = [ edgename(e) for e in graph.edges_iter(v) ]
+        names = [ edgename((u,v)) for u in neighbors(graph,v) ]
         for cls in parity_constraint(names,c):
             tse.add_clause(list(cls),strict=True)
 

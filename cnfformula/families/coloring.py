@@ -11,6 +11,8 @@ from cnfformula.cmdline import SimpleGraphHelper
 from cnfformula.cmdline  import register_cnfgen_subcommand
 from cnfformula.families import register_cnf_generator
 
+from cnfformula.graphs import enumerate_vertices,enumerate_edges,neighbors
+
 from itertools import combinations
 import collections
 
@@ -54,7 +56,7 @@ def GraphColoringFormula(G,colors,functional=True):
         col.header=name+".\n\n"+col.header
 
     # Fix the vertex order
-    V=G.nodes()
+    V=enumerate_vertices(G)
 
     # Each vertex has a color
     for vertex in V:
@@ -71,7 +73,7 @@ def GraphColoringFormula(G,colors,functional=True):
                     (False,'x_{{{0},{1}}}'.format(vertex,c2))],strict=True)
 
     # This is a legal coloring
-    for (v1,v2) in G.edges():
+    for (v1,v2) in enumerate_edges(G):
         for c in colors:
             col.add_clause([
                 (False,'x_{{{0},{1}}}'.format(v1,c)),
@@ -122,16 +124,16 @@ def EvenColoringFormula(G):
         else:
             return 'x_{{{0},{1}}}'.format(v,u)
     
-    for (u, v) in G.edges():
+    for (u, v) in enumerate_edges(G):
         F.add_variable(var_name(u, v))
 
     # Defined on both side
-    for v in G.nodes():
+    for v in enumerate_vertices(G):
 
         if G.degree(v) % 2 == 1:
             raise ValueError("Markstrom formulas requires all vertices to have even degree.")
 
-        edge_vars = [ var_name(*e) for e in G.edges(v) ]
+        edge_vars = [ var_name(u,v) for u in neighbors(G,v) ]
         
         for cls in equal_to_constraint(edge_vars,
                                        len(edge_vars)/2):
@@ -174,7 +176,7 @@ class KColorCmdHelper(object):
 class ECCmdHelper(object):
     name='ec'
     description='even coloring formulas'
-
+    
     @staticmethod
     def setup_command_line(parser):
         SimpleGraphHelper.setup_command_line(parser)

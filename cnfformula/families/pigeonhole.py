@@ -12,6 +12,7 @@ from cnfformula.graphs import bipartite_sets
 import cnfformula.cmdline
 import cnfformula.families
 
+from cnfformula.graphs import neighbors
 from itertools import combinations
 
 @cnfformula.families.register_cnf_generator
@@ -159,24 +160,24 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     def _GPHP_clause_generator(G,functional,onto):
         # Pigeon axioms
         for p in Left:
-            for C in greater_or_equal_constraint([var_name(p,h) for h in G.adj[p]], 1): yield C
+            for C in greater_or_equal_constraint([var_name(p,h) for h in neighbors(G,p)], 1): yield C
         # Onto axioms
         if onto:
             for h in Right:
-                for C in greater_or_equal_constraint([var_name(p,h) for p in G.adj[h]], 1): yield C
+                for C in greater_or_equal_constraint([var_name(p,h) for p in neighbors(G,h)], 1): yield C
         # No conflicts axioms
         for h in Right:
-            for C in less_or_equal_constraint([var_name(p,h) for p in G.adj[h]],1): yield C
+            for C in less_or_equal_constraint([var_name(p,h) for p in neighbors(G,h)],1): yield C
         # Function axioms
         if functional:
             for p in Left:
-                for C in less_or_equal_constraint([var_name(p,h) for h in G.adj[p]],1): yield C
+                for C in less_or_equal_constraint([var_name(p,h) for h in neighbors(G,p)],1): yield C
 
     gphp=CNF()
     gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)
 
     for p in Left:
-        for h in graph.adj[p]:
+        for h in neighbors(graph,p):
             gphp.add_variable(var_name(p,h))
 
     

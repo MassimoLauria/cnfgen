@@ -9,7 +9,7 @@ from cnfformula.cnf import exactly_half_floor,exactly_half_ceil
 
 from cnfformula.cmdline import BipartiteGraphHelper
 
-from cnfformula.graphs import bipartite_sets
+from cnfformula.graphs import bipartite_sets,enumerate_edges,neighbors
 
 import cnfformula.families
 import cnfformula.cmdline
@@ -95,11 +95,11 @@ def SubsetCardinalityFormula(B, equalities = False):
             return 'x_{{{0},{1}}}'.format(v,u)
 
     for u in Left:
-        for e in B.edges(u):
-            ssc.add_variable(var_name(*e))
+        for v in neighbors(B,u):
+            ssc.add_variable(var_name(u,v))
         
     for u in Left:
-        edge_vars = [ var_name(*e) for e in B.edges(u) ]
+        edge_vars = [ var_name(u,v) for v in neighbors(B,u) ]
 
         if equalities:
             for cls in exactly_half_ceil(edge_vars):
@@ -109,7 +109,7 @@ def SubsetCardinalityFormula(B, equalities = False):
                 ssc.add_clause(cls,strict=True)
 
     for v in Right:
-        edge_vars = [ var_name(*e) for e in B.edges(v) ]
+        edge_vars = [ var_name(u,v) for u in neighbors(B,v) ]
 
         if equalities:
             for cls in exactly_half_floor(edge_vars):

@@ -9,7 +9,7 @@ from cnfformula.cmdline import SimpleGraphHelper
 import cnfformula.cmdline  
 import cnfformula.families
 
-
+from cnfformula.graphs import enumerate_vertices,neighbors
 from itertools import combinations,permutations
 
 import networkx
@@ -61,7 +61,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
 
 
     # Fix the vertex order
-    V = graph.nodes()
+    V = enumerate_vertices(graph)
 
     # Add variables
     iterator = combinations if smart else permutations

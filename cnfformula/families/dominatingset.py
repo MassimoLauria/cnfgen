@@ -11,6 +11,7 @@ from cnfformula.cmdline import SimpleGraphHelper
 from cnfformula.cmdline  import register_cnfgen_subcommand
 from cnfformula.families import register_cnf_generator
 
+from cnfformula.graphs import enumerate_vertices,enumerate_edges,neighbors
 from itertools import combinations,combinations_with_replacement,product
 
 
@@ -53,7 +54,7 @@ def DominatingSet(G,d, alternative = False):
         F.header=name+".\n\n"+F.header
 
     # Fix the vertex order
-    V=sorted(G.nodes())
+    V=enumerate_vertices(G)
     
 
     def D(v):
