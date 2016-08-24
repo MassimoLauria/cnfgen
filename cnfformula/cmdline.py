@@ -492,11 +492,6 @@ class BipartiteGraphHelper(GraphHelper):
         """Setup input options for command lines
         """
 
-        gr=parser.add_argument_group(title="Input bipartite graph",
-                                     description="""
-                                     You can either read the input bipartite graph from file according to one of
-                                     the formats, or generate it using one of the included constructions.""")
-
         class IntIntFloat(argparse.Action):
             def __call__(self, parser, args, values, option_string = None):
                 try:
@@ -517,7 +512,11 @@ class BipartiteGraphHelper(GraphHelper):
                     raise argparse.ArgumentError(self,e.message)
                 setattr(args, self.dest, (l,r,d))
 
-        gr=parser.add_argument_group("Read/Write the underlying bipartite graph")
+        gr=parser.add_argument_group("Bipartite graph structure",
+                                     description="""
+                                     The structure of this CNF formula depends on a bipartite graph, which
+                                     can be read from file (in one of the supported format), or generated
+                                     using one of the included constructions.""")
 
         gr=gr.add_mutually_exclusive_group()
 
@@ -526,37 +525,40 @@ class BipartiteGraphHelper(GraphHelper):
                         type=argparse.FileType('r',0),
                         metavar="<input>",
                         default='-',
-                        help="""Input file. The graph is read from a file instead of being read from
-                        standard output. Setting '<input>' to '-' is
-                        another way to read from standard
-                        input.  (default: -)
+                        help="""Read the graph from file. Setting '<input>' to '-' is
+                        another way to read from standard input.  (default: -)
                         """)
 
                 
         gr.add_argument('--bp',nargs=3,action=IntIntFloat,metavar=('l','r','p'),
-                        help="random bipartite graph according with independent edges)")
+                        help="Random bipartite graph with independent edges")
 
 
         gr.add_argument('--bm',type=positive_int,nargs=3,action='store',metavar=('l','r','m'),
-                        help="random bipartite graph, with m random edges")
+                        help="Bipartite graph with m random edges")
 
         gr.add_argument('--bd',type=positive_int,nargs=3,action='store',metavar=('l','r','d'),
-                        help="random bipartite d-left-regular graph, with d random edges per left vertex)")
+                        help="Bipartite graph with d random edges per left vertex")
 
         gr.add_argument('--bregular',nargs=3,action=BipartiteRegular,metavar=('l','r','d'),
-                        help="random (l,r)-bipartite regular graph, with d edges per left vertex.")
+                        help="Bipartite regular graph, with d random edges per left vertex.")
 
         gr.add_argument('--bcomplete',type=positive_int,nargs=2,action='store',metavar=('l','r'),
-                        help="complete bipartite graph")
+                        help="Complete bipartite graph")
 
-        gr=parser.add_argument_group("Modifications for input graph")
+        gr=parser.add_argument_group("Modify the graph structure")
+        
         gr.add_argument('--plantbiclique',type=positive_int,nargs=2,action='store',metavar=('l','r'),
-                        help="choose l left vertices and r right vertices at random and add all edges among them")
+                        help="Plant a random (l,r)-bipartite clique")
 
         gr.add_argument('--addedges',type=positive_int,action='store',metavar="<k>",
-                        help="add k NEW random edges to the graph (applied last)")
+                        help="Add k NEW random edges to the graph (applied in the end)")
 
-        gr=parser.add_argument_group("I/O options")
+        gr=parser.add_argument_group("File I/O options",
+                                     description=""" 
+                                     Additional option regarding the input and output of the files
+                                     containing the graph structure.
+                                     """)
         gr.add_argument('--savegraph','-sg',
                         type=argparse.FileType('wb',0),
                         metavar="<graph_file>",
