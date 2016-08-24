@@ -217,18 +217,24 @@ a sequence of transformations.
         
     # Output
     if args.output_format == 'latex':
-        cmdline_descr="\\noindent\\textbf{Command line:}\n" + \
-            "\\begin{lstlisting}[breaklines]\n" + \
-            "$ cnfgen " + " ".join(argv[1:]) + "\n" + \
-            "\\end{lstlisting}\n"
+        cmdline_descr=["\\noindent\\textbf{Command line:}",
+                       "\\begin{lstlisting}[breaklines]",
+                       "$ cnfgen " + " ".join(argv[1:]),
+                       "\\end{lstlisting}"]
         if hasattr(args.generator,"docstring"):
-            cmdline_descr += \
-                             "\\noindent\\textbf{Docstring:}\n" +\
-                             "\\begin{lstlisting}[breaklines,basicstyle=\\small]\n" +\
-                             args.generator.docstring+ \
-                             "\\end{lstlisting}\n"
+            cmdline_descr += ["\\noindent\\textbf{Docstring:}",
+                              "\\begin{lstlisting}[breaklines,basicstyle=\\small]",
+                              args.generator.docstring,
+                              "\\end{lstlisting}"]
+        if hasattr(args.input,"name") and args.input != sys.stdin:
+            args.input.seek(0,0)
+            cmdline_descr += ["\\noindent\\textbf{Input file \\texttt{%s}}"%args.input.name,
+                              "\\begin{lstlisting}[breaklines,basicstyle=\\small]" ] + \
+                              args.input.readlines() + \
+                              ["\\end{lstlisting}"]
+
         output = cnf.latex(export_header=args.verbose,
-                            full_document=True,extra_text=cmdline_descr)
+                            full_document=True,extra_text="\n".join(cmdline_descr+["\n"]))
         
     elif args.output_format == 'dimacs':
         output = cnf.dimacs(export_header=args.verbose)

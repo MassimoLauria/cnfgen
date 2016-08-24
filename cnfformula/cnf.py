@@ -21,6 +21,7 @@ from __future__ import print_function
 from itertools import product
 from itertools import combinations
 from collections import Counter
+import re
 
 from . import prjdata as pd
 
@@ -605,7 +606,9 @@ class CNF(object):
         if full_document:
             output.write(latex_preamble)
             output.write("\\begin{document}\n")
-            output.write("\\title{{{}}}\n".format(self.header.split('\n')[0]))
+            title=self.header.split('\n')[0]
+            title=title.replace("_","\_")
+            output.write("\\title{{{}}}\n".format(title))
             output.write("\\author{CNFgen formula generator}\n")
             output.write("\\maketitle\n")
             output.write("\\noindent\\textbf{Formula header:}\n")

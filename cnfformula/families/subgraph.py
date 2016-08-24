@@ -84,16 +84,16 @@ def SubgraphFormula(graph,templates):
     k=max([s.order() for s in templates])
 
     for i,j in product(range(k),range(N)):
-        F.add_variable("S_{{{0}{1}}}".format(i,j))
+        F.add_variable("S_{{{0},{1}}}".format(i,j))
 
     # each vertex has an image...
     for i in range(k):
-        F.add_clause([(True,"S_{{{0}{1}}}".format(i,j)) for j in range(N)],strict=True)
+        F.add_clause([(True,"S_{{{0},{1}}}".format(i,j)) for j in range(N)],strict=True)
 
     # ...and exactly one
     for i,(a,b) in product(range(k),combinations(range(N),2)):
-        F.add_clause([(False,"S_{{{0}{1}}}".format(i,a)),
-                      (False,"S_{{{0}{1}}}".format(i,b))  ], strict = True)
+        F.add_clause([(False,"S_{{{0},{1}}}".format(i,a)),
+                      (False,"S_{{{0},{1}}}".format(i,b))  ], strict = True)
 
  
     # Mapping is strictly monotone increasing (so it is also injective)
@@ -101,8 +101,8 @@ def SubgraphFormula(graph,templates):
                         combinations_with_replacement(range(N),2))
 
     for (a,b),(i,j) in localmaps:
-        F.add_clause([(False,"S_{{{0}{1}}}".format(min(a,b),max(i,j))),
-                      (False,"S_{{{0}{1}}}".format(max(a,b),min(i,j)))  ],strict=True)
+        F.add_clause([(False,"S_{{{0},{1}}}".format(min(a,b),max(i,j))),
+                      (False,"S_{{{0},{1}}}".format(max(a,b),min(i,j)))  ],strict=True)
 
 
     # The selectors choose a template subgraph.  A mapping must map
@@ -143,8 +143,8 @@ def SubgraphFormula(graph,templates):
 
             # if it is not, add the corresponding
             F.add_clause(activation_prefixes[i] + \
-                         [(False,"S_{{{0}{1}}}".format(min(i1,i2),min(j1,j2))),
-                          (False,"S_{{{0}{1}}}".format(max(i1,i2),max(j1,j2))) ],strict=True)
+                         [(False,"S_{{{0},{1}}}".format(min(i1,i2),min(j1,j2))),
+                          (False,"S_{{{0},{1}}}".format(max(i1,i2),max(j1,j2))) ],strict=True)
 
     return F
 
