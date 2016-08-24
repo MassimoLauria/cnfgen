@@ -606,7 +606,7 @@ class BipartiteGraphHelper(GraphHelper):
             # Workaround: the bipartite labels are missing in old version of networkx
             for i in range(0,l):
                 G.add_node(i,bipartite=0)
-            for i in range(l+1,l+r):
+            for i in range(l,l+r):
                 G.add_node(i,bipartite=1)
             
         elif args.graphformat is not None:
