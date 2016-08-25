@@ -506,8 +506,30 @@ class BipartiteGraphHelper(GraphHelper):
             def __call__(self, parser, args, values, option_string = None):
                 try:
                     l,r,d = positive_int(values[0]),positive_int(values[1]),positive_int(values[2])
+                    if d > r :
+                        raise ValueError('In a regular bipartite graph, left degree d is at most r.')
                     if (d*l % r) != 0 :
                         raise ValueError('In a regular bipartite graph, r must divide d*l.')
+                except ValueError as e:
+                    raise argparse.ArgumentError(self,e.message)
+                setattr(args, self.dest, (l,r,d))
+
+        class BipartiteEdge(argparse.Action):
+            def __call__(self, parser, args, values, option_string = None):
+                try:
+                    l,r,m = positive_int(values[0]),positive_int(values[1]),positive_int(values[2])
+                    if m > r*l :
+                        raise ValueError('In a bipartite graph, #edges is at most l*r.')
+                except ValueError as e:
+                    raise argparse.ArgumentError(self,e.message)
+                setattr(args, self.dest, (l,r,m))
+
+        class BipartiteLeft(argparse.Action):
+            def __call__(self, parser, args, values, option_string = None):
+                try:
+                    l,r,d = positive_int(values[0]),positive_int(values[1]),positive_int(values[2])
+                    if d > r :
+                        raise ValueError('In a bipartite graph, left degree d is at most r.')
                 except ValueError as e:
                     raise argparse.ArgumentError(self,e.message)
                 setattr(args, self.dest, (l,r,d))
@@ -534,10 +556,10 @@ class BipartiteGraphHelper(GraphHelper):
                         help="Random bipartite graph with independent edges")
 
 
-        gr.add_argument('--bm',type=positive_int,nargs=3,action='store',metavar=('l','r','m'),
+        gr.add_argument('--bm',type=positive_int,nargs=3,action=BipartiteEdge,metavar=('l','r','m'),
                         help="Bipartite graph with m random edges")
 
-        gr.add_argument('--bd',type=positive_int,nargs=3,action='store',metavar=('l','r','d'),
+        gr.add_argument('--bd',type=positive_int,nargs=3,action=BipartiteLeft,metavar=('l','r','d'),
                         help="Bipartite graph with d random edges per left vertex")
 
         gr.add_argument('--bregular',nargs=3,action=BipartiteRegular,metavar=('l','r','d'),
