@@ -548,22 +548,30 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
             if nvertex<0:
                 raise ValueError("[Input error] "+
                                  "Non negative number of vertices expected at line {}.".format(i))
-            G.add_nodes_from(range(1,nvertex+1))
-            G.ordered_vertices=range(1,nvertex+1)
+            G.add_nodes_from(xrange(1,nvertex+1))
+            G.ordered_vertices=xrange(1,nvertex+1)
             continue
 
         # Load edges from this line
         target,sources=l.split(':')
         target=int(target.strip())
-        sources=[int(s) for s in sources.split()]
-
+        try:
+            sources=[int(s) for s in sources.split()]
+        except ValueError:
+            raise ValueError("[Input error] "+
+                             "Non integer vertex ID at line {}.".format(i))
+        if len(sources)<1 or sources[-1]!=0:
+            raise ValueError("[Input error] "+
+                             "Line {} must end with 0.".format(i))
+        
         if target < 1 or target > nvertex:
             raise ValueError("[Input error] "+
-                             "Vertex ID out of range [1,{}] expected at line {}.".format(nvertex,i))
+                             "Vertex ID out of range [1,{}] at line {}.".format(nvertex,i))
 
+        sources.pop()
         if len([x for x in sources if x < 1 or x > nvertex]):
             raise ValueError("[Input error] "+
-                             "Vertex ID out of range [1,{}] expected at line {}.".format(nvertex,i))
+                             "Vertex ID out of range [1,{}] at line {}.".format(nvertex,i))
 
         # Vertices should appear in increasing order if the graph is topologically sorted
         for s in sources:
@@ -791,16 +799,15 @@ def _write_graph_kthlist_format(G,output_file):
     for v,i in enumeration:
 
         if G.is_directed():
-            neighbors = [indices[w] for w in G.predecessors(v)]
-
+            nbors = [indices[w] for w in G.predecessors(v)]
         else:
-            neighbors = [indices[w] for w in G.adj[v].keys()]
+            nbors = [indices[w] for w in G.adj[v].keys()]
 
-        neighbors.sort()
+        nbors.sort()
 
         output.write( str(i)+" : ")
-        output.write( " ".join([str(i) for i in neighbors]))
-        output.write( "\n")
+        output.write( " ".join([str(i) for i in nbors]))
+        output.write( " 0\n")
     
     print(output.getvalue(),file=output_file)
 

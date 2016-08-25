@@ -41,24 +41,24 @@ dimacs_path2 ="p edge 3 2\ne 1 2\ne 2 3\n"
 
 kthlist_non_bipartite="""
 5
-1: 2 3
-5: 3 4
-4: 5
-2: 3
+1: 2 3 0
+5: 3 4 0
+4: 5 0
+2: 3 0
 """
 
 kthlist_non_dag="""
 3
-1: 2
-2: 3
-3: 1
+1: 2 0
+2: 3 0
+3: 1 0
 """
 kthlist_bipartite="""
 5
-1: 2 
-2: 1
-3: 
-4: 1
+1: 2 0
+2: 1 0
+3: 0
+4: 1 0
 """
 
 class TestGraphIO(unittest.TestCase) :
