@@ -459,7 +459,7 @@ class CNF(object):
         return self.__iter__()
 
 
-    def dimacs(self, export_header=True):
+    def dimacs(self, export_header=True, extra_text=None):
         """Produce the dimacs encoding of the formula
 
         The formula is rendered in the DIMACS format for CNF formulas,
@@ -471,10 +471,13 @@ class CNF(object):
             determines whether the formula header should be inserted as
             a comment in the DIMACS output.
 
+        extra_text : str, optional
+            Additional text attached to the header
+
         Returns
         -------
         string
-            the string contains the LaTeX code
+            the string contains the Dimacs code
 
 
         Examples
@@ -500,10 +503,10 @@ class CNF(object):
         """
         from cStringIO import StringIO
         output = StringIO()
-        self._dimacs_dump_clauses(output, export_header)
+        self._dimacs_dump_clauses(output, export_header, extra_text)
         return output.getvalue()
 
-    def _dimacs_dump_clauses(self, output=None, export_header=True):
+    def _dimacs_dump_clauses(self, output=None, export_header=True, extra_text=None):
         """Dump the dimacs encoding of the formula to the file-like output
 
         This is for internal use only. It produces the dimacs output
@@ -521,6 +524,11 @@ class CNF(object):
             for line in self.header.split("\n")[:-1]:
                 output.write(("c "+line).rstrip()+"\n")
 
+            if extra_text is not None:
+                for line in extra_text.split("\n"):
+                    output.write(("c "+line).rstrip()+"\n")
+
+
         # Formula specification
         output.write("p cnf {0} {1}".format(n, m))
 
@@ -531,7 +539,7 @@ class CNF(object):
         for cls in self._clauses:
             output.write("\n" + " ".join([str(l) for l in cls + (0,)]))
 
-    def latex(self, export_header=True, full_document=False, extra_text=None):
+    def latex(self, export_header=True, extra_text=None, full_document=False):
         """Output a LaTeX version of the CNF formula
 
         The CNF formula is translated into the LaTeX markup language
@@ -550,12 +558,12 @@ class CNF(object):
             determines whether the formula header should be inserted as
             a LaTeX comment in the output. By default is True. 
 
+        extra_text : str, optional
+            Additional text attached to the abstract.
+
         full_document : bool, optional
             rather than just output the formula, output a document 
             that contains it. False by default.
-
-        extra_text : str, optional
-            Additional text attached to the abstract.
 
         Returns
         -------

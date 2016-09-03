@@ -251,13 +251,16 @@ a sequence of transformations.
                               ["\\end{lstlisting}"]
 
         output = cnf.latex(export_header=args.verbose,
-                            full_document=True,extra_text="\n".join(cmdline_descr+["\n"]))
+                           extra_text="\n".join(cmdline_descr+["\n"]),
+                           full_document=True)
         
     elif args.output_format == 'dimacs':
-        output = cnf.dimacs(export_header=args.verbose)
+        output = cnf.dimacs(export_header=args.verbose,
+                            extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
 
     else:
-        output = cnf.dimacs(export_header=args.verbose)
+        output = cnf.dimacs(export_header=args.verbose,
+                            extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
 
     print(output,file=args.output)
 
