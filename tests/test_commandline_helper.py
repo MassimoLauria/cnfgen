@@ -81,7 +81,7 @@ class TestCommandline(unittest.TestCase):
         with stdout_redirector(f),stdin_redirector(indata):
                 cmdline(parameters)
                 
-        self.assertEqual(f.getvalue(),expected_cnf.dimacs()+'\n')
+        self.assertEqual(f.getvalue(),expected_cnf.dimacs(export_header=False)+'\n')
 
     def checkCrash(self, indata, args, cmdline=cnfgen):
         parameters = [str(x) for x in args]

@@ -51,7 +51,7 @@ class TestOrderingPrincipleCommandline(TestCommandline):
                 for smart in (True,False):
                     for plant in (True,False):
                         for knuth in (0,2,3):
-                            parameters = ["cnfgen","op", elements]
+                            parameters = ["cnfgen","-q","op", elements]
                             if total : parameters.append("--total")
                             if smart : parameters.append("--smart")
                             if plant : parameters.append("--plant")
@@ -70,7 +70,7 @@ class TestGraphOrderingPrincipleCommandline(TestCommandline):
                 for smart in (True,False):
                     for plant in (True,False):
                         for knuth in (0,2,3):
-                            parameters = ["cnfgen","gop", "--complete", elements]
+                            parameters = ["cnfgen","-q","gop", "--complete", elements]
                             if total : parameters.append("--total")
                             if smart : parameters.append("--smart")
                             if plant : parameters.append("--plant")

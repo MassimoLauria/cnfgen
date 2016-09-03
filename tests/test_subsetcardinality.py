@@ -80,11 +80,11 @@ class TestSubsetCardinalityCommandline(TestCommandline):
     def test_complete(self):
         for rows in range(2,5):
             for columns in range(2,5):
-                parameters = ["cnfgen","subsetcard", "--bcomplete", rows, columns]
+                parameters = ["cnfgen","-q","subsetcard", "--bcomplete", rows, columns]
                 graph = complete_bipartite_graph_proper(rows, columns)
                 F = SubsetCardinalityFormula(graph)
                 self.checkFormula(sys.stdin,F, parameters)
 
     def test_not_bipartite(self):
-        parameters = ["cnfgen","subsetcard", "--complete", "3"]
+        parameters = ["cnfgen","-q","subsetcard", "--complete", "3"]
         self.checkCrash(sys.stdin, parameters)

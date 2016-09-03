@@ -24,7 +24,7 @@ class TestKTHList2Pebbling(TestCommandline) :
         F = PebblingFormula(readGraph(input,'dag','kthlist'))
 
         input.seek(0)
-        self.checkFormula(input,F,["kthlist2pebbling","none"],cmdline = kthlist2pebbling)
+        self.checkFormula(input,F,["kthlist2pebbling","-q","none"],cmdline = kthlist2pebbling)
 
     def test_small_line(self) :
 
@@ -32,31 +32,31 @@ class TestKTHList2Pebbling(TestCommandline) :
         F = PebblingFormula(readGraph(input,'dag','kthlist'))
 
         input.seek(0)
-        self.checkFormula(input,F,["kthlist2pebbling","none"],cmdline = kthlist2pebbling)
+        self.checkFormula(input,F,["kthlist2pebbling","-q","none"],cmdline = kthlist2pebbling)
 
     def test_small_pyramid(self) :
         input = StringIO.StringIO("3\n1 : 0\n2 : 0\n3 : 1 2 0\n")
         F = PebblingFormula(readGraph(input,'dag','kthlist'))
         input.seek(0)
-        self.checkFormula(input,F,["kthlist2pebbling","none"],cmdline = kthlist2pebbling)
+        self.checkFormula(input,F,["kthlist2pebbling","-q","none"],cmdline = kthlist2pebbling)
         
     def test_or_substitution(self) :
         input = StringIO.StringIO("3\n1 : 0\n2 : 0\n3 : 1 2 0\n")
         G = PebblingFormula(readGraph(input,'dag','kthlist'))
         F = OrSubstitution(G,2)
         input.seek(0)
-        self.checkFormula(input,F,["kthlist2pebbling","or",2],cmdline = kthlist2pebbling)
+        self.checkFormula(input,F,["kthlist2pebbling","-q","or",2],cmdline = kthlist2pebbling)
 
     def test_lift_substitution(self) :
         input = StringIO.StringIO("3\n1 : 0\n2 : 0\n3 : 1 2 0\n")
         G = PebblingFormula(readGraph(input,'dag','kthlist'))
         F = FormulaLifting(G,3)
         input.seek(0)
-        self.checkFormula(input,F,["kthlist2pebbling","lift",3],cmdline = kthlist2pebbling)
+        self.checkFormula(input,F,["kthlist2pebbling","-q","lift",3],cmdline = kthlist2pebbling)
     
     def test_xor_substitution(self) :
         input = StringIO.StringIO("3\n1 : 0\n2 : 0\n3 : 1 2 0\n")
         G = PebblingFormula(readGraph(input,'dag','kthlist'))
         F = XorSubstitution(G,2)
         input.seek(0)
-        self.checkFormula(input,F,["kthlist2pebbling","xor",2],cmdline = kthlist2pebbling)
+        self.checkFormula(input,F,["kthlist2pebbling","-q","xor",2],cmdline = kthlist2pebbling)

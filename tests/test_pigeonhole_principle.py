@@ -142,7 +142,7 @@ class TestPigeonholePrincipleCommandline(TestCommandline):
             for holes in range(2,5):
                 for functional in (True,False):
                     for onto in (True,False):
-                        parameters = ["cnfgen", "php", pigeons, holes]
+                        parameters = ["cnfgen","-q","php", pigeons, holes]
                         if functional : parameters.append("--functional")
                         if onto : parameters.append("--onto")
                         F = PigeonholePrinciple(pigeons,holes,functional,onto)
@@ -154,7 +154,7 @@ class TestGraphPigeonholePrincipleCommandline(TestCommandline):
             for holes in range(2,5):
                 for functional in (True,False):
                     for onto in (True,False):
-                        parameters = ["cnfgen","gphp", "--bcomplete", pigeons, holes]
+                        parameters = ["cnfgen","-q","gphp", "--bcomplete", pigeons, holes]
                         if functional : parameters.append("--functional")
                         if onto : parameters.append("--onto")
                         graph = complete_bipartite_graph_proper(pigeons,holes)

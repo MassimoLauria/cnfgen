@@ -39,7 +39,7 @@ class TestPerfectMatching(TestCNFBase):
 class TestPerfectMatchingCommandline(TestCommandline):
     def test_complete(self):
         for n in range(2,5):
-            parameters = ["cnfgen", "matching", "--complete", n]
+            parameters = ["cnfgen","-q","matching", "--complete", n]
             graph = nx.complete_graph(n)
             F = PerfectMatchingPrinciple(graph)
             self.checkFormula(sys.stdin,F, parameters)

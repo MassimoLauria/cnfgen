@@ -53,7 +53,8 @@ def setup_command_line(parser):
                         another way to read from standard
                         input.  (default: -)
                         """)
-
+    parser.add_argument('--quiet', '-q',action='store_false',dest='verbose',
+                        help="""Output just the formula with no header.""")
 
     
     # Cmdline parser for formula transformations    
@@ -99,7 +100,7 @@ def command_line_utility(argv=sys.argv):
     Fstart = cnfformula.PebblingFormula(G)
 
     Ftransform = args.transformation.transform_cnf(Fstart,args)
-    print(Ftransform.dimacs(),file=args.output)
+    print(Ftransform.dimacs(export_header=args.verbose),file=args.output)
     
 ### Launcher
 if __name__ == '__main__':
