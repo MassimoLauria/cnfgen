@@ -583,7 +583,7 @@ class FormulaLiftingCmd:
 @register_cnf_transformation_subcommand
 class FlipCmd:
     name='flip'
-    description='negate the first N variables in the formula (default: all)'
+    description='negate all variables in the formula'
 
     @staticmethod
     def setup_command_line(parser):
