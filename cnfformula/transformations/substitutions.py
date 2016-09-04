@@ -421,6 +421,37 @@ class ExactlyOneSubstitution(BaseSubstitution):
         return clauses
 
 
+
+@register_cnf_transformation
+class FlipPolarity(BaseSubstitution):
+    """Flip the polarity of variables
+    """
+    def __init__(self, cnf):
+        """Build a new CNF obtained by flipping the polarity of the variables
+
+        Parameters
+        ----------
+        cnf : a CNF object
+        """
+        super(FlipPolarity,self).__init__(cnf)
+
+        self._header="Polarity variables has been flipped\n\n"+self._header
+
+        
+        
+    def transform_a_literal(self, polarity,varname):
+        """Substitute a positive literal with an OR,
+        and negative literals with its negation.
+
+        Arguments:
+        - `polarity`: polarity of the literal
+        - `varname`: fariable to be substituted
+
+        Returns: a list of clauses
+        """
+        return [[(not polarity,varname)]]
+
+
 #
 # Command line helpers for these substitutions
 #
@@ -549,3 +580,16 @@ class FormulaLiftingCmd:
         return FormulaLifting(F,args.N)
 
 
+@register_cnf_transformation_subcommand
+class FlipCmd:
+    name='flip'
+    description='negate the first N variables in the formula (default: all)'
+
+    @staticmethod
+    def setup_command_line(parser):
+        pass
+    
+    @staticmethod
+    def transform_cnf(F,args):
+       
+        return  FlipPolarity(F)
