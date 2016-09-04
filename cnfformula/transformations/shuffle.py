@@ -11,8 +11,8 @@ from ..transformations import register_cnf_transformation
 from ..cnf import CNF
 
 
-
-def cnfshuffle(cnf,
+@register_cnf_transformation
+def Shuffle(cnf,
                variable_permutation=None,
                clause_permutation=None,
                polarity_flip=None):
@@ -102,7 +102,7 @@ class ShuffleCmd:
     
     @staticmethod
     def transform_cnf(F,args):
-        return cnfshuffle(F,
-                          variable_permutation=None if not args.no_variable_permutations else list(F.variables()),
-                          clause_permutation=None if not args.no_clause_permutations else range(len(F)),
-                          polarity_flip=None if not args.no_polarity_flips else [1]*len(list(F.variables())))
+        return Shuffle(F,
+                       variable_permutation=None if not args.no_variable_permutations else list(F.variables()),
+                       clause_permutation=None if not args.no_clause_permutations else range(len(F)),
+                       polarity_flip=None if not args.no_polarity_flips else [1]*len(list(F.variables())))

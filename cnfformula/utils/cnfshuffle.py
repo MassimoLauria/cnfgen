@@ -12,7 +12,7 @@ import random
 from .. import CNF
 from .  import dimacs2cnf
 
-from ..transformations.shuffle import cnfshuffle
+from ..transformations.shuffle import Shuffle
 
 
 def command_line_utility(argv=sys.argv):
@@ -71,9 +71,8 @@ def command_line_utility(argv=sys.argv):
     parser.add_argument('--no-variables-permutation','-v',action='store_true',dest='no_variable_permutations',help="No permutation of variables")
     parser.add_argument('--no-clauses-permutation','-c',action='store_true',dest='no_clause_permutations',help="No permutation of clauses")
 
-    g=parser.add_mutually_exclusive_group()
-    g.add_argument('--quiet', '-q',action='store_false',dest='verbose',
-                   help="""Output just the formula with no header.""")
+    parser.add_argument('--quiet', '-q',action='store_false',default=True,dest='verbose',
+                        help="""Output just the formula with no header.""")
 
 
     # Process the options
@@ -84,12 +83,12 @@ def command_line_utility(argv=sys.argv):
         random.seed(args.seed)
 
     input_cnf = dimacs2cnf(args.input)
-    output_cnf = cnfshuffle(input_cnf,
-                                   variable_permutation=None if not args.no_variable_permutations else list(input_cnf.variables()),
-                                   clause_permutation=None if not args.no_clause_permutations else range(len(input_cnf)),
-                                   polarity_flip=None if not args.no_polarity_flips else [1]*len(list(input_cnf.variables())))
+    output_cnf = Shuffle(input_cnf,
+                         variable_permutation=None if not args.no_variable_permutations else list(input_cnf.variables()),
+                         clause_permutation=None if not args.no_clause_permutations else range(len(input_cnf)),
+                         polarity_flip=None if not args.no_polarity_flips else [1]*len(list(input_cnf.variables())))
     output_cnf._dimacs_dump_clauses(output=args.output,
-                                    export_header=True)
+                                    export_header=args.verbose)
 
     if args.output != sys.stdout:
         args.output.close()
