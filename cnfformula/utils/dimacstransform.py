@@ -47,6 +47,9 @@ def setup_command_line(parser):
                         (default: -)
                         """)
 
+    parser.add_argument('--quiet', '-q',action='store_false',default=True,dest='verbose',
+                        help="""Output just the formula with no header.""")
+
     # Cmdline parser for formula transformations    
     from cnfformula import transformations
     from cnfformula.cmdline import is_cnf_transformation_subcommand
@@ -84,7 +87,7 @@ def command_line_utility(argv=sys.argv):
     args=parser.parse_args(argv[1:])
     F = dimacs2cnf(args.input)
     G = args.transformation.transform_cnf(F,args)
-    print(G.dimacs(),file=args.output)
+    print(G.dimacs(args.verbose),file=args.output)
 
     
 ### Launcher
