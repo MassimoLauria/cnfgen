@@ -588,7 +588,7 @@ class BipartiteGraphHelper(GraphHelper):
         gr.add_argument('--bregular',nargs=3,action=BipartiteRegular,metavar=('l','r','d'),
                         help="Bipartite regular graph, with d random edges per left vertex.")
 
-        gr.add_argument('--bshift',type=positive_int,nargs='+',action=BipartiteShift,
+        gr.add_argument('--bshift',type=positive_int,nargs='*',action=BipartiteShift,metavar=('N'),
                         help="Args <N> <M> <v1> <v2> ... NxM bipartite. Vertex i connexted to i+v1, i+v2,... (mod M)")
 
         gr.add_argument('--bcomplete',type=positive_int,nargs=2,action='store',metavar=('l','r'),
