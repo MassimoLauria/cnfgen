@@ -53,6 +53,24 @@ class TestBipartite(TestArgparse) :
         for v in right:
             self.assertEqual(G.degree(v),5)
 
+    def test_bshift(self):
+
+        G = self.parse(["--bshift", "10","9"])
+        self.assertEqual(G.order(),19)
+        left, right = bipartite_sets(G)
+        self.assertEqual(len(left),10)
+        self.assertEqual(len(right),9)
+        for v in left:
+            self.assertEqual(G.degree(v),0)
+        G = self.parse(["--bshift", "10","10","1","2","4","8"])
+        self.assertEqual(G.order(),20)
+        left, right = bipartite_sets(G)
+        self.assertEqual(len(left),10)
+        self.assertEqual(len(right),10)
+        for v in left:
+            self.assertEqual(G.degree(v),4)
+        
+        
     def test_bcomplete(self):
         G = self.parse(["--bcomplete", "10", "9"])
         self.assertEqual(G.order(),19)

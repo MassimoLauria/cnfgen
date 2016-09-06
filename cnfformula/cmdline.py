@@ -24,7 +24,7 @@ from itertools import combinations, product
 
 from .graphs import supported_formats as graph_formats
 from .graphs import readGraph,writeGraph
-from .graphs import bipartite_random_left_regular,bipartite_random_regular
+from .graphs import bipartite_random_left_regular,bipartite_random_regular,bipartite_shift
 from .graphs import bipartite_sets
 from .graphs import dag_complete_binary_tree,dag_pyramid
 from .graphs import sample_missing_edges
@@ -524,6 +524,30 @@ class BipartiteGraphHelper(GraphHelper):
                     raise argparse.ArgumentError(self,e.message)
                 setattr(args, self.dest, (l,r,m))
 
+        class BipartiteShift(argparse.Action):
+            def __call__(self, parser, args, values, option_string = None):
+                try:
+
+                    if len(values)<2:
+                        raise ValueError("'bshift' requires two positive int parameters or more.")
+
+                    
+                    N,M,pattern= values[0],values[1],sorted(values[2:])
+
+                    for i in range(len(pattern)-1):
+                        if pattern[i] == pattern[i+1]:
+                            raise ValueError("no repetitions is allowed in the edge pattern.")
+
+                    if N<1 or M<1:
+                        raise ValueError("matrix dimensions N and M must be positive.")
+
+                    if any([ x < 1 or x > M for x in pattern]):
+                        raise ValueError("in v(1),v(2)... we need 1 <= v(i) <= M.")
+                    
+                except ValueError as e:
+                    raise argparse.ArgumentError(self,e.message)
+                setattr(args, self.dest, (N,M,pattern))
+
         class BipartiteLeft(argparse.Action):
             def __call__(self, parser, args, values, option_string = None):
                 try:
@@ -555,7 +579,6 @@ class BipartiteGraphHelper(GraphHelper):
         gr.add_argument('--bp',nargs=3,action=IntIntFloat,metavar=('l','r','p'),
                         help="Random bipartite graph with independent edges")
 
-
         gr.add_argument('--bm',type=positive_int,nargs=3,action=BipartiteEdge,metavar=('l','r','m'),
                         help="Bipartite graph with m random edges")
 
@@ -565,8 +588,12 @@ class BipartiteGraphHelper(GraphHelper):
         gr.add_argument('--bregular',nargs=3,action=BipartiteRegular,metavar=('l','r','d'),
                         help="Bipartite regular graph, with d random edges per left vertex.")
 
+        gr.add_argument('--bshift',type=positive_int,nargs='+',action=BipartiteShift,
+                        help="Args <N> <M> <v1> <v2> ... NxM bipartite. Vertex i connexted to i+v1, i+v2,... (mod M)")
+
         gr.add_argument('--bcomplete',type=positive_int,nargs=2,action='store',metavar=('l','r'),
                         help="Complete bipartite graph")
+
 
         gr=parser.add_argument_group("Modify the graph structure")
         
@@ -621,6 +648,11 @@ class BipartiteGraphHelper(GraphHelper):
             l,r,d = args.bregular
             G=bipartite_random_regular(l,r,d)
 
+        elif args.bshift is not None:
+
+            N,M,pattern = args.bshift
+            G=bipartite_shift(N,M,pattern)
+            
         elif args.bcomplete is not None:
             
             l,r = args.bcomplete

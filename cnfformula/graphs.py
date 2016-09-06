@@ -18,7 +18,7 @@ __all__ = ["supported_formats",
 #################################################################
 
 
-_graphformats = { 
+_graphformats = {
     'dag':   ['kthlist','gml','dot'],
     'digraph': ['kthlist','gml','dot','dimacs'],
     'simple': ['kthlist','gml','dot','dimacs'],
@@ -44,7 +44,7 @@ try:
     import networkx
     import networkx.algorithms
 except ImportError:
-    print("ERROR: Missing 'networkx' library: no support for graph based formulas.",
+    print("ERROR: Missing 'networkx' library: we cannot use graph based formulas.",
           file=sys.stderr)
     exit(-1)
 
@@ -52,19 +52,8 @@ except ImportError:
 def has_dot_library():
     """Test the presence of a library that supports dot format
 
-    Old version of NetworkX have use `pydot', while new versions use
+    Old versions of NetworkX need `pydot', while new versions need
     `pydotplus`.
-
-    read_dot and write_dot exposed in the
-    main package. This is not true anymore in NetworkX 1.11.
-
-    Furthermore the position of the `read_dot` and `write_dot` have been
-    moved around between versions.
-
-    The function returns the available reader and writer, and
-    furthermore it cleans up the list of supported format from any
-    reference to dot format, in case of missing library.
-
     """
     try:
         # newer version of networkx
@@ -103,7 +92,9 @@ if not has_dot_library():
 def find_read_dot():
     """Look for the implementation of 'read_dot' in NetworkX
 
-    The position inside the NetworkX library depends on its version.
+    Functions `read_dot` and `write_dot` were exposed in the main
+    package. The exact position depends on the installed version of
+    NetworkX.
     """
 
     try:
@@ -121,12 +112,14 @@ def find_read_dot():
     raise RuntimeError("We can't find an implementation of 'read_dot' in NetworkX")
 
 
-    
+
 def find_write_dot():
     """Look for the implementation of 'write_dot' in NetworkX
 
-    The position inside the NetworkX library depends on its version.
-    """    
+    Functions `read_dot` and `write_dot` were exposed in the main
+    package. The exact position depends on the installed version of
+    NetworkX.
+    """
     try:
         from networkx import nx_pydot
         return networkx.nx_pydot.write_dot
@@ -138,7 +131,7 @@ def find_write_dot():
         return write_dot
     except ImportError:
         pass
-    
+
     raise RuntimeError("We can't find an implementation of 'write_dot' in NetworkX")
 
 
@@ -158,7 +151,7 @@ def _process_graph_io_arguments(iofile,
        not isinstance(iofile,file) and \
        not isinstance(iofile,StringIO.StringIO):
         raise ValueError("The IO stream \"{}\" does not correspond to a file".format(iofile))
-    
+
     # Check the graph type specification
     if graph_type not in _graphformats.keys():
         raise ValueError("The graph type must be one of "+_graphformats.keys())
@@ -182,7 +175,7 @@ def _process_graph_io_arguments(iofile,
             extension = os.path.splitext(iofile.name)[-1][1:]
         except AttributeError:
             raise ValueError("No file name corresponds to IO stream. Can't guess a file format.")
-            
+
         if extension not in _graphformats[graph_type]:
             raise ValueError("Cannot guess a file format for {} graphs from \"{}\".".\
                              format(graph_type,iofile.name))
@@ -194,7 +187,7 @@ def _process_graph_io_arguments(iofile,
                          +_graphformats[graph_type])
 
     return (grtype,file_format)
-    
+
 
 
 def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
@@ -230,14 +223,14 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
         The file format that the parser should expect to receive.
         See also :py:func:`cnfformula.graph.supported_formats`. By default
         it tries to autodetect it from the file name extension (when applicable).
-    
+
     multi_edges: bool,optional
         are multiple edge allowed in the graph? By default this is not allowed.
 
     Returns
     -------
     a graph object
-        one among networkx.DiGraph, networkx.MultiDiGraph, 
+        one among networkx.DiGraph, networkx.MultiDiGraph,
         networkx.Graph, networkx.MultiGraph object.
 
     Raises
@@ -248,7 +241,7 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
         invalid choices.
 
     IOError
-        it is impossible to read the ``input_file`` 
+        it is impossible to read the ``input_file``
 
     See Also
     --------
@@ -261,7 +254,7 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
         with open(input_file,'r') as file_handle:
             return readGraph(file_handle,graph_type,file_format,multi_edges)
 
-    
+
     grtype, file_format = _process_graph_io_arguments(input_file,
                                                       graph_type,
                                                       file_format,
@@ -298,7 +291,7 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
 
     if graph_type=="bipartite" and not has_bipartition(G):
         raise ValueError("[Input error] Graph vertices miss the 'bipartite' 0,1 label.")
-        
+
     return G
 
 
@@ -322,7 +315,7 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
         The file format that the parser should expect to receive.
         See also :py:func:`cnfformula.graph.supported_formats`. By default
         it tries to autodetect it from the file name extension (when applicable).
-    
+
     Returns
     -------
     None
@@ -335,7 +328,7 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
         invalid choices.
 
     IOError
-        it is impossible to write on the ``output_file`` 
+        it is impossible to write on the ``output_file``
 
     See Also
     --------
@@ -348,12 +341,12 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
         with open(output_file,'w') as file_handle:
             return writeGraph(G,file_handle,graph_type,file_format)
 
-    
+
     _,file_format = _process_graph_io_arguments(output_file,
                                                 graph_type,
                                                 file_format,
                                                 False)
-    
+
     if file_format=='dot':
 
         find_write_dot()(G,output_file)
@@ -361,7 +354,7 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
     elif file_format=='gml':
 
         networkx.write_gml(G,output_file)
-            
+
     elif file_format=='kthlist':
 
         _write_graph_kthlist_format(G,output_file)
@@ -373,7 +366,7 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
     elif file_format=='matrix':
 
         _write_graph_matrix_format(G,output_file)
-            
+
     else:
         raise RuntimeError("[Internal error] Format {} not implemented".format(file_format))
 
@@ -385,7 +378,7 @@ def is_dag(digraph):
 
     if the input graph has a member `topologically_sorted' then assumed that
     there is a member `ordered_vertices' and that it is a topological order.
-    
+
     Arguments:
     - `digraph`: input graph
     """
@@ -411,20 +404,20 @@ def has_bipartition(G):
     NetworkX follows the convention that bipartite graphs have their
     vertices labeled with the bipartition. In particular each vertex
     has the 'bipartite' attribute with is either 0 or 1.
-    
+
     Parameters
     ----------
     G: networkx.Graph
-        
+
     """
-    try: 
+    try:
         for n in G.nodes():
             # Accept both string and int representation
             if not G.node[n]['bipartite'] in [0,1,'0','1']:
                 return False
     except KeyError:
         return False
-    
+
     return True
 
 def bipartite_sets(G):
@@ -465,7 +458,7 @@ def enumerate_edges(graph):
         setattr(graph,"ordered_edges",sorted(graph.edges()))
         return graph.ordered_edges
 
-    
+
 def neighbors(graph,v):
     """Return the ordered list of neighbors ov a vertex
 
@@ -477,7 +470,7 @@ def neighbors(graph,v):
     """
     return sorted(graph.neighbors(v))
 
-    
+
 #
 # In-house parsers
 #
@@ -496,12 +489,12 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
     edge will be part of the left side and and each source node will
     be on the right side. Vertices that are never named are considered
     to be isolated vertices on the right side.
-    
+
     Parameters
     ----------
     inputfile : file object
         file handle of the input
-    
+
     graph_class: class object
         the graph class to read, one of networkx.DiGraph (default)
         networkx.MultiDiGraph networkx.Graph networkx.MultiGraph
@@ -516,7 +509,7 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
                            networkx.MultiGraph]:
         raise ValueError("[Internal error] Attempt to use an unsupported class for graph representation.")
 
-    
+
     G=graph_class()
     G.name=''
     G.ordered_vertices=[]
@@ -527,9 +520,9 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
     # vertex number
     nvertex=-1
     vertex_cnt=-1
-    
+
     for i,l in enumerate(inputfile.readlines()):
-        
+
         # add the comment to the header
         if l[0]=='c':
             G.name+=l[2:]
@@ -538,7 +531,7 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
         # empty line
         if len(l.strip())==0:
             continue
-        
+
         if ':' not in l:
             # vertex number spec
             if nvertex>=0:
@@ -563,7 +556,7 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
         if len(sources)<1 or sources[-1]!=0:
             raise ValueError("[Input error] "+
                              "Line {} must end with 0.".format(i))
-        
+
         if target < 1 or target > nvertex:
             raise ValueError("[Input error] "+
                              "Vertex ID out of range [1,{}] at line {}.".format(nvertex,i))
@@ -576,7 +569,7 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
         # Vertices should appear in increasing order if the graph is topologically sorted
         for s in sources:
             if s <= target:
-                topologically_sorted_input = False 
+                topologically_sorted_input = False
 
         # Check the bi-coloring on both side
         if bipartition:
@@ -593,8 +586,8 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
             G.node[target]['bipartite'] = default_color
             for s in sources:
                 G.node[s]['bipartite'] = 1-default_color
-                
-              
+
+
         # after vertices, add the edges
         for s in sources:
             G.add_edge(s,target)
@@ -605,11 +598,11 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
             if 'bipartite' not in G.node[v]:
                 G.node[v]['bipartite']=1
 
-            
+
     # cache the information that the graph is topologically sorted.
     if topologically_sorted_input:
         G.topologically_sorted = True
-        
+
     if nvertex!=G.order():
         raise ValueError("[Input error] "+
                          "{} vertices expected. Got {} instead.".format(nvertex,G.order()))
@@ -622,7 +615,7 @@ def _read_graph_dimacs_format(inputfile,graph_class=networkx.Graph):
     ----------
     inputfile : file object
         file handle of the input
-    
+
     graph_class: class object
         the graph class to read, one of networkx.DiGraph (default)
         networkx.MultiDiGraph networkx.Graph networkx.MultiGraph
@@ -632,17 +625,17 @@ def _read_graph_dimacs_format(inputfile,graph_class=networkx.Graph):
                            networkx.DiGraph,
                            networkx.MultiDiGraph]:
         raise ValueError("[Internal error] Attempt to use an unsupported class for graph representation.")
-    
+
     G=graph_class()
     G.name=''
 
     n = -1
     m = -1
     m_cnt = 0
-    
+
     # is the input topologically sorted?
     for i,l in enumerate(inputfile.readlines()):
-        
+
         # add the comment to the header
         if l[0]=='c':
             G.name+=l[2:]
@@ -671,7 +664,7 @@ def _read_graph_dimacs_format(inputfile,graph_class=networkx.Graph):
     if m!=m_cnt:
         raise ValueError("[Syntax error] "+
                          "{} edges were expected.".format(m))
-       
+
     return G
 
 def _read_graph_matrix_format(inputfile):
@@ -716,22 +709,22 @@ def _read_graph_matrix_format(inputfile):
 
                 if len(line)==0:
                     raise StopIteration # end of file
-                
+
                 line_cnt += 1
                 tokens = line.split()
 
                 if len(tokens)==0 or tokens[0][0]=='#':
                     continue # comment line
-                
+
                 try:
                     num_buffer.extend( (int(lit),line_cnt) for lit in tokens )
                 except ValueError:
                     raise ValueError("[Syntax error] "+
                                      "Line {} contains a non numeric entry.".format(line_cnt))
-        
+
             yield num_buffer.pop(0)
 
-    
+
     scanner = scan_integer(inputfile)
 
     try:
@@ -747,7 +740,7 @@ def _read_graph_matrix_format(inputfile):
         # read edges
         for i in range(1,n+1):
             for j in range(n+1,n+m+1):
-                
+
                 (b,l) = scanner.next()
                 if b==1:
                     G.add_edge(i,j)
@@ -764,7 +757,7 @@ def _read_graph_matrix_format(inputfile):
         raise ValueError("[Input error at line {}] There are more than {}x{} entries".format(l,n,m))
     except StopIteration:
         pass
-    
+
     assert has_bipartition(G)
     return G
 
@@ -774,7 +767,7 @@ def _read_graph_matrix_format(inputfile):
 #
 def _write_graph_kthlist_format(G,output_file):
     """Wrire a graph to a file, in the KTH reverse adjacency lists format.
-    
+
     Parameters
     ----------
     G : graph object
@@ -808,13 +801,13 @@ def _write_graph_kthlist_format(G,output_file):
         output.write( str(i)+" : ")
         output.write( " ".join([str(i) for i in nbors]))
         output.write( " 0\n")
-    
+
     print(output.getvalue(),file=output_file)
 
 
 def  _write_graph_dimacs_format(G,output_file):
     """Wrire a graph to a file, in DIMACS format.
-    
+
     Parameters
     ----------
     G : graph object
@@ -835,7 +828,7 @@ def  _write_graph_dimacs_format(G,output_file):
 
 def _write_graph_matrix_format(G,output_file):
     """Wrire a graph to a file, in \"matrix\" format.
-    
+
     Parameters
     ----------
     G : graph object
@@ -856,7 +849,7 @@ def _write_graph_matrix_format(G,output_file):
                 adj_row.append("1")
             else:
                 adj_row.append("0")
-                
+
         print(" ".join(adj_row),file=output_file)
 
 #
@@ -865,17 +858,17 @@ def _write_graph_matrix_format(G,output_file):
 
 def bipartite_random_left_regular(l,r,d,seed=None):
     """Returns a random bipartite graph with constant left degree.
-    
+
     Each vertex on the left side has `d` neighbors on the right side,
     picked uniformly at random without repetition.
-    
+
     Each vertex in the graph has an attribute `bipartite` which is 0
     for the vertices on the left side and 1 for the vertices on the
     right side.
 
     Parameters
     ----------
-    l : int 
+    l : int
         vertices on the left side
     r : int
         vertices on the right side
@@ -890,24 +883,24 @@ def bipartite_random_left_regular(l,r,d,seed=None):
 
     Raises
     ------
-    ValueError 
+    ValueError
         unless ``l``, ``r`` and ``d`` are non negative.
 
     """
     import random
     if seed:
         random.seed(seed)
-    
+
     if l<0 or r<0 or d<0:
         raise ValueError("bipartite_random_left_regular(l,r,d) needs l,r,d >=0.")
- 
+
     G=networkx.Graph()
     G.name = "bipartite_random_left_regular({},{},{})".format(l,r,d)
-    
+
     L=range(0,l)
     R=range(l,l+r)
     d=min(r,d)
-    
+
     for u in L:
         G.add_node(u,bipartite=0)
 
@@ -917,7 +910,66 @@ def bipartite_random_left_regular(l,r,d,seed=None):
     for u in L:
         for v in sorted(random.sample(R,d)):
             G.add_edge(u,v)
-    
+
+    return G
+
+def bipartite_shift(N,M,pattern=[]):
+    """Returns a bipartite graph where edges are a fixed shifted sequence.
+
+    The graph has :math:`N` vertices on the left (numbered from
+    :math:`1` to :math:`N`), and :math:`M` vertices on the right
+    (numbered from :math:`1` to :math:`M`),
+
+
+    The vertex :math:`1` on the left side has edges to vertices
+    :math:`v_1`, :math:`v_2`, :math:`v_3`,... (mod :math:`M`).
+    Each other vertex :math:`i>1` on the left side has edges
+    :math:`i+v_1`, :math:`i+v_2`, :math:`i+v_3`,... with wrap around
+    over :math:`[1..M]`.
+
+    Parameters
+    ----------
+    N : int
+        vertices on the left side
+    M : int
+        vertices on the right side
+    pattern : list(int)
+        pattern of neighbors
+
+    Returns
+    -------
+    networkx.Graph
+
+    Raises
+    ------
+    ValueError
+        unless ``N``, ``M`` are non negative and ``pattern`` has vertices outside the range.
+
+    """
+    if N<1 or M<1:
+        raise ValueError("bipartite_shift(N,M,pattern) needs N,M >= 0.")
+
+    if any([ x < 1 or x > M for x in pattern]):
+        raise ValueError("bipartite_shift(N,M,pattern) needs 1 <= pattern[i] <= M.")
+
+
+    G=networkx.Graph()
+    G.name = "bipartite_shift_regular({},{},{})".format(N,M,pattern)
+
+    L=range(1,N+1)
+    R=range(N+1,N+M+1)
+
+    for u in L:
+        G.add_node(u,bipartite=0)
+
+    for v in R:
+        G.add_node(v,bipartite=1)
+
+    pattern.sort()
+    for u in L:
+        for i in pattern:
+            G.add_edge(u, N+1 + (i+u-2) % M )
+
     return G
 
 
@@ -926,30 +978,30 @@ def bipartite_random_regular(l,r,d,seed=None):
 
     The graph is d-regular on the left side and regular on the right
     size, so it must be that d*l / r is an integer number.
-    
+
     Each vertex in the graph has an attribute `bipartite` which is 0
     for the vertices on the left side and 1 for the vertices on the
     right side.
 
     Parameters
     ----------
-    l : int 
+    l : int
        vertices on the left side
-    r : int 
+    r : int
        vertices on the right side
-    d : int 
+    d : int
        degree of vertices at the left side
     seed : hashable object
        seed of random generator
- 
+
     Returns
     -------
     networkx.Graph
 
     Raises
     ------
-    ValueError 
-        if one among ``l``, ``r`` and ``d`` is negative or 
+    ValueError
+        if one among ``l``, ``r`` and ``d`` is negative or
         if ``r`` does not divides `l*d`
 
     References
@@ -967,13 +1019,13 @@ def bipartite_random_regular(l,r,d,seed=None):
 
     if (l*d) % r != 0:
         raise ValueError("bipartite_random_regular(l,r,d) needs r to divid l*d.")
- 
+
     G=networkx.Graph()
     G.name = "bipartite_random_regular({},{},{})".format(l,r,d)
-    
+
     L=range(0,l)
     R=range(l,l+r)
-    
+
     for u in L:
         G.add_node(u,bipartite=0)
 
@@ -1009,7 +1061,7 @@ def bipartite_random_regular(l,r,d,seed=None):
                 return bipartite_random_regular(l,r,d)
 
     return G
-    
+
 
 def dag_pyramid(height):
     """Generates the pyramid DAG
@@ -1030,7 +1082,7 @@ def dag_pyramid(height):
     # vertices
     X=[ [('x_{{{},{}}}'.format(h,i),h,i) for i in range(height-h+1)] \
         for h in range(height+1) ]
-    
+
     for layer in X:
         for (name,h,i) in layer:
             D.add_node(name,rank=(h,i))
@@ -1076,12 +1128,12 @@ def sample_missing_edges(G,m, seed=None):
     """Sample m pairs of missing edges in G
 
     If :math:`G` is not complete and has at least :math:`m` missing edges, :math:`m` of them are sampled.
-    
+
     Parameters
     ----------
-    G : networkx.Graph 
+    G : networkx.Graph
         a graph with at least :math:`m` missing edges
-    m : int 
+    m : int
        the number of missing edges to sample
     seed : hashable object
        seed of random generator
@@ -1092,12 +1144,12 @@ def sample_missing_edges(G,m, seed=None):
 
     Raises
     ------
-    ValueError 
+    ValueError
         if :math:`G` doesn't have :math:`m` missing edges
-    RuntimeError 
+    RuntimeError
         Sampling failure in the sparse case
 
-    
+
     """
 
     import random
@@ -1109,13 +1161,13 @@ def sample_missing_edges(G,m, seed=None):
     if m < 0:
         raise ValueError("You can only sample a non negative number of edges.")
 
-    
+
     total_number_of_edges=None
-    
+
     if has_bipartition(G):
-        
+
         Left,Right = bipartite_sets(G)
-        total_number_of_edges = len(Left)*len(Right) 
+        total_number_of_edges = len(Left)*len(Right)
 
         def edge_sampler():
             u = random.sample(Left,1)[0]
@@ -1127,7 +1179,7 @@ def sample_missing_edges(G,m, seed=None):
 
     else:
 
-        total_number_of_edges = G.order()*(G.order()-1)/2 
+        total_number_of_edges = G.order()*(G.order()-1)/2
 
         def edge_sampler():
             return random.sample(G.nodes(),2)
@@ -1137,7 +1189,7 @@ def sample_missing_edges(G,m, seed=None):
 
 
     number_avaiable_edges = total_number_of_edges - G.number_of_edges()
- 
+
     if number_avaiable_edges < m:
         raise ValueError("The graph does not have {} missing edges to sample.".format(m))
 
@@ -1159,9 +1211,8 @@ def sample_missing_edges(G,m, seed=None):
                (v,u) not in missing_edges and \
                not G.has_edge(u,v):
                 missing_edges.add( (u,v) )
-                
+
         if len(missing_edges) >= m:
             return missing_edges
         else:
             raise RuntimeError("Improbable failure at sampling missing edges in a sparse graph.")
-    
