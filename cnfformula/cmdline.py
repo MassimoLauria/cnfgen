@@ -241,33 +241,47 @@ class GraphHelper(object):
 class DirectedAcyclicGraphHelper(GraphHelper):
 
     @staticmethod
-    def setup_command_line(parser):
-        """Setup input options for command lines
+    def setup_command_line(parser, suffix="", required=False):
+        """Setup command line options for reading a DAG
+
+        Parameters
+        ----------
+        parser : ArgParse parser object
+            it is populated with options for input graphs
+
+        suffix: string, optional
+            add a suffix to all input options. Useful if you need to input 
+            multiple graphs in the same command line (default: empty)
+
+        require : bool, optional
+            enforce that at least one input specification is required. 
+            If it is not the case the standard input is the default input. 
+            Not a good idea if we read multiple graphs in input.
         """
 
-        gr=parser.add_argument_group(title="Input directed acyclic graph (DAG)",
+        gr=parser.add_argument_group(title="Input directed acyclic graph (DAG) " + suffix,
                                      description="""
                                      You can either read the input DAG from file according to one of
                                      the formats, or generate it using one of the constructions included.""")
 
-        gr=gr.add_mutually_exclusive_group()
+        gr=gr.add_mutually_exclusive_group(required=required)
        
-        gr.add_argument('--input','-i',
+        gr.add_argument('--input'+suffix,'-i'+suffix,
                         type=argparse.FileType('r',0),
                         metavar="<input>",
                         default='-',
                         help="""Read the DAG from <input>. Setting '<input>' to '-' is another way
                         to read from standard input. (default: -) """)
 
-        gr.add_argument('--tree',type=positive_int,action='store',metavar="<height>",
+        gr.add_argument('--tree'+suffix,type=positive_int,action='store',metavar="<height>",
                             help="rooted tree digraph")
 
-        gr.add_argument('--pyramid',type=positive_int,action='store',metavar="<height>",
+        gr.add_argument('--pyramid'+suffix,type=positive_int,action='store',metavar="<height>",
                             help="pyramid digraph")
 
         gr=parser.add_argument_group("I/O options")
 
-        gr.add_argument('--savegraph','-sg',
+        gr.add_argument('--savegraph'+suffix,'-sg'+suffix,
                             type=argparse.FileType('wb',0),
                             metavar="<graph_file>",
                             default=None,
@@ -276,42 +290,44 @@ class DirectedAcyclicGraphHelper(GraphHelper):
                             another way to send the DAG to
                             standard output.  (default:  -)
                             """)
-        gr.add_argument('--graphformat','-gf',
+        gr.add_argument('--graphformat'+suffix,'-gf'+suffix,
                         choices=graph_formats()['dag'],
                         default='autodetect',
                         help="Format of the DAG file. (default: autodetect)")
 
 
     @staticmethod
-    def obtain_graph(args):
+    def obtain_graph(args,suffix=""):
         """Produce a DAG from either input or library
         """
-        if args.tree is not None:
-            assert args.tree > 0
+        if getattr(args,'tree'+suffix) is not None:
+            assert getattr(args,'tree'+suffix) > 0
 
-            D = dag_complete_binary_tree(args.tree)
+            D = dag_complete_binary_tree( getattr(args,'tree'+suffix) )
 
-        elif args.pyramid is not None:
-            assert args.pyramid > 0
+        elif getattr(args,'pyramid'+suffix) is not None:
+            assert getattr(args,'pyramid'+suffix) > 0
 
-            D = dag_pyramid(args.pyramid)
+            D = dag_pyramid( getattr(args,'pyramid'+suffix))
 
-        elif args.graphformat is not None:
+        elif getattr(args,'graphformat'+suffix) is not None:
 
             try:
-                D=readGraph(args.input,"dag",args.graphformat)
+                D=readGraph(getattr(args,'input'+suffix),
+                            "dag",
+                            getattr(args,'graphformat'+suffix))
             except ValueError,e:
-                print("ERROR ON '{}'. {}".format(args.input.name,e),file=sys.stderr)
+                print("ERROR ON '{}'. {}".format(getattr(args,'input'+suffix).name,e),file=sys.stderr)
                 exit(-1)
         else:
             raise RuntimeError("Invalid graph specification on command line")
 
         # Output the graph is requested
-        if args.savegraph is not None:
+        if getattr(args,'savegraph'+suffix) is not None:
             writeGraph(D,
-                       args.savegraph,
+                       getattr(args,'savegraph'+suffix),
                        "dag",
-                       args.graphformat)
+                       getattr(args,'graphformat'+suffix))
 
         return D
 
@@ -488,8 +504,22 @@ class SimpleGraphHelper(GraphHelper):
 class BipartiteGraphHelper(GraphHelper):
 
     @staticmethod
-    def setup_command_line(parser):
-        """Setup input options for command lines
+    def setup_command_line(parser,suffix="",required=False):
+        """Setup input options for reading bipartites on command lines
+
+        Parameters
+        ----------
+        parser : ArgParse parser object
+            it is populated with options for input graphs
+
+        suffix: string, optional
+            add a suffix to all input options. Useful if you need to input 
+            multiple graphs in the same command line (default: empty)
+
+        require : bool, optional
+            enforce that at least one input specification is required. 
+            If it is not the case the standard input is the default input. 
+            Not a good idea if we read multiple graphs in input.
         """
 
         class IntIntFloat(argparse.Action):
@@ -558,16 +588,16 @@ class BipartiteGraphHelper(GraphHelper):
                     raise argparse.ArgumentError(self,e.message)
                 setattr(args, self.dest, (l,r,d))
 
-        gr=parser.add_argument_group("Bipartite graph structure",
+        gr=parser.add_argument_group("Bipartite graph structure "+suffix,
                                      description="""
                                      The structure of this CNF formula depends on a bipartite graph, which
                                      can be read from file (in one of the supported format), or generated
                                      using one of the included constructions.""")
 
-        gr=gr.add_mutually_exclusive_group()
+        gr=gr.add_mutually_exclusive_group(required=False)
 
 
-        gr.add_argument('--input','-i',
+        gr.add_argument('--input'+suffix,'-i'+suffix,
                         type=argparse.FileType('r',0),
                         metavar="<input>",
                         default='-',
@@ -576,31 +606,31 @@ class BipartiteGraphHelper(GraphHelper):
                         """)
 
                 
-        gr.add_argument('--bp',nargs=3,action=IntIntFloat,metavar=('l','r','p'),
+        gr.add_argument('--bp'+suffix,nargs=3,action=IntIntFloat,metavar=('l','r','p'),
                         help="Random bipartite graph with independent edges")
 
-        gr.add_argument('--bm',type=positive_int,nargs=3,action=BipartiteEdge,metavar=('l','r','m'),
+        gr.add_argument('--bm'+suffix,type=positive_int,nargs=3,action=BipartiteEdge,metavar=('l','r','m'),
                         help="Bipartite graph with m random edges")
 
-        gr.add_argument('--bd',type=positive_int,nargs=3,action=BipartiteLeft,metavar=('l','r','d'),
+        gr.add_argument('--bd'+suffix,type=positive_int,nargs=3,action=BipartiteLeft,metavar=('l','r','d'),
                         help="Bipartite graph with d random edges per left vertex")
 
-        gr.add_argument('--bregular',nargs=3,action=BipartiteRegular,metavar=('l','r','d'),
+        gr.add_argument('--bregular'+suffix,nargs=3,action=BipartiteRegular,metavar=('l','r','d'),
                         help="Bipartite regular graph, with d random edges per left vertex.")
 
-        gr.add_argument('--bshift',type=positive_int,nargs='*',action=BipartiteShift,metavar=('N'),
+        gr.add_argument('--bshift'+suffix,type=positive_int,nargs='*',action=BipartiteShift,metavar=('N'),
                         help="Args <N> <M> <v1> <v2> ... NxM bipartite. Vertex i connexted to i+v1, i+v2,... (mod M)")
 
-        gr.add_argument('--bcomplete',type=positive_int,nargs=2,action='store',metavar=('l','r'),
+        gr.add_argument('--bcomplete'+suffix,type=positive_int,nargs=2,action='store',metavar=('l','r'),
                         help="Complete bipartite graph")
 
 
         gr=parser.add_argument_group("Modify the graph structure")
         
-        gr.add_argument('--plantbiclique',type=positive_int,nargs=2,action='store',metavar=('l','r'),
+        gr.add_argument('--plantbiclique'+suffix,type=positive_int,nargs=2,action='store',metavar=('l','r'),
                         help="Plant a random (l,r)-bipartite clique")
 
-        gr.add_argument('--addedges',type=positive_int,action='store',metavar="<k>",
+        gr.add_argument('--addedges'+suffix,type=positive_int,action='store',metavar="<k>",
                         help="Add k NEW random edges to the graph (applied in the end)")
 
         gr=parser.add_argument_group("File I/O options",
@@ -608,54 +638,54 @@ class BipartiteGraphHelper(GraphHelper):
                                      Additional option regarding the input and output of the files
                                      containing the graph structure.
                                      """)
-        gr.add_argument('--savegraph','-sg',
+        gr.add_argument('--savegraph'+suffix,'-sg'+suffix,
                         type=argparse.FileType('wb',0),
                         metavar="<graph_file>",
                         default=None,
                         help="""Save the graph to <graph_file>. Setting '<graph_file>' to '-'sends
                         the graph to standard output. (default: -) """)
-        gr.add_argument('--graphformat','-gf',
+        gr.add_argument('--graphformat'+suffix,'-gf'+suffix,
                         choices=graph_formats()['bipartite'],
                         default='autodetect',
                         help="Format of the graph file. (default: autodetect)")
 
 
     @staticmethod
-    def obtain_graph(args):
+    def obtain_graph(args,suffix=""):
         """Build a Bipartite graph according to command line arguments
 
         Arguments:
         - `args`: command line options
         """
 
-        if args.bp is not None:
+        if getattr(args,"bp"+suffix) is not None:
 
-            l,r,p = args.bp
+            l,r,p = getattr(args,"bp"+suffix)
             G=bipartite_random_graph(l,r,p)
 
-        elif args.bm is not None:
+        elif getattr(args,"bm"+suffix)  is not None:
 
-            l,r,m = args.bm
+            l,r,m = getattr(args,"bm"+suffix)
             G=bipartite_gnmk_random_graph(l,r,m)
 
-        elif args.bd is not None:
+        elif getattr(args,"bd"+suffix) is not None:
 
-            l,r,d = args.bd
+            l,r,d = getattr(args,"bd"+suffix)
             G=bipartite_random_left_regular(l,r,d)
 
-        elif args.bregular is not None:
+        elif getattr(args,"bregular"+suffix)  is not None:
 
-            l,r,d = args.bregular
+            l,r,d = getattr(args,"bregular"+suffix)
             G=bipartite_random_regular(l,r,d)
 
-        elif args.bshift is not None:
+        elif getattr(args,"bshift"+suffix) is not None:
 
-            N,M,pattern = args.bshift
+            N,M,pattern = getattr(args,"bshift"+suffix)
             G=bipartite_shift(N,M,pattern)
             
-        elif args.bcomplete is not None:
+        elif getattr(args,"bcomplete"+suffix) is not None:
             
-            l,r = args.bcomplete
+            l,r = getattr(args,"bcomplete"+suffix)
             G=complete_bipartite_graph(l,r)
             # Workaround: the bipartite labels are missing in old version of networkx
             for i in range(0,l):
@@ -663,12 +693,14 @@ class BipartiteGraphHelper(GraphHelper):
             for i in range(l,l+r):
                 G.add_node(i,bipartite=1)
             
-        elif args.graphformat is not None:
+        elif getattr(args,"graphformat"+suffix) is not None:
 
             try:
-                G=readGraph(args.input, "bipartite", args.graphformat)
+                G=readGraph(getattr(args,"input"+suffix),
+                            "bipartite",
+                            getattr(args,"graphformat"+suffix))
             except ValueError,e:
-                print("ERROR ON '{}'. {}".format(args.input.name,e),file=sys.stderr)
+                print("ERROR ON '{}'. {}".format(getattr(args,"input"+suffix).name,e),file=sys.stderr)
                 exit(-1)
                             
         else:
@@ -677,8 +709,8 @@ class BipartiteGraphHelper(GraphHelper):
         
 
         # Graph modifications
-        if args.plantbiclique is not None:
-            l,r = args.plantbiclique
+        if getattr(args,"plantbiclique"+suffix) is not None:
+            l,r = getattr(args,"plantbiclique"+suffix)
             left,right = bipartite_sets(G)
             if l > len(left) or r > len(right) :
                 raise ValueError("Clique cannot be larger than graph")
@@ -689,9 +721,9 @@ class BipartiteGraphHelper(GraphHelper):
             for v,w in product(left,right):
                 G.add_edge(v,w)
 
-        if args.addedges is not None:
+        if getattr(args,"addedges"+suffix) is not None:
 
-            k = args.addedges
+            k = getattr(args,"addedges"+suffix)
 
             G.add_edges_from(sample_missing_edges(G,k))
 
@@ -700,10 +732,10 @@ class BipartiteGraphHelper(GraphHelper):
             
             
         # Output the graph is requested
-        if args.savegraph is not None:
+        if getattr(args,"savegraph"+suffix) is not None:
             writeGraph(G,
-                       args.savegraph,
+                       getattr(args,"savegraph"+suffix),
                        'bipartite',
-                       args.graphformat)
+                       getattr(args,"graphformat"+suffix))
 
         return G
