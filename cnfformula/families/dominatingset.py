@@ -5,7 +5,6 @@
 
 
 from cnfformula.cnf import CNF
-from cnfformula.cnf import less_or_equal_constraint
 from cnfformula.cmdline import SimpleGraphHelper
 
 from cnfformula.cmdline  import register_cnfgen_subcommand
@@ -79,7 +78,7 @@ def DominatingSet(G,d, alternative = False):
                 F.add_clause( [ (False,D(u)),(False,D(v)), (False,M(u,i)), (False,M(v,i))    ])
     else:
         for i in range(1,d+1):
-            for c in less_or_equal_constraint([M(v,i) for v in V],1):
+            for c in CNF.less_or_equal_constraint([M(v,i) for v in V],1):
                 F.add_clause(c)
                 
     # (Active) Vertices in the sequence are not repeated

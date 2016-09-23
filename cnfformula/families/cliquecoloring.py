@@ -4,7 +4,6 @@
 """
 
 from cnfformula.cnf import CNF
-from cnfformula.cnf import equal_to_constraint
 
 import cnfformula.cmdline
 import cnfformula.families
@@ -82,7 +81,7 @@ def CliqueColoring(n,k,c):
 
     # some vertex is i'th member of clique
     for k in range(1,k+1):
-        for cl in equal_to_constraint([Q(k,v) for v in range(1,n+1)], 1):
+        for cl in CNF.equal_to_constraint([Q(k,v) for v in range(1,n+1)], 1):
             formula.add_clause(cl,strict=True)
 
     # clique members are connected by edges
@@ -96,7 +95,7 @@ def CliqueColoring(n,k,c):
 
     # every vertex v has exactly one colour
     for v in range(1,n+1):
-        for cl in equal_to_constraint([R(v,ell) for ell in range(1,c+1)], 1):
+        for cl in CNF.equal_to_constraint([R(v,ell) for ell in range(1,c+1)], 1):
             formula.add_clause(cl,strict=True)
 
     # neighbours have distinct colours

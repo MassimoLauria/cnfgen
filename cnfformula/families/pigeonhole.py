@@ -4,8 +4,6 @@
 """
 
 from cnfformula.cnf import CNF
-from cnfformula.cnf import greater_or_equal_constraint
-from cnfformula.cnf import less_or_equal_constraint
 from cnfformula.cmdline import BipartiteGraphHelper
 from cnfformula.graphs import bipartite_sets
 
@@ -82,18 +80,18 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
         """Generator for the clauses"""
         # Pigeon axioms
         for p in xrange(1,pigeons+1):
-            for C in greater_or_equal_constraint([var_name(p,h) for h in xrange(1,holes+1)], 1): yield C
+            for C in CNF.greater_or_equal_constraint([var_name(p,h) for h in xrange(1,holes+1)], 1): yield C
         # Onto axioms
         if onto:
             for h in xrange(1,holes+1):
-                for C in greater_or_equal_constraint([var_name(p,h) for p in xrange(1,pigeons+1)], 1): yield C
+                for C in CNF.greater_or_equal_constraint([var_name(p,h) for p in xrange(1,pigeons+1)], 1): yield C
         # No conflicts axioms
         for h in xrange(1,holes+1):
-            for C in less_or_equal_constraint([var_name(p,h) for p in xrange(1,pigeons+1)],1): yield C
+            for C in CNF.less_or_equal_constraint([var_name(p,h) for p in xrange(1,pigeons+1)],1): yield C
         # Function axioms
         if functional:
             for p in xrange(1,pigeons+1):
-                for C in less_or_equal_constraint([var_name(p,h) for h in xrange(1,holes+1)],1): yield C
+                for C in CNF.less_or_equal_constraint([var_name(p,h) for h in xrange(1,holes+1)],1): yield C
 
     php=CNF()
     php.header="{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes)\
@@ -160,18 +158,18 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     def _GPHP_clause_generator(G,functional,onto):
         # Pigeon axioms
         for p in Left:
-            for C in greater_or_equal_constraint([var_name(p,h) for h in neighbors(G,p)], 1): yield C
+            for C in CNF.greater_or_equal_constraint([var_name(p,h) for h in neighbors(G,p)], 1): yield C
         # Onto axioms
         if onto:
             for h in Right:
-                for C in greater_or_equal_constraint([var_name(p,h) for p in neighbors(G,h)], 1): yield C
+                for C in CNF.greater_or_equal_constraint([var_name(p,h) for p in neighbors(G,h)], 1): yield C
         # No conflicts axioms
         for h in Right:
-            for C in less_or_equal_constraint([var_name(p,h) for p in neighbors(G,h)],1): yield C
+            for C in CNF.less_or_equal_constraint([var_name(p,h) for p in neighbors(G,h)],1): yield C
         # Function axioms
         if functional:
             for p in Left:
-                for C in less_or_equal_constraint([var_name(p,h) for h in neighbors(G,p)],1): yield C
+                for C in CNF.less_or_equal_constraint([var_name(p,h) for h in neighbors(G,p)],1): yield C
 
     gphp=CNF()
     gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)

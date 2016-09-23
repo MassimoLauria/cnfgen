@@ -751,294 +751,302 @@ class CNF(object):
         from .utils import solver
         return solver.is_satisfiable(self, cmd=cmd, sameas=sameas)
 
-###
-### Various utility function for CNFs
-###
-def parity_constraint(variables, constant):
-    """Output the CNF encoding of a parity constraint
+    ###
+    ### Various utility function for CNFs
+    ###
+    @classmethod
+    def parity_constraint(cls,variables, constant):
+        """Output the CNF encoding of a parity constraint
+        
+        E.g. X1 + X2 + X3 = 1 (mod 2) is encoded as
+        
+        ( X1 v  X2 v  X3)
+        (~X1 v ~X2 v  X3)
+        (~X1 v  X2 v ~X3)
+        ( X1 v ~X2 v ~X3)
 
-    E.g. X1 + X2 + X3 = 1 (mod 2) is encoded as
+        Parameters
+        ----------
+        variables : array-like
+            variables involved in the constraint
+        constant : {0,1}
+            the constant of the linear equation
 
-    ( X1 v  X2 v  X3)
-    (~X1 v ~X2 v  X3)
-    (~X1 v  X2 v ~X3)
-    ( X1 v ~X2 v ~X3)
-
-    Parameters
-    ----------
-    variables : array-like
-        variables involved in the constraint
-    constant : {0,1}
-        the constant of the linear equation
-
-    Returns
-    -------
+        Returns
+        -------
         a list of clauses
 
-    Examples
-    --------
-    >>> parity_constraint(['a','b'],1)
-    [[(True, 'a'), (True, 'b')], [(False, 'a'), (False, 'b')]]
-    >>> parity_constraint(['a','b'],0)
-    [[(True, 'a'), (False, 'b')], [(False, 'a'), (True, 'b')]]
-    >>> parity_constraint(['a'],0)
-    [[(False, 'a')]]
-    """
-    domains = tuple([((True, var), (False, var)) for var in variables])
-    clauses = []
-    for c in product(*domains):
-        # Save only the clauses with the right polarity
-        parity = sum(1-l[0] for l in c) % 2
-        if parity != constant:
-            clauses.append(list(c))
-    return clauses
+        Examples
+        --------
+        >>> CNF.parity_constraint(['a','b'],1)
+        [[(True, 'a'), (True, 'b')], [(False, 'a'), (False, 'b')]]
+        >>> CNF.parity_constraint(['a','b'],0)
+        [[(True, 'a'), (False, 'b')], [(False, 'a'), (True, 'b')]]
+        >>> CNF.parity_constraint(['a'],0)
+        [[(False, 'a')]]
+        """
+        domains = tuple([((True, var), (False, var)) for var in variables])
+        clauses = []
+        for c in product(*domains):
+            # Save only the clauses with the right polarity
+            parity = sum(1-l[0] for l in c) % 2
+            if parity != constant:
+                clauses.append(list(c))
+        return clauses
 
 
-def _inequality_constraint_builder(variables, k, greater=False):
-    """Builder for inequality constraint
+    @classmethod
+    def _inequality_constraint_builder(cls,variables, k, greater=False):
+        """Builder for inequality constraint
+     
+        This is a generic builder used to build all the inequality
+        constraints. By default it build a "stricly less that", and if
+        ``greater`` is True it builds a "strictly greater than".
+        """
+        clauses = []
+        polarity = greater
+        if greater:
+            k = len(variables) - k
+     
+        if k > len(variables):
+            return []
+        elif k < 0:
+            return [[]]
+     
+        for tpl in combinations(variables, k):
+            clauses.append([(polarity, v) for v in tpl])
+        return clauses
+     
+    @classmethod 
+    def less_than_constraint(cls,variables, upperbound):
+        """Clauses encoding a \"strictly less than\" constraint
+     
+        E.g. X1 + X2 + X3 + X4 < 3
+     
+        (~X1 v ~X2 v ~X3)
+        (~X1 v ~X2 v ~X4)
+        (~X1 v ~X3 v ~X4)
+        (~X2 v ~X3 v ~X4)
+     
+        Parameters
+        ----------
+        variables : list of variables
+           variables in the constraint
+        upperbound: int
+           upper bound of the constraint
+     
+        Returns
+        -------
+            a list of clauses
+     
+        Examples
+        --------
+        >>> CNF.less_than_constraint(['a','b','c'],2)
+        [[(False, 'a'), (False, 'b')], [(False, 'a'), (False, 'c')], [(False, 'b'), (False, 'c')]]
+        >>> CNF.less_than_constraint(['a'],1)
+        [[(False, 'a')]]
+        >>> CNF.less_than_constraint(['a','b','c'],-1)
+        [[]]
+        >>> CNF.less_than_constraint(['a','b','c'],10)
+        []
+        """
+        return cls._inequality_constraint_builder(variables, upperbound, greater=False)
 
-    This is a generic builder used to build all the inequality
-    constraints. By default it build a "stricly less that", and if
-    ``greater`` is True it builds a "strictly greater than".
-    """
-    clauses = []
-    polarity = greater
-    if greater:
-        k = len(variables) - k
+    @classmethod
+    def less_or_equal_constraint(cls,variables, upperbound):
+        """Clauses encoding a \"less than or equal to\" constraint
+     
+        E.g. X1 + X2 + X3 + X4 <= 2
+     
+        (~X1 v ~X2 v ~X3)
+        (~X1 v ~X2 v ~X4)
+        (~X1 v ~X3 v ~X4)
+        (~X2 v ~X3 v ~X4)
+     
+        Parameters
+        ----------
+        variables : list of variables
+           variables in the constraint
+        upperbound: int
+           upper bound of the constraint
+     
+        Returns
+        -------
+            a list of clauses
+     
+        Examples
+        --------
+        >>> CNF.less_than_constraint(['a','b','c'],3) == CNF.less_or_equal_constraint(['a','b','c'],2)
+        True
+        >>> CNF.less_or_equal_constraint(['a','b','c'],1)
+        [[(False, 'a'), (False, 'b')], [(False, 'a'), (False, 'c')], [(False, 'b'), (False, 'c')]]
+        >>> CNF.less_or_equal_constraint(['a','b'],0)
+        [[(False, 'a')], [(False, 'b')]]
+        >>> CNF.less_or_equal_constraint(['a','b','c'],-1)
+        [[]]
+        >>> CNF.less_or_equal_constraint(['a','b','c'],10)
+        []
+        """
+        return cls._inequality_constraint_builder(variables, upperbound+1, greater=False)
+     
+    @classmethod
+    def greater_than_constraint(cls, variables, lowerbound):
+        """Clauses encoding a \"strictly greater than\" constraint
+     
+        E.g. X1 + X2 + X3 + X4 > 2
+     
+        (X1 v X2 v X3)
+        (X1 v X2 v X4)
+        (X1 v X3 v X4)
+        (X2 v X3 v X4)
+     
+        Parameters
+        ----------
+        variables : list of variables
+           variables in the constraint
+        lowerbound: int
+           lower bound of the constraint
+     
+        Returns
+        -------
+            a list of clauses
+     
+        Examples
+        --------
+        >>> CNF.greater_than_constraint(['a','b','c'],2)
+        [[(True, 'a')], [(True, 'b')], [(True, 'c')]]
+        >>> CNF.greater_than_constraint(['a'],0)
+        [[(True, 'a')]]
+        >>> CNF.greater_than_constraint(['a','b','c'],-1)
+        []
+        >>> CNF.greater_than_constraint(['a','b','c'],3)
+        [[]]
+        """
+        return cls._inequality_constraint_builder(variables, lowerbound, greater=True)
+     
+    @classmethod
+    def greater_or_equal_constraint(cls, variables, lowerbound):
+        """Clauses encoding a \"greater than or equal to\" constraint
+     
+        E.g. X1 + X2 + X3 + X4 > 1
+     
+        (X1 v X2 v X3)
+        (X1 v X2 v X4)
+        (X1 v X3 v X4)
+        (X2 v X3 v X4)
+     
+        Parameters
+        ----------
+        variables : list of variables
+           variables in the constraint
+        lowerbound: int
+           lower bound of the constraint
+     
+        Returns
+        -------
+            a list of clauses
+     
+        Examples
+        --------
+        >>> CNF.greater_than_constraint(['a','b','c'],1) == CNF.greater_or_equal_constraint(['a','b','c'],2)
+        True
+        >>> CNF.greater_or_equal_constraint(['a','b','c'],3)
+        [[(True, 'a')], [(True, 'b')], [(True, 'c')]]
+        >>> CNF.greater_or_equal_constraint(['a'],0)
+        []
+        >>> CNF.greater_or_equal_constraint(['a','b','c'],4)
+        [[]]
+        """
+        return cls._inequality_constraint_builder(variables, lowerbound - 1, greater=True)
 
-    if k > len(variables):
-        return []
-    elif k < 0:
-        return [[]]
+    @classmethod
+    def equal_to_constraint(cls, variables, value):
+        """Clauses encoding a \"equal to\" constraint
+     
+        E.g. X1 + X2 + X3 + X4 = 1
+     
+        (X1 v X2 v X3 v X4)
+        (~X1 v ~X2)
+        (~X1 v ~X3)
+        (~X1 v ~X4)
+        (~X2 v ~X3)
+        (~X2 v ~X4)
+        (~X3 v ~X4)
+     
+        Parameters
+        ----------
+        variables : list of variables
+           variables in the constraint
+        value: int
+           target values
+     
+        Returns
+        -------
+            a list of clauses
+        """
+        return cls.less_or_equal_constraint(variables, value) + \
+               cls.greater_or_equal_constraint(variables, value)
+     
+    @classmethod
+    def loose_majority_constraint(cls, variables):
+        """Clauses encoding a \"at least half\" constraint
+     
+        Parameters
+        ----------
+        variables : list of variables
+           variables in the constraint
+     
+        Returns
+        -------
+            a list of clauses
+        """
+        threshold = (len(variables)+1)/2
+        return cls.greater_or_equal_constraint(variables, threshold)
 
-    for tpl in combinations(variables, k):
-        clauses.append([(polarity, v) for v in tpl])
-    return clauses
-
-
-def less_than_constraint(variables, upperbound):
-    """Clauses encoding a \"strictly less than\" constraint
-
-    E.g. X1 + X2 + X3 + X4 < 3
-
-    (~X1 v ~X2 v ~X3)
-    (~X1 v ~X2 v ~X4)
-    (~X1 v ~X3 v ~X4)
-    (~X2 v ~X3 v ~X4)
-
-    Parameters
-    ----------
-    variables : list of variables
-       variables in the constraint
-    upperbound: int
-       upper bound of the constraint
-
-    Returns
-    -------
-        a list of clauses
-
-    Examples
-    --------
-    >>> less_than_constraint(['a','b','c'],2)
-    [[(False, 'a'), (False, 'b')], [(False, 'a'), (False, 'c')], [(False, 'b'), (False, 'c')]]
-    >>> less_than_constraint(['a'],1)
-    [[(False, 'a')]]
-    >>> less_than_constraint(['a','b','c'],-1)
-    [[]]
-    >>> less_than_constraint(['a','b','c'],10)
-    []
-    """
-    return _inequality_constraint_builder(variables, upperbound, greater=False)
-
-def less_or_equal_constraint(variables, upperbound):
-    """Clauses encoding a \"less than or equal to\" constraint
-
-    E.g. X1 + X2 + X3 + X4 <= 2
-
-    (~X1 v ~X2 v ~X3)
-    (~X1 v ~X2 v ~X4)
-    (~X1 v ~X3 v ~X4)
-    (~X2 v ~X3 v ~X4)
-
-    Parameters
-    ----------
-    variables : list of variables
-       variables in the constraint
-    upperbound: int
-       upper bound of the constraint
-
-    Returns
-    -------
-        a list of clauses
-
-    Examples
-    --------
-    >>> less_than_constraint(['a','b','c'],3) == less_or_equal_constraint(['a','b','c'],2)
-    True
-    >>> less_or_equal_constraint(['a','b','c'],1)
-    [[(False, 'a'), (False, 'b')], [(False, 'a'), (False, 'c')], [(False, 'b'), (False, 'c')]]
-    >>> less_or_equal_constraint(['a','b'],0)
-    [[(False, 'a')], [(False, 'b')]]
-    >>> less_or_equal_constraint(['a','b','c'],-1)
-    [[]]
-    >>> less_or_equal_constraint(['a','b','c'],10)
-    []
-    """
-    return _inequality_constraint_builder(variables, upperbound+1, greater=False)
-
-def greater_than_constraint(variables, lowerbound):
-    """Clauses encoding a \"strictly greater than\" constraint
-
-    E.g. X1 + X2 + X3 + X4 > 2
-
-    (X1 v X2 v X3)
-    (X1 v X2 v X4)
-    (X1 v X3 v X4)
-    (X2 v X3 v X4)
-
-    Parameters
-    ----------
-    variables : list of variables
-       variables in the constraint
-    lowerbound: int
-       lower bound of the constraint
-
-    Returns
-    -------
-        a list of clauses
-
-    Examples
-    --------
-    >>> greater_than_constraint(['a','b','c'],2)
-    [[(True, 'a')], [(True, 'b')], [(True, 'c')]]
-    >>> greater_than_constraint(['a'],0)
-    [[(True, 'a')]]
-    >>> greater_than_constraint(['a','b','c'],-1)
-    []
-    >>> greater_than_constraint(['a','b','c'],3)
-    [[]]
-    """
-    return _inequality_constraint_builder(variables, lowerbound, greater=True)
-
-def greater_or_equal_constraint(variables, lowerbound):
-    """Clauses encoding a \"greater than or equal to\" constraint
-
-    E.g. X1 + X2 + X3 + X4 > 1
-
-    (X1 v X2 v X3)
-    (X1 v X2 v X4)
-    (X1 v X3 v X4)
-    (X2 v X3 v X4)
-
-    Parameters
-    ----------
-    variables : list of variables
-       variables in the constraint
-    lowerbound: int
-       lower bound of the constraint
-
-    Returns
-    -------
-        a list of clauses
-
-    Examples
-    --------
-    >>> greater_than_constraint(['a','b','c'],1) == greater_or_equal_constraint(['a','b','c'],2)
-    True
-    >>> greater_or_equal_constraint(['a','b','c'],3)
-    [[(True, 'a')], [(True, 'b')], [(True, 'c')]]
-    >>> greater_or_equal_constraint(['a'],0)
-    []
-    >>> greater_or_equal_constraint(['a','b','c'],4)
-    [[]]
-    """
-    return _inequality_constraint_builder(variables, lowerbound - 1, greater=True)
-
-def equal_to_constraint(variables, value):
-    """Clauses encoding a \"equal to\" constraint
-
-    E.g. X1 + X2 + X3 + X4 = 1
-
-    (X1 v X2 v X3 v X4)
-    (~X1 v ~X2)
-    (~X1 v ~X3)
-    (~X1 v ~X4)
-    (~X2 v ~X3)
-    (~X2 v ~X4)
-    (~X3 v ~X4)
-
-    Parameters
-    ----------
-    variables : list of variables
-       variables in the constraint
-    value: int
-       target values
-
-    Returns
-    -------
-        a list of clauses
-    """
-    return less_or_equal_constraint(variables, value) + \
-           greater_or_equal_constraint(variables, value)
-
-
-def loose_majority_constraint(variables):
-    """Clauses encoding a \"at least half\" constraint
-
-    Parameters
-    ----------
-    variables : list of variables
-       variables in the constraint
-
-    Returns
-    -------
-        a list of clauses
-    """
-    threshold = (len(variables)+1)/2
-    return greater_or_equal_constraint(variables, threshold)
-
-def loose_minority_constraint(variables):
-    """Clauses encoding a \"at most half\" constraint
-
-    Parameters
-    ----------
-    variables : list of variables
-       variables in the constraint
-
-    Returns
-    -------
-        a list of clauses
-    """
-    threshold = len(variables)/2
-    return less_or_equal_constraint(variables, threshold)
-
-
-def exactly_half_ceil(variables):
-    """Clauses encoding a \"exactly half\" constraint (rounded up)
-
-    Parameters
-    ----------
-    variables : list of variables
-       variables in the constraint
-
-    Returns
-    -------
-        a list of clauses
-    """
-    threshold = (len(variables)+1)/2
-    return equal_to_constraint(variables,threshold)
-
-def exactly_half_floor(variables):
-    """Clauses encoding a \"exactly half\" constraint (rounded down)
-
-    Parameters
-    ----------
-    variables : list of variables
-       variables in the constraint
-
-    Returns
-    -------
-        a list of clauses
-    """
-    threshold = len(variables)/2
-    return equal_to_constraint(variables,threshold)
+    @classmethod
+    def loose_minority_constraint(cls, variables):
+        """Clauses encoding a \"at most half\" constraint
+     
+        Parameters
+        ----------
+        variables : list of variables
+           variables in the constraint
+     
+        Returns
+        -------
+            a list of clauses
+        """
+        threshold = len(variables)/2
+        return cls.less_or_equal_constraint(variables, threshold)
+     
+    @classmethod
+    def exactly_half_ceil(cls, variables):
+        """Clauses encoding a \"exactly half\" constraint (rounded up)
+     
+        Parameters
+        ----------
+        variables : list of variables
+           variables in the constraint
+     
+        Returns
+        -------
+            a list of clauses
+        """
+        threshold = (len(variables)+1)/2
+        return cls.equal_to_constraint(variables,threshold)
+     
+    @classmethod
+    def exactly_half_floor(cls, variables):
+        """Clauses encoding a \"exactly half\" constraint (rounded down)
+     
+        Parameters
+        ----------
+        variables : list of variables
+           variables in the constraint
+     
+        Returns
+        -------
+            a list of clauses
+        """
+        threshold = len(variables)/2
+        return cls.equal_to_constraint(variables,threshold)

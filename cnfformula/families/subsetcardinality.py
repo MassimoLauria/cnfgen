@@ -4,8 +4,6 @@
 """
 
 from cnfformula.cnf import CNF
-from cnfformula.cnf import loose_majority_constraint,loose_minority_constraint
-from cnfformula.cnf import exactly_half_floor,exactly_half_ceil
 
 from cnfformula.cmdline import BipartiteGraphHelper
 
@@ -102,20 +100,20 @@ def SubsetCardinalityFormula(B, equalities = False):
         edge_vars = [ var_name(u,v) for v in neighbors(B,u) ]
 
         if equalities:
-            for cls in exactly_half_ceil(edge_vars):
+            for cls in CNF.exactly_half_ceil(edge_vars):
                 ssc.add_clause(cls,strict=True)
         else:
-            for cls in loose_majority_constraint(edge_vars):
+            for cls in CNF.loose_majority_constraint(edge_vars):
                 ssc.add_clause(cls,strict=True)
 
     for v in Right:
         edge_vars = [ var_name(u,v) for u in neighbors(B,v) ]
 
         if equalities:
-            for cls in exactly_half_floor(edge_vars):
+            for cls in CNF.exactly_half_floor(edge_vars):
                 ssc.add_clause(cls,strict=True)
         else:
-            for cls in loose_minority_constraint(edge_vars):
+            for cls in CNF.loose_minority_constraint(edge_vars):
                 ssc.add_clause(cls,strict=True)
     
     return ssc

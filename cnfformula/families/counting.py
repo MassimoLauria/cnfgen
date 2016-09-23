@@ -9,7 +9,6 @@ from cnfformula.cmdline import SimpleGraphHelper
 from cnfformula.cmdline  import register_cnfgen_subcommand
 from cnfformula.families import register_cnf_generator
 
-from cnfformula.cnf import equal_to_constraint
 from cnfformula.graphs import enumerate_vertices,neighbors
 from itertools import combinations
 
@@ -46,7 +45,7 @@ def CountingPrinciple(M,p):
 
         edge_vars = [var_name(tpl) for tpl in incidence[el]]
 
-        for cls in equal_to_constraint(edge_vars,1):
+        for cls in CNF.equal_to_constraint(edge_vars,1):
             cnf.add_clause(cls)
 
     return cnf
@@ -85,7 +84,7 @@ def PerfectMatchingPrinciple(G):
 
         edge_vars = [var_name(u,v) for u in neighbors(G,v)]
 
-        for cls in equal_to_constraint(edge_vars,1):
+        for cls in CNF.equal_to_constraint(edge_vars,1):
             cnf.add_clause(cls)
 
     return cnf

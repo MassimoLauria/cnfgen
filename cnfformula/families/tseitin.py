@@ -4,7 +4,6 @@
 """
 
 from cnfformula.cnf import CNF
-from cnfformula.cnf import parity_constraint
 
 from cnfformula.cmdline import SimpleGraphHelper
 from cnfformula.graphs import enumerate_vertices,neighbors
@@ -47,7 +46,7 @@ def TseitinFormula(graph,charges=None):
         
         # produce all clauses and save half of them
         names = [ edgename((u,v)) for u in neighbors(graph,v) ]
-        for cls in parity_constraint(names,c):
+        for cls in CNF.parity_constraint(names,c):
             tse.add_clause(list(cls),strict=True)
 
     return tse

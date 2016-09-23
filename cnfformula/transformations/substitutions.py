@@ -4,7 +4,6 @@
 from __future__ import print_function
 
 from ..cnf import CNF
-from ..cnf import parity_constraint
 
 from ..cmdline  import register_cnf_transformation_subcommand
 from ..transformations import register_cnf_transformation
@@ -321,7 +320,7 @@ class XorSubstitution(BaseSubstitution):
         Returns: a list of clauses
         """
         names = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
-        return parity_constraint(names,polarity)
+        return CNF.parity_constraint(names,polarity)
 
 @register_cnf_transformation
 class FormulaLifting(BaseSubstitution):
