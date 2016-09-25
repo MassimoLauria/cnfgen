@@ -398,6 +398,9 @@ class SimpleGraphHelper(GraphHelper):
 
         gr.add_argument('--complete'+suffix,type=positive_int,action='store',metavar="<N>",
                         help="complete graph on N vertices")
+        
+        gr.add_argument('--empty'+suffix,type=positive_int,action='store',metavar="<N>",
+                        help="empty graph on N vertices")
 
         gr=parser.add_argument_group("Modifications for input graph "+suffix)
         gr.add_argument('--plantclique'+suffix,type=positive_int,action='store',metavar="<k>",
@@ -459,6 +462,10 @@ class SimpleGraphHelper(GraphHelper):
         elif getattr(args,'complete'+suffix) is not None:
 
             G=networkx.complete_graph(getattr(args,'complete'+suffix))
+
+        elif getattr(args,'empty'+suffix) is not None:
+
+            G=networkx.empty_graph(getattr(args,'empty'+suffix))
 
         elif getattr(args,'graphformat'+suffix) is not None:
 
