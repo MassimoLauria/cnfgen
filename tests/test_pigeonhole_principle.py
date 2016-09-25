@@ -2,7 +2,9 @@ import networkx as nx
 
 import sys
 from cnfformula import CNF
-from cnfformula import PigeonholePrinciple, GraphPigeonholePrinciple
+from cnfformula.families.pigeonhole import PigeonholePrinciple
+from cnfformula.families.pigeonhole import GraphPigeonholePrinciple
+from cnfformula.families.pigeonhole import BinaryPigeonholePrinciple
 
 from . import TestCNFBase
 from .test_commandline_helper import TestCommandline
@@ -147,6 +149,15 @@ class TestPigeonholePrincipleCommandline(TestCommandline):
                         if onto : parameters.append("--onto")
                         F = PigeonholePrinciple(pigeons,holes,functional,onto)
                         self.checkFormula(sys.stdin,F, parameters)
+
+class TestBinaryPigeonholePrincipleCommandline(TestCommandline):
+    def test_parameters(self):
+        for pigeons in range(2,5):
+            for holes in range(2,8):
+                parameters = ["cnfgen","-q","bphp", pigeons, holes]
+                F = BinaryPigeonholePrinciple(pigeons,holes)
+                self.checkFormula(sys.stdin,F, parameters)
+
 
 class TestGraphPigeonholePrincipleCommandline(TestCommandline):
     def test_complete(self):
