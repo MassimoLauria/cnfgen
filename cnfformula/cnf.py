@@ -19,11 +19,12 @@ https://github.com/MassimoLauria/cnfgen.git
 
 from __future__ import print_function
 from itertools import product
-from itertools import combinations
+from itertools import combinations,combinations_with_replacement
 from collections import Counter
 import re
 
 from . import prjdata as pd
+from .graphs import bipartite_sets,neighbors
 
 _default_header="Generated with `cnfgen`\n(C) {}\n{}\n\n".format(pd.__copyright__,
                                                                  pd.__url__)
@@ -1050,3 +1051,265 @@ class CNF(object):
         """
         threshold = len(variables)/2
         return cls.equal_to_constraint(variables,threshold)
+
+    @classmethod
+    def unary_mapping( cls, D, R,
+                       var_name=None,
+                       complete=True,
+                       functional=False,
+                       surjective=False,
+                       injective=False):
+        r"""Generator for the clauses of a mapping between to sets
+
+        This generates of the constraints on variables :math:`v(i,j)`
+        where :math:`i \in D` and :math:`j in R`, so that they
+        represent a mapping (or a relation) between the two sets,
+        expressed in unary (i.e. :math:`v(i,j)` expresses whether
+        :math:`i` is mapped to :math:`j` or not).
+
+        Parameters
+        ----------
+        D : iterable
+            the domain of the mapping
+
+        R : iterable
+            the range of the mapping
+
+        var_name: a function 
+            given :math:`i` and :math`j` the function must produce the
+            name of variable :math`v(i,j)`
+
+        complete: bool
+            every element of :math:`D` must have an image (default: true)
+
+        functional: bool
+            every element of :math:`D` must have at most one image (default: false)
+
+        surjective: bool
+            every element of :math:`R` must have a pre-image (default: false)
+
+        injective: bool
+            every element of :math:`R` must have at most one pre-image (default: false)
+        
+        Yields
+        ------
+            a sequence of clauses
+
+        """
+        def default_name(i,j):
+            return "X_{{{0},{1}}}".format(i,j)
+        
+        if var_name is None:
+            var_name = default_name
+            
+        # Completeness axioms
+        if complete:
+            for i in D:
+                for c in CNF.greater_or_equal_constraint([var_name(i,j) for j in R], 1):
+                    yield c
+                    
+        # Surjectivity axioms
+        if surjective:
+            for j in R:
+                for c in CNF.greater_or_equal_constraint([var_name(i,j) for i in D], 1):
+                    yield c
+
+        # Injectivity axioms
+        if injective:
+            for j in R:
+                for c in CNF.less_or_equal_constraint([var_name(i,j) for i in D],1):
+                    yield c
+
+        # Functionality axioms
+        if functional:
+            for i in D:
+                for c in CNF.less_or_equal_constraint([var_name(i,j) for j in R],1):
+                    yield c
+
+
+
+    @classmethod
+    def unary_subset_increasing(cls, Idx, S,
+                                var_name=None):
+        r"""Generator for the clauses to index a subset
+
+        This generates the constraints on variables :math:`v(i,j)`
+        that say that the elements of `Idx` are indexing a subset of
+        elements in `S`. The mapping is guaranteed to be monotone
+        increasing, i.e, if :math:`i_1 \leq i_2` and both
+        :math:`v(i_1,j_1)` and :math:`v(i_2,j_2)` hold, then
+        :math:`j_1 \leq j_2` holds too. Order is assumed by iterables
+        in input.
+
+        Parameters
+        ----------
+        Idx : iterable
+            an list of indices
+
+        S : iterable
+            set where to pick the subset
+
+        var_name: a function 
+            given :math:`i` and :math`j` the function must produce the
+            name of variable :math`v(i,j)`
+
+        Yields
+        ------
+            a sequence of clauses
+
+        """
+        for c in cls.unary_mapping(Idx, S,var_name=var_name,
+                                   functional=True,
+                                   injective=False):
+            yield c
+            
+        # Mapping is strictly monotone increasing (so it is also injective)
+        localmaps = product(combinations(Idx,2),
+                            combinations_with_replacement(S,2))
+
+        for (a,b),(i,j) in localmaps:
+            yield [(False,var_name(a,j)),(False,var_name(b,i))]
+
+        
+                    
+    @classmethod
+    def sparse_mapping( cls, B,
+                       var_name=None,
+                       complete=True,
+                       functional=False,
+                       surjective=False,
+                       injective=False):
+        r"""Generator for the clauses of a mapping according to a bipartite graph
+
+        This generates of the constraints on variables :math:`v(i,j)`
+        where :math:`i` is a left vertex of :math:`B` and :math:`j` is
+        a right vertex of :math`B`, so that they represent a mapping
+        (or a relation) between the left and right vertices, so that
+        every pair in the ralation must be and edge of :math:`B`.
+        (i.e. if :math:`v(i,j)` is true then :math:`(i,j)` must be an
+        edge of the graph :math:`B`).
+
+        Parameters
+        ----------
+        B : graph
+            a bipartite graph
+
+        var_name: a function 
+            given :math:`i` and :math`j` the function must produce the
+            name of variable :math`v(i,j)`
+
+        complete: bool
+            every element on the left must have an image (default: true)
+
+        functional: bool
+            every element on the left must have at most one image (default: false)
+
+        surjective: bool
+            every element on the right must have a pre-image (default: false)
+
+        injective: bool
+            every element on the right must have at most one pre-image (default: false)
+        
+        Yields
+        ------
+            a sequence of clauses
+
+        """
+        def default_name(i,j):
+            return "X_{{{0},{1}}}".format(i,j)
+        
+        if var_name is None:
+            var_name = default_name
+
+        D,R = bipartite_sets(B)
+        # Completeness axioms
+        if complete:
+            for i in D:
+                for c in CNF.greater_or_equal_constraint([var_name(i,j) for j in neighbors(B,i)], 1):
+                    yield c
+                    
+        # Surjectivity axioms
+        if surjective:
+            for j in R:
+                for c in CNF.greater_or_equal_constraint([var_name(i,j) for i in neighbors(B,j)], 1):
+                    yield c
+
+        # Injectivity axioms
+        if injective:
+            for j in R:
+                for c in CNF.less_or_equal_constraint([var_name(i,j) for i in neighbors(B,j)],1):
+                    yield c
+
+        # Functionality axioms
+        if functional:
+            for i in D:
+                for c in CNF.less_or_equal_constraint([var_name(i,j) for j in neighbors(B,i)],1):
+                    yield c
+
+
+
+    @classmethod
+    def binary_mapping( cls, D, k,
+                        var_name=None,
+                        injective=False,
+                        cutoff=None):
+        r"""Generator for the clauses of a binary mapping between D and :math:`\{0...1\}^k`
+
+        This generates of the constraints on variables
+        :math:`v(i,0)...v(i,k-1)` where :math:`i \in D` and
+        :math:`v(i,0)...v(i,k-1)` is a binary of :math:`k` bits.
+        And variables express the mapping (i.e.
+        :math:`v(i,k-1)...v(i,0)` expresses that :math:`i` is mapped
+        to that string).
+
+        Parameters
+        ----------
+        D : iterable
+            the domain of the mapping
+
+        k : int
+            the length of the bit strings
+
+        var_name: a function 
+            given :math:`i` and :math`b` the function must produce the
+            name of variable :math`v(i,b)`
+
+        injective: bool
+            every bitstring must have at most one pre-image (default: false)
+        
+        cutoff: int
+            forbid, as images, the bit strings encoding numbers larger
+            than cutoff This is useful to represent a range which is
+            not a power of two. For example a mapping to a range of
+            [10] ca be represented with 4 bits, but the strings >=
+            1010 must not be image of anything. (default: None)
+
+        Yields
+        ------
+            a sequence of clauses
+
+        """
+        def default_name(i,b):
+            return "Y_{{{0},{1}}}".format(i,b)
+
+        if var_name is None:
+            var_name = default_name
+
+        if cutoff is None:
+            cutoff = 2**k
+            
+        def build_or(i,bs):
+            return [ ( bs[b]==0, var_name(i,k-1-b)) for b in xrange(k) ] 
+        
+        for j,bits in enumerate(product([0,1],repeat=k)):
+
+            # Exclude high strings
+            if j >= cutoff:
+                for i in D:
+                    yield build_or(i,bits) 
+                
+            elif injective:
+            # Injectivity axioms
+                for i1,i2 in combinations(D,2):
+                    yield build_or(i1,bits) + build_or(i2,bits)
+
