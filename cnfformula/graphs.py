@@ -9,7 +9,8 @@ from __future__ import print_function
 
 __all__ = ["supported_formats",
            "readGraph","writeGraph",
-           "is_dag","has_bipartition","enumerate_vertices","enumerate_edges","neighbors",
+           "is_dag","has_bipartition","bipartite_sets",
+           "enumerate_vertices","enumerate_edges","neighbors",
            "bipartite_random_left_regular", "bipartite_random_regular",
            "dag_complete_binary_tree", "dag_pyramid"]
 

@@ -11,7 +11,8 @@ import cnfformula.cmdline
 import cnfformula.families
 
 from cnfformula.graphs import neighbors
-from itertools import combinations
+from itertools import combinations,product
+from math import ceil,log
 
 @cnfformula.families.register_cnf_generator
 def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
@@ -74,25 +75,7 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
             formula_name="Onto pigeonhole principle"
         else:
             formula_name="Pigeonhole principle"
-
-    # Clause generator
-    def _PHP_clause_generator(pigeons,holes,functional,onto):
-        """Generator for the clauses"""
-        # Pigeon axioms
-        for p in xrange(1,pigeons+1):
-            for C in CNF.greater_or_equal_constraint([var_name(p,h) for h in xrange(1,holes+1)], 1): yield C
-        # Onto axioms
-        if onto:
-            for h in xrange(1,holes+1):
-                for C in CNF.greater_or_equal_constraint([var_name(p,h) for p in xrange(1,pigeons+1)], 1): yield C
-        # No conflicts axioms
-        for h in xrange(1,holes+1):
-            for C in CNF.less_or_equal_constraint([var_name(p,h) for p in xrange(1,pigeons+1)],1): yield C
-        # Function axioms
-        if functional:
-            for p in xrange(1,pigeons+1):
-                for C in CNF.less_or_equal_constraint([var_name(p,h) for h in xrange(1,holes+1)],1): yield C
-
+            
     php=CNF()
     php.header="{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes)\
         + php.header
@@ -101,7 +84,14 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
         for h in xrange(1,holes+1):
             php.add_variable(var_name(p,h))
     
-    clauses=_PHP_clause_generator(pigeons,holes,functional,onto)
+    clauses=php.unary_mapping(
+        xrange(1,pigeons+1),
+        xrange(1,holes+1),
+        var_name,
+        complete = True,
+        injective = True,
+        functional = functional,
+        surjective = onto)
     for c in clauses:
         php.add_clause(c,strict=True)
 
@@ -152,39 +142,63 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
         else:
             formula_name="Graph pigeonhole principle"
 
-    Left, Right = bipartite_sets(graph)
-
-    # Clause generator
-    def _GPHP_clause_generator(G,functional,onto):
-        # Pigeon axioms
-        for p in Left:
-            for C in CNF.greater_or_equal_constraint([var_name(p,h) for h in neighbors(G,p)], 1): yield C
-        # Onto axioms
-        if onto:
-            for h in Right:
-                for C in CNF.greater_or_equal_constraint([var_name(p,h) for p in neighbors(G,h)], 1): yield C
-        # No conflicts axioms
-        for h in Right:
-            for C in CNF.less_or_equal_constraint([var_name(p,h) for p in neighbors(G,h)],1): yield C
-        # Function axioms
-        if functional:
-            for p in Left:
-                for C in CNF.less_or_equal_constraint([var_name(p,h) for h in neighbors(G,p)],1): yield C
 
     gphp=CNF()
     gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)
+
+    Left, _ = bipartite_sets(graph)
 
     for p in Left:
         for h in neighbors(graph,p):
             gphp.add_variable(var_name(p,h))
 
-    
-    clauses=_GPHP_clause_generator(graph,functional,onto)
+    clauses=gphp.sparse_mapping( graph,
+                                 var_name=var_name,
+                                 complete = True,
+                                 injective = True,
+                                 functional = functional,
+                                 surjective = onto)
+
     for c in clauses:
         gphp.add_clause(c,strict=True)
 
     return gphp
 
+@cnfformula.families.register_cnf_generator
+def BinaryPigeonholePrinciple(pigeons,holes):
+    """Binary Pigeonhole Principle CNF formula
+
+    The pigeonhole principle claims that no M pigeons can sit in
+    N pigeonholes without collision if M>N. This formula encodes the
+    principle using binary strings to identify the holes.
+
+    Parameters
+    ----------
+    pigeon : int 
+       number of pigeons
+    holes : int 
+       number of holes
+    """
+
+    def var_name(p,b):
+        return 'Y_{{{0},{1}}}'.format(p,b)
+    
+    bphp=CNF()
+    bphp.header="Binary Pigeonhole Principle for {0} pigeons and {1} holes\n".format(pigeons,holes)\
+                 + bphp.header
+    
+    k = int(ceil(log(holes,2)))
+    assert( holes <= 2**k)
+
+    for p,b in product(xrange(1,pigeons+1),xrange(0,k)):
+        bphp.add_variable(var_name(p,b))
+    
+    clauses=bphp.binary_mapping(xrange(1,pigeons+1), k, var_name, cutoff=holes,injective = True)
+
+    for c in clauses:
+        bphp.add_clause(c,strict=True)
+
+    return bphp
 
 @cnfformula.cmdline.register_cnfgen_subcommand
 class PHPCmdHelper(object):
@@ -255,3 +269,29 @@ class GPHPCmdHelper:
 
 
 
+@cnfformula.cmdline.register_cnfgen_subcommand
+class BPHPCmdHelper(object):
+    """Command line helper for the Pigeonhole principle CNF"""
+    
+    name='bphp'
+    description='binary pigeonhole principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for pigeonhole principle formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('pigeons',metavar='<pigeons>',type=int,help="Number of pigeons")
+        parser.add_argument('holes',metavar='<holes>',type=int,help="Number of holes")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a PHP formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        return BinaryPigeonholePrinciple(args.pigeons,
+                                         args.holes)
