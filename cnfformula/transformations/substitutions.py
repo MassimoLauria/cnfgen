@@ -5,10 +5,11 @@ from __future__ import print_function
 
 from ..cnf import CNF
 
-from ..cmdline  import register_cnf_transformation_subcommand
+from ..cmdline  import register_cnf_transformation_subcommand,BipartiteGraphHelper
 from ..transformations import register_cnf_transformation
 
 from itertools import combinations,product,permutations
+from cnfformula.graphs import bipartite_sets,neighbors
 
 ###
 ### Substitions
@@ -18,7 +19,7 @@ class BaseSubstitution(CNF):
     """Apply a substitution to a formula
     """
 
-    def __init__(self, cnf):
+    def __init__(self, cnf, new_variables=None):
         """Build a new CNF substituting variables
 
         Arguments:
@@ -48,14 +49,14 @@ class BaseSubstitution(CNF):
 
         # Collect new variable names from the CNFs:
         # clause compression needs the variable names
-        for i in range(1,len(variablenames)):
-            for clause in varadditional[i]+\
-                          substitutions[i]+\
-                          substitutions[-i]:
-                for _,varname in clause:
-                    self.add_variable(varname)
-
-         
+        if new_variables is None:
+            for i in range(1,len(variablenames)):
+                for clause in varadditional[i]+substitutions[i]+substitutions[-i]:
+                    for _,varname in clause:
+                        self.add_variable(varname)
+        else:
+            for v in new_variables:
+                self.add_variable(v)
 
         # Compress substitution cnfs
         for i in range(1,len(varadditional)):
@@ -127,8 +128,7 @@ class IfThenElseSubstitution(BaseSubstitution):
 
         super(IfThenElseSubstitution,self).__init__(cnf)
 
-        self._header="If-Then-Else substituted formula\n\n".format(self._rank) \
-            +self._header
+        self._header="If-Then-Else substituted formula\n\n" + self._header
 
     def transform_a_literal(self, polarity,varname):
         """Substitute a positive literal with an if then else statement,
@@ -450,7 +450,83 @@ class FlipPolarity(BaseSubstitution):
         """
         return [[(not polarity,varname)]]
 
+@register_cnf_transformation
+class VariableCompression(BaseSubstitution):
+    """Vabiable compression transformation 
+    
+    The original variable are substituted with the XOR (or MAJ) of
+    a subset of a new set of variables (usually smaller).
+    """
 
+    _name_vertex_dict={}
+    _pattern  = None
+    _function = None
+    
+    def __init__(self, cnf, B, function='xor'):
+        """Build a new CNF obtained by substituting a XOR to the
+        variables of the original CNF.
+
+        Parameters
+        ----------
+        cnf : CNF
+            the original cnf formula
+        B : networkx.Graph
+            a bipartite graph. The right side must have the number of
+            vertices equal to the number of original variables
+        
+        function: string 
+            Select which faction is used for the compression. It must
+            be one among 'xor' or 'maj'.
+
+        - `cnf`: the original cnf
+        - `rank`: how many variables in each xor
+
+        """
+        if function not in ['xor','maj']:
+            raise ValueError("Function specification for variable compression must be either 'xor' or 'maj'.")
+
+        Left,Right = bipartite_sets(B)
+
+        if len(Right) != len(list(cnf.variables())):
+            raise ValueError("Right side of the graph must match the variable numbers of the CNF.")
+
+        self._pattern = B
+        self._function = function
+        for n,v in zip(cnf.variables(),Right):
+            self._name_vertex_dict[n]=v
+            
+        super(VariableCompression,self).__init__(cnf, new_variables = ["Y_{{{0}}}".format(i) for i in Left])
+
+        self._header="Variable {}-compression from {} to {} variables\n\n".format(function,len(Right),len(Left)) \
+            +self._header
+
+    def transform_a_literal(self, polarity,varname):
+        """Substitute a literal with a (negated) XOR
+
+        Arguments:
+        - `polarity`: polarity of the literal
+        - `varname`: fariable to be substituted
+
+        Returns: a list of clauses
+        """
+        varname = self._name_vertex_dict[varname]
+        local_vars  = neighbors(self._pattern,varname)
+        local_names = ["Y_{{{0}}}".format(i) for i in local_vars ]
+
+        if self._function == 'xor':
+
+            return self.parity_constraint(local_names,polarity)
+
+        elif self._function == 'maj':
+
+            threshold = len(local_names)
+            if polarity:
+                return self.greater_or_equal_constraint(local_names, threshold // 2 + 1)
+            else:
+                return self.less_than_constraint(local_names, threshold // 2 + 1)
+        else:
+            raise RuntimeError("Error: variable compression with invalid function")
+            
 #
 # Command line helpers for these substitutions
 #
@@ -592,3 +668,31 @@ class FlipCmd:
     def transform_cnf(F,args):
        
         return  FlipPolarity(F)
+
+@register_cnf_transformation_subcommand
+class XorCompressionCmd:
+    name='xorcomp'
+    description='variable compression using XOR'
+
+    @staticmethod
+    def setup_command_line(parser):
+        BipartiteGraphHelper.setup_command_line(parser)
+        
+    @staticmethod
+    def transform_cnf(F,args):
+        B = BipartiteGraphHelper.obtain_graph(args)
+        return  VariableCompression(F,B,function='xor')
+
+@register_cnf_transformation_subcommand
+class MayCompressionCmd:
+    name='majcomp'
+    description='variable compression using Majority'
+
+    @staticmethod
+    def setup_command_line(parser):
+        BipartiteGraphHelper.setup_command_line(parser)
+        
+    @staticmethod
+    def transform_cnf(F,args):
+        B = BipartiteGraphHelper.obtain_graph(args)
+        return  VariableCompression(F,B,function='maj')
