@@ -11,7 +11,7 @@ import cnfformula.cmdline
 
 from itertools import combinations
 from itertools import product
-from itertools import combinations_with_replacement
+from itertools import permutations
 from cnfformula.graphs import enumerate_vertices
 
 from networkx  import complete_graph
@@ -20,7 +20,7 @@ from networkx  import empty_graph
 from textwrap import dedent
 
 @cnfformula.families.register_cnf_generator
-def SubgraphFormula(graph,templates):
+def SubgraphFormula(graph,templates, symmetric=False):
     """Test whether a graph contains one of the templates.
 
     Given a graph :math:`G` and a sequence of template graphs
@@ -36,16 +36,28 @@ def SubgraphFormula(graph,templates):
     ----------
     graph : networkx.Graph
         a simple graph
+
     templates : list-like object
         a sequence of graphs.
+
+    symmetric:
+        all template graphs are symmetric wrt permutations of
+        vertices. This allows some optimization in the search space of
+        the assignments.
+
+    induce: 
+        force the subgraph to be induced (i.e. no additional edges are allowed)
+
 
     Returns
     -------
     a CNF object
+
     """
 
     F=CNF()
 
+    
     # One of the templates is chosen to be the subgraph
     if len(templates)==0:
         return F
@@ -60,12 +72,8 @@ def SubgraphFormula(graph,templates):
         F.add_variable(s)
         
     if len(selectors)>1:
-
-        # Exactly one of the graphs must be selected as subgraph
-        F.add_clause([(True,v) for v in selectors],strict=True)
-
-        for (a,b) in combinations(selectors):
-            F.add_clause( [ (False,a), (False,b) ], strict=True )
+        for cls in F.equal_to_constraint(selectors,1):
+            F.add_clause( cls , strict=True )
 
     # comment the formula accordingly
     if len(selectors)>1:
@@ -83,28 +91,20 @@ def SubgraphFormula(graph,templates):
     N=graph.order()
     k=max([s.order() for s in templates])
 
+    var_name = lambda i,j: "S_{{{0},{1}}}".format(i,j)
+
     for i,j in product(range(k),range(N)):
-        F.add_variable("S_{{{0},{1}}}".format(i,j))
+        F.add_variable( var_name(i,j) )
 
-    # each vertex has an image...
-    for i in range(k):
-        F.add_clause([(True,"S_{{{0},{1}}}".format(i,j)) for j in range(N)],strict=True)
-
-    # ...and exactly one
-    for i,(a,b) in product(range(k),combinations(range(N),2)):
-        F.add_clause([(False,"S_{{{0},{1}}}".format(i,a)),
-                      (False,"S_{{{0},{1}}}".format(i,b))  ], strict = True)
-
- 
-    # Mapping is strictly monotone increasing (so it is also injective)
-    localmaps = product(combinations(range(k),2),
-                        combinations_with_replacement(range(N),2))
-
-    for (a,b),(i,j) in localmaps:
-        F.add_clause([(False,"S_{{{0},{1}}}".format(min(a,b),max(i,j))),
-                      (False,"S_{{{0},{1}}}".format(max(a,b),min(i,j)))  ],strict=True)
-
-
+    if symmetric:
+        gencls = F.unary_subset_increasing(range(k),range(N),var_name=var_name)
+    else:
+        gencls = F.unary_mapping(range(k),range(N),var_name=var_name,
+                                 functional=True,injective=True)
+        
+    for cls in gencls:
+        F.add_clause( cls, strict=True )
+        
     # The selectors choose a template subgraph.  A mapping must map
     # edges to edges and non-edges to non-edges for the active
     # template.
@@ -126,25 +126,30 @@ def SubgraphFormula(graph,templates):
 
     for i in range(len(templates)):
 
-
         k  = templates[i].order()
         tV = enumerate_vertices(templates[i])
 
-        localmaps = product(combinations(range(k),2),
-                            combinations(range(N),2))
-
+        if symmetric:
+            # Using 'unary_subset_increasing' monotone representation.
+            localmaps = product(combinations(range(k),2),
+                                combinations(range(N),2))
+        else:
+            localmaps = product(combinations(range(k),2),
+                                permutations(range(N),2))
+       
 
         for (i1,i2),(j1,j2) in localmaps:
 
             # check if this mapping is compatible
             tedge=templates[i].has_edge(tV[i1],tV[i2])
             gedge=graph.has_edge(gV[j1],gV[j2])
-            if tedge == gedge: continue
+            if tedge == gedge:
+                continue
 
             # if it is not, add the corresponding
             F.add_clause(activation_prefixes[i] + \
-                         [(False,"S_{{{0},{1}}}".format(min(i1,i2),min(j1,j2))),
-                          (False,"S_{{{0},{1}}}".format(max(i1,i2),max(j1,j2))) ],strict=True)
+                         [(False,var_name(i1,j1)),
+                          (False,var_name(i2,j2)) ],strict=True)
 
     return F
 
@@ -169,7 +174,7 @@ def CliqueFormula(G,k):
     a CNF object
 
     """
-    return SubgraphFormula(G,[complete_graph(k)])
+    return SubgraphFormula(G,[complete_graph(k)],symmetric=True)
 
 @cnfformula.families.register_cnf_generator
 def RamseyWitnessFormula(G,k,s):
@@ -194,7 +199,7 @@ def RamseyWitnessFormula(G,k,s):
     a CNF object
 
     """
-    return SubgraphFormula(G,[complete_graph(k),empty_graph(s)])
+    return SubgraphFormula(G,[complete_graph(k),empty_graph(s)],symmetric=True)
 
 
 @cnfformula.cmdline.register_cnfgen_subcommand
@@ -255,6 +260,35 @@ class RWCmdHelper(object):
         - `args`: command line options
         """
         G = SimpleGraphHelper.obtain_graph(args)
-        return SubgraphFormula(G,[complete_graph(args.k),
-                                  empty_graph(args.s)])
+        return RamseyWitnessFormula(G,args.k,args.s)
+
+@cnfformula.cmdline.register_cnfgen_subcommand
+class SubGraphCmdHelper(object):
+    """Command line helper for Graph Isomorphism formula
+    """
+    name='subgraph'
+    description='subgraph formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for graph isomorphism formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        SimpleGraphHelper.setup_command_line(parser,suffix="",required=True)
+        SimpleGraphHelper.setup_command_line(parser,suffix="T",required=True)
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a graph automorphism formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        G = SimpleGraphHelper.obtain_graph(args,suffix="")
+        T = SimpleGraphHelper.obtain_graph(args,suffix="T")
+        return SubgraphFormula(G,[T],symmetric=False)
+
 
