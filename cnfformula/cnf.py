@@ -1252,6 +1252,7 @@ class CNF(object):
     def binary_mapping( cls, D, k,
                         var_name=None,
                         injective=False,
+                        nondecreasing=False
                         cutoff=None):
         r"""Generator for the clauses of a binary mapping between D and :math:`\{0...1\}^k`
 
@@ -1277,6 +1278,9 @@ class CNF(object):
         injective: bool
             every bitstring must have at most one pre-image (default: false)
         
+        nondecreasing: bool
+            the mapping must be non decreasing (default: false)
+        
         cutoff: int
             forbid, as images, the bit strings encoding numbers larger
             than cutoff This is useful to represent a range which is
@@ -1298,7 +1302,7 @@ class CNF(object):
         if cutoff is None:
             cutoff = 2**k
             
-        def build_or(i,bs):
+        def avoid_string(i,bs):
             return [ ( bs[b]==0, var_name(i,k-1-b)) for b in xrange(k) ] 
         
         for j,bits in enumerate(product([0,1],repeat=k)):
@@ -1306,10 +1310,27 @@ class CNF(object):
             # Exclude high strings
             if j >= cutoff:
                 for i in D:
-                    yield build_or(i,bits) 
+                    yield avoid_string(i,bits) 
                 
             elif injective:
             # Injectivity axioms
                 for i1,i2 in combinations(D,2):
-                    yield build_or(i1,bits) + build_or(i2,bits)
+                    yield avoid_string(i1,bits) + avoid_string(i2,bits)
 
+        if nondecreasing:
+            # avoid strictly decreasing maps
+            pairs_of_maps = product(combinations(Idx,2),
+                                    combinations([ bs for (i,vs) in
+                                                   enumerate(product([0,1],repeat=k))
+                                                   if j < cutoff],
+                                                 2))
+            for (j1,bs1),(j2,bs2) in pairs_of_maps:
+                yield avoid_string(j1,bs2) + avoid_string(j2,bs1)
+                
+                
+                    
+    @classmethod
+    def binary_subset_increasing(cls, Idx, k,
+                                 var_name=None,
+                                 cutoff=None):
+        return cls.binary_mapping(cls, Idx, k, cutoff=cutoff, var_name=var_name,injective=True,nondecreasing=True)

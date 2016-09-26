@@ -14,6 +14,8 @@ from itertools import product
 from itertools import permutations
 from cnfformula.graphs import enumerate_vertices
 
+from math import log,ceil
+
 from networkx  import complete_graph
 from networkx  import empty_graph
 
@@ -157,7 +159,7 @@ def SubgraphFormula(graph,templates, symmetric=False):
 
 @cnfformula.families.register_cnf_generator
 def CliqueFormula(G,k):
-    """Test whether a graph contains one of the templates.
+    """Test whether a graph has a k-clique.
 
     Given a graph :math:`G` and a non negative value :math:`k`, the
     CNF formula claims that :math:`G` contains a :math:`k`-clique.
@@ -175,6 +177,9 @@ def CliqueFormula(G,k):
 
     """
     return SubgraphFormula(G,[complete_graph(k)],symmetric=True)
+
+
+
 
 @cnfformula.families.register_cnf_generator
 def RamseyWitnessFormula(G,k,s):

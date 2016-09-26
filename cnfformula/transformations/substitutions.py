@@ -169,26 +169,25 @@ class MajoritySubstitution(BaseSubstitution):
         """Substitute a positive literal with Loose Majority,
         and negative literals with Strict Minority.
 
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
+        Parameters
+        ----------
+        polarity : bool
+            polarity of the literal
+        varname  : string
+            variable to be substituted
 
         Returns: a list of clauses
         """
 
-        # Majority is espressed as a set of positive clauses,
-        # while Minority as a set on negative ones
-        lit = [ (polarity,"{{{}}}^{}".format(varname,i)) for i in range(self._rank) ]
+        variables = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
 
+        threshold = (self._rank + 1) // 2 # loose majority
         if polarity:
-            witness = self._rank // 2 + 1   # avoid strict majority of 'False'
+            return self.greater_or_equal_constraint(variables,threshold)
         else:
-            witness = (self._rank + 1) // 2 # avoid loose  majority of 'True'
-
-        binom = combinations
-
-        return [ s for s in binom(lit,witness) ]
-
+            return self.less_than_constraint(variables,threshold)
+        
+        
 
 @register_cnf_transformation
 class OrSubstitution(BaseSubstitution):
@@ -320,7 +319,7 @@ class XorSubstitution(BaseSubstitution):
         Returns: a list of clauses
         """
         names = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
-        return CNF.parity_constraint(names,polarity)
+        return self.parity_constraint(names,polarity)
 
 @register_cnf_transformation
 class FormulaLifting(BaseSubstitution):
@@ -519,11 +518,13 @@ class VariableCompression(BaseSubstitution):
 
         elif self._function == 'maj':
 
-            threshold = len(local_names)
+            threshold = (len(local_names)+1) // 2 # loose majority
+
             if polarity:
-                return self.greater_or_equal_constraint(local_names, threshold // 2 + 1)
+                return self.greater_or_equal_constraint(local_names, threshold )
             else:
-                return self.less_than_constraint(local_names, threshold // 2 + 1)
+                return self.less_than_constraint(local_names, threshold )
+            
         else:
             raise RuntimeError("Error: variable compression with invalid function")
             
