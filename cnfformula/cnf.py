@@ -1252,7 +1252,7 @@ class CNF(object):
     def binary_mapping( cls, D, k,
                         var_name=None,
                         injective=False,
-                        nondecreasing=False
+                        nondecreasing=False,
                         cutoff=None):
         r"""Generator for the clauses of a binary mapping between D and :math:`\{0...1\}^k`
 
