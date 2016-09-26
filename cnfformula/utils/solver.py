@@ -9,19 +9,28 @@ solvers, see
   `cnfformula.utils.solver.supported_satsolvers`
 """
 
+from __future__ import print_function
+import sys
+
 __all__ = ["supported_satsolvers", "is_satisfiable", "have_satsolver"]
 
 
-def _satsolve_filein_fileout(F, cmd='minisat'):
+def _satsolve_filein_fileout(F, cmd='minisat',verbose=0):
     """Test CNF satisfiability using a minisat-style solver.
 
     This also works fine using `glucose` instead of `minisat`, or any
     other solver which uses the same I/O conventions of `minisat`.
 
-    Arguments:
+    Parameters
     ----------
-    `F`: a CNF formula
-    `cmd`: the command line used to invoke the SAT solver.
+    F  : a CNF formula
+    
+    cmd : string
+        the command line used to invoke the SAT solver.
+
+    verbose: int
+       0 or less means no output. 1 shows the command line actually
+       run. 2 outputs the solver output. (default: 0)
 
     Examples:
     ---------
@@ -60,15 +69,22 @@ def _satsolve_filein_fileout(F, cmd='minisat'):
     cnf.close()
     sat.close()
 
-    output = []
+    output = None
 
     # Run the command, store its output and remove the temporary files.
     try:
-        subprocess.Popen(args=cmd.split()+[cnf.name, sat.name],
+
+        final_command = cmd + " " + cnf.name + " " +sat.name
+
+        if verbose >=1:
+            print("$ "+final_command,file=sys.stderr)
+
+        p = subprocess.Popen(args=cmd.split()+[cnf.name, sat.name],
                          stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE).wait()
-        sat = open(sat.name, "r")
-        output = sat.read().split()
+                         stdout=subprocess.PIPE)
+        (output,_) = p.communicate()
+        sat     = open(sat.name, "r")
+        foutput = sat.read().split()
         sat.close()
     except OSError:
         pass
@@ -84,19 +100,22 @@ def _satsolve_filein_fileout(F, cmd='minisat'):
     result = None
     witness = None
 
-    if len(output) == 0:
+    if verbose>=2:
+        print(output,file=sys.stderr)
+        
+    if len(foutput) == 0:
 
         raise RuntimeError("Error during SAT solver call: {}.\n".format(" ".join([cmd,cnf.name, sat.name])))
 
-    elif output[0] == 'SAT':
+    elif foutput[0] == 'SAT':
 
         result = True
 
-        witness = [int(v) for v in output[1:] if v != '0']
+        witness = [int(v) for v in foutput[1:] if v != '0']
 
         witness = {F._index2name[abs(v)]: v > 0 for v in witness}
 
-    elif output[0] == 'UNSAT':
+    elif foutput[0] == 'UNSAT':
 
         result = False
 
@@ -107,17 +126,24 @@ def _satsolve_filein_fileout(F, cmd='minisat'):
     return (result, result and witness or None)
 
 
-def _satsolve_stdin_stdout(F, cmd='lingeling'):
+def _satsolve_stdin_stdout(F, cmd='lingeling',verbose=0):
     """Test CNF satisfiability using a dimacs I/O compatible solver.
 
     This works fine using any other solver which respects the dimacs
     conventions for input/output. In particular it works with the
     default solver which is `lingeling`.
 
-    Arguments:
+    Parameters
     ----------
-    `F`: a CNF formula
-    `cmd`: the command line used to invoke the SAT solver.
+    F  : a CNF formula
+    
+    cmd : string
+        the command line used to invoke the SAT solver.
+    
+    verbose: int
+       0 or less means no output. 1 shows the command line actually
+       run. 2 outputs the solver output. (default: 0)
+
 
     Example:
     --------
@@ -156,6 +182,10 @@ def _satsolve_stdin_stdout(F, cmd='lingeling'):
     # call solver
     output = ""
     try:
+        
+        if verbose >=1:
+            print("$ "+cmd,file=sys.stderr)
+
         p = subprocess.Popen(args=cmd.split(),
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE)
@@ -176,6 +206,9 @@ def _satsolve_stdin_stdout(F, cmd='lingeling'):
 
     for line in output.splitlines():
 
+        if verbose >= 2:
+            print(line,file=sys.stderr)
+        
         if len(line) == 0:
             continue
 
@@ -202,17 +235,23 @@ def _satsolve_stdin_stdout(F, cmd='lingeling'):
     return (result, result and witness or None)
 
 
-def _satsolve_filein_stdout(F, cmd='sat4j'):
+def _satsolve_filein_stdout(F, cmd='sat4j', verbose=0):
     """Test CNF satisfiability using solvers that requires input file.
 
     This works fine using any solver which requires the input formula
     as a file but respects the dimacs conventions for the output. In
     particular it works with the default solver which is `sat4j`.
 
-    Arguments:
+    Parameters
     ----------
-    `F`: a CNF formula
-    `cmd`: the command line used to invoke the SAT solver.
+    F  : a CNF formula
+    
+    cmd : string
+        the command line used to invoke the SAT solver.
+    
+    verbose: int
+       0 or less means no output. 1 shows the command line actually
+       run. 2 outputs the solver output. (default: 0)
 
     Example:
     --------
@@ -239,6 +278,12 @@ def _satsolve_filein_stdout(F, cmd='sat4j'):
     output = ""
 
     try:
+
+        final_command = cmd + " " + cnf.name
+
+        if verbose >=1:
+            print("$ "+final_command,file=sys.stderr)
+        
         p = subprocess.Popen(args=cmd.split()+[cnf.name],
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE)
@@ -257,6 +302,10 @@ def _satsolve_filein_stdout(F, cmd='sat4j'):
     witness = []
     result = None
 
+
+    if verbose>=2:
+        print(output,file=sys.stderr)
+        
     for line in output.splitlines():
 
         if len(line) == 0:
@@ -347,7 +396,7 @@ def have_satsolver(solvers=None):
 
 
 
-def is_satisfiable(F, cmd=None, sameas=None):
+def is_satisfiable(F, cmd=None, sameas=None, verbose=0):
     """Determines whether a CNF is satisfiable or not.
 
     The satisfiability is determined using an external sat solver.  If
@@ -365,6 +414,10 @@ def is_satisfiable(F, cmd=None, sameas=None):
     sameas: string, optional
        use the interface of one of the supported solvers, indicated in
        input. Useful when the solver ont the command line is not supported.
+
+    verbose: int
+       0 or less means no output. 1 shows the command line actually
+       run. 2 outputs the solver output. (default: 0)
 
     Examples
     --------
@@ -410,6 +463,7 @@ def is_satisfiable(F, cmd=None, sameas=None):
 
     >>> is_satisfiable(F,cmd='minisat-style-solver',sameas='minisat')  # doctest: +SKIP
     >>> is_satisfiable(F,cmd='dimacs-style-solver',sameas='lingeling') # doctest: +SKIP
+
     """
 
     # Public API. Check the arguments
@@ -442,7 +496,7 @@ def is_satisfiable(F, cmd=None, sameas=None):
         if not have_satsolver(solvers=[solver]):
             continue
         else:
-            return s_func(F, solver_cmd)
+            return s_func(F, solver_cmd,verbose=verbose)
 
     # no solver was available.
     if len(solver_cmds) == 1:

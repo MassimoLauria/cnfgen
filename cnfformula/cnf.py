@@ -682,7 +682,7 @@ class CNF(object):
         return output.getvalue()
 
 
-    def is_satisfiable(self, cmd=None, sameas=None):
+    def is_satisfiable(self, cmd=None, sameas=None, verbose=0):
         """Determines whether a CNF is satisfiable or not.
 
         The formula is passed to a SAT solver, according to the
@@ -713,6 +713,11 @@ class CNF(object):
         sameas : string, optional
             use the interface of one of the supported solvers. Useful
             when the solver used in the command line is not supported.
+
+        verbose: int
+            0 or less means no output. 1 shows the command line actually
+            run. 2 outputs the solver output. (default: 0)
+
 
         Examples
         --------
@@ -750,7 +755,7 @@ class CNF(object):
 
         """
         from .utils import solver
-        return solver.is_satisfiable(self, cmd=cmd, sameas=sameas)
+        return solver.is_satisfiable(self, cmd=cmd, sameas=sameas, verbose=verbose)
 
     ###
     ### Various utility function for CNFs
