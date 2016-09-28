@@ -99,7 +99,9 @@ def SubgraphFormula(graph,templates, symmetric=False):
         F.add_variable( var_name(i,j) )
 
     if symmetric:
-        gencls = F.unary_subset_increasing(range(k),range(N),var_name=var_name)
+        gencls = F.unary_mapping(range(k),range(N),var_name=var_name,
+                                 functional=True,injective=True,
+                                 nondecreasing=True)
     else:
         gencls = F.unary_mapping(range(k),range(N),var_name=var_name,
                                  functional=True,injective=True)
@@ -132,7 +134,7 @@ def SubgraphFormula(graph,templates, symmetric=False):
         tV = enumerate_vertices(templates[i])
 
         if symmetric:
-            # Using 'unary_subset_increasing' monotone representation.
+            # Using non-decreasing map to represent a subset
             localmaps = product(combinations(range(k),2),
                                 combinations(range(N),2))
         else:
@@ -179,6 +181,47 @@ def CliqueFormula(G,k):
     return SubgraphFormula(G,[complete_graph(k)],symmetric=True)
 
 
+@cnfformula.families.register_cnf_generator
+def BinaryCliqueFormula(G,k):
+    """Test whether a graph has a k-clique.
+
+    Given a graph :math:`G` and a non negative value :math:`k`, the
+    CNF formula claims that :math:`G` contains a :math:`k`-clique.
+    This formula uses the binary encoding, in the sense that the
+    clique elements are indexed by strings of bits.
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        a simple graph
+    k : a non negative integer
+        clique size
+
+    Returns
+    -------
+    a CNF object
+
+    """
+    F=CNF()
+    F.header="Binary {0}-clique formula\n".format(k) + F.header
+    
+    clauses_gen=F.binary_mapping(xrange(1,k+1), G.nodes(),
+                                 injective = True,
+                                 nondecreasing = True)
+
+    for v in clauses_gen.variables():
+        F.add_variable(v)
+        
+    for c in clauses_gen.clauses():
+        F.add_clause(c,strict=True)
+
+    for (i1,i2),(v1,v2) in product(combinations(xrange(1,k+1),2),
+                                   combinations(G.nodes(),2)):
+    
+        if not G.has_edge(v1,v2):
+            F.add_clause( clauses_gen.forbid_image(i1,v1) + clauses_gen.forbid_image(i2,v2),strict=True)
+
+    return F
 
 
 @cnfformula.families.register_cnf_generator
@@ -235,6 +278,34 @@ class KCliqueCmdHelper(object):
         G = SimpleGraphHelper.obtain_graph(args)
         return CliqueFormula(G,args.k)
 
+
+@cnfformula.cmdline.register_cnfgen_subcommand
+class BinaryKCliqueCmdHelper(object):
+    """Command line helper for k-clique formula
+    """
+    name='kcliquebin'
+    description='Binary k clique formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for k-clique formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('k',metavar='<k>',type=int,action='store',help="size of the clique to be found")
+        SimpleGraphHelper.setup_command_line(parser)
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a k-clique formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        G = SimpleGraphHelper.obtain_graph(args)
+        return BinaryCliqueFormula(G,args.k)
 
 @cnfformula.cmdline.register_cnfgen_subcommand
 class RWCmdHelper(object):

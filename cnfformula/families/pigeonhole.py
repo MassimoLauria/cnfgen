@@ -12,7 +12,6 @@ import cnfformula.families
 
 from cnfformula.graphs import neighbors
 from itertools import combinations,product
-from math import ceil,log
 
 @cnfformula.families.register_cnf_generator
 def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
@@ -180,22 +179,16 @@ def BinaryPigeonholePrinciple(pigeons,holes):
        number of holes
     """
 
-    def var_name(p,b):
-        return 'Y_{{{0},{1}}}'.format(p,b)
-    
     bphp=CNF()
     bphp.header="Binary Pigeonhole Principle for {0} pigeons and {1} holes\n".format(pigeons,holes)\
                  + bphp.header
     
-    k = int(ceil(log(holes,2)))
-    assert( holes <= 2**k)
+    bphpgen=bphp.binary_mapping(xrange(1,pigeons+1), xrange(1,holes+1), injective = True)
 
-    for p,b in product(xrange(1,pigeons+1),xrange(0,k)):
-        bphp.add_variable(var_name(p,b))
-    
-    clauses=bphp.binary_mapping(xrange(1,pigeons+1), k, var_name, cutoff=holes,injective = True)
-
-    for c in clauses:
+    for v in bphpgen.variables():
+        bphp.add_variable(v)
+        
+    for c in bphpgen.clauses():
         bphp.add_clause(c,strict=True)
 
     return bphp

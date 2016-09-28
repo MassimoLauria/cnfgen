@@ -22,6 +22,7 @@ from itertools import product
 from itertools import combinations,combinations_with_replacement
 from collections import Counter
 import re
+from math import ceil,log
 
 from . import prjdata as pd
 from .graphs import bipartite_sets,neighbors
@@ -1063,7 +1064,9 @@ class CNF(object):
                        complete=True,
                        functional=False,
                        surjective=False,
-                       injective=False):
+                       injective=False,
+                       nondecreasing=False,
+                       sparse_pattern=None):
         r"""Generator for the clauses of a mapping between to sets
 
         This generates of the constraints on variables :math:`v(i,j)`
@@ -1095,6 +1098,10 @@ class CNF(object):
 
         injective: bool
             every element of :math:`R` must have at most one pre-image (default: false)
+
+        nondecreasing: bool
+            the mapping is going to be non decresing, with respect to
+            the order of domain and range (default: false)
         
         Yields
         ------
@@ -1106,7 +1113,7 @@ class CNF(object):
         
         if var_name is None:
             var_name = default_name
-            
+
         # Completeness axioms
         if complete:
             for i in D:
@@ -1131,54 +1138,16 @@ class CNF(object):
                 for c in CNF.less_or_equal_constraint([var_name(i,j) for j in R],1):
                     yield c
 
+        # Mapping is monotone non-decreasing
+        if nondecreasing:
+            localmaps = product(combinations(D,2),
+                                combinations(R,2))
 
-
-    @classmethod
-    def unary_subset_increasing(cls, Idx, S,
-                                var_name=None):
-        r"""Generator for the clauses to index a subset
-
-        This generates the constraints on variables :math:`v(i,j)`
-        that say that the elements of `Idx` are indexing a subset of
-        elements in `S`. The mapping is guaranteed to be monotone
-        increasing, i.e, if :math:`i_1 \leq i_2` and both
-        :math:`v(i_1,j_1)` and :math:`v(i_2,j_2)` hold, then
-        :math:`j_1 \leq j_2` holds too. Order is assumed by iterables
-        in input.
-
-        Parameters
-        ----------
-        Idx : iterable
-            an list of indices
-
-        S : iterable
-            set where to pick the subset
-
-        var_name: a function 
-            given :math:`i` and :math`j` the function must produce the
-            name of variable :math`v(i,j)`
-
-        Yields
-        ------
-            a sequence of clauses
-
-        """
-        for c in cls.unary_mapping(Idx, S,var_name=var_name,
-                                   functional=True,
-                                   injective=False):
-            yield c
-            
-        # Mapping is strictly monotone increasing (so it is also injective)
-        localmaps = product(combinations(Idx,2),
-                            combinations_with_replacement(S,2))
-
-        for (a,b),(i,j) in localmaps:
-            yield [(False,var_name(a,j)),(False,var_name(b,i))]
-
-        
+            for (a,b),(i,j) in localmaps:
+                yield [(False,var_name(a,j)),(False,var_name(b,i))]
                     
     @classmethod
-    def sparse_mapping( cls, B,
+    def sparse_mapping(cls, B,
                        var_name=None,
                        complete=True,
                        functional=False,
@@ -1229,113 +1198,140 @@ class CNF(object):
         D,R = bipartite_sets(B)
         # Completeness axioms
         if complete:
-            for i in D:
-                for c in CNF.greater_or_equal_constraint([var_name(i,j) for j in neighbors(B,i)], 1):
+            for a in D:
+                for c in CNF.greater_or_equal_constraint([var_name(a,i) for i in neighbors(B,a)], 1):
                     yield c
                     
         # Surjectivity axioms
         if surjective:
-            for j in R:
-                for c in CNF.greater_or_equal_constraint([var_name(i,j) for i in neighbors(B,j)], 1):
+            for i in R:
+                for c in CNF.greater_or_equal_constraint([var_name(a,i) for a in neighbors(B,i)], 1):
                     yield c
 
         # Injectivity axioms
         if injective:
-            for j in R:
-                for c in CNF.less_or_equal_constraint([var_name(i,j) for i in neighbors(B,j)],1):
+            for i in R:
+                for c in CNF.less_or_equal_constraint([var_name(a,i) for a in neighbors(B,i)],1):
                     yield c
 
         # Functionality axioms
         if functional:
-            for i in D:
-                for c in CNF.less_or_equal_constraint([var_name(i,j) for j in neighbors(B,i)],1):
+            for a in D:
+                for c in CNF.less_or_equal_constraint([var_name(a,i) for i in neighbors(B,a)],1):
                     yield c
 
+    class binary_mapping(object):
 
+        Domain = None
+        Range  = None
+        Bits   = None
 
-    @classmethod
-    def binary_mapping( cls, D, k,
-                        var_name=None,
-                        injective=False,
-                        nondecreasing=False,
-                        cutoff=None):
-        r"""Generator for the clauses of a binary mapping between D and :math:`\{0...1\}^k`
+        Injective     = False
+        NonDecreasing = False
 
-        This generates of the constraints on variables
-        :math:`v(i,0)...v(i,k-1)` where :math:`i \in D` and
-        :math:`v(i,0)...v(i,k-1)` is a binary of :math:`k` bits.
-        And variables express the mapping (i.e.
-        :math:`v(i,k-1)...v(i,0)` expresses that :math:`i` is mapped
-        to that string).
-
-        Parameters
-        ----------
-        D : iterable
-            the domain of the mapping
-
-        k : int
-            the length of the bit strings
-
-        var_name: a function 
-            given :math:`i` and :math`b` the function must produce the
-            name of variable :math`v(i,b)`
-
-        injective: bool
-            every bitstring must have at most one pre-image (default: false)
-        
-        nondecreasing: bool
-            the mapping must be non decreasing (default: false)
-        
-        cutoff: int
-            forbid, as images, the bit strings encoding numbers larger
-            than cutoff This is useful to represent a range which is
-            not a power of two. For example a mapping to a range of
-            [10] ca be represented with 4 bits, but the strings >=
-            1010 must not be image of anything. (default: None)
-
-        Yields
-        ------
-            a sequence of clauses
-
-        """
-        def default_name(i,b):
+        @staticmethod
+        def var_name(i,b):
             return "Y_{{{0},{1}}}".format(i,b)
 
-        if var_name is None:
-            var_name = default_name
-
-        if cutoff is None:
-            cutoff = 2**k
-            
-        def avoid_string(i,bs):
-            return [ ( bs[b]==0, var_name(i,k-1-b)) for b in xrange(k) ] 
         
-        for j,bits in enumerate(product([0,1],repeat=k)):
+        def variables(self):
+            for v,b in product(self.Domain,xrange(0,self.Bits)):
+                yield self.var_name(v,b)
+                
 
-            # Exclude high strings
-            if j >= cutoff:
-                for i in D:
-                    yield avoid_string(i,bits) 
-                
-            elif injective:
-            # Injectivity axioms
-                for i1,i2 in combinations(D,2):
-                    yield avoid_string(i1,bits) + avoid_string(i2,bits)
+        def __init__(self, D, R,
+                     var_name=None,
+                     injective=False,
+                     nondecreasing=False):
+            r"""Generator for the clauses of a binary mapping between D and :math:`R`
+            
+            This generates of the constraints on variables
+            :math:`v(i,0)...v(i,k-1)` where :math:`i \in D` and
+            :math:`v(i,0)...v(i,k-1)` is a binary of :math:`k` bits, so
+            that the first :math:`|R|` string in :math:`{0,1}^k` (in
+            lexicographic order) encode the elements of :math:`R`. 
 
-        if nondecreasing:
-            # avoid strictly decreasing maps
-            pairs_of_maps = product(combinations(Idx,2),
-                                    combinations([ bs for (i,vs) in
-                                                   enumerate(product([0,1],repeat=k))
-                                                   if j < cutoff],
-                                                 2))
-            for (j1,bs1),(j2,bs2) in pairs_of_maps:
-                yield avoid_string(j1,bs2) + avoid_string(j2,bs1)
-                
-                
-                    
-    @classmethod
-    def binary_subset_increasing(cls, Idx, k,
-                                 var_name=None,
-                                 cutoff=None):
-        return cls.binary_mapping(cls, Idx, k, cutoff=cutoff, var_name=var_name,injective=True,nondecreasing=True)
+            Parameters
+            ----------
+            D : iterable
+                the domain of the mapping
+            
+            R : iterable
+                the length of the bit strings
+
+            var_name: a function 
+                given :math:`i` and :math`b` the function must produce the
+                name of variable :math`v(i,b)`
+
+            injective: bool
+                every bitstring must have at most one pre-image (default: false)
+             
+            nondecreasing: bool
+                the mapping must be non decreasing (default: false)
+            
+            Yields
+            ------
+            a sequence of clauses
+
+            """
+            self.Domain = list(D)
+            self.Range  = list(R)
+            self.Bits   = int(ceil(log(len(R),2)))
+        
+            self.Injective     = injective
+            self.NonDecreasing = nondecreasing
+
+            if var_name is not None:
+                self.var_name = var_name
+
+            self.ImageToBits={}
+            self.BitsToImage={}
+            self.residual_strings = None
+            
+            cutoff = len(self.Range)
+            gen_strings=enumerate(product([0,1],repeat=self.Bits))
+            
+            for i,bs in gen_strings:
+
+                self.ImageToBits[ self.Range[i] ] = bs
+                self.BitsToImage[ bs ] = self.Range[i]
+
+                if i >= cutoff-1:
+                    break
+
+            self.residual_strings = gen_strings
+
+        def image_to_bitstring(self,im):
+            return self.ImageToBits[im]
+
+        def bitstring_to_image(self,bs):
+            return self.BitsToImage[bs]
+
+        def forbid_bitstring(self, i, bs):
+            """Generates a clause that exclude 'i -> bs' mapping """
+            return [ ( bs[b]==0, self.var_name(i,self.Bits-1-b))
+                     for b in xrange(self.Bits) ] 
+
+        def forbid_image(self, i, j):
+            """Generates a clause that exclude 'i -> j' mapping """
+            return self.forbid_bitstring(i,self.ImageToBits[j])
+            
+        def clauses(self):
+
+            # Avoid strings that do not correspond to elements from the range
+            for i,(_,bs) in product(self.Domain,self.residual_strings):
+                yield self.forbid_bitstring(i,bs) 
+
+            # Injectivity
+            if self.Injective:
+                for j in self.Range:
+                    for i1,i2 in combinations(self.Domain,2):
+                        yield self.forbid_image(i1,j) + self.forbid_image(i2,j)
+
+            # Enforce Non Decreasing Mapping 
+            if self.NonDecreasing:
+                pairs_of_maps = product(combinations(self.Domain,2),
+                                        combinations(self.Range,2))
+
+                for (i1,i2),(j1,j2) in pairs_of_maps:
+                    yield self.forbid_image(i1,j2) + self.forbid_image(i2,j1)
