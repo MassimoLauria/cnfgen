@@ -116,16 +116,13 @@ class IfThenElseSubstitution(BaseSubstitution):
     """Transformed formula: substitutes variable with a three variables
     if-then-else
     """
-    def __init__(self, cnf, rank=1):
+    def __init__(self, cnf):
         """Build a new CNF obtained by substituting an if-then-else to the
         variables of the original CNF
 
         Arguments:
         - `cnf`: the original cnf
-        - `rank`: ignored
         """
-        self._rank = rank
-
         super(IfThenElseSubstitution,self).__init__(cnf)
 
         self._header="If-Then-Else substituted formula\n\n" + self._header
@@ -685,7 +682,7 @@ class XorCompressionCmd:
         return  VariableCompression(F,B,function='xor')
 
 @register_cnf_transformation_subcommand
-class MayCompressionCmd:
+class MajCompressionCmd:
     name='majcomp'
     description='variable compression using Majority'
 
