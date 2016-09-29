@@ -175,10 +175,10 @@ def _process_graph_io_arguments(iofile,
         try:
             extension = os.path.splitext(iofile.name)[-1][1:]
         except AttributeError:
-            raise ValueError("No file name corresponds to IO stream. Can't guess a file format.")
+            raise ValueError("Cannot guess a file format from an IO stream with no name. Please specify the format manually.")
 
         if extension not in _graphformats[graph_type]:
-            raise ValueError("Cannot guess a file format for {} graphs from \"{}\".".\
+            raise ValueError("Cannot guess a file format for {} graphs from the extension of \"{}\". Please specify the format manually.".\
                              format(graph_type,iofile.name))
         else:
             file_format=extension
