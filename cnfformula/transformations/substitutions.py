@@ -10,6 +10,7 @@ from ..transformations import register_cnf_transformation
 
 from itertools import combinations,product,permutations
 from cnfformula.graphs import bipartite_sets,neighbors
+import sys
 
 ###
 ### Substitions
@@ -474,9 +475,6 @@ class VariableCompression(BaseSubstitution):
             Select which faction is used for the compression. It must
             be one among 'xor' or 'maj'.
 
-        - `cnf`: the original cnf
-        - `rank`: how many variables in each xor
-
         """
         if function not in ['xor','maj']:
             raise ValueError("Function specification for variable compression must be either 'xor' or 'maj'.")
@@ -679,8 +677,14 @@ class XorCompressionCmd:
     @staticmethod
     def transform_cnf(F,args):
         B = BipartiteGraphHelper.obtain_graph(args)
-        return  VariableCompression(F,B,function='xor')
 
+        try:
+            return  VariableCompression(F,B,function='xor')
+        except ValueError,e:
+            print("ERROR: {}".format(e),file=sys.stderr)
+            exit(-1)
+
+        
 @register_cnf_transformation_subcommand
 class MajCompressionCmd:
     name='majcomp'
@@ -693,4 +697,10 @@ class MajCompressionCmd:
     @staticmethod
     def transform_cnf(F,args):
         B = BipartiteGraphHelper.obtain_graph(args)
-        return  VariableCompression(F,B,function='maj')
+
+        try:
+            return  VariableCompression(F,B,function='maj')
+        except ValueError,e:
+            print("ERROR: {}".format(e),file=sys.stderr)
+            exit(-1)
+
