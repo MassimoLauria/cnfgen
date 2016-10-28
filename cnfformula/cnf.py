@@ -1077,7 +1077,7 @@ class CNF(object):
         def var_name(i,b):
             return "X_{{{0},{1}}}".format(i,b)
 
-        def __init__(self, D, R, *args,**kwargs):
+        def __init__(self, D, R,**kwargs):
             r"""Generator for the clauses of a mapping between to sets
 
             This generates of the constraints on variables :math:`v(i,j)`
@@ -1123,10 +1123,6 @@ class CNF(object):
             """
             self.Domain = list(D)
             self.Range  = list(R)
-
-            sparsity_pattern = None,
-            var_name = None,
-            nondecreasing=False
 
             # optional parameters of the mapping
             self.Complete      = kwargs.pop('complete',  True)
@@ -1257,10 +1253,7 @@ class CNF(object):
                 yield self.var_name(v,b)
                 
 
-        def __init__(self, D, R,
-                     var_name=None,
-                     injective=False,
-                     nondecreasing=False):
+        def __init__(self, D, R, **kwargs):
             r"""Generator for the clauses of a binary mapping between D and :math:`R`
             
             This generates of the constraints on variables
@@ -1277,30 +1270,32 @@ class CNF(object):
             R : iterable
                 the length of the bit strings
 
-            var_name: a function 
+            var_name: function, optional
                 given :math:`i` and :math`b` the function must produce the
                 name of variable :math`v(i,b)`
 
-            injective: bool
+            injective: bool, optional
                 every bitstring must have at most one pre-image (default: false)
              
-            nondecreasing: bool
+            nondecreasing: bool, optional
                 the mapping must be non decreasing (default: false)
 
             """
             self.Domain = list(D)
             self.Range  = list(R)
             self.Bits   = int(ceil(log(len(R),2)))
-        
-            self.Injective     = injective
-            self.NonDecreasing = nondecreasing
 
-            if var_name is not None:
-                self.var_name = var_name
+            # optional parameters of the mapping
+            self.Injective     = kwargs.pop('injective', False)
+            self.NonDecreasing = kwargs.pop('nondecreasing', False)
+            # variable name scheme 
+            self.var_name = kwargs.pop('var_name', self.var_name)
+
+            if kwargs:
+                raise TypeError('Unexpected **kwargs: %r' % kwargs)
 
             self.ImageToBits={}
             self.BitsToImage={}
-            self.residual_strings = None
             
             cutoff = len(self.Range)
             gen_strings=enumerate(product([0,1],repeat=self.Bits))
@@ -1312,8 +1307,6 @@ class CNF(object):
 
                 if i >= cutoff-1:
                     break
-
-            self.residual_strings = gen_strings
 
         def image_to_bitstring(self,im):
             return self.ImageToBits[im]
@@ -1329,11 +1322,21 @@ class CNF(object):
         def forbid_image(self, i, j):
             """Generates a clause that exclude 'i -> j' mapping """
             return self.forbid_bitstring(i,self.ImageToBits[j])
+
+        def residual_strings(self):
+            cutoff = len(self.Range)
+            gen_strings=enumerate(product([0,1],repeat=self.Bits))
             
+            for i,bs in gen_strings:
+                if i < cutoff:
+                    continue
+                else:
+                    yield bs
+        
         def clauses(self):
 
             # Avoid strings that do not correspond to elements from the range
-            for i,(_,bs) in product(self.Domain,self.residual_strings):
+            for i,bs in product(self.Domain,self.residual_strings()):
                 yield self.forbid_bitstring(i,bs) 
 
             # Injectivity
