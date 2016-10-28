@@ -145,20 +145,19 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     gphp=CNF()
     gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)
 
-    Left, _ = bipartite_sets(graph)
+    Left, Right = bipartite_sets(graph)
 
-    for p in Left:
-        for h in neighbors(graph,p):
-            gphp.add_variable(var_name(p,h))
-
-    clauses=gphp.sparse_mapping( graph,
+    mapping = gphp.unary_mapping(Left,Right,
+                                 sparsity_pattern=graph,
                                  var_name=var_name,
-                                 complete = True,
                                  injective = True,
                                  functional = functional,
                                  surjective = onto)
+    
+    for v in mapping.variables():
+        gphp.add_variable(v)
 
-    for c in clauses:
+    for c in mapping.clauses():
         gphp.add_clause(c,strict=True)
 
     return gphp

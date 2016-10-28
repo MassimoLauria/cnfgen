@@ -1223,7 +1223,7 @@ class CNF(object):
             # Functionality axioms
             if self.Functional:
                 for d in self.Domain:
-                    for c in CNF.less_or_equal_constraint([var_name(d,r) for r in self.images(d)],1):
+                    for c in CNF.less_or_equal_constraint([self.var_name(d,r) for r in self.images(d)],1):
                         yield c
 
             # Mapping is monotone non-decreasing
