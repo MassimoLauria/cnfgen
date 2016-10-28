@@ -1077,14 +1077,7 @@ class CNF(object):
         def var_name(i,b):
             return "X_{{{0},{1}}}".format(i,b)
 
-        def __init__(self, D, R,
-                     sparsity_pattern = None,
-                     var_name=None,
-                     complete=True,
-                     functional=False,
-                     surjective=False,
-                     injective=False,
-                     nondecreasing=False):
+        def __init__(self, D, R, *args,**kwargs):
             r"""Generator for the clauses of a mapping between to sets
 
             This generates of the constraints on variables :math:`v(i,j)`
@@ -1101,23 +1094,29 @@ class CNF(object):
             R : iterable
                 the range of the mapping
 
-            var_name: a function 
+            sparsity_pattern : bipartite_graph, optional
+                each element of the domain is allowed to be mapped
+                only into certain range elements. The graph represents
+                which range elements are compatible with a specific
+                domain element.
+
+            var_name: function, optional 
                 given :math:`i` and :math`j` the function must produce the
                 name of variable :math`v(i,j)`
      
-            complete: bool
+            complete: bool, optional
                 every element of :math:`D` must have an image (default: true)
      
-            functional: bool
+            functional: bool, optional
                 every element of :math:`D` must have at most one image (default: false)
      
-            surjective: bool
+            surjective: bool, optional
                 every element of :math:`R` must have a pre-image (default: false)
      
-            injective: bool
+            injective: bool, optional
                 every element of :math:`R` must have at most one pre-image (default: false)
      
-            nondecreasing: bool
+            nondecreasing: bool, optional
                 the mapping is going to be non decresing, with respect to
                 the order of domain and range (default: false)
                 
@@ -1125,20 +1124,27 @@ class CNF(object):
             self.Domain = list(D)
             self.Range  = list(R)
 
-            
-            self.Complete      = complete
-            self.Functional    = functional
-            self.Surjective    = surjective
-            self.Injective     = injective
+            sparsity_pattern = None,
+            var_name = None,
+            nondecreasing=False
 
-            self.NonDecreasing = nondecreasing
+            # optional parameters of the mapping
+            self.Complete      = kwargs.pop('complete',  True)
+            self.Functional    = kwargs.pop('functional',False)
+            self.Surjective    = kwargs.pop('surjective',False)
+            self.Injective     = kwargs.pop('injective', False)
 
-            if var_name is not None:
-                self.var_name = var_name
+            self.NonDecreasing = kwargs.pop('nondecreasing', False)
 
-            if sparsity_pattern is not None:
-                self.Pattern = sparsity_pattern
+            # variable name scheme 
+            self.var_name = kwargs.pop('var_name', self.var_name)
 
+            # use a bipartite graph scheme for the mapping?
+            self.Pattern  = kwargs.pop('sparsity_pattern', None)
+
+            if kwargs:
+                raise TypeError('Unexpected **kwargs: %r' % kwargs)
+                
             self.DomainToVertex={}
             self.VertexToDomain={}
             self.RangeToVertex={}

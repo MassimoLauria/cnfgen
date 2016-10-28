@@ -79,19 +79,19 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     php.header="{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes)\
         + php.header
 
-    for p in xrange(1,pigeons+1):
-        for h in xrange(1,holes+1):
-            php.add_variable(var_name(p,h))
     
-    clauses=php.unary_mapping(
+    mapping=php.unary_mapping(
         xrange(1,pigeons+1),
         xrange(1,holes+1),
-        var_name,
-        complete = True,
+        var_name=var_name,
         injective = True,
         functional = functional,
         surjective = onto)
-    for c in clauses:
+
+    for v in mapping.variables():
+        php.add_variable(v)
+
+    for c in mapping.clauses():
         php.add_clause(c,strict=True)
 
     return php
