@@ -18,7 +18,7 @@ https://github.com/MassimoLauria/cnfgen.git
 
 
 from __future__ import print_function
-from itertools import product
+from itertools import product,islice
 from itertools import combinations,combinations_with_replacement
 from collections import Counter
 import re
@@ -1297,16 +1297,11 @@ class CNF(object):
             self.ImageToBits={}
             self.BitsToImage={}
             
-            cutoff = len(self.Range)
-            gen_strings=enumerate(product([0,1],repeat=self.Bits))
-            
-            for i,bs in gen_strings:
+            for i,bs in islice(enumerate(product([0,1],repeat=self.Bits)),
+                               len(self.Range)):
 
                 self.ImageToBits[ self.Range[i] ] = bs
                 self.BitsToImage[ bs ] = self.Range[i]
-
-                if i >= cutoff-1:
-                    break
 
         def image_to_bitstring(self,im):
             return self.ImageToBits[im]
@@ -1322,21 +1317,12 @@ class CNF(object):
         def forbid_image(self, i, j):
             """Generates a clause that exclude 'i -> j' mapping """
             return self.forbid_bitstring(i,self.ImageToBits[j])
-
-        def residual_strings(self):
-            cutoff = len(self.Range)
-            gen_strings=enumerate(product([0,1],repeat=self.Bits))
             
-            for i,bs in gen_strings:
-                if i < cutoff:
-                    continue
-                else:
-                    yield bs
-        
         def clauses(self):
 
             # Avoid strings that do not correspond to elements from the range
-            for i,bs in product(self.Domain,self.residual_strings()):
+            for i,bs in product(self.Domain,
+                                islice(product([0,1],repeat=self.Bits),len(self.Range),None)):
                 yield self.forbid_bitstring(i,bs) 
 
             # Injectivity
