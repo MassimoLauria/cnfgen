@@ -1175,6 +1175,13 @@ class CNF(object):
                 
             for i,r in enumerate(self.Range,start=1):
                 self.RankRange[r]=i
+
+
+        def domain(self):
+            return self.Domain
+        
+        def range(self):
+            return self.Range
                 
         def images(self,d):
             if self.Pattern is None:
