@@ -95,18 +95,19 @@ def SubgraphFormula(graph,templates, symmetric=False):
 
     var_name = lambda i,j: "S_{{{0},{1}}}".format(i,j)
 
-    for i,j in product(range(k),range(N)):
-        F.add_variable( var_name(i,j) )
-
     if symmetric:
-        gencls = F.unary_mapping(range(k),range(N),var_name=var_name,
-                                 functional=True,injective=True,
-                                 nondecreasing=True)
+        mapping = F.unary_mapping(range(k),range(N),var_name=var_name,
+                                  functional=True,injective=True,
+                                  nondecreasing=True)
     else:
-        gencls = F.unary_mapping(range(k),range(N),var_name=var_name,
-                                 functional=True,injective=True)
-        
-    for cls in gencls:
+        mapping = F.unary_mapping(range(k),range(N),var_name=var_name,
+                                  functional=True,injective=True,
+                                  nondecreasing=False)
+
+    for v in mapping.variables():
+        F.add_variable( v )
+
+    for cls in mapping.clauses():
         F.add_clause( cls, strict=True )
         
     # The selectors choose a template subgraph.  A mapping must map

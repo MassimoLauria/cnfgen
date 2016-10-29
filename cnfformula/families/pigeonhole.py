@@ -79,19 +79,19 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     php.header="{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes)\
         + php.header
 
-    for p in xrange(1,pigeons+1):
-        for h in xrange(1,holes+1):
-            php.add_variable(var_name(p,h))
     
-    clauses=php.unary_mapping(
+    mapping=php.unary_mapping(
         xrange(1,pigeons+1),
         xrange(1,holes+1),
-        var_name,
-        complete = True,
+        var_name=var_name,
         injective = True,
         functional = functional,
         surjective = onto)
-    for c in clauses:
+
+    for v in mapping.variables():
+        php.add_variable(v)
+
+    for c in mapping.clauses():
         php.add_clause(c,strict=True)
 
     return php
@@ -145,20 +145,19 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     gphp=CNF()
     gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)
 
-    Left, _ = bipartite_sets(graph)
+    Left, Right = bipartite_sets(graph)
 
-    for p in Left:
-        for h in neighbors(graph,p):
-            gphp.add_variable(var_name(p,h))
-
-    clauses=gphp.sparse_mapping( graph,
+    mapping = gphp.unary_mapping(Left,Right,
+                                 sparsity_pattern=graph,
                                  var_name=var_name,
-                                 complete = True,
                                  injective = True,
                                  functional = functional,
                                  surjective = onto)
+    
+    for v in mapping.variables():
+        gphp.add_variable(v)
 
-    for c in clauses:
+    for c in mapping.clauses():
         gphp.add_clause(c,strict=True)
 
     return gphp

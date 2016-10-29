@@ -18,7 +18,7 @@ https://github.com/MassimoLauria/cnfgen.git
 
 
 from __future__ import print_function
-from itertools import product
+from itertools import product,islice
 from itertools import combinations,combinations_with_replacement
 from collections import Counter
 import re
@@ -1058,169 +1058,190 @@ class CNF(object):
         threshold = len(variables)/2
         return cls.equal_to_constraint(variables,threshold)
 
-    @classmethod
-    def unary_mapping( cls, D, R,
-                       var_name=None,
-                       complete=True,
-                       functional=False,
-                       surjective=False,
-                       injective=False,
-                       nondecreasing=False,
-                       sparse_pattern=None):
-        r"""Generator for the clauses of a mapping between to sets
-
-        This generates of the constraints on variables :math:`v(i,j)`
-        where :math:`i \in D` and :math:`j in R`, so that they
-        represent a mapping (or a relation) between the two sets,
-        expressed in unary (i.e. :math:`v(i,j)` expresses whether
-        :math:`i` is mapped to :math:`j` or not).
-
-        Parameters
-        ----------
-        D : iterable
-            the domain of the mapping
-
-        R : iterable
-            the range of the mapping
-
-        var_name: a function 
-            given :math:`i` and :math`j` the function must produce the
-            name of variable :math`v(i,j)`
-
-        complete: bool
-            every element of :math:`D` must have an image (default: true)
-
-        functional: bool
-            every element of :math:`D` must have at most one image (default: false)
-
-        surjective: bool
-            every element of :math:`R` must have a pre-image (default: false)
-
-        injective: bool
-            every element of :math:`R` must have at most one pre-image (default: false)
-
-        nondecreasing: bool
-            the mapping is going to be non decresing, with respect to
-            the order of domain and range (default: false)
+    class unary_mapping(object):
+        """Unary CNF representation of a mapping between two sets."""
         
-        Yields
-        ------
-            a sequence of clauses
+        Domain = None
+        Range  = None
 
-        """
-        def default_name(i,j):
-            return "X_{{{0},{1}}}".format(i,j)
+        Pattern = None
         
-        if var_name is None:
-            var_name = default_name
+        Complete      = False
+        Functional    = False
+        Surjective    = False
+        Injective     = False
 
-        # Completeness axioms
-        if complete:
-            for i in D:
-                for c in CNF.greater_or_equal_constraint([var_name(i,j) for j in R], 1):
-                    yield c
+        NonDecreasing = False
+
+        @staticmethod
+        def var_name(i,b):
+            return "X_{{{0},{1}}}".format(i,b)
+
+        def __init__(self, D, R,**kwargs):
+            r"""Generator for the clauses of a mapping between to sets
+
+            This generates of the constraints on variables :math:`v(i,j)`
+            where :math:`i \in D` and :math:`j in R`, so that they
+            represent a mapping (or a relation) between the two sets,
+            expressed in unary (i.e. :math:`v(i,j)` expresses whether
+            :math:`i` is mapped to :math:`j` or not).
+            
+            Parameters
+            ----------
+            D : iterable
+                the domain of the mapping
+
+            R : iterable
+                the range of the mapping
+
+            sparsity_pattern : bipartite_graph, optional
+                each element of the domain is allowed to be mapped
+                only into certain range elements. The graph represents
+                which range elements are compatible with a specific
+                domain element.
+
+            var_name: function, optional 
+                given :math:`i` and :math`j` the function must produce the
+                name of variable :math`v(i,j)`
+     
+            complete: bool, optional
+                every element of :math:`D` must have an image (default: true)
+     
+            functional: bool, optional
+                every element of :math:`D` must have at most one image (default: false)
+     
+            surjective: bool, optional
+                every element of :math:`R` must have a pre-image (default: false)
+     
+            injective: bool, optional
+                every element of :math:`R` must have at most one pre-image (default: false)
+     
+            nondecreasing: bool, optional
+                the mapping is going to be non decresing, with respect to
+                the order of domain and range (default: false)
+                
+            """
+            self.Domain = list(D)
+            self.Range  = list(R)
+
+            # optional parameters of the mapping
+            self.Complete      = kwargs.pop('complete',  True)
+            self.Functional    = kwargs.pop('functional',False)
+            self.Surjective    = kwargs.pop('surjective',False)
+            self.Injective     = kwargs.pop('injective', False)
+
+            self.NonDecreasing = kwargs.pop('nondecreasing', False)
+
+            # variable name scheme 
+            self.var_name = kwargs.pop('var_name', self.var_name)
+
+            # use a bipartite graph scheme for the mapping?
+            self.Pattern  = kwargs.pop('sparsity_pattern', None)
+
+            if kwargs:
+                raise TypeError('Unexpected **kwargs: %r' % kwargs)
+                
+            self.DomainToVertex={}
+            self.VertexToDomain={}
+            self.RangeToVertex={}
+            self.VertexToRange={}
+
+            self.RankRange  = {}
+            self.RankDomain = {}
+            
+            if self.Pattern is not None:
+
+                gL,gR = bipartite_sets(self.Pattern)
+
+                if len(gL) != len(self.Domain):
+                    raise ValueError("Domain and the left side of the pattern differ in size")
+
+                if len(gR) != len(self.Range):
+                    raise ValueError("Range and the right side of the pattern differ in size")
+            else:
+                gL = self.Domain
+                gR = self.Range
+                
+            for (d,v) in zip(self.Domain,gL):
+                self.DomainToVertex[d]=v
+                self.VertexToDomain[v]=d
                     
-        # Surjectivity axioms
-        if surjective:
-            for j in R:
-                for c in CNF.greater_or_equal_constraint([var_name(i,j) for i in D], 1):
-                    yield c
+            for (r,v) in zip(self.Range,gR):
+                self.RangeToVertex[r]=v
+                self.VertexToRange[v]=r
 
-        # Injectivity axioms
-        if injective:
-            for j in R:
-                for c in CNF.less_or_equal_constraint([var_name(i,j) for i in D],1):
-                    yield c
+            for i,d in enumerate(self.Domain,start=1):
+                self.RankDomain[d]=i
+                
+            for i,r in enumerate(self.Range,start=1):
+                self.RankRange[r]=i
 
-        # Functionality axioms
-        if functional:
-            for i in D:
-                for c in CNF.less_or_equal_constraint([var_name(i,j) for j in R],1):
-                    yield c
 
-        # Mapping is monotone non-decreasing
-        if nondecreasing:
-            localmaps = product(combinations(D,2),
-                                combinations(R,2))
-
-            for (a,b),(i,j) in localmaps:
-                yield [(False,var_name(a,j)),(False,var_name(b,i))]
-                    
-    @classmethod
-    def sparse_mapping(cls, B,
-                       var_name=None,
-                       complete=True,
-                       functional=False,
-                       surjective=False,
-                       injective=False):
-        r"""Generator for the clauses of a mapping according to a bipartite graph
-
-        This generates of the constraints on variables :math:`v(i,j)`
-        where :math:`i` is a left vertex of :math:`B` and :math:`j` is
-        a right vertex of :math`B`, so that they represent a mapping
-        (or a relation) between the left and right vertices, so that
-        every pair in the ralation must be and edge of :math:`B`.
-        (i.e. if :math:`v(i,j)` is true then :math:`(i,j)` must be an
-        edge of the graph :math:`B`).
-
-        Parameters
-        ----------
-        B : graph
-            a bipartite graph
-
-        var_name: a function 
-            given :math:`i` and :math`j` the function must produce the
-            name of variable :math`v(i,j)`
-
-        complete: bool
-            every element on the left must have an image (default: true)
-
-        functional: bool
-            every element on the left must have at most one image (default: false)
-
-        surjective: bool
-            every element on the right must have a pre-image (default: false)
-
-        injective: bool
-            every element on the right must have at most one pre-image (default: false)
+        def domain(self):
+            return self.Domain
         
-        Yields
-        ------
-            a sequence of clauses
+        def range(self):
+            return self.Range
+                
+        def images(self,d):
+            if self.Pattern is None:
+                return self.Range
+            else:
+                v = self.DomainToVertex[d]
+                return [ self.VertexToRange[u] for u in neighbors(self.Pattern,v) ]
 
-        """
-        def default_name(i,j):
-            return "X_{{{0},{1}}}".format(i,j)
-        
-        if var_name is None:
-            var_name = default_name
+        def counterimages(self,r):
+            if self.Pattern is None:
+                return self.Domain
+            else:
+                v = self.RangeToVertex[r]
+                return [ self.VertexToDomain[u] for u in neighbors(self.Pattern,v) ]
 
-        D,R = bipartite_sets(B)
-        # Completeness axioms
-        if complete:
-            for a in D:
-                for c in CNF.greater_or_equal_constraint([var_name(a,i) for i in neighbors(B,a)], 1):
-                    yield c
+        def variables(self):
+            for d in self.Domain:
+                for r in self.images(d):
+                    yield self.var_name(d,r)
+
+            
+        def clauses(self):
+
+            # Completeness axioms
+            if self.Complete:
+                for d in self.Domain:
+                    for c in CNF.greater_or_equal_constraint([self.var_name(d,r) for r in self.images(d)], 1):
+                        yield c
                     
-        # Surjectivity axioms
-        if surjective:
-            for i in R:
-                for c in CNF.greater_or_equal_constraint([var_name(a,i) for a in neighbors(B,i)], 1):
-                    yield c
+            # Surjectivity axioms
+            if self.Surjective:
+                for r in self.Range:
+                    for c in CNF.greater_or_equal_constraint([self.var_name(d,r) for d in self.counterimages(r)], 1):
+                        yield c
 
-        # Injectivity axioms
-        if injective:
-            for i in R:
-                for c in CNF.less_or_equal_constraint([var_name(a,i) for a in neighbors(B,i)],1):
-                    yield c
+            # Injectivity axioms
+            if self.Injective:
+                for r in self.Range:
+                    for c in CNF.less_or_equal_constraint([self.var_name(d,r)  for d in self.counterimages(r)],1):
+                        yield c
 
-        # Functionality axioms
-        if functional:
-            for a in D:
-                for c in CNF.less_or_equal_constraint([var_name(a,i) for i in neighbors(B,a)],1):
-                    yield c
+            # Functionality axioms
+            if self.Functional:
+                for d in self.Domain:
+                    for c in CNF.less_or_equal_constraint([self.var_name(d,r) for r in self.images(d)],1):
+                        yield c
 
+            # Mapping is monotone non-decreasing
+            if self.NonDecreasing:
+
+                for (a,b) in combinations(self.Domain,2):
+                    for (i,j) in product(self.images(a),self.images(b)):
+
+                        if self.RankRange[i] > self.RankRange[j]:
+                            yield [(False,self.var_name(a,i)),(False,self.var_name(b,j))]
+                        
+
+                            
     class binary_mapping(object):
+        """Binary CNF representation of a mapping between two sets."""
 
         Domain = None
         Range  = None
@@ -1239,10 +1260,7 @@ class CNF(object):
                 yield self.var_name(v,b)
                 
 
-        def __init__(self, D, R,
-                     var_name=None,
-                     injective=False,
-                     nondecreasing=False):
+        def __init__(self, D, R, **kwargs):
             r"""Generator for the clauses of a binary mapping between D and :math:`R`
             
             This generates of the constraints on variables
@@ -1259,47 +1277,38 @@ class CNF(object):
             R : iterable
                 the length of the bit strings
 
-            var_name: a function 
+            var_name: function, optional
                 given :math:`i` and :math`b` the function must produce the
                 name of variable :math`v(i,b)`
 
-            injective: bool
+            injective: bool, optional
                 every bitstring must have at most one pre-image (default: false)
              
-            nondecreasing: bool
+            nondecreasing: bool, optional
                 the mapping must be non decreasing (default: false)
-            
-            Yields
-            ------
-            a sequence of clauses
 
             """
             self.Domain = list(D)
             self.Range  = list(R)
             self.Bits   = int(ceil(log(len(R),2)))
-        
-            self.Injective     = injective
-            self.NonDecreasing = nondecreasing
 
-            if var_name is not None:
-                self.var_name = var_name
+            # optional parameters of the mapping
+            self.Injective     = kwargs.pop('injective', False)
+            self.NonDecreasing = kwargs.pop('nondecreasing', False)
+            # variable name scheme 
+            self.var_name = kwargs.pop('var_name', self.var_name)
+
+            if kwargs:
+                raise TypeError('Unexpected **kwargs: %r' % kwargs)
 
             self.ImageToBits={}
             self.BitsToImage={}
-            self.residual_strings = None
             
-            cutoff = len(self.Range)
-            gen_strings=enumerate(product([0,1],repeat=self.Bits))
-            
-            for i,bs in gen_strings:
+            for i,bs in islice(enumerate(product([0,1],repeat=self.Bits)),
+                               len(self.Range)):
 
                 self.ImageToBits[ self.Range[i] ] = bs
                 self.BitsToImage[ bs ] = self.Range[i]
-
-                if i >= cutoff-1:
-                    break
-
-            self.residual_strings = gen_strings
 
         def image_to_bitstring(self,im):
             return self.ImageToBits[im]
@@ -1319,7 +1328,8 @@ class CNF(object):
         def clauses(self):
 
             # Avoid strings that do not correspond to elements from the range
-            for i,(_,bs) in product(self.Domain,self.residual_strings):
+            for i,bs in product(self.Domain,
+                                islice(product([0,1],repeat=self.Bits),len(self.Range),None)):
                 yield self.forbid_bitstring(i,bs) 
 
             # Injectivity
