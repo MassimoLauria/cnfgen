@@ -1174,7 +1174,7 @@ class CNF(object):
                 self.RankDomain[d]=i
                 
             for i,r in enumerate(self.Range,start=1):
-                self.RankDomain[r]=i
+                self.RankRange[r]=i
                 
         def images(self,d):
             if self.Pattern is None:
@@ -1225,11 +1225,11 @@ class CNF(object):
             # Mapping is monotone non-decreasing
             if self.NonDecreasing:
 
-                for (a,b) in combinations(self.Domain):
+                for (a,b) in combinations(self.Domain,2):
                     for (i,j) in product(self.images(a),self.images(b)):
 
                         if self.RankRange[i] > self.RankRange[j]:
-                            yield [(False,self.var_name(a,j)),(False,self.var_name(b,i))]
+                            yield [(False,self.var_name(a,i)),(False,self.var_name(b,j))]
                         
 
                             
