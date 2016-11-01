@@ -7,12 +7,13 @@ from __future__ import print_function
 
 
 from cnfformula.cnf import CNF
-from cnfformula.graphs import is_dag,enumerate_vertices
+from cnfformula.graphs import is_dag,enumerate_vertices,bipartite_sets
 
 from itertools import product
 from collections import OrderedDict
 
 from cnfformula.cmdline import DirectedAcyclicGraphHelper
+from cnfformula.cmdline import BipartiteGraphHelper
 
 import cnfformula.families
 import cnfformula.cmdline
@@ -69,6 +70,74 @@ def PebblingFormula(digraph):
 
     return peb
 
+
+
+
+def stone_formula_helper(F,D,mapping):
+    """Stones formulas helper
+
+    Builds the clauses of a stone formula given the mapping object
+    between stones and vertices of the DAG. THis is not supposed to be
+    called by user code, and indeed this function assumes the following facts.
+
+    - :math:`D` is equal to `mapping.domain()`
+    - :math:`D` is a DAG
+
+    Parameters
+    ----------
+    F : CNF
+        the CNF which will contain the clauses of the stone formula
+
+    D : a directed acyclic graph
+        it should be a directed acyclic graph.
+
+    mapping : unary_mapping object
+       mapping between stones and graph vertices
+
+
+    See Also
+    --------
+    StoneFormula : the classic stone formula
+    SparseStomeFormula : stone formula with sparse mapping
+
+    """
+
+    # add variables in the appropriate order
+    vertices=enumerate_vertices(D)
+
+    # Stones->Vertices variables
+    for v in mapping.variables():
+        F.add_variable(v)
+
+    # Color variables
+    for stone in mapping.range():
+        F.add_variable("R_{{{0}}}".format(stone),
+                       description="Stone ${}$ is red".format(stone))
+    
+    # Each vertex has some stone
+    for cls in mapping.clauses():
+        F.add_clause(cls)
+        
+    # If predecessors have red stones, the sink must have a red stone
+    for v in vertices:
+        for j in mapping.images(v):
+            pred=sorted(D.predecessors(v),key=lambda x:mapping.RankDomain[x])
+
+            for stones_tuple in product(*tuple( [s for s in mapping.images(v) if s!=j  ] for v in pred)):
+#            for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
+                F.add_clause([(False, mapping.var_name(p,s)) for (p,s) in zip(pred,stones_tuple)] +
+                               [(False, mapping.var_name(v,j))] +
+                               [(False, "R_{{{0}}}".format(s)) for s in _uniqify_list(stones_tuple)] +
+                               [(True,  "R_{{{0}}}".format(j))],
+                               strict=True)
+        
+        if D.out_degree(v)==0: #the sink
+            for j in mapping.images(v):
+                F.add_clause([ (False, mapping.var_name(v,j)),
+                               (False,"R_{{{0}}}".format(j))],
+                               strict = True)
+
+    return F
 
 
 @cnfformula.families.register_cnf_generator
@@ -164,12 +233,12 @@ def StoneFormula(D,nstones):
     for v in vertices:
         for j in stones:
             pred=sorted(D.predecessors(v),key=lambda x:position[x])
+#            for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
             for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
                 cnf.add_clause([(False, "P_{{{0},{1}}}".format(p,s)) for (p,s) in zip(pred,stones_tuple)] +
                                [(False, "P_{{{0},{1}}}".format(v,j))] +
                                [(False, "R_{{{0}}}".format(s)) for s in _uniqify_list(stones_tuple)] +
-                               [(True,  "R_{{{0}}}".format(j))],
-                               strict=True)
+                               [(True,  "R_{{{0}}}".format(j))])
         
         if D.out_degree(v)==0: #the sink
             for j in stones:
@@ -179,6 +248,35 @@ def StoneFormula(D,nstones):
 
     return cnf
 
+@cnfformula.families.register_cnf_generator
+def SparseStoneFormula(D,B):
+    """Stones formulas (alternative implementation)
+
+    """
+    if not is_dag(D):
+        raise ValueError("Stone formulas are defined only for directed acyclic graphs.")
+    
+    Left, Right = bipartite_sets(B)
+    nstones = len(Right)
+
+    if len(Left) != D.order():
+        raise ValueError("Formula requires the bipartite left side to match #vertices of the DAG.")
+     
+    cnf = CNF()
+    
+    if hasattr(D, 'name'):
+        cnf.header = "Sparse Stone formula of: " + D.name + "\nwith " + str(nstones) + " stones\n" + cnf.header
+    else:
+        cnf.header = "Sparse Stone formula with " + str(nstones) + " stones\n" + cnf.header
+
+    # add variables in the appropriate order
+    vertices=enumerate_vertices(D)
+    stones=range(1,nstones+1)
+    
+    mapping = cnf.unary_mapping(vertices,stones,sparsity_pattern=B)
+
+    stone_formula_helper(cnf,D,mapping)
+    return cnf
 
 
 @cnfformula.cmdline.register_cnfgen_subcommand
@@ -207,8 +305,8 @@ class PebblingCmdHelper:
         D= DirectedAcyclicGraphHelper.obtain_graph(args)
         try:
             return PebblingFormula(D)
-        except ValueError:
-            print("\nError: input graph must be directed and acyclic.",file=sys.stderr)
+        except ValueError,e:
+            print("\nError: {}".format(e),file=sys.stderr)
             sys.exit(-1)
 
 @cnfformula.cmdline.register_cnfgen_subcommand
@@ -239,6 +337,39 @@ class StoneCmdHelper:
         D= DirectedAcyclicGraphHelper.obtain_graph(args)
         try:
             return StoneFormula(D,args.s)
-        except ValueError:
-            print("\nError: Input graph must be a DAG, and a non negative # of stones.",file=sys.stderr)
+        except ValueError,e :
+            print("\nError: {}".format(e),file=sys.stderr)
+            sys.exit(-1)
+
+@cnfformula.cmdline.register_cnfgen_subcommand
+class SparseStoneCmdHelper:
+    """Command line helper for stone formulas
+    """
+    name='stonesparse'
+    description='stone formula (sparse version)'
+    __doc__ = StoneFormula.__doc__
+    
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for stone formulas
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        DirectedAcyclicGraphHelper.setup_command_line(parser)
+        BipartiteGraphHelper.setup_command_line(parser,suffix="_mapping")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build the pebbling formula
+
+        Arguments:
+        - `args`: command line options
+        """
+        D= DirectedAcyclicGraphHelper.obtain_graph(args)
+        B= BipartiteGraphHelper.obtain_graph(args,suffix="_mapping")
+        try:
+            return SparseStoneFormula(D,B)
+        except ValueError,e:
+            print("\nError: {}".format(e),file=sys.stderr)
             sys.exit(-1)
