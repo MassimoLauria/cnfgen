@@ -124,7 +124,6 @@ def stone_formula_helper(F,D,mapping):
             pred=sorted(D.predecessors(v),key=lambda x:mapping.RankDomain[x])
 
             for stones_tuple in product(*tuple( [s for s in mapping.images(v) if s!=j  ] for v in pred)):
-#            for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
                 F.add_clause([(False, mapping.var_name(p,s)) for (p,s) in zip(pred,stones_tuple)] +
                                [(False, mapping.var_name(v,j))] +
                                [(False, "R_{{{0}}}".format(s)) for s in _uniqify_list(stones_tuple)] +
