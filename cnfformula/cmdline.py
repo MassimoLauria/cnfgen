@@ -313,6 +313,8 @@ class DirectedAcyclicGraphHelper(GraphHelper):
         elif getattr(args,'graphformat'+suffix) is not None:
 
             try:
+                print("INFO: reading directed acyclic graph {} from '{}'".format(suffix,getattr(args,"input"+suffix).name),
+                      file=sys.stderr)
                 D=readGraph(getattr(args,'input'+suffix),
                             "dag",
                             getattr(args,'graphformat'+suffix))
@@ -320,7 +322,7 @@ class DirectedAcyclicGraphHelper(GraphHelper):
                 print("ERROR ON '{}'. {}".format(getattr(args,'input'+suffix).name,e),file=sys.stderr)
                 exit(-1)
         else:
-            raise RuntimeError("Invalid graph specification on command line")
+            raise RuntimeError("Command line does not specify a directed acyclic graph")
 
         # Output the graph is requested
         if getattr(args,'savegraph'+suffix) is not None:
@@ -470,6 +472,8 @@ class SimpleGraphHelper(GraphHelper):
         elif getattr(args,'graphformat'+suffix) is not None:
 
             try:
+                print("INFO: reading simple graph {} from '{}'".format(suffix,getattr(args,"input"+suffix).name),
+                      file=sys.stderr)
                 G=readGraph(getattr(args,'input'+suffix),
                             "simple",
                             getattr(args,'graphformat'+suffix))
@@ -479,7 +483,7 @@ class SimpleGraphHelper(GraphHelper):
                       file=sys.stderr)
                 exit(-1)
         else:
-            raise RuntimeError("Invalid graph specification on command line")
+            raise RuntimeError("Command line does not specify a graph")
 
         # Graph modifications
         if getattr(args,'plantclique'+suffix)>1:
@@ -703,6 +707,8 @@ class BipartiteGraphHelper(GraphHelper):
         elif getattr(args,"graphformat"+suffix) is not None:
 
             try:
+                print("INFO: reading bipartite graph {} from '{}'".format(suffix,getattr(args,"input"+suffix).name),
+                      file=sys.stderr)
                 G=readGraph(getattr(args,"input"+suffix),
                             "bipartite",
                             getattr(args,"graphformat"+suffix))
@@ -711,7 +717,7 @@ class BipartiteGraphHelper(GraphHelper):
                 exit(-1)
                             
         else:
-            raise RuntimeError("Invalid graph specification on command line")
+            raise RuntimeError("Command line does not specify a bipartite graph")
             
         
 
