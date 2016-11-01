@@ -7,7 +7,8 @@ from __future__ import print_function
 
 
 from cnfformula.cnf import CNF
-from cnfformula.graphs import is_dag,enumerate_vertices,bipartite_sets
+from cnfformula.graphs import is_dag,enumerate_vertices
+from cnfformula.graphs import has_bipartition,bipartite_sets
 
 from itertools import product
 from collections import OrderedDict
@@ -98,8 +99,7 @@ def stone_formula_helper(F,D,mapping):
     See Also
     --------
     StoneFormula : the classic stone formula
-    SparseStomeFormula : stone formula with sparse mapping
-
+    SparseStoneFormula : stone formula with sparse mapping
     """
 
     # add variables in the appropriate order
@@ -141,7 +141,7 @@ def stone_formula_helper(F,D,mapping):
 
 @cnfformula.families.register_cnf_generator
 def StoneFormula(D,nstones):
-    """Stones formulas
+    """Stone formulas
 
     The stone formulas have been introduced in [2]_ and generalized in
     [1]_. They are one of the classic examples that separate regular
@@ -249,11 +249,62 @@ def StoneFormula(D,nstones):
 
 @cnfformula.families.register_cnf_generator
 def SparseStoneFormula(D,B):
-    """Stones formulas (alternative implementation)
+    """Sparse Stone formulas
+
+    This is a variant of the :py:func:`StoneFormula`. See that for
+    a description of the formula. This variant is such that each
+    vertex has only a small selection of which stone can go to that
+    vertex. In particular which stones are allowed on each vertex is
+    specified by a bipartite graph :math:`B` on which the left
+    vertices represent the vertices of DAG :math:`D` and the right
+    vertices are the stones. 
+
+    If a vertex of :math:`D` correspond to the left vertex :math:`v`
+    in :math:`B`, then its neighbors describe which stones are allowed
+    for it.
+
+    The vertices in :math:`D` do not need to have the same name as the
+    one on the left side of :math:`B`. It is only important that the
+    number of vertices in :math:`D` is the same as the vertices in the
+    left side of :math:`B`.
+
+    In that case the element at position :math:`i` in the ordered
+    sequence ``enumerate_vertices(D)`` corresponds to the element of
+    rank :math:`i` in the sequence of left side vertices of
+    :math:`B` according to the output of ``Left, Right =
+    bipartite_sets(B)``.
+
+    Standard :py:func:`StoneFormula` is essentially equivalent to
+    a sparse stone formula where :math:`B` is the complete graph.
+
+    Parameters
+    ----------
+    D : a directed acyclic graph
+        it should be a directed acyclic graph.
+    B : bipartite graph
+
+    Raises
+    ------
+    ValueError
+       if :math:`D` is not a directed acyclic graph
+    
+    ValueError
+       if :math:`B` is not a bipartite graph
+
+    ValueError
+       when size differs between :math:`D` and the left side of
+       :math:`B`
+
+    See Also
+    --------
+    StoneFormula
 
     """
     if not is_dag(D):
         raise ValueError("Stone formulas are defined only for directed acyclic graphs.")
+
+    if not has_bipartition(B):
+        raise ValueError("Vertices to stones mapping must be specified with a bipartite graph")
     
     Left, Right = bipartite_sets(B)
     nstones = len(Right)
@@ -346,7 +397,7 @@ class SparseStoneCmdHelper:
     """
     name='stonesparse'
     description='stone formula (sparse version)'
-    __doc__ = StoneFormula.__doc__
+    __doc__ = SparseStoneFormula.__doc__
     
     @staticmethod
     def setup_command_line(parser):
