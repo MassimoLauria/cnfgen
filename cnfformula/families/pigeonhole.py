@@ -92,7 +92,7 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
         php.add_variable(v)
 
     for c in mapping.clauses():
-        php.add_clause(c,strict=True)
+        php.add_clause(c)
 
     return php
 
@@ -158,7 +158,7 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
         gphp.add_variable(v)
 
     for c in mapping.clauses():
-        gphp.add_clause(c,strict=True)
+        gphp.add_clause(c)
 
     return gphp
 
@@ -188,7 +188,7 @@ def BinaryPigeonholePrinciple(pigeons,holes):
         bphp.add_variable(v)
         
     for c in bphpgen.clauses():
-        bphp.add_clause(c,strict=True)
+        bphp.add_clause(c)
 
     return bphp
 
