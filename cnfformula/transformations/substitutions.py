@@ -181,9 +181,9 @@ class MajoritySubstitution(BaseSubstitution):
 
         threshold = (self._rank + 1) // 2 # loose majority
         if polarity:
-            return self.greater_or_equal_constraint(variables,threshold)
+            return list(self.greater_or_equal_constraint(variables,threshold))
         else:
-            return self.less_than_constraint(variables,threshold)
+            return list(self.less_than_constraint(variables,threshold))
         
         
 
@@ -317,7 +317,7 @@ class XorSubstitution(BaseSubstitution):
         Returns: a list of clauses
         """
         names = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
-        return self.parity_constraint(names,polarity)
+        return list(self.parity_constraint(names,polarity))
 
 @register_cnf_transformation
 class FormulaLifting(BaseSubstitution):
@@ -509,16 +509,16 @@ class VariableCompression(BaseSubstitution):
 
         if self._function == 'xor':
 
-            return self.parity_constraint(local_names,polarity)
+            return list(self.parity_constraint(local_names,polarity))
 
         elif self._function == 'maj':
 
             threshold = (len(local_names)+1) // 2 # loose majority
 
             if polarity:
-                return self.greater_or_equal_constraint(local_names, threshold )
+                return list(self.greater_or_equal_constraint(local_names, threshold ))
             else:
-                return self.less_than_constraint(local_names, threshold )
+                return list(self.less_than_constraint(local_names, threshold ))
             
         else:
             raise RuntimeError("Error: variable compression with invalid function")

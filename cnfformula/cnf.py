@@ -807,11 +807,11 @@ class CNF(object):
 
         Examples
         --------
-        >>> CNF.parity_constraint(['a','b'],1)
+        >>> list(CNF.parity_constraint(['a','b'],1))
         [[(True, 'a'), (True, 'b')], [(False, 'a'), (False, 'b')]]
-        >>> CNF.parity_constraint(['a','b'],0)
+        >>> list(CNF.parity_constraint(['a','b'],0))
         [[(True, 'a'), (False, 'b')], [(False, 'a'), (True, 'b')]]
-        >>> CNF.parity_constraint(['a'],0)
+        >>> list(CNF.parity_constraint(['a'],0))
         [[(False, 'a')]]
         """
         domains = tuple([((True, var), (False, var)) for var in variables])
@@ -820,8 +820,7 @@ class CNF(object):
             # Save only the clauses with the right polarity
             parity = sum(1-l[0] for l in c) % 2
             if parity != constant:
-                clauses.append(list(c))
-        return clauses
+                yield list(c)
 
 
     @classmethod
@@ -832,19 +831,18 @@ class CNF(object):
         constraints. By default it build a "stricly less that", and if
         ``greater`` is True it builds a "strictly greater than".
         """
-        clauses = []
         polarity = greater
         if greater:
             k = len(variables) - k
      
         if k > len(variables):
-            return []
+            return
         elif k < 0:
-            return [[]]
-     
+            yield []
+            return
+        
         for tpl in combinations(variables, k):
-            clauses.append([(polarity, v) for v in tpl])
-        return clauses
+            yield [(polarity, v) for v in tpl]
      
     @classmethod 
     def less_than_constraint(cls,variables, upperbound):
@@ -870,13 +868,13 @@ class CNF(object):
      
         Examples
         --------
-        >>> CNF.less_than_constraint(['a','b','c'],2)
+        >>> list(CNF.less_than_constraint(['a','b','c'],2))
         [[(False, 'a'), (False, 'b')], [(False, 'a'), (False, 'c')], [(False, 'b'), (False, 'c')]]
-        >>> CNF.less_than_constraint(['a'],1)
+        >>> list(CNF.less_than_constraint(['a'],1))
         [[(False, 'a')]]
-        >>> CNF.less_than_constraint(['a','b','c'],-1)
+        >>> list(CNF.less_than_constraint(['a','b','c'],-1))
         [[]]
-        >>> CNF.less_than_constraint(['a','b','c'],10)
+        >>> list(CNF.less_than_constraint(['a','b','c'],10))
         []
         """
         return cls._inequality_constraint_builder(variables, upperbound, greater=False)
@@ -905,15 +903,15 @@ class CNF(object):
      
         Examples
         --------
-        >>> CNF.less_than_constraint(['a','b','c'],3) == CNF.less_or_equal_constraint(['a','b','c'],2)
+        >>> list(CNF.less_than_constraint(['a','b','c'],3)) == list(CNF.less_or_equal_constraint(['a','b','c'],2))
         True
-        >>> CNF.less_or_equal_constraint(['a','b','c'],1)
+        >>> list(CNF.less_or_equal_constraint(['a','b','c'],1))
         [[(False, 'a'), (False, 'b')], [(False, 'a'), (False, 'c')], [(False, 'b'), (False, 'c')]]
-        >>> CNF.less_or_equal_constraint(['a','b'],0)
+        >>> list(CNF.less_or_equal_constraint(['a','b'],0))
         [[(False, 'a')], [(False, 'b')]]
-        >>> CNF.less_or_equal_constraint(['a','b','c'],-1)
+        >>> list(CNF.less_or_equal_constraint(['a','b','c'],-1))
         [[]]
-        >>> CNF.less_or_equal_constraint(['a','b','c'],10)
+        >>> list(CNF.less_or_equal_constraint(['a','b','c'],10))
         []
         """
         return cls._inequality_constraint_builder(variables, upperbound+1, greater=False)
@@ -942,13 +940,13 @@ class CNF(object):
      
         Examples
         --------
-        >>> CNF.greater_than_constraint(['a','b','c'],2)
+        >>> list(CNF.greater_than_constraint(['a','b','c'],2))
         [[(True, 'a')], [(True, 'b')], [(True, 'c')]]
-        >>> CNF.greater_than_constraint(['a'],0)
+        >>> list(CNF.greater_than_constraint(['a'],0))
         [[(True, 'a')]]
-        >>> CNF.greater_than_constraint(['a','b','c'],-1)
+        >>> list(CNF.greater_than_constraint(['a','b','c'],-1))
         []
-        >>> CNF.greater_than_constraint(['a','b','c'],3)
+        >>> list(CNF.greater_than_constraint(['a','b','c'],3))
         [[]]
         """
         return cls._inequality_constraint_builder(variables, lowerbound, greater=True)
@@ -977,13 +975,13 @@ class CNF(object):
      
         Examples
         --------
-        >>> CNF.greater_than_constraint(['a','b','c'],1) == CNF.greater_or_equal_constraint(['a','b','c'],2)
+        >>> tuple(CNF.greater_than_constraint(['a','b','c'],1)) == tuple(CNF.greater_or_equal_constraint(['a','b','c'],2))
         True
-        >>> CNF.greater_or_equal_constraint(['a','b','c'],3)
+        >>> list(CNF.greater_or_equal_constraint(['a','b','c'],3))
         [[(True, 'a')], [(True, 'b')], [(True, 'c')]]
-        >>> CNF.greater_or_equal_constraint(['a'],0)
+        >>> list(CNF.greater_or_equal_constraint(['a'],0))
         []
-        >>> CNF.greater_or_equal_constraint(['a','b','c'],4)
+        >>> list(CNF.greater_or_equal_constraint(['a','b','c'],4))
         [[]]
         """
         return cls._inequality_constraint_builder(variables, lowerbound - 1, greater=True)
@@ -1013,8 +1011,10 @@ class CNF(object):
         -------
             a list of clauses
         """
-        return cls.less_or_equal_constraint(variables, value) + \
-               cls.greater_or_equal_constraint(variables, value)
+        for c in cls.less_or_equal_constraint(variables, value):
+            yield c
+        for c in cls.greater_or_equal_constraint(variables, value):
+            yield c
      
     @classmethod
     def loose_majority_constraint(cls, variables):
