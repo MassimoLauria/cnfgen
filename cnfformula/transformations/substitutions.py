@@ -181,9 +181,9 @@ class MajoritySubstitution(BaseSubstitution):
 
         threshold = (self._rank + 1) // 2 # loose majority
         if polarity:
-            return self.greater_or_equal_constraint(variables,threshold)
+            return list(self.greater_or_equal_constraint(variables,threshold))
         else:
-            return self.less_than_constraint(variables,threshold)
+            return list(self.less_than_constraint(variables,threshold))
         
         
 
@@ -516,9 +516,9 @@ class VariableCompression(BaseSubstitution):
             threshold = (len(local_names)+1) // 2 # loose majority
 
             if polarity:
-                return self.greater_or_equal_constraint(local_names, threshold )
+                return list(self.greater_or_equal_constraint(local_names, threshold ))
             else:
-                return self.less_than_constraint(local_names, threshold )
+                return list(self.less_than_constraint(local_names, threshold ))
             
         else:
             raise RuntimeError("Error: variable compression with invalid function")
