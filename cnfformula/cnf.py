@@ -315,16 +315,13 @@ class CNF(object):
                    strict=False):
         """Add a clause to the CNF.
 
-        The clause must be well formatted. Otherwise it raises
-        `TypeError` if the clause is not well formatted.
-
         E.g. (not x3) or x4 or (not x2) is encoded as
              [(False,u"x3"),(True,u"x4"),(False,u"x2")]
 
         All variable mentioned in the clause will be added to the list
         of variables  of the CNF,  in the  order of appearance  in the
-        clauses.
-
+        clauses, unless `auto_variable` is ``False``.
+        
         Parameters
         ----------
         clause: list of (bool,str) 
@@ -363,14 +360,14 @@ class CNF(object):
             a clause contains an unknow variables, `ValueError` is
             raised. (default: True)
 
-        
         strict: bool, optional
-            If `True` impose restrictions on the clause
+            If `True` impose restrictions on the clause.
 
             Setting this to `True` is equivalent to set
             `literal_repetitions`, `opposite_literals`,
             `auto_variables` to `False`. In case of conflicting
-            setting, the more restrictive one hold.
+            settings, the most restrictive one holds.
+            (default: False)
         """
         assert self._coherent
 
@@ -381,39 +378,64 @@ class CNF(object):
             raise TypeError("%s is not a well formatted clause" %clause)
 
         # Activate the most restrictive setting
+        
         literal_repetitions = literal_repetitions and (not strict)
         opposite_literals   = opposite_literals and (not strict)
         auto_variables      = auto_variables and (not strict) 
         
-        # Add all missing variables
-        try:
-            for _, var in clause:
-                if var in self._name2index:
-                    continue
-                if not auto_variables:
-                    raise ValueError("The clause contains an illegal variable %s" % var)
-                else:
-                    self.add_variable(var)
-        except TypeError:
-            raise TypeError("%s is not a well formatted clause" %clause)
-
         # Check literal repetitions
-        if (not literal_repetitions) and max(Counter(clause).values() + [0])>1:
-            counter  = Counter(clause)
-            repeated = [l for (l,c) in counter.iteritems() if c>1]
-            raise ValueError("Forbidden repeated literals %s" % repeated)
+        if (not literal_repetitions) and len(set(clause)) != len(clause):
+            raise ValueError("Forbidden repeated literals in clause {}".format(clause))
 
         # Check opposite literals
         if not opposite_literals:
-            positive     = [v for (p,v) in clause if p ]
-            intersection = [v for (p,v) in clause if not p and v in positive]
-            if len(intersection):
-                raise ValueError("Forbidden opposite literals for variables %s" % intersection)
-        
+            positive     = set([v for (p,v) in clause if p ])
+            negative     = set([v for (p,v) in clause if not p ])
+            if len(positive & negative)>0:
+                emsg = "{ " + ", ".join(positive & negative) + " }"
+                raise ValueError("Following variable occur with opposite literals: {}".format(emsg))
+
         # Add the compressed clause
+        try:
+            self._clauses.append( self._compress_clause(clause) )
+        except KeyError,error:
+            if not auto_variables:
+                raise ValueError("The clause contains unknown variable: {}".format(error))
+            else:
+                for _, var in clause:
+                    self.add_variable(var)
+                self._clauses.append( self._compress_clause(clause) )
+
+
+    def add_clause_unsafe(self,clause):
+        """Add a clause without checking input
+
+        This is logically equivalent to :py:meth:`CNF.add_clause`
+        where `literal_repetition`, `opposite_literals` and
+        `auto_variables` are ``True``, but it is faster because
+        it does less checks on the input.
+
+        Parameters
+        ----------
+        clause: list of (bool,str) 
+            the clause to be added in the CNF
+
+            A clause with k literals is a list with k pairs.
+            First coords are the polarities, second coords are utf8
+            encoded strings with variable names.
+
+            Clauses are added with repetition, i.e. if the same clause
+            is added twice then it will occur twice in the
+            formula too.
+
+        Raises
+        ------
+        KeyError
+            if the clause contains a variable which was not added to the formula before.
+        """
         self._clauses.append( self._compress_clause(clause) )
 
-
+        
     def add_variable(self,var,description=None):
         """Add a variable to the formula (if not already resent).
 
