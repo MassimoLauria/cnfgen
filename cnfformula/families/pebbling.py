@@ -24,10 +24,15 @@ import sys
 
 
 
-def _uniqify_list(x):
-    """Remove duplicates while maintaining the order."""
-    x=OrderedDict.fromkeys(x)
-    return x.keys()
+def _uniqify_list(seq):
+    """Remove duplicates while maintaining the order.
+
+    (due to Dave Kirby) 
+
+    Seen on https://www.peterbe.com/plog/uniqifiers-benchmark
+    """
+    seen = set()
+    return [x for x in seq if x not in seen and not seen.add(x)]
 
 
 
@@ -64,10 +69,10 @@ def PebblingFormula(digraph):
 
         # If predecessors are pebbled the vertex must be pebbled
         pred=sorted(digraph.predecessors(v),key=lambda x:position[x])
-        peb.add_clause([(False,p) for p in pred]+[(True,v)],strict=True)
+        peb.add_clause_unsafe([(False,p) for p in pred]+[(True,v)])
 
         if digraph.out_degree(v)==0: #the sink
-            peb.add_clause([(False,v)],strict=True)
+            peb.add_clause_unsafe([(False,v)])
 
     return peb
 
@@ -116,13 +121,12 @@ def stone_formula_helper(F,D,mapping):
     
     # Each vertex has some stone
     for cls in mapping.clauses():
-        F.add_clause(cls)
+        F.add_clause_unsafe(cls)
         
     # If predecessors have red stones, the sink must have a red stone
     for v in vertices:
         for j in mapping.images(v):
             pred=sorted(D.predecessors(v),key=lambda x:mapping.RankDomain[x])
-
             for stones_tuple in product(*tuple( [s for s in mapping.images(v) if s!=j  ] for v in pred)):
                 F.add_clause([(False, mapping.var_name(p,s)) for (p,s) in zip(pred,stones_tuple)] +
                                [(False, mapping.var_name(v,j))] +
@@ -208,42 +212,45 @@ def StoneFormula(D,nstones):
     else:
         cnf.header = "Stone formula with " + str(nstones) + " stones\n" + cnf.header
 
-    # add variables in the appropriate order
+    # Add variables in the appropriate order
     vertices=enumerate_vertices(D)
     position=dict((v,i) for (i,v) in enumerate(vertices))
     stones=range(1,nstones+1)
+
+    # Caching variable names
+    color_vn = {}
+    stone_vn = {}
     
     # Stones->Vertices variables
     for v in vertices:
         for j in stones:
-            cnf.add_variable("P_{{{0},{1}}}".format(v,j),
+            stone_vn[(v,j)] = "P_{{{0},{1}}}".format(v,j) 
+            cnf.add_variable(stone_vn[(v,j)],
                              description="Stone ${1}$ on vertex ${0}$".format(v,j))
 
     # Color variables
     for j in stones:
-        cnf.add_variable("R_{{{0}}}".format(j),
+        color_vn[j] = "R_{{{0}}}".format(j)
+        cnf.add_variable(color_vn[j],
                          description="Stone ${}$ is red".format(j))
     
     # Each vertex has some stone
     for v in vertices:
-        cnf.add_clause([(True,"P_{{{0},{1}}}".format(v,j)) for j in stones])
+        cnf.add_clause_unsafe([(True,stone_vn[(v,j)]) for j in stones])
         
     # If predecessors have red stones, the sink must have a red stone
     for v in vertices:
         for j in stones:
             pred=sorted(D.predecessors(v),key=lambda x:position[x])
-#            for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
             for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
-                cnf.add_clause([(False, "P_{{{0},{1}}}".format(p,s)) for (p,s) in zip(pred,stones_tuple)] +
-                               [(False, "P_{{{0},{1}}}".format(v,j))] +
-                               [(False, "R_{{{0}}}".format(s)) for s in _uniqify_list(stones_tuple)] +
-                               [(True,  "R_{{{0}}}".format(j))])
+                cnf.add_clause_unsafe([(False, stone_vn[(p,s)]) for (p,s) in zip(pred,stones_tuple)] +
+                                      [(False, stone_vn[(v,j)])] +
+                                      [(False, color_vn[s]) for s in _uniqify_list(stones_tuple)] +
+                                      [(True,  color_vn[j])])
         
         if D.out_degree(v)==0: #the sink
             for j in stones:
-                cnf.add_clause([ (False,"P_{{{0},{1}}}".format(v,j)),
-                                 (False,"R_{{{0}}}".format(j))],
-                               strict = True)
+                cnf.add_clause_unsafe([ (False,stone_vn[(v,j)]), (False,color_vn[j])])
 
     return cnf
 
