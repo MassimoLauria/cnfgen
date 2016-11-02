@@ -807,11 +807,11 @@ class CNF(object):
 
         Examples
         --------
-        >>> CNF.parity_constraint(['a','b'],1)
+        >>> list(CNF.parity_constraint(['a','b'],1))
         [[(True, 'a'), (True, 'b')], [(False, 'a'), (False, 'b')]]
-        >>> CNF.parity_constraint(['a','b'],0)
+        >>> list(CNF.parity_constraint(['a','b'],0))
         [[(True, 'a'), (False, 'b')], [(False, 'a'), (True, 'b')]]
-        >>> CNF.parity_constraint(['a'],0)
+        >>> list(CNF.parity_constraint(['a'],0))
         [[(False, 'a')]]
         """
         domains = tuple([((True, var), (False, var)) for var in variables])
@@ -820,8 +820,7 @@ class CNF(object):
             # Save only the clauses with the right polarity
             parity = sum(1-l[0] for l in c) % 2
             if parity != constant:
-                clauses.append(list(c))
-        return clauses
+                yield list(c)
 
 
     @classmethod
