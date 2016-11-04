@@ -245,7 +245,7 @@ a sequence of transformations.
 
         for f in search_cmdline_input_file([args]+t_args):
             f.seek(0,0)
-            cmdline_descr += ["\\noindent\\textbf{Input file \\texttt{%s}}"%f.name,
+            cmdline_descr += ["\\noindent\\textbf{Input file} \\verb|%s|"%f.name,
                               "\\begin{lstlisting}[breaklines,basicstyle=\\small]" ] + \
                               f.readlines() + \
                               ["\\end{lstlisting}"]
