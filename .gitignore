@@ -8,3 +8,4 @@ dist/
 .eggs/
 *.egg-info/
 .dir-locals.el
+gh-pages
