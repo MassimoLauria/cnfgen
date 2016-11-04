@@ -358,7 +358,7 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
 
     elif file_format=='kthlist':
 
-        _write_graph_kthlist_format(G,output_file)
+        _write_graph_kthlist_format(G,output_file,  bipartition = (graph_type == 'bipartite'))
 
     elif file_format=='dimacs':
 
@@ -766,7 +766,7 @@ def _read_graph_matrix_format(inputfile):
 #
 # In-house graph writers
 #
-def _write_graph_kthlist_format(G,output_file):
+def _write_graph_kthlist_format(G,output_file, bipartition = False):
     """Wrire a graph to a file, in the KTH reverse adjacency lists format.
 
     Parameters
@@ -775,22 +775,28 @@ def _write_graph_kthlist_format(G,output_file):
 
     output_file : file object
         file handle of the output
+
+    bipartition : boolean
+        only write the left side adjacency lists. This will enforce
+        the bipartition where the file is read again
     """
 
     print("c {}".format(G.name),file=output_file)
     print("{}".format(G.order()),file=output_file)
 
     # we need numerical indices for the vertices
-    enumeration = zip( enumerate_vertices(G),
-                       xrange(1,G.order()+1))
-
     # adj list in the same order
-    indices = dict( enumeration )
-
+    indices = { v:i for (i,v) in enumerate(enumerate_vertices(G),start=1)}
+    
+    if bipartition:
+        V, _ = bipartite_sets(G)
+    else:
+        V    = enumerate_vertices(G)
+        
     from cStringIO import StringIO
     output = StringIO()
 
-    for v,i in enumeration:
+    for v in V:
 
         if G.is_directed():
             nbors = [indices[w] for w in G.predecessors(v)]
@@ -799,7 +805,7 @@ def _write_graph_kthlist_format(G,output_file):
 
         nbors.sort()
 
-        output.write( str(i)+" : ")
+        output.write( str(indices[v])+" : ")
         output.write( " ".join([str(i) for i in nbors]))
         output.write( " 0\n")
 
