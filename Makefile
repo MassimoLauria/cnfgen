@@ -19,6 +19,7 @@ clean:
 	rm -fr *.egg-info
 	rm -fr docs/_build
 	find . -name '*.pyc' -delete
+	find . -name '*.pyo' -delete
 	find . -name 'flycheck*.py' -delete
 
 package: clean

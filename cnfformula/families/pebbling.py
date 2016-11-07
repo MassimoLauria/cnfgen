@@ -110,13 +110,21 @@ def stone_formula_helper(F,D,mapping):
     # add variables in the appropriate order
     vertices=enumerate_vertices(D)
 
+    # caching variable names
+    color_vn = {}
+    stone_vn = {}
+    
     # Stones->Vertices variables
     for v in mapping.variables():
         F.add_variable(v)
-
+    for v in vertices:
+        for j in mapping.images(v):
+            stone_vn[(v,j)] = mapping.var_name(v,j)
+        
     # Color variables
     for stone in mapping.range():
-        F.add_variable("R_{{{0}}}".format(stone),
+        color_vn[stone] = "R_{{{0}}}".format(stone)
+        F.add_variable(color_vn[stone],
                        description="Stone ${}$ is red".format(stone))
     
     # Each vertex has some stone
@@ -128,17 +136,15 @@ def stone_formula_helper(F,D,mapping):
         for j in mapping.images(v):
             pred=sorted(D.predecessors(v),key=lambda x:mapping.RankDomain[x])
             for stones_tuple in product(*tuple( [s for s in mapping.images(v) if s!=j  ] for v in pred)):
-                F.add_clause([(False, mapping.var_name(p,s)) for (p,s) in zip(pred,stones_tuple)] +
-                               [(False, mapping.var_name(v,j))] +
-                               [(False, "R_{{{0}}}".format(s)) for s in _uniqify_list(stones_tuple)] +
-                               [(True,  "R_{{{0}}}".format(j))],
-                               strict=True)
+                F.add_clause_unsafe([(False, stone_vn[(p,s)]) for (p,s) in zip(pred,stones_tuple)] +
+                                    [(False, stone_vn[(v,j)])] +
+                                    [(False, color_vn[s]) for s in _uniqify_list(stones_tuple)] +
+                                    [(True,  color_vn[j])])
         
         if D.out_degree(v)==0: #the sink
             for j in mapping.images(v):
-                F.add_clause([ (False, mapping.var_name(v,j)),
-                               (False,"R_{{{0}}}".format(j))],
-                               strict = True)
+                F.add_clause_unsafe([ (False, stone_vn[(v,j)]),
+                                      (False, color_vn[j])] )
 
     return F
 
