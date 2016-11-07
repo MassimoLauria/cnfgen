@@ -4,7 +4,7 @@ VIRTUALENV = $(HOME)/.virtualenvs/$(PROJECT)-venv
 
 all : test
 
-.PHONY: test install package upload devinstall docbuild editor-tools doc-tools venv
+.PHONY: test install package upload devinstall docbuild dev-tools doc-tools venv
 
 test: venv
 	. $(VIRTUALENV)/bin/activate && \
@@ -44,9 +44,9 @@ docbuild: devinstall
 #
 # Install tools
 #
-editor-tools : venv
+dev-tools : venv
 	. $(VIRTUALENV)/bin/activate && \
-	pip install jedi epc pylint nose six service_factory
+	pip install --upgrade pylint nose
 
 doc-tools : venv
 	. $(VIRTUALENV)/bin/activate && \
