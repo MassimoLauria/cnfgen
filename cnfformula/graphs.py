@@ -512,61 +512,97 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
 
 
     G=graph_class()
-    G.name=''
-    G.ordered_vertices=[]
-
+    
     # is the input topologically sorted?
     topologically_sorted_input=True
+    nvertex=None
+    header = StringIO.StringIO()
 
-    # vertex number
-    nvertex=-1
-    vertex_cnt=-1
+    target  = None
+    sources = []
+    parsing_adjlist = False
+    for i,l in enumerate(inputfile.readlines(),start=1):
 
-    for i,l in enumerate(inputfile.readlines()):
-
-        # add the comment to the header
-        if l[0]=='c':
-            G.name+=l[2:]
+        # Comment line
+        #
+        # only the comments before the vertex number specification
+        # will be included in the header of the formula
+        #
+        if l[0]=='c' or l[0]=='C':
+            if nvertex is None:
+                header.write(l[2:])
             continue
 
-        # empty line
+        # Empty line
         if len(l.strip())==0:
             continue
 
-        if ':' not in l:
-            # vertex number spec
-            if nvertex>=0:
-                raise ValueError("[Syntax error] "+
-                                 "Line {} contains a second spec directive.".format(i))
-            nvertex = int(l.strip())
-            if nvertex<0:
+        # Vertex number spec
+        #
+        # Initialize the graph object
+        #
+        if nvertex is None:
+            try:
+                nvertex = int(l.strip())
+            except ValueError:
                 raise ValueError("[Input error] "+
-                                 "Non negative number of vertices expected at line {}.".format(i))
+                                 "A single non negative number of vertices expected at line {}.".format(i))
+            # Init the graph object
             G.add_nodes_from(xrange(1,nvertex+1))
             G.ordered_vertices=xrange(1,nvertex+1)
+            G.name = header.getvalue()
             continue
 
         # Load edges from this line
-        target,sources=l.split(':')
-        target=int(target.strip())
+        #
+        # Either read a new adjacency list or continue parsing the
+        # unfinished one from the previous line
+        #
+        if parsing_adjlist is False:
+
+            if ":" not in l:
+                raise ValueError("[Input error] "+
+                                 "An adjacency list was expected at line {}.".format(i))
+            else:
+
+                parsing_adjlist = True
+                target,new_sources=l.split(':')
+                sources = []
+                
+                try:
+                    target=int(target.strip())
+                except ValueError:
+                    raise ValueError("[Input error] "+
+                                     "Vertex ID at line {} must be  anumber.".format(i))
+               
+                if target < 1 or target > nvertex:
+                    raise ValueError("[Input error] "+
+                                     "Target vertex ID out of range [1,{}] at line {}.".format(nvertex,i))
+        elif ":" in l:
+            raise ValueError("[Input error] "+
+                             "Unfinished adjacency list has been interrupted at line {}.".format(i))
+        else:
+            new_sources=l.strip()
+
+        # A list of predecessors is made on ints between 1 and nvertex
         try:
-            sources=[int(s) for s in sources.split()]
+            new_sources=[int(s) for s in new_sources.split()]
         except ValueError:
             raise ValueError("[Input error] "+
-                             "Non integer vertex ID at line {}.".format(i))
-        if len(sources)<1 or sources[-1]!=0:
-            raise ValueError("[Input error] "+
-                             "Line {} must end with 0.".format(i))
+                             "Non integer source vertex IDs at line {}.".format(i))
 
-        if target < 1 or target > nvertex:
+        if len(new_sources)>=1 and new_sources[-1]==0:
+            parsing_adjlist = False
+            new_sources.pop()
+            
+        if len([x for x in new_sources if x < 1 or x > nvertex]):
             raise ValueError("[Input error] "+
-                             "Vertex ID out of range [1,{}] at line {}.".format(nvertex,i))
+                             "At line {} there is a vertex ID that is not an int in [1,{}].".format(i,nvertex))
 
-        sources.pop()
-        if len([x for x in sources if x < 1 or x > nvertex]):
-            raise ValueError("[Input error] "+
-                             "Vertex ID out of range [1,{}] at line {}.".format(nvertex,i))
-
+        sources.extend(new_sources)
+        if parsing_adjlist:
+            continue
+        
         # Vertices should appear in increasing order if the graph is topologically sorted
         for s in sources:
             if s <= target:
@@ -593,6 +629,12 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
         for s in sources:
             G.add_edge(s,target)
 
+    # Unterminated ajdlist?
+    if parsing_adjlist:
+        raise ValueError("[Input error] "+
+                         "Unexpected end of the file. Unterminated adjacency list.".format(i))
+
+            
     # label the bipartition on residual vertices
     if bipartition:
         for v in G.ordered_vertices:
