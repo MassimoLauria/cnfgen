@@ -88,7 +88,7 @@ def ThapenCPLSFormula(a, b, c):
 class ThapenCPLSCmdHelper(object):
     """Command line helper for Thapen's size-width tradeoff formula"""
 
-    name='thapen'
+    name='thapencpls'
     description='Thapen\'s size-width tradeoff formula'
 
     @staticmethod
