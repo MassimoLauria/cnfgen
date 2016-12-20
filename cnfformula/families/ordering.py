@@ -10,7 +10,8 @@ import cnfformula.cmdline
 import cnfformula.families
 
 from cnfformula.graphs import enumerate_vertices,neighbors
-from itertools import combinations,permutations
+from itertools import combinations,permutations,product
+import random
 
 import networkx
 
@@ -154,6 +155,111 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
 
     return gop
 
+@cnfformula.families.register_cnf_generator
+def DenseOrderingPrinciple(size,degree=None,seed=None,total=True):
+    """Generates the clauses for dense ordering principle
+
+    This ordering principle was introduced in [1]_
+
+    Defined on a set of n^2 variables for all edges in a complete graph,
+    it has the following axioms:
+    (1) No self loops
+    (2) Transitivity
+    (3) "Dense" clauses:
+       for all (i,j,k) (not necessarily all distinct),
+       if x[i->j], then there exists k such that x[i->k] and x[k->j]
+    (4) Totality [optional, see below]:
+        for all (i,j) (not necessarily distinct),
+        one of x[i,j] and x[j,i] is False
+
+    Note that (1) no self loops + (2) transitivity => graph is acyclic,
+    and acyclic + (3) "dense" clauses => graph is empty.
+    So instead of (4), adding a clause stating that at least one edge
+    exists is enough to make the formula unsatisfiable.
+
+    Therefore we introduced another argument `total`.
+
+    Arguments:
+    - `size` : size of the domain
+    - `degree`: size of the neighbour sets in the sparse version
+    - `total` : if True, add (4) totality axioms;
+      otherwise, add a clause stating that at least one edge exists.
+
+    References
+    ----------
+    .. [1] A. Atserias and V. Dalmau
+           A combinatorial characterization of resolution width
+           Journal of Computer and System Sciences (2007)
+
+    """
+    if seed:
+        random.seed(seed)
+    graph = networkx.complete_graph(size)
+    gop = CNF()
+
+    # Describe the formula
+    if degree is None:
+        if total:
+            name = "Dense linear ordering principle on complete graph with {0} nodes".format(size)
+        else:
+            name = "Dense ordering principle on complete graph with {0} nodes".format(size)
+    else:
+        if total:
+            name = "Sparse dense linear ordering principle on complete graph with {0} nodes with neighbour sets of size {1}".format(size, degree)
+        else:
+            name = "Sparse dense ordering principle on complete graph with {0} nodes with neighbour sets of size {1}".format(size, degree)
+
+    gop.header = name+".\n"+gop.header
+
+
+    # Fix the vertex order
+    V = enumerate_vertices(graph)
+    
+    S = {}
+    for i in V:
+        lst = list(V)
+        random.shuffle(lst)
+        S[i] = set(lst if degree is None else lst[:degree])
+
+    def X(i,j): return 'x_{{{0},{1}}}'.format(i,j)
+    def Z(i,j,k): return 'z_{{{0},{1},{2}}}'.format(i,j,k)
+    for i,j in product(V,V):
+        gop.add_variable(X(i,j))
+    for i,k in product(V,V):
+        for j in S[i] | S[k]:
+            gop.add_variable(Z(i,j,k))
+
+    # (1) No self loops: ~x[i,i] for all i.
+    # (the paper has all ~x[i,j] v ~x[j,i] (note: including i=j), but
+    # those can be derived from ~x[i,i] and transitivity)
+    for i in V:
+        gop.add_clause([(False, X(i,i))], strict=True)
+    # (2) Transitivity: ~x[i,j] v ~x[j,k] v x[i,k] for all (i,j,k)
+    for i,j,k in product(V,V,V):
+        if i!=j and j!=k:
+            gop.add_clause([(False, X(i,j)), (False, X(j,k)), (True, X(i,k))], strict=True)
+    # (3) "dense" clauses
+    # ~z[i,j,k] v x[i,j] for all (i,j,k)
+    # ~z[i,j,k] v x[j,k] for all (i,j,k)
+    # ~x[i,j] v ~x[j,k] v z[i,j,k] for all (i,j,k) with j in S[i] \cup S[k]
+    for i,k in product(V,V):
+        for j in S[i] | S[k]:
+            gop.add_clause([(False, Z(i,j,k)), (True, X(i,j))], strict=True)
+            gop.add_clause([(False, Z(i,j,k)), (True, X(j,k))], strict=True)
+            gop.add_clause([(False, X(i,i)), (True, Z(i,i,i))] if i==j==k\
+                    else [(False, X(i,j)), (False, X(j,k)), (True, Z(i,j,k))], strict=True)
+    # ~x[i,k] v z[i,1,k] v ... v z[i,n,k] (D[i,k]) for all (i,k)
+    for i,k in product(V,V):
+        gop.add_clause([(False, X(i,k))] + [(True, Z(i,j,k)) for j in S[i] | S[k]], strict=True)
+    # (4) Totality: if total=True, x[i,j] v x[j,i] for all {i,j};
+    #     otherwise, a clause stating that at least one edge exists.
+    if total:
+        for i,j in combinations(V,2):
+            gop.add_clause([(True, X(i,j)), (True, X(j,i))], strict=True)
+    else:
+        gop.add_clause([(True, X(i,j)) for j in V for i in V])
+
+    return gop
 
 @cnfformula.cmdline.register_cnfgen_subcommand
 class OPCmdHelper(object):
@@ -225,3 +331,61 @@ class GOPCmdHelper(object):
         return GraphOrderingPrinciple(G,args.total,args.smart,args.plant,args.knuth)
 
 
+@cnfformula.cmdline.register_cnfgen_subcommand
+class DOPCmdHelper(object):
+    """Command line helper for Dense ordering principle formulas
+    """
+    name='dop'
+    description='dense ordering principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Dense ordering principle formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('N',metavar='<N>',type=int,help="domain size")
+        g=parser.add_mutually_exclusive_group()
+        g.add_argument('--total','-t',default=True,action='store_true',help="assume a total order")
+        g.add_argument('--no-total',default=False,action='store_false',dest='total',help="don't assume a total order")
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a Dense ordering principle formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        return DenseOrderingPrinciple(args.N,total=args.total)
+
+@cnfformula.cmdline.register_cnfgen_subcommand
+class SparseDOPCmdHelper(object):
+    """Command line helper for Dense ordering principle formulas
+    """
+    name='dopsparse'
+    description='dense ordering principle (sparse version)'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Dense ordering principle formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('N',metavar='<N>',type=int,help="domain size")
+        parser.add_argument('degree',metavar='<degree>',type=int,help="number of neighbours per vertex for the dense axioms")
+        g=parser.add_mutually_exclusive_group()
+        g.add_argument('--total','-t',default=True,action='store_true',help="assume a total order")
+        g.add_argument('--no-total',default=False,action='store_false',dest='total',help="don't assume a total order")
+
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a Dense ordering principle formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        return DenseOrderingPrinciple(args.N,degree=args.degree,total=args.total)
