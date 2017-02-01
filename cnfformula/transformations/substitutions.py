@@ -572,7 +572,7 @@ class AllEqualsSubstitutionCmd:
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N',type=int,nargs='?',default=2,action='store',help="arity (default: 3)")
+        parser.add_argument('N',type=int,nargs='?',default=3,action='store',help="arity (default: 3)")
 
     @staticmethod
     def transform_cnf(F,args):
@@ -585,7 +585,7 @@ class NeqSubstitutionCmd:
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N',type=int,nargs='?',default=2,action='store',help="arity (default: 3)")
+        parser.add_argument('N',type=int,nargs='?',default=3,action='store',help="arity (default: 3)")
 
     @staticmethod
     def transform_cnf(F,args):
@@ -598,7 +598,7 @@ class MajSubstitution:
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N',type=int,nargs='?',default=2,action='store',help="arity (default: 3)")
+        parser.add_argument('N',type=int,nargs='?',default=3,action='store',help="arity (default: 3)")
 
     @staticmethod
     def transform_cnf(F,args):
@@ -624,7 +624,7 @@ class ExactlyOneSubstitutionCmd:
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N',type=int,nargs='?',default=2,action='store',help="arity (default: 3)")
+        parser.add_argument('N',type=int,nargs='?',default=3,action='store',help="arity (default: 3)")
     
     @staticmethod
     def transform_cnf(F,args):
@@ -644,7 +644,7 @@ class FormulaLiftingCmd:
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N',type=int,nargs='?',default=2,action='store',help="arity (default: 3)")
+        parser.add_argument('N',type=int,nargs='?',default=3,action='store',help="arity (default: 3)")
     
     @staticmethod
     def transform_cnf(F,args):
