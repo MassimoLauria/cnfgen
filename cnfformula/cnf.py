@@ -1080,7 +1080,11 @@ class CNF(object):
         threshold = len(variables)/2
         return cls.equal_to_constraint(variables,threshold)
 
-    class unary_mapping(object):
+    @classmethod
+    def unary_mapping(cls, D, R, **kwargs):
+        return cls._unary_mapping(cls, D, R, **kwargs)
+
+    class _unary_mapping(object):
         """Unary CNF representation of a mapping between two sets."""
         
         Domain = None
@@ -1099,7 +1103,7 @@ class CNF(object):
         def var_name(i,b):
             return "X_{{{0},{1}}}".format(i,b)
 
-        def __init__(self, D, R,**kwargs):
+        def __init__(self, cls, D, R, **kwargs):
             r"""Generator for the clauses of a mapping between to sets
 
             This generates of the constraints on variables :math:`v(i,j)`
@@ -1143,6 +1147,8 @@ class CNF(object):
                 the order of domain and range (default: false)
                 
             """
+            self.cls = cls
+
             self.Domain = list(D)
             self.Range  = list(R)
 
@@ -1230,25 +1236,25 @@ class CNF(object):
             # Completeness axioms
             if self.Complete:
                 for d in self.Domain:
-                    for c in CNF.greater_or_equal_constraint([self.var_name(d,r) for r in self.images(d)], 1):
+                    for c in self.cls.greater_or_equal_constraint([self.var_name(d,r) for r in self.images(d)], 1):
                         yield c
                     
             # Surjectivity axioms
             if self.Surjective:
                 for r in self.Range:
-                    for c in CNF.greater_or_equal_constraint([self.var_name(d,r) for d in self.counterimages(r)], 1):
+                    for c in self.cls.greater_or_equal_constraint([self.var_name(d,r) for d in self.counterimages(r)], 1):
                         yield c
 
             # Injectivity axioms
             if self.Injective:
                 for r in self.Range:
-                    for c in CNF.less_or_equal_constraint([self.var_name(d,r)  for d in self.counterimages(r)],1):
+                    for c in self.cls.less_or_equal_constraint([self.var_name(d,r)  for d in self.counterimages(r)],1):
                         yield c
 
             # Functionality axioms
             if self.Functional:
                 for d in self.Domain:
-                    for c in CNF.less_or_equal_constraint([self.var_name(d,r) for r in self.images(d)],1):
+                    for c in self.cls.less_or_equal_constraint([self.var_name(d,r) for r in self.images(d)],1):
                         yield c
 
             # Mapping is monotone non-decreasing
