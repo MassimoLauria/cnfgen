@@ -3,7 +3,7 @@
 """Graph isomorphimsm/automorphism formulas
 """
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 from cnfformula.cmdline import SimpleGraphHelper
 
 from cnfformula.cmdline  import register_cnfgen_subcommand
@@ -39,7 +39,7 @@ def GraphIsomorphism(G1, G2):
     are isomorphic.
 
     """
-    F = CNF()
+    F = CSP()
     F.header = "Graph Isomorphism problem between graphs " +\
                G1.name + " and " + G2.name + "\n" + F.header
 
@@ -95,7 +95,7 @@ def GraphAutomorphism(G):
     A CNF formula which is satiafiable if and only if graph G has a
     nontrivial automorphism.
     """
-    tmp = CNF()
+    tmp = CSP()
     header = "Graph automorphism formula for graph "+ G.name +"\n"+ tmp.header
     F = GraphIsomorphism(G, G)
     F.header = header

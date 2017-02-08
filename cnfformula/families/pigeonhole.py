@@ -3,7 +3,7 @@
 """Implementation of the pigeonhole principle formulas
 """
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 from cnfformula.cmdline import BipartiteGraphHelper
 from cnfformula.graphs import bipartite_sets
 
@@ -75,7 +75,7 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
         else:
             formula_name="Pigeonhole principle"
             
-    php=CNF()
+    php=CSP()
     php.header="{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes)\
         + php.header
 
@@ -142,7 +142,7 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
             formula_name="Graph pigeonhole principle"
 
 
-    gphp=CNF()
+    gphp=CSP()
     gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)
 
     Left, Right = bipartite_sets(graph)
@@ -178,7 +178,7 @@ def BinaryPigeonholePrinciple(pigeons,holes):
        number of holes
     """
 
-    bphp=CNF()
+    bphp=CSP()
     bphp.header="Binary Pigeonhole Principle for {0} pigeons and {1} holes\n".format(pigeons,holes)\
                  + bphp.header
     

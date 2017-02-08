@@ -3,7 +3,7 @@
 """Implementation of Tseitin formulas
 """
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 
 from cnfformula.cmdline import SimpleGraphHelper
 from cnfformula.graphs import enumerate_vertices,neighbors
@@ -34,7 +34,7 @@ def TseitinFormula(graph,charges=None):
         charges=charges+[0]*(len(V)-len(charges))  # pad with even charges
 
     # init formula
-    tse=CNF()
+    tse=CSP()
     edgename = { }
     
     for (u,v) in sorted(graph.edges(),key=sorted):
@@ -47,7 +47,7 @@ def TseitinFormula(graph,charges=None):
         
         # produce all clauses and save half of them
         names = [ edgename[(u,v)] for u in neighbors(graph,v) ]
-        for cls in CNF.parity_constraint(names,c):
+        for cls in tse.parity_constraint(names,c):
             tse.add_clause(list(cls),strict=True)
 
     return tse

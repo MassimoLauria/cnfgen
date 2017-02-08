@@ -3,7 +3,7 @@
 """Implementation of counting/matching formulas
 """
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 from cnfformula.cmdline import SimpleGraphHelper
 
 from cnfformula.cmdline  import register_cnfgen_subcommand
@@ -25,7 +25,7 @@ def CountingPrinciple(M,p):
     - `p`  : size of each class
 
     """
-    cnf=CNF()
+    cnf=CSP()
 
     # Describe the formula
     name="Counting Principle: {0} divided in parts of size {1}.".format(M,p)
@@ -45,7 +45,7 @@ def CountingPrinciple(M,p):
 
         edge_vars = [var_name(tpl) for tpl in incidence[el]]
 
-        for cls in CNF.equal_to_constraint(edge_vars,1):
+        for cls in cnf.equal_to_constraint(edge_vars,1):
             cnf.add_clause(cls)
 
     return cnf
@@ -63,7 +63,7 @@ def PerfectMatchingPrinciple(G):
     G : undirected graph
 
     """
-    cnf=CNF()
+    cnf=CSP()
 
     # Describe the formula
     name="Perfect Matching Principle"
@@ -84,7 +84,7 @@ def PerfectMatchingPrinciple(G):
 
         edge_vars = [var_name(u,v) for u in neighbors(G,v)]
 
-        for cls in CNF.equal_to_constraint(edge_vars,1):
+        for cls in cnf.equal_to_constraint(edge_vars,1):
             cnf.add_clause(cls)
 
     return cnf

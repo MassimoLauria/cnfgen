@@ -3,7 +3,7 @@
 """CNF Formulas for Ramsey-like statements
 """
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 
 import cnfformula.cmdline
 import cnfformula.families
@@ -41,7 +41,7 @@ def PythagoreanTriples(N):
            arXiv preprint arXiv:1605.00723, 2016.
     """
 
-    ptn=CNF()
+    ptn=CSP()
 
     ptn.header=dedent("""
 It is possible to bicolor the numbers from
@@ -78,7 +78,7 @@ def RamseyLowerBoundFormula(s,k,N):
     - `N`: vertices
     """
 
-    ram=CNF()
+    ram=CSP()
 
     ram.header=dedent("""\
         CNF encoding of the claim that there is a graph of %d vertices

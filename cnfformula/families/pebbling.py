@@ -6,7 +6,7 @@
 from __future__ import print_function
 
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 from cnfformula.graphs import is_dag,enumerate_vertices
 from cnfformula.graphs import has_bipartition,bipartite_sets
 
@@ -50,7 +50,7 @@ def PebblingFormula(digraph):
     if not is_dag(digraph):
         raise ValueError("Pebbling formula is defined only for directed acyclic graphs")
 
-    peb=CNF()
+    peb=CSP()
 
     if hasattr(digraph,'name'):
         peb.header="Pebbling formula of: "+digraph.name+"\n\n"+peb.header
@@ -205,7 +205,7 @@ def StoneFormula(D,nstones):
     if nstones<0:
         raise ValueError("There must be at least one stone.")
 
-    cnf = CNF()
+    cnf = CSP()
 
     if hasattr(D, 'name'):
         cnf.header = "Stone formula of: " + D.name + "\nwith " + str(nstones) + " stones\n" + cnf.header
@@ -319,7 +319,7 @@ def SparseStoneFormula(D,B):
     if len(Left) != D.order():
         raise ValueError("Formula requires the bipartite left side to match #vertices of the DAG.")
      
-    cnf = CNF()
+    cnf = CSP()
     
     if hasattr(D, 'name'):
         cnf.header = "Sparse Stone formula of: " + D.name + "\nwith " + str(nstones) + " stones\n" + cnf.header

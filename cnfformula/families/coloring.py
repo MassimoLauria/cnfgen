@@ -4,7 +4,7 @@
 """
 
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 from cnfformula.cmdline import SimpleGraphHelper
 
 from cnfformula.cmdline  import register_cnfgen_subcommand
@@ -38,7 +38,7 @@ def GraphColoringFormula(G,colors,functional=True):
        the CNF encoding of the coloring problem on graph ``G``
 
     """
-    col=CNF()
+    col=CSP()
 
     if isinstance(colors,int) and colors>=0:
         colors = range(1,colors+1)
@@ -114,7 +114,7 @@ def EvenColoringFormula(G):
        Journal on Satisfiability, Boolean Modeling and Computation 2 (2006) 221-228
 
     """
-    F = CNF()
+    F = CSP()
     F.header = "Even coloring formula on graph " + G.name + "\n" + F.header
 
     def var_name(u,v):
@@ -134,8 +134,8 @@ def EvenColoringFormula(G):
 
         edge_vars = [ var_name(u,v) for u in neighbors(G,v) ]
         
-        for cls in CNF.equal_to_constraint(edge_vars,
-                                           len(edge_vars)/2):
+        for cls in F.equal_to_constraint(edge_vars,
+                                         len(edge_vars)/2):
             F.add_clause(cls,strict=True)
 
     return F

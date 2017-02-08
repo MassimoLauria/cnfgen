@@ -3,7 +3,7 @@
 """Implementation of simple formulas
 """
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 
 import cnfformula.cmdline
 
@@ -35,7 +35,7 @@ class OR(object):
         """
         clause = [ (True,"x_{}".format(i)) for i in range(args.P) ] + \
                  [ (False,"y_{}".format(i)) for i in range(args.N) ]
-        orcnf =  CNF([clause])
+        orcnf =  CSP([clause])
         orcnf.header = "Clause with {} positive and {} negative literals\n\n".format(args.P,args.N) + \
                        orcnf.header
         return orcnf
@@ -68,7 +68,7 @@ class AND(object):
         """
         clauses = [ [(True,"x_{}".format(i))] for i in range(args.P) ] + \
                   [ [(False,"y_{}".format(i))] for i in range(args.N) ]
-        andcnf =  CNF(clauses)
+        andcnf =  CSP(clauses)
         andcnf.header = "Singleton clauses: {} positive and {} negative\n\n""".format(args.P,args.N) +\
                         andcnf.header
         return andcnf
@@ -95,7 +95,7 @@ class EMPTY(object):
         args : ignored 
              command line options
         """
-        return CNF()
+        return CSP()
 
 @cnfformula.cmdline.register_cnfgen_subcommand
 class EMPTY_CLAUSE(object):
@@ -118,5 +118,5 @@ class EMPTY_CLAUSE(object):
         args : ignored 
              command line options
         """
-        return CNF([[]])
+        return CSP([[]])
 

@@ -3,7 +3,7 @@
 """Implementation of subset cardinality formulas
 """
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 
 from cnfformula.cmdline import BipartiteGraphHelper
 
@@ -82,7 +82,7 @@ def SubsetCardinalityFormula(B, equalities = False):
     """
     Left, Right = bipartite_sets(B)
             
-    ssc=CNF()
+    ssc=CSP()
     ssc.header="Subset cardinality formula for graph {0}\n".format(B.name)
 
     def var_name(u,v):
@@ -100,20 +100,20 @@ def SubsetCardinalityFormula(B, equalities = False):
         edge_vars = [ var_name(u,v) for v in neighbors(B,u) ]
 
         if equalities:
-            for cls in CNF.exactly_half_ceil(edge_vars):
+            for cls in ssc.exactly_half_ceil(edge_vars):
                 ssc.add_clause(cls,strict=True)
         else:
-            for cls in CNF.loose_majority_constraint(edge_vars):
+            for cls in ssc.loose_majority_constraint(edge_vars):
                 ssc.add_clause(cls,strict=True)
 
     for v in Right:
         edge_vars = [ var_name(u,v) for u in neighbors(B,v) ]
 
         if equalities:
-            for cls in CNF.exactly_half_floor(edge_vars):
+            for cls in ssc.exactly_half_floor(edge_vars):
                 ssc.add_clause(cls,strict=True)
         else:
-            for cls in CNF.loose_minority_constraint(edge_vars):
+            for cls in ssc.loose_minority_constraint(edge_vars):
                 ssc.add_clause(cls,strict=True)
     
     return ssc
