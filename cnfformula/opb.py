@@ -7,18 +7,18 @@ class OPB(CNF):
         self._constraints = []
         self.add_clause_unsafe = self.add_constraint
         self.add_clause = self.add_constraint
-        CNF.__init__(self)
-
+        super(OPB,self).__init__()
+        
     def dimacs(self, export_header=False, extra_text=None):
         from cStringIO import StringIO
         output = StringIO()
         output.write("* #variable= {} #constraint= {}\n".format(
-            len(self._index2name),len(self._constraints)))
+            len(self._name2index),len(self._constraints)))
         for c in self._constraints:
             freeterm = c[-1]
             for term in c[:-1]:
                 coefficient = term[0]
-                literal = "x" + str(self._name2index[term[2]]+1)
+                literal = "x" + str(self._name2index[term[2]])
                 if not term[1] :
                     coefficient *= -1
                     freeterm += coefficient
