@@ -84,10 +84,7 @@ def has_dot_library():
 # Check that DOT is a supported format
 if not has_dot_library():
     for k in _graphformats.values():
-        try:
-            k.remove('dot')
-        except ValueError:
-            pass
+        k.discard('dot')
 
 
 def find_read_dot():
