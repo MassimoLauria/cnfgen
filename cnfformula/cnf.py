@@ -29,9 +29,6 @@ from math import ceil,log
 from . import prjdata as pd
 from .graphs import bipartite_sets,neighbors
 
-_default_header="Generated with `cnfgen`\n(C) {}\n{}\n\n".format(pd.__copyright__,
-                                                                 pd.__url__)
-
 class CNF(object):
     """Propositional formulas in conjunctive normal form.
 
@@ -86,8 +83,6 @@ class CNF(object):
             a preamble which documents the formula
         """
 
-        self._header = header if header!=None else _default_header
-
         # Initial empty formula
         self._clauses         = []
 
@@ -97,6 +92,13 @@ class CNF(object):
         self._name2index      = dict()
         self._name2descr      = dict()
 
+
+        # How strict is the addition of constraints
+        self._allow_literal_repetitions=False
+        self._allow_opposite_literals=False
+        self._auto_add_variables=True
+
+
         # Internal coherence can be disrupted by some methods.  API
         # methods require it to be rechecked.
         self._coherent        = True
@@ -105,22 +107,114 @@ class CNF(object):
         for c in clauses or []:
             self.add_clause(c)
 
+        # Internal documentation of the formula
+        self._header = header or "Generated with `cnfgen`\n(C) {}\n{}\n\n".format(pd.__copyright__,
+                                                                                  pd.__url__)
 
-    # Formula contains an header property
-    def _set_header(self, value):
-        """Header setter"""
-        self._header = value
-
-    def _get_header(self):
-        """Header getter"""
+    @property
+    def header(self):
+        """Brief description of the formula"""
         return self._header
 
-    header = property(_get_header, _set_header)
+    @header.setter
+    def header(self, value):
+        self._header = value
 
+    #
+    #
+    # (Strict?) Rules for constraints addition
+    #
+    #
+    def mode_strict(self):
+        """Constraints are added with strict rules
+
+        In particular this sets to `False`:
+          - :py:meth:`CNF.allow_literal_repetition`
+          - :py:meth:`CNF.allow_opposite_literals`
+          - :py:meth:`CNF.auto_add_variables`
+ 
+        """
+        self._allow_literal_repetitions = False
+        self._allow_opposite_literals   = False
+        self._auto_add_variables        = False
+
+    def mode_unchecked(self):
+        """Constraints are added with no rule
+
+        In particular this sets to `True`:
+          - :py:meth:`CNF.allow_literal_repetitions`
+          - :py:meth:`CNF.allow_opposite_literals`
+          - :py:meth:`CNF.auto_add_variables`
+ 
+        """
+        self._allow_literal_repetitions = True
+        self._allow_opposite_literals   = True
+        self._auto_add_variables        = True
+        
+    def mode_unchecked(self):
+        """Constraint are added with default rules
+
+        In particular this sets to `False`:
+          - :py:meth:`CNF.allow_literal_repetitions`
+          - :py:meth:`CNF.allow_opposite_literals`
+
+        and sets to `True`:
+          - :py:meth:`CNF.auto_add_variables`
+ 
+        """
+        self._allow_literal_repetitions = False
+        self._allow_opposite_literals   = False
+        self._auto_add_variables        = True
+        
+
+    @property
+    def allow_literal_repetitions(self):
+        """True if and only if the constraint can have repeated literal.
+        
+        Useful for sanity check. If the flag is `False` and the
+        clause contain two copies of the same literal, then
+        `ValueError` is raised. (default: False)
+        """
+        return self._allow_literal_repetitions
+
+    @allow_literal_repetitions.setter
+    def allow_literal_repetitions(self,value):
+        self._allow_literal_repetitions = bool(value)
+    
+    @property
+    def allow_opposite_literals(self):
+        """True if and only if the clause can have opposite literals.
+
+        Useful for sanity check. If the flag is `False` and the
+        clause contain two opposite literals, then `ValueError`
+        is raised. (default: False)
+        """
+        return self._allow_opposite_literals
+
+    @allow_opposite_literals.setter
+    def allow_opposite_literals(self,value):
+        self._allow_opposite_literals = bool(value)
+    
+    @property
+    def auto_add_variables(self):
+        """If `True` the clause can contain new variables.
+
+        New variables occurring in the clause will be added to the
+        formula, unless the flag is `False`. In that case when
+        a clause contains an unknow variables, `ValueError` is
+        raised. (default: True)
+        """
+        return self._auto_add_variables
+
+    @auto_add_variables.setter
+    def auto_add_variables(self,value):
+        self._auto_add_variables = bool(value)
+    
+    
     #
     # Implementation of some standard methods
     #
-
+    
     def __iter__(self):
         """Iterates over all clauses of the CNF
         """
@@ -310,11 +404,7 @@ class CNF(object):
     # High level API: build the CNF
     #
 
-    def add_clause(self,clause,
-                   literal_repetitions=False,
-                   opposite_literals=False,
-                   auto_variables=True,
-                   strict=False):
+    def add_clause(self,clause):
         """Add a clause to the CNF.
 
         E.g. (not x3) or x4 or (not x2) is encoded as
@@ -339,37 +429,6 @@ class CNF(object):
             Clauses are added with repetition, i.e. if the same clause
             is added twice then it will occur twice in the
             formula too.
-
-        literal_repetitions: bool, optional
-            True if and only if the clause can have repeated literal.
-
-            Useful for sanity check. If the flag is `False` and the
-            clause contain two copies of the same literal, then
-            `ValueError` is raised. (default: False)
-
-        opposite_literals: bool, optional
-            True if and only if the clause can have opposite literal.
-
-            Useful for sanity check. If the flag is `False` and the
-            clause contain two opposite literals, then `ValueError`
-            is raised. (default: False)
-
-        auto_variables: bool, optional
-            If `True` the clause can contain new variables.
-
-            New variables occurring in the clause will be added to the
-            formula, unless the flag is `False`. In that case when
-            a clause contains an unknow variables, `ValueError` is
-            raised. (default: True)
-
-        strict: bool, optional
-            If `True` impose restrictions on the clause.
-
-            Setting this to `True` is equivalent to set
-            `literal_repetitions`, `opposite_literals`,
-            `auto_variables` to `False`. In case of conflicting
-            settings, the most restrictive one holds.
-            (default: False)
         """
         assert self._coherent
 
@@ -379,18 +438,12 @@ class CNF(object):
         except TypeError:
             raise TypeError("%s is not a well formatted clause" %clause)
 
-        # Activate the most restrictive setting
-        
-        literal_repetitions = literal_repetitions and (not strict)
-        opposite_literals   = opposite_literals and (not strict)
-        auto_variables      = auto_variables and (not strict) 
-        
         # Check literal repetitions
-        if (not literal_repetitions) and len(set(clause)) != len(clause):
+        if (not self._allow_literal_repetitions) and len(set(clause)) != len(clause):
             raise ValueError("Forbidden repeated literals in clause {}".format(clause))
 
         # Check opposite literals
-        if not opposite_literals:
+        if not self._allow_opposite_literals:
             positive     = set([v for (p,v) in clause if p ])
             negative     = set([v for (p,v) in clause if not p ])
             if len(positive & negative)>0:
@@ -401,7 +454,7 @@ class CNF(object):
         try:
             self._clauses.append( self._compress_clause(clause) )
         except KeyError,error:
-            if not auto_variables:
+            if not self._auto_add_variables:
                 raise ValueError("The clause contains unknown variable: {}".format(error))
             else:
                 for _, var in clause:
@@ -1391,10 +1444,6 @@ class xor(namedtuple("xor",['literals','value'])):
     ::
 
          xor((1,-3,7),1)
-
-    Repeated or opposite literals are forbidden. In case one of these
-    things occur the `n_clauses` and `clauses` methods have
-    undefined behavior.
 
     Parameters
     ----------

@@ -84,7 +84,8 @@ def SubsetCardinalityFormula(B, equalities = False):
             
     ssc=CNF()
     ssc.header="Subset cardinality formula for graph {0}\n".format(B.name)
-
+    ssc.mode_strict()
+    
     def var_name(u,v):
         """Compute the variable names."""
         if u<=v:
@@ -101,20 +102,20 @@ def SubsetCardinalityFormula(B, equalities = False):
 
         if equalities:
             for cls in CNF.exactly_half_ceil(edge_vars):
-                ssc.add_clause(cls,strict=True)
+                ssc.add_clause(cls)
         else:
             for cls in CNF.loose_majority_constraint(edge_vars):
-                ssc.add_clause(cls,strict=True)
+                ssc.add_clause(cls)
 
     for v in Right:
         edge_vars = [ var_name(u,v) for u in neighbors(B,v) ]
 
         if equalities:
             for cls in CNF.exactly_half_floor(edge_vars):
-                ssc.add_clause(cls,strict=True)
+                ssc.add_clause(cls)
         else:
             for cls in CNF.loose_minority_constraint(edge_vars):
-                ssc.add_clause(cls,strict=True)
+                ssc.add_clause(cls)
     
     return ssc
 

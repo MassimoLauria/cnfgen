@@ -80,9 +80,10 @@ def CliqueColoring(n,k,c):
             formula.add_variable(R(v,ell))
 
     # some vertex is i'th member of clique
+    formula.mode_strict()
     for k in range(1,k+1):
         for cl in CNF.equal_to_constraint([Q(k,v) for v in range(1,n+1)], 1):
-            formula.add_clause(cl,strict=True)
+            formula.add_clause(cl)
 
     # clique members are connected by edges
     for v in range(1,n+1):
@@ -90,19 +91,17 @@ def CliqueColoring(n,k,c):
             formula.add_clause([(False, Q(i,v)), (False, Q(j,v))], strict=True)
     for u,v in combinations(range(1,n+1),2):
         for i,j in permutations(range(1,k+1),2):
-            formula.add_clause([(True, E(u,v)), (False, Q(i,u)), (False, Q(j,v))],
-                               strict=True)
+            formula.add_clause([(True, E(u,v)), (False, Q(i,u)), (False, Q(j,v))])
 
     # every vertex v has exactly one colour
     for v in range(1,n+1):
         for cl in CNF.equal_to_constraint([R(v,ell) for ell in range(1,c+1)], 1):
-            formula.add_clause(cl,strict=True)
+            formula.add_clause(cl)
 
     # neighbours have distinct colours
     for u,v in combinations(range(1,n+1),2):
         for ell in range(1,c+1):
-            formula.add_clause([(False, E(u,v)), (False, R(u,ell)), (False, R(v,ell))],
-                               strict=True)
+            formula.add_clause([(False, E(u,v)), (False, R(u,ell)), (False, R(v,ell))])
     return formula
 
 @cnfformula.cmdline.register_cnfgen_subcommand
