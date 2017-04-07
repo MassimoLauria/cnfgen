@@ -11,7 +11,7 @@ to the `cnfformula` library.
 
 
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016  Massimo Lauria <lauria.massimo@gmail.com>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2017  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -21,6 +21,8 @@ from __future__ import print_function
 from itertools import product,islice
 from itertools import combinations,combinations_with_replacement
 from collections import Counter
+from collections import namedtuple
+
 import re
 from math import ceil,log
 
@@ -1367,3 +1369,327 @@ class CNF(object):
 
                 for (i1,i2),(j1,j2) in pairs_of_maps:
                     yield self.forbid_image(i1,j2) + self.forbid_image(i2,j1)
+
+
+class xor(namedtuple("xor",['literals','value'])):
+    """Parity constraint
+
+    Internal representation of a parity constraint over a set of
+    literals. In particular the constraint claims that the boolean
+    values of the sequence of literals (contained in the field
+    `literals`) must sum to a number which is equal to the field
+    `value`, module 2.
+
+    For example the encoding of 
+
+    .. math::
+
+         x_1 \\oplus \\neg x_3 \\oplus x_7 = 1 \\pmod{2}
+
+    as 
+
+    ::
+
+         xor((1,-3,7),1)
+
+    Repeated or opposite literals are forbidden. In case one of these
+    things occur the `n_clauses` and `clauses` methods have
+    undefined behavior.
+
+    Parameters
+    ----------
+    literals : tuple(int)
+       literals in the sum
+
+    value : integer
+       a boolean value
+
+    """
+    __slots__ = ()
+
+    def n_clauses(self):
+        """Number of clauses to represent the constraints"""
+
+        # Parity of an empty sequence
+        if len(self.literals)==0:
+            return self.literals % 2
+
+        # Parity of a non emtpy sequence
+        return 2**(len(self.literals)-1)
+
+    def clauses(self):
+        """Clauses to represent the constraint"""
+        
+        value = (self.value + len([lit for lit in self.literals if lit < 0])) % 2
+        domains = tuple([(-abs(lit),abs(lit)) for lit in self.literals])
+        for c in product(*domains):
+            # Save only the clauses with the right polarity
+            parity = len([lit for lit in c if lit < 0]) % 2
+            if parity != value:
+                yield list(c)
+
+        
+    
+    
+class less(namedtuple("less",['literals','threshold'])):
+    """Less-than constraint
+
+    Represent a 'less than' constraint over a set of literals.
+    In particular the constraint claims that the boolean values of the
+    sequence of literals (contained in the field `literals`) must sum
+    to a number which is strictly less than the field `threshold`.
+
+    For example the encoding of 
+
+    .. math::
+
+         x_2 + \\neg x_3 + x_7 < 2
+
+    as 
+
+    ::
+
+         less((2,-3,7),2)
+
+    Repeated or opposite literals are forbidden. In case one of these
+    things occur the `n_clauses` and `clauses` methods have
+    undefined behavior.
+
+    Parameters
+    ----------
+    literals : tuple(int)
+       literals in the sum
+
+    threshold : integer
+       the threshold value
+
+    """
+    __slots__ = ()
+
+    def n_clauses(self):
+        """Number of clauses to represent the constraints"""
+        if self.threshold > len(self.literals):
+            return 0
+        elif self.threshold <= 0:
+            return 1
+
+        def binom(n,k):
+            k = min(k,n-k)
+            if k==0:
+                return 1
+            else:
+                return n*binom(n-1,k-1) // k 
+                
+        return binom(len(self.literals),self.threshold)
+
+    def clauses(self):
+        """Clauses to represent the constraint"""
+        if self.threshold > len(self.literals):
+            return
+        elif self.threshold < 0:
+            yield []
+            return
+
+        for cls in combinations([-l for l in self.literals], self.threshold):
+            yield cls
+
+class leq(namedtuple("leq",['literals','threshold'])):
+    """Less-than-or-equal-to constraint
+
+    Represent a 'less than or equal to' constraint over a set of
+    literals. In particular the constraint claims that the boolean
+    values of the sequence of literals (contained in the field
+    `literals`) must sum to a number which less than or equal to the
+    field `threshold`.
+
+    For example the encoding of 
+
+    .. math::
+
+         x_2 + \\neg x_3 + \\neq x_4 + x_7 \leq 2
+
+    as 
+
+    ::
+
+         leq((2,-3,-4,7),2)
+
+    If there are repeated or opposite literals, then the constraint
+    could make no sense. In particular `n_clauses` and `clauses`
+    method have undefined behavior.
+
+    Parameters
+    ----------
+    literals : tuple(int)
+       literals in the sum
+
+    threshold : integer
+       the threshold value
+
+    """
+    __slots__ = ()
+
+    def n_clauses(self):
+        """Number of clauses to represent the constraints"""
+        return less(self.literals,self.threshold+1).n_clauses()
+
+    def clauses(self):
+        """Clauses to represent the constraint"""
+        return less(self.literals,self.threshold+1).clauses()
+
+
+class greater(namedtuple("greater",['literals','threshold'])):
+    """Greater-than constraint
+
+    Represent a 'greater than' constraint over a set of literals.
+    In particular the constraint claims that the boolean values of the
+    sequence of literals (contained in the field `literals`) must sum
+    to a number which greater than the field `threshold`.
+
+    For example the encoding of 
+
+    .. math::
+
+         x_2 + \\neg x_3 + \\neq x_4 + x_7 > 2
+
+    as 
+
+    ::
+
+         greater((2,-3,-4,7),2)
+
+    If there are repeated or opposite literals, then the constraint
+    could make no sense. In particular `n_clauses` and `clauses`
+    method have undefined behavior.
+
+    Parameters
+    ----------
+    literals : tuple(int)
+       literals in the sum
+
+    threshold : integer
+       the threshold value
+
+    """
+    __slots__ = ()
+
+    def n_clauses(self):
+        """Number of clauses to represent the constraints"""
+        if self.threshold >= len(self.literals):
+            return 1
+        elif self.threshold < 0:
+            return 0
+
+        def binom(n,k):
+            k = min(k,n-k)
+            if k==0:
+                return 1
+            else:
+                return n*binom(n-1,k-1) // k 
+
+        # logically it should be binom(LEN,LEN-THR)
+        return binom(len(self.literals),self.threshold)
+
+    def clauses(self):
+        """Clauses to represent the constraint"""
+        if self.threshold >= len(self.literals):
+            yield []
+            return
+        elif self.threshold < 0:
+            return
+
+        for cls in combinations(self.literals, len(self.literals)-self.threshold):
+            yield cls
+
+
+class geq(namedtuple("geq",['literals','threshold'])):
+    """Greater-than-or-equal-to constraint
+
+    Represent a 'greater than or equal to' constraint over a set of
+    literals. In particular the constraint claims that the boolean
+    values of the sequence of literals (contained in the field
+    `literals`) must sum to a number which greater than or equal to the
+    field `threshold`.
+
+    For example the encoding of 
+
+    .. math::
+
+         x_2 + \\neg x_3 + \\neq x_4 + x_7 \geq 2
+
+    as 
+
+    ::
+
+         geq((2,-3,-4,7),2)
+
+    If there are repeated or opposite literals, then the constraint
+    could make no sense. In particular `n_clauses` and `clauses`
+    method have undefined behavior.
+
+    Parameters
+    ----------
+    literals : tuple(int)
+       literals in the sum
+
+    threshold : integer
+       the threshold value
+
+    """
+    __slots__ = ()
+
+    def n_clauses(self):
+        """Number of clauses to represent the constraints"""
+        return greater(self.literals,self.threshold-1).n_clauses()
+
+    def clauses(self):
+        """Clauses to represent the constraint"""
+        return greater(self.literals,self.threshold-1).clauses()
+
+class eq(namedtuple("eq",['literals','value'])):
+    """Equal-to constraint
+
+    Represent an 'equal to' constraint over a set of literals.
+    In particular the constraint claims that the boolean values of the
+    sequence of literals (contained in the field `literals`) must sum
+    to a number which equal to the field `value`.
+
+    For example the encoding of 
+
+    .. math::
+
+         x_2 + \\neg x_3 + \\neq x_4 + x_7 = 2
+
+    as 
+
+    ::
+
+         eq((2,-3,-4,7),2)
+
+    If there are repeated or opposite literals, then the constraint
+    could make no sense. In particular `n_clauses` and `clauses`
+    method have undefined behavior.
+
+    Parameters
+    ----------
+    literals : tuple(int)
+       literals in the sum
+
+    value : integer
+       expected value of the sum
+
+    """
+    __slots__ = ()
+
+    def n_clauses(self):
+        """Number of clauses to represent the constraints"""
+        return less(self.literals,self.value+1).n_clauses() \
+            + \
+            greater(self.literals,self.value-1).n_clauses()
+
+    def clauses(self):
+        """Clauses to represent the constraint"""
+        for c in less(self.literals,self.value+1).clauses():
+            yield c
+        for c in greater(self.literals,self.value-1).clauses():
+            yield c
