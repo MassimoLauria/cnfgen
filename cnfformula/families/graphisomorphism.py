@@ -42,6 +42,7 @@ def GraphIsomorphism(G1, G2):
     F = CNF()
     F.header = "Graph Isomorphism problem between graphs " +\
                G1.name + " and " + G2.name + "\n" + F.header
+    F.mode_strict()
 
     U=enumerate_vertices(G1)
     V=enumerate_vertices(G2)
@@ -52,29 +53,29 @@ def GraphIsomorphism(G1, G2):
 
     # Defined on both side
     for u in U:
-        F.add_clause([(True, var(u, v)) for v in V], strict=True)
+        F.add_clause([(True, var(u, v)) for v in V])
 
     for v in V:
-        F.add_clause([(True, var(u, v)) for u in U], strict=True)
+        F.add_clause([(True, var(u, v)) for u in U])
 
     # Injective on both sides
     for u in U:
         for v1, v2 in combinations(V, 2):
             F.add_clause([(False, var(u, v1)),
-                          (False, var(u, v2))], strict=True)
+                          (False, var(u, v2))])
     for v in V:
         for u1, u2 in combinations(U, 2):
             F.add_clause([(False, var(u1, v)),
-                          (False, var(u2, v))], strict=True)
+                          (False, var(u2, v))])
 
     # Edge consistency
     for u1, u2 in combinations(U, 2):
         for v1, v2 in combinations(V, 2):
             if G1.has_edge(u1, u2) != G2.has_edge(v1, v2):
                 F.add_clause([(False, var(u1, v1)),
-                              (False, var(u2, v2))], strict=True)
+                              (False, var(u2, v2))])
                 F.add_clause([(False, var(u1, v2)),
-                              (False, var(u2, v1))], strict=True)
+                              (False, var(u2, v1))])
 
     return F
 
@@ -99,10 +100,11 @@ def GraphAutomorphism(G):
     header = "Graph automorphism formula for graph "+ G.name +"\n"+ tmp.header
     F = GraphIsomorphism(G, G)
     F.header = header
-
+    F.mode_strict()
+    
     var = _graph_isomorphism_var
 
-    F.add_clause([(False, var(u, u)) for u in enumerate_vertices(G)], strict=True)
+    F.add_clause([(False, var(u, u)) for u in enumerate_vertices(G)])
 
     return F
 

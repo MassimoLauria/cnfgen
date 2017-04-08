@@ -44,6 +44,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
     - `knuth` : Don Knuth variants 2 or 3 of the formula (anything else suppress it)
     """
     gop = CNF()
+    gop.mode_strict()
 
     # Describe the formula
     if total or smart:
@@ -88,7 +89,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
                 clause += [(False, varname(V[med], V[hi]))]
             else:
                 clause += [(True, varname(V[hi], V[med]))]
-        gop.add_clause(clause, strict=True)
+        gop.add_clause(clause)
 
     #
     # Transitivity axiom
@@ -101,13 +102,11 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
 
                 gop.add_clause([(True,  varname(v1, v2)),
                                 (True,  varname(v2, v3)),
-                                (False, varname(v1, v3))],
-                               strict=True)
+                                (False, varname(v1, v3))])
                 
                 gop.add_clause([(False, varname(v1, v2)),
                                 (False, varname(v2, v3)),
-                                (True,  varname(v1, v3))],
-                               strict=True)
+                                (True,  varname(v1, v3))])
 
         elif total:
             # With totality we still need just two axiom per triangle
@@ -115,13 +114,11 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
                 
                 gop.add_clause([(False, varname(v1, v2)),
                                 (False, varname(v2, v3)),
-                                (False, varname(v3, v1))],
-                               strict=True)
+                                (False, varname(v3, v1))])
 
                 gop.add_clause([(False, varname(v1, v3)),
                                 (False, varname(v3, v2)),
-                                (False, varname(v2, v1))],
-                               strict=True)
+                                (False, varname(v2, v1))])
 
         else:
             for (v1, v2, v3) in permutations(V, 3):
@@ -135,22 +132,19 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
 
                 gop.add_clause([(False, varname(v1, v2)),
                                 (False, varname(v2, v3)),
-                                (True,  varname(v1, v3))],
-                               strict=True)
+                                (True,  varname(v1, v3))])
 
     if not smart:
         # Antisymmetry axioms (useless for 'smart' representation)
         for (v1, v2) in combinations(V, 2):
             gop.add_clause([(False, varname(v1, v2)),
-                            (False, varname(v2, v1))],
-                           strict=True)
+                            (False, varname(v2, v1))])
 
         # Totality axioms (useless for 'smart' representation)
         if total:
             for (v1, v2) in combinations(V, 2):
                 gop.add_clause([(True, varname(v1, v2)),
-                                (True, varname(v2, v1))],
-                               strict=True)
+                                (True, varname(v2, v1))])
 
     return gop
 

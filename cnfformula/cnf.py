@@ -151,7 +151,7 @@ class CNF(object):
         self._allow_opposite_literals   = True
         self._auto_add_variables        = True
         
-    def mode_unchecked(self):
+    def mode_default(self):
         """Constraint are added with default rules
 
         In particular this sets to `False`:

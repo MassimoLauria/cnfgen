@@ -39,11 +39,13 @@ class TestCNF(TestCNFBase) :
 
     def test_safe_clause_insetion(self):
         F=cnfformula.CNF()
+        F.mode_strict()
         F.add_variable("S")
+        F.add_variable("T")
         F.add_variable("U")
         F.add_clause([(True,"S"),(False,"T")])
         self.assertTrue(len(list(F.variables())),2)
-        F.add_clause([(True,"T"),(False,"U")],strict=True)
+        F.add_clause([(True,"T"),(False,"U")])
         self.assertTrue(len(list(F.variables())),3)
         self.assertRaises(ValueError, F.add_clause,
-                          [(True,"T"),(False,"V")],strict=True)
+                          [(True,"T"),(False,"V")])
