@@ -439,11 +439,11 @@ class CNF(object):
             raise TypeError("%s is not a well formatted clause" %clause)
 
         # Check literal repetitions
-        if (not self._allow_literal_repetitions) and len(set(clause)) != len(clause):
+        if (not self.allow_literal_repetitions) and len(set(clause)) != len(clause):
             raise ValueError("Forbidden repeated literals in clause {}".format(clause))
 
         # Check opposite literals
-        if not self._allow_opposite_literals:
+        if not self.allow_opposite_literals:
             positive     = set([v for (p,v) in clause if p ])
             negative     = set([v for (p,v) in clause if not p ])
             if len(positive & negative)>0:
@@ -454,7 +454,7 @@ class CNF(object):
         try:
             self._clauses.append( self._compress_clause(clause) )
         except KeyError,error:
-            if not self._auto_add_variables:
+            if not self.auto_add_variables:
                 raise ValueError("The clause contains unknown variable: {}".format(error))
             else:
                 for _, var in clause:
