@@ -61,8 +61,8 @@ It is possible to bicolor the numbers from
     for x,y in combinations(range(1,N+1),2):
         z = int(sqrt(x**2 +  y**2))
         if z <=N and z**2 == x**2 + y**2:
-            ptn.add_clause([ (True, V(x)), (True, V(y)), (True, V(z))],strict=True)
-            ptn.add_clause([ (False,V(x)), (False,V(y)), (False,V(z))],strict=True)
+            ptn.add_clause([ (True, V(x)), (True, V(y)), (True, V(z))])
+            ptn.add_clause([ (False,V(x)), (False,V(y)), (False,V(z))])
 
     return ptn
 
@@ -79,6 +79,7 @@ def RamseyLowerBoundFormula(s,k,N):
     """
 
     ram=CNF()
+    ram.mode_strict()
 
     ram.header=dedent("""\
         CNF encoding of the claim that there is a graph of %d vertices
@@ -98,7 +99,7 @@ def RamseyLowerBoundFormula(s,k,N):
         clause=[]
         for edge in combinations(vertex_set,2):
             clause += [(True,'e_{{{0},{1}}}'.format(*edge))]
-        ram.add_clause(clause,strict=True)
+        ram.add_clause(clause)
 
     #
     # No clique of size k
@@ -107,7 +108,7 @@ def RamseyLowerBoundFormula(s,k,N):
         clause=[]
         for edge in combinations(vertex_set,2):
             clause+=[(False,'e_{{{0},{1}}}'.format(*edge))]
-        ram.add_clause(clause,strict=True)
+        ram.add_clause(clause)
 
     return ram
 

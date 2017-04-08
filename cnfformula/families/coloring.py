@@ -39,6 +39,7 @@ def GraphColoringFormula(G,colors,functional=True):
 
     """
     col=CNF()
+    col.mode_strict()
 
     if isinstance(colors,int) and colors>=0:
         colors = range(1,colors+1)
@@ -69,14 +70,14 @@ def GraphColoringFormula(G,colors,functional=True):
             for (c1,c2) in combinations(colors,2):
                 col.add_clause([
                     (False,'x_{{{0},{1}}}'.format(vertex,c1)),
-                    (False,'x_{{{0},{1}}}'.format(vertex,c2))],strict=True)
+                    (False,'x_{{{0},{1}}}'.format(vertex,c2))])
 
     # This is a legal coloring
     for (v1,v2) in enumerate_edges(G):
         for c in colors:
             col.add_clause([
                 (False,'x_{{{0},{1}}}'.format(v1,c)),
-                (False,'x_{{{0},{1}}}'.format(v2,c))],strict=True)
+                (False,'x_{{{0},{1}}}'.format(v2,c))])
             
     return col
 
@@ -115,6 +116,7 @@ def EvenColoringFormula(G):
 
     """
     F = CNF()
+    F.mode_strict()
     F.header = "Even coloring formula on graph " + G.name + "\n" + F.header
 
     def var_name(u,v):
@@ -136,7 +138,7 @@ def EvenColoringFormula(G):
         
         for cls in CNF.equal_to_constraint(edge_vars,
                                            len(edge_vars)/2):
-            F.add_clause(cls,strict=True)
+            F.add_clause(cls)
 
     return F
 

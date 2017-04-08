@@ -131,14 +131,12 @@ def stone_formula_helper(F,D,mapping):
                 F.add_clause([(False, mapping.var_name(p,s)) for (p,s) in zip(pred,stones_tuple)] +
                                [(False, mapping.var_name(v,j))] +
                                [(False, "R_{{{0}}}".format(s)) for s in _uniqify_list(stones_tuple)] +
-                               [(True,  "R_{{{0}}}".format(j))],
-                               strict=True)
+                               [(True,  "R_{{{0}}}".format(j))])
         
         if D.out_degree(v)==0: #the sink
             for j in mapping.images(v):
                 F.add_clause([ (False, mapping.var_name(v,j)),
-                               (False,"R_{{{0}}}".format(j))],
-                               strict = True)
+                               (False,"R_{{{0}}}".format(j))])
 
     return F
 

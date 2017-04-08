@@ -108,13 +108,14 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
 
     F = CNF()
     F.header = "Random {}-CNF over {} variables and {} clauses\n".format(k,n,m) + F.header
+    F.mode_strict()
 
     indices = xrange(1,n+1)
     for i in indices:
         F.add_variable('x_{0}'.format(i))
     try:
         for clause in sample_clauses(k, indices, m, planted_assignments):
-            F.add_clause(list(clause), strict=True)
+            F.add_clause(list(clause))
     except ValueError:
         raise ValueError("There are fewer clauses available than the number requested")
 

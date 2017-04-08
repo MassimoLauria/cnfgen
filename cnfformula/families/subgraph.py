@@ -58,7 +58,7 @@ def SubgraphFormula(graph,templates, symmetric=False):
     """
 
     F=CNF()
-
+    F.mode_strict()
     
     # One of the templates is chosen to be the subgraph
     if len(templates)==0:
@@ -75,7 +75,7 @@ def SubgraphFormula(graph,templates, symmetric=False):
         
     if len(selectors)>1:
         for cls in F.equal_to_constraint(selectors,1):
-            F.add_clause( cls , strict=True )
+            F.add_clause( cls )
 
     # comment the formula accordingly
     if len(selectors)>1:
@@ -108,7 +108,7 @@ def SubgraphFormula(graph,templates, symmetric=False):
         F.add_variable( v )
 
     for cls in mapping.clauses():
-        F.add_clause( cls, strict=True )
+        F.add_clause( cls )
         
     # The selectors choose a template subgraph.  A mapping must map
     # edges to edges and non-edges to non-edges for the active
@@ -152,9 +152,8 @@ def SubgraphFormula(graph,templates, symmetric=False):
                 continue
 
             # if it is not, add the corresponding
-            F.add_clause(activation_prefixes[i] + \
-                         [(False,var_name(i1,j1)),
-                          (False,var_name(i2,j2)) ],strict=True)
+            F.add_clause(activation_prefixes[i] +
+                         [(False,var_name(i1,j1)), (False,var_name(i2,j2)) ])
 
     return F
 
@@ -214,13 +213,14 @@ def BinaryCliqueFormula(G,k):
         F.add_variable(v)
         
     for c in clauses_gen.clauses():
-        F.add_clause(c,strict=True)
+        F.add_clause(c)
 
     for (i1,i2),(v1,v2) in product(combinations(xrange(1,k+1),2),
                                    combinations(G.nodes(),2)):
     
         if not G.has_edge(v1,v2):
-            F.add_clause( clauses_gen.forbid_image(i1,v1) + clauses_gen.forbid_image(i2,v2),strict=True)
+            F.add_clause( clauses_gen.forbid_image(i1,v1) +
+                          clauses_gen.forbid_image(i2,v2))
 
     return F
 

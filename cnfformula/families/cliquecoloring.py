@@ -62,6 +62,7 @@ def CliqueColoring(n,k,c):
         return 'r_{{{0},{1}}}'.format(v,ell)
     
     formula=CNF()
+    formula.mode_strict()
     formula.header="There is a graph of {0} vertices with a {1}-clique".format(n,k)+\
         " and a {0}-coloring\n\n".format(c)\
         + formula.header
@@ -88,7 +89,7 @@ def CliqueColoring(n,k,c):
     # clique members are connected by edges
     for v in range(1,n+1):
         for i,j in combinations(range(1,k+1),2):
-            formula.add_clause([(False, Q(i,v)), (False, Q(j,v))], strict=True)
+            formula.add_clause([(False, Q(i,v)), (False, Q(j,v))])
     for u,v in combinations(range(1,n+1),2):
         for i,j in permutations(range(1,k+1),2):
             formula.add_clause([(True, E(u,v)), (False, Q(i,u)), (False, Q(j,v))])
