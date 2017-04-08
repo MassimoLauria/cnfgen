@@ -2,6 +2,8 @@
 
 import unittest
 import textwrap
+import random
+import itertools
 
 from cnfformula import CNF
 from cnfformula.utils.solver import is_satisfiable, have_satsolver
@@ -20,7 +22,8 @@ class TestCNFBase(unittest.TestCase):
     """Base class for the test suite.
 
     It just implements some additional asserting features like testing
-    that two CNFs are actually the same.
+    that two CNFs are actually the same, plus some utility function to
+    produce CNFs to test.
     """
     def assertCnfEqual(self,cnf1,cnf2):
         self.assertSetEqual(set(cnf1.variables()),set(cnf2.variables()))
@@ -54,3 +57,26 @@ class TestCNFBase(unittest.TestCase):
             assert not result
         else:
             self.skipTest("No usable solver found.")
+
+    @staticmethod
+    def cnf_from_variables_and_clauses(variables, clauses) :
+        cnf = CNF()
+        for variable in variables :
+            cnf.add_variable(variable)
+        for clause in clauses :
+            cnf.add_clause(clause)
+        return cnf
+
+    @staticmethod
+    def sorted_cnf(clauses) :
+        return TestCNFBase.cnf_from_variables_and_clauses(
+            sorted(set(variable for polarity,variable in itertools.chain(*clauses))),
+            clauses)
+
+    @staticmethod
+    def random_cnf(width, num_variables, num_clauses) :
+        return TestCNFBase.cnf_from_variables_and_clauses(xrange(1,num_variables+1), [
+                [(random.choice([True,False]),x+1)
+                 for x in random.sample(xrange(num_variables),width)]
+                for C in xrange(num_clauses)])
+    

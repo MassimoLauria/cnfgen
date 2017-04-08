@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import cnfformula
+from cnfformula.cnf import CNF
 
 from . import TestCNFBase
 
@@ -9,43 +9,42 @@ import itertools
 
 class TestCNF(TestCNFBase) :
 
-    @staticmethod
-    def cnf_from_variables_and_clauses(variables, clauses) :
-        cnf = cnfformula.CNF()
-        for variable in variables :
-            cnf.add_variable(variable)
-        for clause in clauses :
-            cnf.add_clause(clause)
-        return cnf
-
-    @staticmethod
-    def sorted_cnf(clauses) :
-        return TestCNF.cnf_from_variables_and_clauses(
-            sorted(set(variable for polarity,variable in itertools.chain(*clauses))),
-            clauses)
-
-    @staticmethod
-    def random_cnf(width, num_variables, num_clauses) :
-        return TestCNF.cnf_from_variables_and_clauses(xrange(1,num_variables+1), [
-                [(random.choice([True,False]),x+1)
-                 for x in random.sample(xrange(num_variables),width)]
-                for C in xrange(num_clauses)])
-    
     def test_empty(self) :
-        F=cnfformula.CNF()
+        F=CNF()
         self.assertTrue(F._check_coherence())
         self.assertListEqual(list(F.variables()),[])
         self.assertListEqual(list(F.clauses()),[])
 
-    def test_safe_clause_insetion(self):
-        F=cnfformula.CNF()
+    def test_strict_clause_insertion(self):
+        F=CNF()
         F.mode_strict()
         F.add_variable("S")
         F.add_variable("T")
         F.add_variable("U")
+        self.assertTrue(len(list(F.variables()))==3)
         F.add_clause([(True,"S"),(False,"T")])
-        self.assertTrue(len(list(F.variables())),2)
         F.add_clause([(True,"T"),(False,"U")])
-        self.assertTrue(len(list(F.variables())),3)
         self.assertRaises(ValueError, F.add_clause,
                           [(True,"T"),(False,"V")])
+
+    def test_auto_add_variables(self):
+        F=CNF()
+        F.auto_add_variables = True
+        F.add_variable("S")
+        F.add_variable("U")
+        self.assertTrue(len(list(F.variables()))==2)
+        F.add_clause([(True,"S"),(False,"T")])
+        self.assertTrue(len(list(F.variables()))==3)
+        F.auto_add_variables = False
+        F.add_clause([(True,"T"),(False,"U")])
+        self.assertRaises(ValueError, F.add_clause,
+                          [(True,"T"),(False,"V")])
+
+    def test_literal_repetitions(self):
+        F=CNF()
+        F.auto_add_variables = True
+        F.allow_literal_repetitions = True
+        F.add_clause([(True,"S"),(False,"T"),(True,"S")])
+        F.allow_literal_repetitions = False
+        self.assertRaises(ValueError, F.add_clause,
+                          [(False,"T"),(True,"V"),(False,"T")])
