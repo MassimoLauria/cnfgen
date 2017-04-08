@@ -1,7 +1,6 @@
 import cnfformula.utils.cnfshuffle as cnfshuffle
 
 from . import TestCNFBase
-from test_cnfformula import TestCNF
 from . import shufflereference
 
 import cnfformula
@@ -9,7 +8,7 @@ import cnfformula
 import random
 import StringIO
 
-class TestReshuffler(TestCNF) :
+class TestReshuffler(TestCNFBase) :
     @staticmethod
     def inverse_permutation(permutation, base=0) :
         inverse = [0]*len(permutation)
@@ -89,7 +88,7 @@ class TestReshuffler(TestCNF) :
         shuffle2 = cnfshuffle.Shuffle(cnf)
         self.assertCnfEqual(shuffle2,shuffle)
 
-class TestDimacsReshuffler(TestCNF) :
+class TestDimacsReshuffler(TestCNFBase) :
     def test_backwards_compatible(self) :
         cnf = self.random_cnf(4,10,100)
         random.seed(44)
