@@ -48,3 +48,13 @@ class TestCNF(TestCNFBase) :
         F.allow_literal_repetitions = False
         self.assertRaises(ValueError, F.add_clause,
                           [(False,"T"),(True,"V"),(False,"T")])
+
+    def test_opposite_literals(self):
+        F=CNF()
+        F.auto_add_variables = True
+        F.allow_opposite_literals = True
+        F.add_clause([(True,"S"),(False,"T"),(False,"S")])
+        F.allow_opposite_literals = False
+        self.assertRaises(ValueError, F.add_clause,
+                          [(True,"T"),(True,"V"),(False,"T")])
+
