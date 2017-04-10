@@ -51,6 +51,7 @@ def PebblingFormula(digraph):
         raise ValueError("Pebbling formula is defined only for directed acyclic graphs")
 
     peb=CNF()
+    peb.mode_unchecked()
 
     if hasattr(digraph,'name'):
         peb.header="Pebbling formula of: "+digraph.name+"\n\n"+peb.header
@@ -69,10 +70,10 @@ def PebblingFormula(digraph):
 
         # If predecessors are pebbled the vertex must be pebbled
         pred=sorted(digraph.predecessors(v),key=lambda x:position[x])
-        peb.add_clause_unsafe([(False,p) for p in pred]+[(True,v)])
+        peb.add_clause([(False,p) for p in pred]+[(True,v)])
 
         if digraph.out_degree(v)==0: #the sink
-            peb.add_clause_unsafe([(False,v)])
+            peb.add_clause([(False,v)])
 
     return peb
 
@@ -120,10 +121,12 @@ def stone_formula_helper(F,D,mapping):
                        description="Stone ${}$ is red".format(stone))
     
     # Each vertex has some stone
+    F.mode_unchecked()
     for cls in mapping.clauses():
-        F.add_clause_unsafe(cls)
+        F.add_clause(cls)
         
     # If predecessors have red stones, the sink must have a red stone
+    F.mode_default()
     for v in vertices:
         for j in mapping.images(v):
             pred=sorted(D.predecessors(v),key=lambda x:mapping.RankDomain[x])
@@ -204,6 +207,7 @@ def StoneFormula(D,nstones):
         raise ValueError("There must be at least one stone.")
 
     cnf = CNF()
+    cnf.mode_unchecked()
 
     if hasattr(D, 'name'):
         cnf.header = "Stone formula of: " + D.name + "\nwith " + str(nstones) + " stones\n" + cnf.header
@@ -234,21 +238,21 @@ def StoneFormula(D,nstones):
     
     # Each vertex has some stone
     for v in vertices:
-        cnf.add_clause_unsafe([(True,stone_vn[(v,j)]) for j in stones])
+        cnf.add_clause([(True,stone_vn[(v,j)]) for j in stones])
         
     # If predecessors have red stones, the sink must have a red stone
     for v in vertices:
         for j in stones:
             pred=sorted(D.predecessors(v),key=lambda x:position[x])
             for stones_tuple in product([s for s in stones if s!=j],repeat=len(pred)):
-                cnf.add_clause_unsafe([(False, stone_vn[(p,s)]) for (p,s) in zip(pred,stones_tuple)] +
-                                      [(False, stone_vn[(v,j)])] +
-                                      [(False, color_vn[s]) for s in _uniqify_list(stones_tuple)] +
-                                      [(True,  color_vn[j])])
+                cnf.add_clause([(False, stone_vn[(p,s)]) for (p,s) in zip(pred,stones_tuple)] +
+                               [(False, stone_vn[(v,j)])] +
+                               [(False, color_vn[s]) for s in _uniqify_list(stones_tuple)] +
+                               [(True,  color_vn[j])])
         
         if D.out_degree(v)==0: #the sink
             for j in stones:
-                cnf.add_clause_unsafe([ (False,stone_vn[(v,j)]), (False,color_vn[j])])
+                cnf.add_clause([ (False,stone_vn[(v,j)]), (False,color_vn[j])])
 
     return cnf
 

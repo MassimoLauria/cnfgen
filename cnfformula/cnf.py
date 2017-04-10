@@ -129,14 +129,14 @@ class CNF(object):
         """Constraints are added with strict rules
 
         In particular this sets to `False`:
-          - :py:meth:`CNF.allow_literal_repetition`
-          - :py:meth:`CNF.allow_opposite_literals`
-          - :py:meth:`CNF.auto_add_variables`
+          - :py:attr:`allow_literal_repetition`
+          - :py:attr:`allow_opposite_literals`
+          - :py:attr:`auto_add_variables`
  
         """
-        self._allow_literal_repetitions = False
-        self._allow_opposite_literals   = False
-        self._auto_add_variables        = False
+        self.allow_literal_repetitions = False
+        self.allow_opposite_literals   = False
+        self.auto_add_variables        = False
 
     def mode_unchecked(self):
         """Constraints are added with no rule
@@ -147,9 +147,9 @@ class CNF(object):
           - :py:meth:`CNF.auto_add_variables`
  
         """
-        self._allow_literal_repetitions = True
-        self._allow_opposite_literals   = True
-        self._auto_add_variables        = True
+        self.allow_literal_repetitions = True
+        self.allow_opposite_literals   = True
+        self.auto_add_variables        = True
         
     def mode_default(self):
         """Constraint are added with default rules
@@ -162,10 +162,9 @@ class CNF(object):
           - :py:meth:`CNF.auto_add_variables`
  
         """
-        self._allow_literal_repetitions = False
-        self._allow_opposite_literals   = False
-        self._auto_add_variables        = True
-        
+        self.allow_literal_repetitions   = False
+        self.allow_opposite_literals     = False
+        self.auto_add_variables          = True
 
     @property
     def allow_literal_repetitions(self):
@@ -180,6 +179,12 @@ class CNF(object):
     @allow_literal_repetitions.setter
     def allow_literal_repetitions(self,value):
         self._allow_literal_repetitions = bool(value)
+        if self._auto_add_variables and \
+           self._allow_literal_repetitions and \
+           self._allow_opposite_literals:
+            self._check_and_compress_literals = self._check_and_compress_literals_unsafe
+        else:
+            self._check_and_compress_literals = self._check_and_compress_literals_safe
     
     @property
     def allow_opposite_literals(self):
@@ -194,6 +199,12 @@ class CNF(object):
     @allow_opposite_literals.setter
     def allow_opposite_literals(self,value):
         self._allow_opposite_literals = bool(value)
+        if self._auto_add_variables and \
+           self._allow_literal_repetitions and \
+           self._allow_opposite_literals:
+            self._check_and_compress_literals = self._check_and_compress_literals_unsafe
+        else:
+            self._check_and_compress_literals = self._check_and_compress_literals_safe
     
     @property
     def auto_add_variables(self):
@@ -209,7 +220,16 @@ class CNF(object):
     @auto_add_variables.setter
     def auto_add_variables(self,value):
         self._auto_add_variables = bool(value)
-    
+        if self._auto_add_variables and \
+           self._allow_literal_repetitions and \
+           self._allow_opposite_literals:
+            self._check_and_compress_literals = self._check_and_compress_literals_unsafe
+        else:
+            self._check_and_compress_literals = self._check_and_compress_literals_safe
+            
+
+        
+        
     
     #
     # Implementation of some standard methods
@@ -251,20 +271,25 @@ class CNF(object):
         """
         return [ (l>0, self._index2name[abs(l)]) for l in clause ]
 
-    def _compress_clause(self, clause):
-        """Convert a clause to its numeric representation.
+    def _check_and_compress_literals(self, literals):
+        """Convert a list of literals to its numeric representation.
 
-        For reason of efficiency, clauses are memorized as tuples of
-        integers. Each integer correspond to a variable, with sign +1
-        or -1 depending whether it represents a positive or negative
-        literal. The correspondence between the numbers and the
-        variables names depends on the formula itself
+        For reason of efficiency, sequences of literals are memorized
+        as tuples of integers. Each integer correspond to a variable,
+        with sign +1 or -1 depending whether it represents a positive
+        or negative literal. The correspondence between the numbers
+        and the variables names depends on the formula itself.
+
+        This methods checks and honors the constraints imposed to the
+        literals at the time of insertion. They depends on the choices
+        of the CNF user. In particular it is possible to enforce
+        either more or less strict rules with :py:meth:`mode_strict`,
+        :py:meth:`mode_unchecked`, and :py:meth:`mode_default`.
 
         Parameters
         ----------
-        clause: list of pairs
-            a clause, in the form of a list of literals, which are
-            pairs (bool,string).
+        literals: list of pairs
+            a list of literals, which are pairs (bool,string).
 
         Returns
         -------
@@ -274,12 +299,65 @@ class CNF(object):
         --------
         >>> c=CNF()
         >>> c.add_clause([(True,"x"),(False,"y")])
-        >>> print(c._compress_clause([(False, 'x'), (False, 'y')]))
+        >>> print(c._check_and_compress_literals([(False, 'x'), (False, 'y')]))
         (-1, -2)
 
-        """
-        return tuple((1 if p else -1) * self._name2index[n] for p, n in clause)
+        See Also
+        --------
+        allow_literal_repetition : allows the same literal more than once in a clause
+        allow_opposite_literals : allows opposite literals in a clause
+        auto_add_variables : automatically add new variables to the formula
+        mode_strict : all checks during clause insertion
+        mode_default : all checks but allow new variables
+        mode_unchecked : no checks at all
 
+        Raises
+        ------
+        KeyError
+            in case clause insertion is unchecked and the clause
+            contains a variable which is unknown to the formula.
+        """
+
+        # A clause must be an immutable object
+        try:
+            hash(tuple(literals))
+        except TypeError:
+            raise TypeError("%s is not a well formatted sequence of literals" %literals)
+
+        # Check literal repetitions
+        if (not self.allow_literal_repetitions) and len(set(literals)) != len(literals):
+            raise ValueError("Forbidden repeated literals in the constraint {}".format(literals))
+
+        # Check opposite literals
+        if not self.allow_opposite_literals:
+            positive     = set([v for (p,v) in literals if p ])
+            negative     = set([v for (p,v) in literals if not p ])
+            if len(positive & negative)>0:
+                emsg = "{ " + ", ".join(positive & negative) + " }"
+                raise ValueError("Following variable occur with opposite literals: {}".format(emsg))
+
+        # Add the compressed clause
+        try:
+            return tuple((1 if p else -1) * self._name2index[n] for p, n in literals)
+        except KeyError,error:
+            if not self.auto_add_variables:
+                raise ValueError("The clause contains unknown variable: {}".format(error))
+            else:
+                for _, var in literals:
+                    self.add_variable(var)
+                return tuple((1 if p else -1) * self._name2index[n] for p, n in literals)
+
+    def _check_and_compress_literals_unsafe(self, literals):
+        """(INTERNAL USE) Builds internal representation of literals with no checks.
+
+        See Also
+        --------
+        _check_and_compress_literals : safe version of the same method
+        """
+        return tuple((1 if p else -1) * self._name2index[n] for p, n in literals)
+
+    # By default we start with the safe version
+    _check_and_compress_literals_safe  = _check_and_compress_literals
 
     def _add_compressed_clauses(self, clauses):
         """(INTERNAL USE) Add to the CNF a list of compressed clauses.
@@ -403,16 +481,24 @@ class CNF(object):
     #
     # High level API: build the CNF
     #
-
     def add_clause(self,clause):
         """Add a clause to the CNF.
 
         E.g. (not x3) or x4 or (not x2) is encoded as
              [(False,u"x3"),(True,u"x4"),(False,u"x2")]
 
-        All variable mentioned in the clause will be added to the list
-        of variables  of the CNF,  in the  order of appearance  in the
-        clauses, unless `auto_variable` is ``False``.
+        
+        By default all variable mentioned in the clause will be added
+        to the list of variables of the CNF, in the order of
+        appearance in the clauses. The default applies as long as
+        :py:attr:`auto_add_variables` is set o true.
+
+        In particular the behavior and the constraints that are
+        imposed on the clauses at the time of insertion depends on the
+        choices of the class user. In particular it is possible to
+        enforce either more or less strict rules with
+        :py:meth:`mode_strict`, :py:meth:`mode_unchecked`, and
+        :py:meth:`mode_default`.
         
         Parameters
         ----------
@@ -429,68 +515,32 @@ class CNF(object):
             Clauses are added with repetition, i.e. if the same clause
             is added twice then it will occur twice in the
             formula too.
-        """
-        assert self._coherent
+ 
 
-        # A clause must be an immutable object
-        try:
-            hash(tuple(clause))
-        except TypeError:
-            raise TypeError("%s is not a well formatted clause" %clause)
-
-        # Check literal repetitions
-        if (not self.allow_literal_repetitions) and len(set(clause)) != len(clause):
-            raise ValueError("Forbidden repeated literals in clause {}".format(clause))
-
-        # Check opposite literals
-        if not self.allow_opposite_literals:
-            positive     = set([v for (p,v) in clause if p ])
-            negative     = set([v for (p,v) in clause if not p ])
-            if len(positive & negative)>0:
-                emsg = "{ " + ", ".join(positive & negative) + " }"
-                raise ValueError("Following variable occur with opposite literals: {}".format(emsg))
-
-        # Add the compressed clause
-        try:
-            self._clauses.append( self._compress_clause(clause) )
-        except KeyError,error:
-            if not self.auto_add_variables:
-                raise ValueError("The clause contains unknown variable: {}".format(error))
-            else:
-                for _, var in clause:
-                    self.add_variable(var)
-                self._clauses.append( self._compress_clause(clause) )
-
-
-    def add_clause_unsafe(self,clause):
-        """Add a clause without checking input
-
-        This is logically equivalent to :py:meth:`CNF.add_clause`
-        where `literal_repetition`, `opposite_literals` and
-        `auto_variables` are ``True``, but it is faster because
-        it does less checks on the input.
-
-        Parameters
-        ----------
-        clause: list of (bool,str) 
-            the clause to be added in the CNF
-
-            A clause with k literals is a list with k pairs.
-            First coords are the polarities, second coords are utf8
-            encoded strings with variable names.
-
-            Clauses are added with repetition, i.e. if the same clause
-            is added twice then it will occur twice in the
-            formula too.
+        See Also
+        --------
+        allow_literal_repetition : allows the same literal more than once in a clause
+        allow_opposite_literals : allows opposite literals in a clause
+        auto_add_variables : automatically add new variables to the formula
+        mode_strict : all checks during clause insertion
+        mode_default : all checks but allow new variables
+        mode_unchecked : no checks at all
 
         Raises
         ------
         KeyError
-            if the clause contains a variable which was not added to the formula before.
-        """
-        self._clauses.append( self._compress_clause(clause) )
-
+            in case clause insertion is unchecked and the clause
+            contains a variable which is unknown to the formula.
         
+        ValueError
+            in case the sequence of literals do not satisfies the rules.
+
+        TypeError
+            the sequence of literals is not made by pairs of immutable objects.
+        """
+        self._clauses.append( self._check_and_compress_literals(clause) )
+  
+       
     def add_variable(self,var,description=None):
         """Add a variable to the formula (if not already resent).
 

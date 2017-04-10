@@ -61,11 +61,11 @@ class BaseSubstitution(CNF):
 
         # Compress substitution cnfs
         for i in range(1,len(varadditional)):
-            varadditional[i] =[list(self._compress_clause(cls))
+            varadditional[i] =[list(self._check_and_compress_literals(cls))
                                for cls in varadditional[i] ]
 
         for i in range(1,len(substitutions)):
-            substitutions[i] =[list(self._compress_clause(cls))
+            substitutions[i] =[list(self._check_and_compress_literals(cls))
                                for cls in substitutions[i] ]
 
         # build and add new clauses

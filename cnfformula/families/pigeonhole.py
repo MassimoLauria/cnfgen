@@ -78,7 +78,7 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     php=CNF()
     php.header="{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes)\
         + php.header
-
+    php.mode_unchecked()
     
     mapping=php.unary_mapping(
         xrange(1,pigeons+1),
@@ -92,8 +92,9 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
         php.add_variable(v)
 
     for c in mapping.clauses():
-        php.add_clause_unsafe(c)
+        php.add_clause(c)
 
+    php.mode_default()
     return php
 
 @cnfformula.families.register_cnf_generator
@@ -144,7 +145,8 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
 
     gphp=CNF()
     gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)
-
+    gphp.mode_unchecked()
+    
     Left, Right = bipartite_sets(graph)
 
     mapping = gphp.unary_mapping(Left,Right,
@@ -158,8 +160,9 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
         gphp.add_variable(v)
 
     for c in mapping.clauses():
-        gphp.add_clause_unsafe(c)
+        gphp.add_clause(c)
 
+    gphp.mode_default()
     return gphp
 
 @cnfformula.families.register_cnf_generator
@@ -179,6 +182,7 @@ def BinaryPigeonholePrinciple(pigeons,holes):
     """
 
     bphp=CNF()
+    bphp.mode_unchecked()
     bphp.header="Binary Pigeonhole Principle for {0} pigeons and {1} holes\n".format(pigeons,holes)\
                  + bphp.header
     
@@ -188,8 +192,9 @@ def BinaryPigeonholePrinciple(pigeons,holes):
         bphp.add_variable(v)
         
     for c in bphpgen.clauses():
-        bphp.add_clause_unsafe(c)
+        bphp.add_clause(c)
 
+    bphp.mode_default()
     return bphp
 
 @cnfformula.cmdline.register_cnfgen_subcommand
