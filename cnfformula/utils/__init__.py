@@ -103,5 +103,4 @@ def dimacs2cnf(file_handle):
     cnf._add_compressed_clauses(clauses)
 
     # return the formula
-    cnf._check_coherence(force=True)
     return cnf

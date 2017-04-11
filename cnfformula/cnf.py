@@ -83,6 +83,12 @@ class CNF(object):
             a preamble which documents the formula
         """
 
+        # Internal documentation of the formula
+        self._header = header or \
+                       "Generated with `cnfgen`\n(C) {}\n{}\n\n".format(
+                           pd.__copyright__,
+                           pd.__url__)
+
         # Initial empty formula
         self._clauses         = []
 
@@ -98,18 +104,10 @@ class CNF(object):
         self._allow_opposite_literals=False
         self._auto_add_variables=True
 
-
-        # Internal coherence can be disrupted by some methods.  API
-        # methods require it to be rechecked.
-        self._coherent        = True
-
         # Load the initial data into the CNF
         for c in clauses or []:
             self.add_clause(c)
 
-        # Internal documentation of the formula
-        self._header = header or "Generated with `cnfgen`\n(C) {}\n{}\n\n".format(pd.__copyright__,
-                                                                                  pd.__url__)
 
     @property
     def header(self):
@@ -227,9 +225,6 @@ class CNF(object):
         else:
             self._check_and_compress_literals = self._check_and_compress_literals_safe
             
-
-        
-        
     
     #
     # Implementation of some standard methods
@@ -239,13 +234,11 @@ class CNF(object):
         """Iterates over all clauses of the CNF
         """
         for cls in self._clauses:
-            assert self._coherent
-            yield self._uncompress_clause(cls)
+            yield self._uncompress_literals(cls)
 
     def __str__(self):
         """String representation of the formula
         """
-        assert self._coherent
         return self._header
 
     def __len__(self):
@@ -258,18 +251,25 @@ class CNF(object):
     # Internal implementation methods, use at your own risk!
     #
 
-    def _uncompress_clause(self, clause):
+    def _uncompress_literals(self, literals):
         """(INTERNAL USE) Uncompress a clause from the numeric representation.
 
-        Arguments:
-        - `clause`: clause to be uncompressed
+        Parameters
+        ----------
+        literals : a list of int
 
+        Returns
+        -------
+        a list of pairs (bool,string).
+        
+        Examples
+        --------
         >>> c=CNF()
         >>> c.add_clause([(True,"x"),(False,"y")])
-        >>> print(c._uncompress_clause([-1,-2]))
+        >>> print(c._uncompress_literals([-1,-2]))
         [(False, 'x'), (False, 'y')]
         """
-        return [ (l>0, self._index2name[abs(l)]) for l in clause ]
+        return [ (l>0, self._index2name[abs(l)]) for l in literals ]
 
     def _check_and_compress_literals(self, literals):
         """Convert a list of literals to its numeric representation.
@@ -423,15 +423,12 @@ class CNF(object):
         self._clauses.extend(tuple(c) for c in clauses)
 
 
-    def _check_coherence(self, force=False):
+    def _check_coherence(self):
         """Check if the formula is internally consistent.
 
         Certain fast manipulation methods are not safe if used
         incorrectly, so the CNF object may be corrupted. This method
         tests if that was not the case.
-
-        Arguments:
-        - `force`: force check even if the formula claims coherence
 
         >>> c=CNF()
         >>> c.add_variable("x")
@@ -443,16 +440,7 @@ class CNF(object):
         >>> c._add_compressed_clauses([(-1,2),(1,-2),(1,3)])
         >>> c._check_coherence()
         False
-
-        We cannot use the API now
-
-        >>> c.clauses()
-        Traceback (most recent call last):
-        AssertionError
         """
-        if not force and self._coherent:
-            return True
-
         varindex=self._name2index
         varnames=self._index2name
         
@@ -475,7 +463,6 @@ class CNF(object):
                     return False
 
         # formula passed all tests
-        self._coherent = True
         return True
 
     #
@@ -556,7 +543,6 @@ class CNF(object):
         description: str, optional
              an explanation/description/comment about the variable.
         """
-        assert self._coherent
         try:
             if not var in self._name2index:
                 # name correpsond to the last variable so far
@@ -576,7 +562,6 @@ class CNF(object):
     def variables(self):
         """Returns (a copy of) the list of variable names.
         """
-        assert self._coherent
         vars_iterator = iter(self._index2name)
         vars_iterator.next()
         return vars_iterator
@@ -584,7 +569,6 @@ class CNF(object):
     def clauses(self):
         """Return the list of clauses
         """
-        assert self._coherent
         return self.__iter__()
 
 
@@ -642,7 +626,6 @@ class CNF(object):
         of the clauses, and write then on the output buffer, which is
         tipically a StringIO.
         """
-        assert self._coherent
 
         # Count the number of variables and clauses
         n = len(self._index2name)-1
@@ -720,8 +703,6 @@ class CNF(object):
         ----------
         .. [1] http://www.latex-project.org/
         """
-        assert self._coherent
-
         clauses_per_page = 40
 
         latex_preamble=r"""%

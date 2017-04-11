@@ -26,7 +26,6 @@ class BaseSubstitution(CNF):
         Arguments:
         - `cnf`: the original cnf
         """
-        assert cnf._coherent
         self._orig_cnf = cnf
         super(BaseSubstitution,self).__init__([],header=cnf._header)
 
