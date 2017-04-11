@@ -83,7 +83,6 @@ def Shuffle(cnf,
         out._clauses[new]=tuple( substitution[l] for l in cnf._clauses[old])
 
     # return the formula
-    assert out._check_coherence(force=True)
     return out
 
 
