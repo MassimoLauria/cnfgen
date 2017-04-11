@@ -34,6 +34,8 @@ import os
 import sys
 import random
 
+from csp import CSP
+
 # Python 2.6 does not have argparse library
 try:
     import argparse
@@ -70,7 +72,7 @@ def setup_command_line_args(parser):
                         formula to standard output. (default: -)
                         """)
     parser.add_argument('--output-format','-of',
-                        choices=['latex','dimacs'],
+                        choices=['latex','dimacs','opb'],
                         default='dimacs',
                         help="""
                         Output format of the formulas. 'latex' is
@@ -217,6 +219,9 @@ a sequence of transformations.
     # If necessary, init the random generator
     if hasattr(args,'seed') and args.seed:
         random.seed(args.seed)
+
+    # Choose constraint format
+    CSP.set_format(args.output_format)
 
     # Generate the formula
     try:

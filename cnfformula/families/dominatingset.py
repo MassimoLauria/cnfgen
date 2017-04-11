@@ -4,7 +4,7 @@
 """
 
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 from cnfformula.cmdline import SimpleGraphHelper
 
 from cnfformula.cmdline  import register_cnfgen_subcommand
@@ -39,7 +39,7 @@ def DominatingSet(G,d, alternative = False):
        the CNF encoding for dominating of size :math:`\leq d` for graph :math:`G`
 
     """
-    F=CNF()
+    F=CSP()
 
     if not isinstance(d,int) or d<1:
         ValueError("Parameter \"d\" is expected to be a positive integer")
@@ -78,7 +78,7 @@ def DominatingSet(G,d, alternative = False):
                 F.add_clause( [ (False,D(u)),(False,D(v)), (False,M(u,i)), (False,M(v,i))    ])
     else:
         for i in range(1,d+1):
-            for c in CNF.less_or_equal_constraint([M(v,i) for v in V],1):
+            for c in F.less_or_equal_constraint([M(v,i) for v in V],1):
                 F.add_clause(c)
                 
     # (Active) Vertices in the sequence are not repeated

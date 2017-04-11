@@ -6,7 +6,7 @@
 import itertools
 import random
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 
 import cnfformula.cmdline
 import cnfformula.families
@@ -106,7 +106,7 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
     if k>n:
         raise ValueError("Clauses cannot have more {} literals.".format(n))
 
-    F = CNF()
+    F = CSP()
     F.header = "Random {}-CNF over {} variables and {} clauses\n".format(k,n,m) + F.header
 
     indices = xrange(1,n+1)

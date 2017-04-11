@@ -3,7 +3,7 @@
 """Implementation of formulas that check for subgraphs
 """
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 from cnfformula.cmdline import SimpleGraphHelper
 
 import cnfformula.families
@@ -57,7 +57,7 @@ def SubgraphFormula(graph,templates, symmetric=False):
 
     """
 
-    F=CNF()
+    F=CSP()
 
     
     # One of the templates is chosen to be the subgraph
@@ -203,7 +203,7 @@ def BinaryCliqueFormula(G,k):
     a CNF object
 
     """
-    F=CNF()
+    F=CSP()
     F.header="Binary {0}-clique formula\n".format(k) + F.header
     
     clauses_gen=F.binary_mapping(xrange(1,k+1), G.nodes(),

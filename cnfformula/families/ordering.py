@@ -3,7 +3,7 @@
 """Implementation of the ordering principle formulas
 """
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 from cnfformula.cmdline import SimpleGraphHelper
 
 import cnfformula.cmdline  
@@ -43,7 +43,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
     - `plant` : allow last element to be minimum (and could make the formula SAT)
     - `knuth` : Don Knuth variants 2 or 3 of the formula (anything else suppress it)
     """
-    gop = CNF()
+    gop = CSP()
 
     # Describe the formula
     if total or smart:

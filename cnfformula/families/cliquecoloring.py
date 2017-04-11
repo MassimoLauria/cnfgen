@@ -3,7 +3,7 @@
 """Implementation of the clique-coloring formula 
 """
 
-from cnfformula.cnf import CNF
+from cnfformula.csp import CSP
 
 import cnfformula.cmdline
 import cnfformula.families
@@ -61,7 +61,7 @@ def CliqueColoring(n,k,c):
         "Name of an coloring variable"
         return 'r_{{{0},{1}}}'.format(v,ell)
     
-    formula=CNF()
+    formula=CSP()
     formula.header="There is a graph of {0} vertices with a {1}-clique".format(n,k)+\
         " and a {0}-coloring\n\n".format(c)\
         + formula.header
@@ -81,7 +81,7 @@ def CliqueColoring(n,k,c):
 
     # some vertex is i'th member of clique
     for k in range(1,k+1):
-        for cl in CNF.equal_to_constraint([Q(k,v) for v in range(1,n+1)], 1):
+        for cl in formula.equal_to_constraint([Q(k,v) for v in range(1,n+1)], 1):
             formula.add_clause(cl,strict=True)
 
     # clique members are connected by edges
@@ -95,7 +95,7 @@ def CliqueColoring(n,k,c):
 
     # every vertex v has exactly one colour
     for v in range(1,n+1):
-        for cl in CNF.equal_to_constraint([R(v,ell) for ell in range(1,c+1)], 1):
+        for cl in formula.equal_to_constraint([R(v,ell) for ell in range(1,c+1)], 1):
             formula.add_clause(cl,strict=True)
 
     # neighbours have distinct colours
