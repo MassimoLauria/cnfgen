@@ -1501,36 +1501,37 @@ class disj(tuple):
         yield self
                     
 class xor(tuple):
-    """Parity constraint
 
-    Internal representation of a parity constraint over a set of
-    literals. In particular the constraint claims that the boolean
-    values of the sequence of literals (contained in the field
-    `literals`) must sum to a number which is equal to the field
-    `value`, module 2.
-
-    For example the encoding of 
-
-    .. math::
-
-         x_1 \\oplus \\neg x_3 \\oplus x_7 = 1 \\pmod{2}
-
-    as 
-
-    ::
-
-         xor(1,-3,7, value = 1)
-
-    Parameters
-    ----------
-    *args : zero or more int
-       literals in the sum
-
-    value : integer
-       a boolean value
-
-    """
     def __new__(cls,*args,**kw):
+        """Parity constraint
+            
+        Internal representation of a parity constraint over a set of
+        literals. In particular the constraint claims that the boolean
+        values of the sequence of literals (contained in the field
+        `literals`) must sum to a number which is equal to the field
+        `value`, module 2.
+
+        For example the encoding of 
+
+        .. math::
+
+            x_1 \\oplus \\neg x_3 \\oplus x_7 = 1 \\pmod{2}
+
+        as 
+
+        ::
+        
+            xor(1,-3,7, value = 1)
+
+        Parameters
+        ----------
+        *args : zero or more int
+            literals in the sum
+
+        value : integer
+            a boolean value
+
+        """
         if "value" not in kw:
             raise TypeError("XOR constraints must have \'value\' keyword argument")
         self = super(xor,cls).__new__(cls,args)
@@ -1541,7 +1542,7 @@ class xor(tuple):
         return self.value == other.value and super(xor,self).__eq__(other)
     
     def n_clauses(self):
-        """Number of clauses to represent the constraints"""
+        """Number of clauses to represent a XOR"""
 
         # Parity of an empty sequence
         if len(self)==0:
@@ -1553,13 +1554,13 @@ class xor(tuple):
     def clauses(self):
         """Clauses to represent the constraint"""
         
-        value = (self.value + len([lit for lit in self.literals if lit < 0])) % 2
-        domains = tuple([(-abs(lit),abs(lit)) for lit in self.literals])
+        value = (self.value + len([lit for lit in self if lit < 0])) % 2
+        domains = tuple([(-abs(lit),abs(lit)) for lit in self])
         for c in product(*domains):
             # Save only the clauses with the right polarity
             parity = len([lit for lit in c if lit < 0]) % 2
             if parity != value:
-                yield cls(*c)
+                yield disj(*c)
 
         
     
