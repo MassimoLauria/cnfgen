@@ -9,7 +9,7 @@ class TestRandomCNF(TestCNFBase) :
         self.assertListEqual(list(F.variables()),
                              ['x_{0}'.format(i) for i in range(1,numvariables+1)])
         self.assertEqual(len(F),numclauses)
-        self.assertEqual(len(set(frozenset(x) for x in F.clauses())),numclauses)
+        self.assertEqual(len(set(frozenset(x) for x in F)),numclauses)
 
     def test_empty_cnf(self) :
         self.check_random_cnf(0,0,0)

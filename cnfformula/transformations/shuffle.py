@@ -8,15 +8,28 @@ import random
 from ..cmdline  import register_cnf_transformation_subcommand
 from ..transformations import register_cnf_transformation
 
-from ..cnf import CNF
+from ..cnf import CNF, disj, xor, less, greater, geq, leq
 
+
+def _shuffle_literals(constraint,substitution):
+    """Shuffle the literals in the low level representation of constraints."""
+    literals = (substitution[l] for l in constraint)
+    if type(constraint)==disj:
+        return disj(*literals)
+    elif type(constraint)==xor:
+        return xor(*literals,value=constraint.value)
+    elif type(constraint) in [less, greater, geq, leq]:
+        return type(constraint)(*literals,threshold=constraint.threshold)
+    else:
+        raise ValueError("The constraint type is unknown: {}".format(type(constraint)))
+    
 
 @register_cnf_transformation
 def Shuffle(cnf,
                variable_permutation=None,
-               clause_permutation=None,
-               polarity_flip=None):
-    """ Reshuffle the given cnf. Returns a formula logically
+               constraint_permutation=None,
+               polarity_flips=None):
+    """Reshuffle the given cnf. Returns a formula logically
     equivalent to the input with the following transformations
     applied in order:
 
@@ -28,10 +41,10 @@ def Shuffle(cnf,
     [vars(cnf)]. All the literals with the old i-th variable are
     replaced with the new i-th variable.
 
-    3. Clause permutations. clause_permutation is a permutation of
-    [0..m-1]. The resulting clauses are reordered according to the
-    permutation.
-"""
+    3. Constraint permutations. constraint_permutation is
+    a permutation of [0..m-1]. The resulting clauses are reordered
+    according to the permutation.
+    """
     
     # empty cnf
     out=CNF(header='')
@@ -41,7 +54,7 @@ def Shuffle(cnf,
 
     variables=list(cnf.variables())
     N=len(variables)
-    M=len(cnf)
+    M=len(cnf._constraints)
 
     # variable permutation
     if variable_permutation==None:
@@ -51,10 +64,10 @@ def Shuffle(cnf,
         assert len(variable_permutation)==N
 
     # polarity flip
-    if polarity_flip==None:
-        polarity_flip=[random.choice([-1,1]) for x in xrange(N)]
+    if polarity_flips==None:
+        polarity_flips=[random.choice([-1,1]) for x in xrange(N)]
     else:
-        assert len(polarity_flip)==N
+        assert len(polarity_flips)==N
 
     #
     # substitution of variables
@@ -64,23 +77,25 @@ def Shuffle(cnf,
 
     substitution=[None]*(2*N+1)
     reverse_idx=dict([(v,i) for (i,v) in enumerate(out.variables(),1)])
-    polarity_flip = [None]+polarity_flip
+    polarity_flips = [None]+polarity_flips
 
     for i,v in enumerate(cnf.variables(),1):
-        substitution[i]=  polarity_flip[i]*reverse_idx[v]
+        substitution[i]=  polarity_flips[i]*reverse_idx[v]
         substitution[-i]= -substitution[i]
 
     #
     # permutation of clauses
     #
-    if clause_permutation==None:
-        clause_permutation=range(M)
-        random.shuffle(clause_permutation)
+    if constraint_permutation==None:
+        constraint_permutation=range(M)
+        random.shuffle(constraint_permutation)
 
     # load clauses
-    out._clauses = [None]*M
-    for (old,new) in enumerate(clause_permutation):
-        out._clauses[new]=tuple( substitution[l] for l in cnf._clauses[old])
+    out._constraints = [None]*M
+    out._length  = len(cnf)
+    for (old,new) in enumerate(constraint_permutation):
+        out._constraints[new]=_shuffle_literals(cnf._constraints[old],substitution)
+    
 
     # return the formula
     return out
@@ -95,13 +110,22 @@ class ShuffleCmd:
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('--no-polarity-flips','-p',action='store_true',dest='no_polarity_flips',help="No polarity flips")
-        parser.add_argument('--no-variables-permutation','-v',action='store_true',dest='no_variable_permutations',help="No permutation of variables")
-        parser.add_argument('--no-clauses-permutation','-c',action='store_true',dest='no_clause_permutations',help="No permutation of clauses")
+        parser.add_argument('--no-polarity-flips','-p',
+                            action='store_true',
+                            dest='no_polarity_flips',
+                            help="No polarity flips")
+        parser.add_argument('--no-variables-permutation','-v',
+                            action='store_true',
+                            dest='no_variable_permutation',
+                            help="No permutation of variables")
+        parser.add_argument('--no-constraint-permutation','-c',
+                            action='store_true',
+                            dest='no_constraint_permutation',
+                            help="No permutation of constraints")
     
     @staticmethod
     def transform_cnf(F,args):
         return Shuffle(F,
-                       variable_permutation=None if not args.no_variable_permutations else list(F.variables()),
-                       clause_permutation=None if not args.no_clause_permutations else range(len(F)),
-                       polarity_flip=None if not args.no_polarity_flips else [1]*len(list(F.variables())))
+                       variable_permutation=None if not args.no_variable_permutation else list(F.variables()),
+                       constraint_permutation=None if not args.no_constraint_permutation else range(len(F._clauses)),
+                       polarity_flips=None if not args.no_polarity_flips else [1]*len(list(F.variables())))

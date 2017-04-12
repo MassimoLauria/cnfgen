@@ -90,7 +90,8 @@ class CNF(object):
                            pd.__url__)
 
         # Initial empty formula
-        self._clauses         = []
+        self._length          = 0
+        self._constraints     = []
 
         # Variable indexes <--> Variable names correspondence
         # first variable is indexed with 1.
@@ -229,13 +230,14 @@ class CNF(object):
     #
     # Implementation of some standard methods
     #
-    
+
     def __iter__(self):
         """Iterates over all clauses of the CNF
         """
-        for cls in self._clauses:
-            yield self._uncompress_literals(cls)
-
+        for cnst in self._constraints:
+            for clause in cnst.clauses():
+                yield self._uncompress_literals(clause)
+                
     def __str__(self):
         """String representation of the formula
         """
@@ -244,13 +246,11 @@ class CNF(object):
     def __len__(self):
         """Number of clauses in the formula
         """
-        return len(self._clauses)
-
+        return self._length
 
     #
     # Internal implementation methods, use at your own risk!
     #
-
     def _uncompress_literals(self, literals):
         """(INTERNAL USE) Uncompress a clause from the numeric representation.
 
@@ -359,29 +359,26 @@ class CNF(object):
     # By default we start with the safe version
     _check_and_compress_literals_safe  = _check_and_compress_literals
 
-    def _add_compressed_clauses(self, clauses):
-        """(INTERNAL USE) Add to the CNF a list of compressed clauses.
+    def _add_compressed_constraints(self, constraints):
+        """(INTERNAL USE) Add a list of compressed constraints.
 
-        This method uses the internal compressed clause representation
-        to add a large batch of data  into the CNF.  It does not check
-        for internal  coherence conditions,  and it  does not  need to
-        convert between  internal and external  clause representation,
-        so it  is very fast.   When assertions  are tested, a  call to
-        this method will  disable the standard API, since  the CNF can
-        be in an inconsistent state.
+        This method uses the internal compressed constraint
+        representation to add a large batch of data into the formula.
+        It does not check for internal coherence conditions, and it
+        does not need to convert between internal and external
+        literals representation, so it is very fast. It is recommended
+        to use :py:meth:`_chech_coherence` after using this.
 
-        Whenever the high level API is used with an inconsisten state
-        the code will fail some assertion.
+        Parameters
+        ----------
+        constraints : a list of constraints
 
-        In particular it does not check if the indexes correspond to a
-        variable in the formula.
+        See Also
+        --------
+        _check_coherence : test that the internal representation is coherent.
 
-        To test consistency and re-enable the API, please call method
-        `CNF._check_coherence`.
-
-        Arguments:
-        - `clauses`: a sequence of compressed clauses.
-
+        Examples
+        --------
         >>> c=CNF()
 
         We add the variables in advance, so that the internal status
@@ -391,11 +388,11 @@ class CNF(object):
         >>> c.add_variable("y")
         >>> c.add_variable("z")
 
-        When we add some compressed clauses, we need to test the
+        When we add some compressed clauses, we should test the
         internal status of the object. If the test is positive, then
-        the high level API is available again.
+        working with the high level API is possible again.
 
-        >>> c._add_compressed_clauses([[-1,2,3],[-2,1],[1,-3]])
+        >>> c._add_compressed_constraints([disj(-1,2,3),disj(-2,1),disj(1,-3)])
         >>> c._check_coherence()
         True
         >>> print(c.dimacs(export_header=False))
@@ -407,8 +404,8 @@ class CNF(object):
         If we call the internal API several times, we need to test the
         object only once.
 
-        >>> c._add_compressed_clauses([[-2,-3]])
-        >>> c._add_compressed_clauses([[-1, 2]])
+        >>> c._add_compressed_constraints([disj(-2,-3)])
+        >>> c._add_compressed_constraints([disj(-1, 2)])
         >>> c._check_coherence()
         True
         >>> print(c.dimacs(export_header=False))
@@ -418,9 +415,10 @@ class CNF(object):
         1 -3 0
         -2 -3 0
         -1 2 0
+
         """
-        self._coherent = False
-        self._clauses.extend(tuple(c) for c in clauses)
+        self._length += sum(c.n_clauses() for c in constraints)
+        self._constraints.extend(constraints)
 
 
     def _check_coherence(self):
@@ -437,7 +435,7 @@ class CNF(object):
         We add clauses mentioning three variables, and the formula is
         not coherent.
 
-        >>> c._add_compressed_clauses([(-1,2),(1,-2),(1,3)])
+        >>> c._add_compressed_constraints([disj(-1,2),disj(1,-2),disj(1,3)])
         >>> c._check_coherence()
         False
         """
@@ -457,17 +455,51 @@ class CNF(object):
 
 
         # Count clauses and check literal representation
-        for clause in self._clauses:
-            for literal in clause:
-                if not 0 < abs(literal) <= N:
+        est_length = 0
+        for cnst in self._constraints:
+            for lit in cnst:
+                if not 0 < abs(lit) <= N:
                     return False
+            est_length += cnst.n_clauses()
+
+        if len(self) != est_length:
+            return False
 
         # formula passed all tests
         return True
 
+
     #
-    # High level API: build the CNF
+    # High level API
     #
+    def add_variable(self,var,description=None):
+        """Add a variable to the formula (if not already resent).
+
+        The variable must be `hashable`. I.e. it must be usable as key
+        in a dictionary.  It raises `TypeError` if the variable cannot
+        be hashed.
+
+        Parameters
+        ----------
+        var: hashable
+             the variable name to be added/updated. It can be any
+             hashable object (i.e. a dictionary key).
+        description: str, optional
+             an explanation/description/comment about the variable.
+        """
+        try:
+            if not var in self._name2index:
+                # name correpsond to the last variable so far
+                self._index2name.append(var)
+                self._name2index[var] = len(self._index2name)-1
+        except TypeError:
+            raise TypeError("%s is not a legal variable name" %var)
+
+        # update description
+        if description is not None:
+            self._name2descr[var] = description
+
+
     def add_clause(self,clause):
         """Add a clause to the CNF.
 
@@ -525,39 +557,9 @@ class CNF(object):
         TypeError
             the sequence of literals is not made by pairs of immutable objects.
         """
-        self._clauses.append( self._check_and_compress_literals(clause) )
+        self._constraints.append( disj(*self._check_and_compress_literals(clause)))
+        self._length += 1
   
-       
-    def add_variable(self,var,description=None):
-        """Add a variable to the formula (if not already resent).
-
-        The variable must be `hashable`. I.e. it must be usable as key
-        in a dictionary.  It raises `TypeError` if the variable cannot
-        be hashed.
-
-        Parameters
-        ----------
-        var: hashable
-             the variable name to be added/updated. It can be any
-             hashable object (i.e. a dictionary key).
-        description: str, optional
-             an explanation/description/comment about the variable.
-        """
-        try:
-            if not var in self._name2index:
-                # name correpsond to the last variable so far
-                self._index2name.append(var)
-                self._name2index[var] = len(self._index2name)-1
-        except TypeError:
-            raise TypeError("%s is not a legal variable name" %var)
-
-        # update description
-        if description is not None:
-            self._name2descr[var] = description
-
-    #
-    # High level API: read the CNF
-    #
 
     def variables(self):
         """Returns (a copy of) the list of variable names.
@@ -566,12 +568,85 @@ class CNF(object):
         vars_iterator.next()
         return vars_iterator
     
-    def clauses(self):
-        """Return the list of clauses
+
+    def is_satisfiable(self, cmd=None, sameas=None, verbose=0):
+        """Determines whether a CNF is satisfiable or not.
+
+        The formula is passed to a SAT solver, according to the
+        optional command line ``cmd``. If no command line is
+        specified, the known solvers are tried in succession until one
+        is found.
+
+        It is possible to use any drop-in replacement for these
+        solvers, but in this case more information is needed on how to
+        communicate with the solver. In particular ``minisat`` does not
+        respect the standard DIMACS I/O conventions, and that holds
+        also for ``glucose`` which is a drop-in replacement of
+        ``minisat``.
+
+        For the supported solver we can pick the right interface, but
+        for other solvers it is impossible to guess. Nevertheless it
+        is possible to indicate which interface to use, or more
+        specifically which known solver interface to mimic.
+
+        >>> F.is_satisfiable(cmd='minisat-style-solver',sameas='minisat')  # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='dimacs-style-solver',sameas='lingeling') # doctest: +SKIP
+
+        Parameters
+        ----------
+        cmd : string,optional
+            the actual command line used to invoke the SAT solver
+
+        sameas : string, optional
+            use the interface of one of the supported solvers. Useful
+            when the solver used in the command line is not supported.
+
+        verbose: int
+            0 or less means no output. 1 shows the command line actually
+            run. 2 outputs the solver output. (default: 0)
+
+
+        Examples
+        --------
+        >>> F.is_satisfiable()                                              # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='minisat -no-pre')                         # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='glucose -pre')                            # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='lingeling --plain')                       # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='sat4j')                                   # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='my-hacked-minisat -pre',sameas='minisat') # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='patched-lingeling',sameas='lingeling')    # doctest: +SKIP
+
+        Returns
+        -------
+        (boolean,assignment or None)
+            A pair (answer,witness) where answer is either True when
+            F is satisfiable, or False otherwise. If F is satisfiable
+            the witness is a satisfiable assignment in form of
+            a dictionary, otherwise it is None.
+
+        Raises
+        ------
+        RuntimeError
+           if it is not possible to correctly invoke the solver needed.
+
+        ValueError
+           if `sameas` is set and is not the name of a supported solver.
+
+        TypeError
+           if F is not a CNF object.
+
+        See Also
+        --------
+        cnfformula.utils.solver.is_satisfiable : implementation independent of CNF object.
+        cnfformula.utils.solver.supported_satsolvers : the SAT solver recognized by `cnfformula`.
+
         """
-        return self.__iter__()
+        from .utils import solver
+        return solver.is_satisfiable(self, cmd=cmd, sameas=sameas, verbose=verbose)
 
-
+    #
+    #  Output formats
+    #
     def dimacs(self, export_header=True, extra_text=None):
         """Produce the dimacs encoding of the formula
 
@@ -644,12 +719,13 @@ class CNF(object):
         # Formula specification
         output.write("p cnf {0} {1}".format(n, m))
 
-        if len(self._clauses) == 0:
+        if m == 0:
             output.write("\n")   # this newline makes `lingeling` solver happy
 
         # Clauses
-        for cls in self._clauses:
-            output.write("\n" + " ".join([str(l) for l in cls + (0,)]))
+        for cnst in self._constraints:
+            for cls in cnst.clauses():
+                output.write("\n" + " ".join([str(l) for l in cls + (0,)]))
 
     def latex(self, export_header=True, extra_text=None, full_document=False):
         """Output a LaTeX version of the CNF formula
@@ -764,7 +840,7 @@ class CNF(object):
                              " \\right)")
 
         # Output the clauses
-        clauses_number = len(self._clauses)
+        clauses_number = len(self)
         if full_document:
             output.write("\\noindent\\textbf{{CNF with {} variables and and {} clauses:}}\n".\
                          format(len(self._name2index),clauses_number))
@@ -774,7 +850,7 @@ class CNF(object):
         if clauses_number==0:
             output.write("\n   \\top")
         else:
-            for i,clause in enumerate(self._clauses):
+            for i,clause in enumerate(self._constraints):
                 if i% clauses_per_page ==0 and i!=0 and full_document:
                     output.write("\n\\end{align}\\pagebreak")
                     output.write("\n\\begin{align}")
@@ -790,85 +866,9 @@ class CNF(object):
   
         return output.getvalue()
 
-
-    def is_satisfiable(self, cmd=None, sameas=None, verbose=0):
-        """Determines whether a CNF is satisfiable or not.
-
-        The formula is passed to a SAT solver, according to the
-        optional command line ``cmd``. If no command line is
-        specified, the known solvers are tried in succession until one
-        is found.
-
-        It is possible to use any drop-in replacement for these
-        solvers, but in this case more information is needed on how to
-        communicate with the solver. In particular ``minisat`` does not
-        respect the standard DIMACS I/O conventions, and that holds
-        also for ``glucose`` which is a drop-in replacement of
-        ``minisat``.
-
-        For the supported solver we can pick the right interface, but
-        for other solvers it is impossible to guess. Nevertheless it
-        is possible to indicate which interface to use, or more
-        specifically which known solver interface to mimic.
-
-        >>> F.is_satisfiable(cmd='minisat-style-solver',sameas='minisat')  # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='dimacs-style-solver',sameas='lingeling') # doctest: +SKIP
-
-        Parameters
-        ----------
-        cmd : string,optional
-            the actual command line used to invoke the SAT solver
-
-        sameas : string, optional
-            use the interface of one of the supported solvers. Useful
-            when the solver used in the command line is not supported.
-
-        verbose: int
-            0 or less means no output. 1 shows the command line actually
-            run. 2 outputs the solver output. (default: 0)
-
-
-        Examples
-        --------
-        >>> F.is_satisfiable()                                              # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='minisat -no-pre')                         # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='glucose -pre')                            # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='lingeling --plain')                       # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='sat4j')                                   # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='my-hacked-minisat -pre',sameas='minisat') # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='patched-lingeling',sameas='lingeling')    # doctest: +SKIP
-
-        Returns
-        -------
-        (boolean,assignment or None)
-            A pair (answer,witness) where answer is either True when
-            F is satisfiable, or False otherwise. If F is satisfiable
-            the witness is a satisfiable assignment in form of
-            a dictionary, otherwise it is None.
-
-        Raises
-        ------
-        RuntimeError
-           if it is not possible to correctly invoke the solver needed.
-
-        ValueError
-           if `sameas` is set and is not the name of a supported solver.
-
-        TypeError
-           if F is not a CNF object.
-
-        See Also
-        --------
-        cnfformula.utils.solver.is_satisfiable : implementation independent of CNF object.
-        cnfformula.utils.solver.supported_satsolvers : the SAT solver recognized by `cnfformula`.
-
-        """
-        from .utils import solver
-        return solver.is_satisfiable(self, cmd=cmd, sameas=sameas, verbose=verbose)
-
-    ###
-    ### Various utility function for CNFs
-    ###
+    #
+    # Various utility function for CNFs
+    #
     @classmethod
     def parity_constraint(cls,variables, constant):
         """Output the CNF encoding of a parity constraint
@@ -930,6 +930,7 @@ class CNF(object):
         for tpl in combinations(variables, k):
             yield [(polarity, v) for v in tpl]
      
+
     @classmethod 
     def less_than_constraint(cls,variables, upperbound):
         """Clauses encoding a \"strictly less than\" constraint
@@ -964,6 +965,7 @@ class CNF(object):
         []
         """
         return cls._inequality_constraint_builder(variables, upperbound, greater=False)
+
 
     @classmethod
     def less_or_equal_constraint(cls,variables, upperbound):
@@ -1002,6 +1004,7 @@ class CNF(object):
         """
         return cls._inequality_constraint_builder(variables, upperbound+1, greater=False)
      
+
     @classmethod
     def greater_than_constraint(cls, variables, lowerbound):
         """Clauses encoding a \"strictly greater than\" constraint
@@ -1037,6 +1040,7 @@ class CNF(object):
         """
         return cls._inequality_constraint_builder(variables, lowerbound, greater=True)
      
+
     @classmethod
     def greater_or_equal_constraint(cls, variables, lowerbound):
         """Clauses encoding a \"greater than or equal to\" constraint
@@ -1072,6 +1076,7 @@ class CNF(object):
         """
         return cls._inequality_constraint_builder(variables, lowerbound - 1, greater=True)
 
+
     @classmethod
     def equal_to_constraint(cls, variables, value):
         """Clauses encoding a \"equal to\" constraint
@@ -1102,6 +1107,7 @@ class CNF(object):
         for c in cls.greater_or_equal_constraint(variables, value):
             yield c
      
+
     @classmethod
     def loose_majority_constraint(cls, variables):
         """Clauses encoding a \"at least half\" constraint
@@ -1117,6 +1123,7 @@ class CNF(object):
         """
         threshold = (len(variables)+1)/2
         return cls.greater_or_equal_constraint(variables, threshold)
+
 
     @classmethod
     def loose_minority_constraint(cls, variables):
@@ -1134,6 +1141,7 @@ class CNF(object):
         threshold = len(variables)/2
         return cls.less_or_equal_constraint(variables, threshold)
      
+
     @classmethod
     def exactly_half_ceil(cls, variables):
         """Clauses encoding a \"exactly half\" constraint (rounded up)
@@ -1150,6 +1158,7 @@ class CNF(object):
         threshold = (len(variables)+1)/2
         return cls.equal_to_constraint(variables,threshold)
      
+
     @classmethod
     def exactly_half_floor(cls, variables):
         """Clauses encoding a \"exactly half\" constraint (rounded down)
@@ -1165,6 +1174,7 @@ class CNF(object):
         """
         threshold = len(variables)/2
         return cls.equal_to_constraint(variables,threshold)
+
 
     class unary_mapping(object):
         """Unary CNF representation of a mapping between two sets."""
@@ -1347,7 +1357,6 @@ class CNF(object):
                             yield [(False,self.var_name(a,i)),(False,self.var_name(b,j))]
                         
 
-                            
     class binary_mapping(object):
         """Binary CNF representation of a mapping between two sets."""
 
@@ -1455,7 +1464,43 @@ class CNF(object):
                     yield self.forbid_image(i1,j2) + self.forbid_image(i2,j1)
 
 
-class xor(namedtuple("xor",['literals','value'])):
+
+class disj(tuple):
+    __slots__ = ()
+
+    def __new__(cls,*args):
+        """Clause constraint
+
+        Internal representation of a disjunction of a set of literals.
+        For example the encoding of
+
+        .. math::
+
+            x_1 \vee \\neg x_3 \vee x_7
+
+        as 
+
+        ::
+
+            disj(1,-3,7)
+
+        Parameters
+        ----------
+        *args : zero or more ints
+            literals in the clause
+        """
+        self = super(disj,cls).__new__(cls,args)
+        return self
+
+    def n_clauses(self):
+        """Number of clauses to represent the constraints"""
+        return 1
+    
+    def clauses(self):
+        """Clauses to represent the constraint"""
+        yield self
+                    
+class xor(tuple):
     """Parity constraint
 
     Internal representation of a parity constraint over a set of
@@ -1474,28 +1519,36 @@ class xor(namedtuple("xor",['literals','value'])):
 
     ::
 
-         xor((1,-3,7),1)
+         xor(1,-3,7, value = 1)
 
     Parameters
     ----------
-    literals : tuple(int)
+    *args : zero or more int
        literals in the sum
 
     value : integer
        a boolean value
 
     """
-    __slots__ = ()
+    def __new__(cls,*args,**kw):
+        if "value" not in kw:
+            raise TypeError("XOR constraints must have \'value\' keyword argument")
+        self = super(xor,cls).__new__(cls,args)
+        self.value = kw['value'] % 2
+        return self
 
+    def __eq__(self,other):
+        return self.value == other.value and super(xor,self).__eq__(other)
+    
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
 
         # Parity of an empty sequence
-        if len(self.literals)==0:
-            return self.literals % 2
+        if len(self)==0:
+            return self.value % 2
 
         # Parity of a non emtpy sequence
-        return 2**(len(self.literals)-1)
+        return 2**(len(self)-1)
 
     def clauses(self):
         """Clauses to represent the constraint"""
@@ -1506,7 +1559,7 @@ class xor(namedtuple("xor",['literals','value'])):
             # Save only the clauses with the right polarity
             parity = len([lit for lit in c if lit < 0]) % 2
             if parity != value:
-                yield list(c)
+                yield cls(*c)
 
         
     

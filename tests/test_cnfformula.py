@@ -13,7 +13,7 @@ class TestCNF(TestCNFBase) :
         F=CNF()
         self.assertTrue(F._check_coherence())
         self.assertListEqual(list(F.variables()),[])
-        self.assertListEqual(list(F.clauses()),[])
+        self.assertListEqual(list(F),[])
 
     def test_strict_clause_insertion(self):
         F=CNF()

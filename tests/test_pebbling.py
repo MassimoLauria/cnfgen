@@ -18,7 +18,7 @@ class TestPebbling(TestCNFBase) :
         peb = PebblingFormula(G)
         self.assertTrue(peb._check_coherence())
         self.assertSetEqual(set(peb.variables()),set(['x']))
-        self.assertSetSetEqual(list(peb.clauses()),[[(True,'x')],[(False,'x')]])
+        self.assertSetSetEqual(peb,[[(True,'x')],[(False,'x')]])
 
     def test_path(self) :
         G=nx.path_graph(10,nx.DiGraph())
@@ -29,7 +29,7 @@ class TestPebbling(TestCNFBase) :
             [[(False,i-1),(True,i)] for i in xrange(1,10)] + \
             [[(False,9)]]
         self.assertListEqual(list(peb.variables()),range(10))
-        self.assertSetSetEqual(peb.clauses(),clauses)
+        self.assertSetSetEqual(peb,clauses)
 
     def test_pyramid(self) :
         G=nx.DiGraph()
@@ -44,7 +44,7 @@ class TestPebbling(TestCNFBase) :
             [[(False,i) for i in xrange(10)] + [(True,10)]] + \
             [[(False,10)]]
         self.assertListEqual(list(peb.variables()),range(11))
-        self.assertSetSetEqual(peb.clauses(),clauses)
+        self.assertSetSetEqual(list(peb),clauses)
         
     def test_cycle(self) :
         G=nx.cycle_graph(10,nx.DiGraph())

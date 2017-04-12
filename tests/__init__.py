@@ -27,7 +27,7 @@ class TestCNFBase(unittest.TestCase):
     """
     def assertCnfEqual(self,cnf1,cnf2):
         self.assertSetEqual(set(cnf1.variables()),set(cnf2.variables()))
-        self.assertSetSetEqual(cnf1.clauses(),cnf2.clauses())
+        self.assertSetSetEqual(cnf1,cnf2)
 
     def assertSetSetEqual(self,list1,list2):
         set1=set(frozenset(x) for x in list1)
@@ -42,7 +42,7 @@ class TestCNFBase(unittest.TestCase):
         self.assertEqual(output,dimacs)
 
     def assertCnfEquivalentModuloVariables(self, cnf1, cnf2):
-        self.assertSetEqual(set(cnf1._clauses), set(cnf2._clauses))
+        self.assertSetEqual(set(cnf1._constraints), set(cnf2._constraints))
 
     def assertSAT(self, formula):
         if have_satsolver():
