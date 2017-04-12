@@ -58,3 +58,9 @@ class TestCNF(TestCNFBase) :
         self.assertRaises(ValueError, F.add_clause,
                           [(True,"T"),(True,"V"),(False,"T")])
 
+
+    def test_clause_number(self) :
+        F=CNF()
+        F.add_clause([(False, 'x')])
+        F.add_clause([(True, 'x'), (False, 'y')])
+        self.assertEqual(len(F),len(list(F)))

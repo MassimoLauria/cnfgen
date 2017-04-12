@@ -1,11 +1,11 @@
 import cnfformula
 import cnfformula.utils as cnfutils
 
-from test_cnfformula import TestCNF
+from . import TestCNFBase
 
 import StringIO
 
-class TestDimacsParser(TestCNF) :
+class TestDimacsParser(TestCNFBase) :
     def test_empty_file(self) :
         dimacs = StringIO.StringIO()
         with self.assertRaises(ValueError) :
@@ -42,7 +42,7 @@ class TestDimacsParser(TestCNF) :
         self.assertCnfEqual(cnf,cnfformula.CNF([[(True, 1)],[(False, 1)]]))
     
     def test_inverse(self) :
-        cnf = TestCNF.sorted_cnf([[(True,2),(False,1)]])
+        cnf = TestCNFBase.sorted_cnf([[(True,2),(False,1)]])
         dimacs = StringIO.StringIO(cnf.dimacs())
         cnf2 = cnfutils.dimacs2cnf(dimacs)
         self.assertCnfEqual(cnf2,cnf)
