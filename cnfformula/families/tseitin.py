@@ -44,12 +44,11 @@ def TseitinFormula(graph,charges=None):
 
     tse.mode_strict()
     # add constraints
-    for v,c in zip(V,charges):
+    for v,charge in zip(V,charges):
         
         # produce all clauses and save half of them
         names = [ edgename[(u,v)] for u in neighbors(graph,v) ]
-        for cls in CNF.parity_constraint(names,c):
-            tse.add_clause(list(cls))
+        tse.add_parity(names,charge)
 
     return tse
 

@@ -315,9 +315,11 @@ class XorSubstitution(BaseSubstitution):
 
         Returns: a list of clauses
         """
-        names = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
-        return list(self.parity_constraint(names,polarity))
-
+        temp = CNF()
+        temp.add_parity(["{{{}}}^{}".format(varname,i) for i in range(self._rank)],
+                        1 if polarity else 0)    
+        return list(temp)
+    
 @register_cnf_transformation
 class FormulaLifting(BaseSubstitution):
     """Formula lifting: Y variable select X values
@@ -508,7 +510,9 @@ class VariableCompression(BaseSubstitution):
 
         if self._function == 'xor':
 
-            return list(self.parity_constraint(local_names,polarity))
+            temp = CNF()
+            temp.add_parity(local_names,1 if polarity else 0)
+            return list(temp)
 
         elif self._function == 'maj':
 
