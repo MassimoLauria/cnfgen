@@ -230,7 +230,7 @@ class CNF(object):
     #
     # Implementation of some standard methods
     #
-    def _enumerate_compressed_clauses(self):
+    def _compressed_clauses(self):
         """Iterates over all (compressed) clauses of the CNF
         """
         length = 0
@@ -243,7 +243,7 @@ class CNF(object):
     def __iter__(self):
         """Iterates over all clauses of the CNF
         """
-        for clause in self._enumerate_compressed_clauses():
+        for clause in self._compressed_clauses():
             yield self._uncompress_literals(clause)
                 
     def __str__(self):
@@ -860,7 +860,7 @@ class CNF(object):
         if clauses_number==0:
             output.write("\n   \\top")
         else:
-            for i,clause in enumerate(self._constraints):
+            for i,clause in enumerate(self._compressed_clauses()):
                 if i% clauses_per_page ==0 and i!=0 and full_document:
                     output.write("\n\\end{align}\\pagebreak")
                     output.write("\n\\begin{align}")

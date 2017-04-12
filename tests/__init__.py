@@ -45,8 +45,8 @@ class TestCNFBase(unittest.TestCase):
         print cnf1._constraints
         print cnf2._constraints
         self.assertSetEqual(
-            set(cnf1._enumerate_compressed_clauses()),
-            set(cnf2._enumerate_compressed_clauses()))
+            set(cnf1._compressed_clauses()),
+            set(cnf2._compressed_clauses()))
 
     def assertSAT(self, formula):
         if have_satsolver():
