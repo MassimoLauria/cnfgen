@@ -1,7 +1,6 @@
 import cnfformula.utils.cnfshuffle as cnfshuffle
 
 from . import TestCNFBase
-from test_cnfformula import TestCNF
 from cnfformula import FlipPolarity,Shuffle,cnfgen,CNF
 
 from cnfformula.utils.dimacstransform import command_line_utility as dimacstransform
@@ -9,7 +8,7 @@ from cnfformula.utils.dimacstransform import command_line_utility as dimacstrans
 import random
 import StringIO
 
-class TestFlip(TestCNF) :
+class TestFlip(TestCNFBase) :
     def test_double_flip(self) :
         for _ in range(10):
             cnf   = self.random_cnf(4,10,100)
@@ -34,7 +33,7 @@ class TestFlip(TestCNF) :
 
 
 
-class TestDimacsFlip(TestCNF) :
+class TestDimacsFlip(TestCNFBase) :
 
     def test_cmdline_flip(self) :
 
