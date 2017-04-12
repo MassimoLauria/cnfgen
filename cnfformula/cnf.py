@@ -230,13 +230,21 @@ class CNF(object):
     #
     # Implementation of some standard methods
     #
+    def _enumerate_compressed_clauses(self):
+        """Iterates over all (compressed) clauses of the CNF
+        """
+        length = 0
+        for cnst in self._constraints:
+            for clause in cnst.clauses():
+                length += 1
+                yield clause
+        assert length == self._length
 
     def __iter__(self):
         """Iterates over all clauses of the CNF
         """
-        for cnst in self._constraints:
-            for clause in cnst.clauses():
-                yield self._uncompress_literals(clause)
+        for clause in self._enumerate_compressed_clauses():
+            yield self._uncompress_literals(clause)
                 
     def __str__(self):
         """String representation of the formula
@@ -248,6 +256,8 @@ class CNF(object):
         """
         return self._length
 
+        
+    
     #
     # Internal implementation methods, use at your own risk!
     #
@@ -869,8 +879,7 @@ class CNF(object):
     #
     # Various utility function for CNFs
     #
-    @classmethod
-    def parity_constraint(cls,variables, constant):
+    def add_parity(self,variables, constant):
         """Output the CNF encoding of a parity constraint
         
         E.g. X1 + X2 + X3 = 1 (mod 2) is encoded as
@@ -893,21 +902,24 @@ class CNF(object):
 
         Examples
         --------
-        >>> list(CNF.parity_constraint(['a','b'],1))
+        >>> F=CNF()
+        >>> F.add_parity(['a','b'],1)
+        >>> list(F)
         [[(True, 'a'), (True, 'b')], [(False, 'a'), (False, 'b')]]
-        >>> list(CNF.parity_constraint(['a','b'],0))
+        >>> F=CNF()
+        >>> F.add_parity(['a','b'],0)
+        >>> list(F)
         [[(True, 'a'), (False, 'b')], [(False, 'a'), (True, 'b')]]
-        >>> list(CNF.parity_constraint(['a'],0))
+        >>> F=CNF()
+        >>> F.add_parity(['a'],0)
+        >>> list(F)
         [[(False, 'a')]]
         """
-        domains = tuple([((True, var), (False, var)) for var in variables])
-        clauses = []
-        for c in product(*domains):
-            # Save only the clauses with the right polarity
-            parity = sum(1-l[0] for l in c) % 2
-            if parity != constant:
-                yield list(c)
-
+        literals = [(True,v) for v in variables]
+        parity = xor(*self._check_and_compress_literals(literals),value=constant)
+        self._constraints.append(parity)
+        self._length += parity.n_clauses()
+        
 
     @classmethod
     def _inequality_constraint_builder(cls,variables, k, greater=False):
@@ -1555,7 +1567,7 @@ class xor(tuple):
         """Clauses to represent the constraint"""
         
         value = (self.value + len([lit for lit in self if lit < 0])) % 2
-        domains = tuple([(-abs(lit),abs(lit)) for lit in self])
+        domains = tuple([(abs(lit),-abs(lit)) for lit in self])
         for c in product(*domains):
             # Save only the clauses with the right polarity
             parity = len([lit for lit in c if lit < 0]) % 2

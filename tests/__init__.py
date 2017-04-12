@@ -42,7 +42,11 @@ class TestCNFBase(unittest.TestCase):
         self.assertEqual(output,dimacs)
 
     def assertCnfEquivalentModuloVariables(self, cnf1, cnf2):
-        self.assertSetEqual(set(cnf1._constraints), set(cnf2._constraints))
+        print cnf1._constraints
+        print cnf2._constraints
+        self.assertSetEqual(
+            set(cnf1._enumerate_compressed_clauses()),
+            set(cnf2._enumerate_compressed_clauses()))
 
     def assertSAT(self, formula):
         if have_satsolver():
