@@ -3,7 +3,7 @@
 
 from __future__ import print_function
 
-from ..cnf import CNF
+from ..cnf import CNF, disj
 
 from ..cmdline  import register_cnf_transformation_subcommand,BipartiteGraphHelper
 from ..transformations import register_cnf_transformation
@@ -60,32 +60,32 @@ class BaseSubstitution(CNF):
 
         # Compress substitution cnfs
         for i in range(1,len(varadditional)):
-            varadditional[i] =[list(self._check_and_compress_literals(cls))
+            varadditional[i] =[disj(*self._check_and_compress_literals(cls))
                                for cls in varadditional[i] ]
 
         for i in range(1,len(substitutions)):
-            substitutions[i] =[list(self._check_and_compress_literals(cls))
+            substitutions[i] =[list(disj(*self._check_and_compress_literals(cls)))
                                for cls in substitutions[i] ]
 
         # build and add new clauses
-        for orig_cls in self._orig_cnf._clauses:
+        for orig_cnst in self._orig_cnf._constraints:
+            for orig_cls in orig_cnst.clauses():
 
-            # a substituted clause is the OR of the substituted literals
-            domains=[ substitutions[lit] for lit in orig_cls ]
-            domains=tuple(domains)
+                # a substituted clause is the OR of the substituted literals
+                domains=[ substitutions[lit] for lit in orig_cls ]
+                domains=tuple(domains)
 
-            block = [ tuple([lit for clause in clause_tuple
+                block = [ disj(*[lit for clause in clause_tuple
                                  for lit in clause ])
-                      for clause_tuple in product(*domains)]
+                          for clause_tuple in product(*domains)]
 
-            self._add_compressed_clauses(block)
+                self._add_compressed_constraints(block)
 
         # transformation may need additional clauses per variables
         for block in varadditional[1:]:
             if block:
-                self._add_compressed_clauses(block)
-         
-        assert self._orig_cnf._check_coherence()
+                self._add_compressed_constraints(block)
+
         assert self._check_coherence()
 
     def transform_variable_preamble(self, name):

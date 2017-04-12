@@ -28,10 +28,13 @@ class TestReshuffler(TestCNFBase) :
         cnf = cnfformula.CNF([[(True,'x'),(True,'y'),(False,'z')]])
         variable_permutation = ['y','z','x']
         clause_permutation = range(1)
-        polarity_flip = [1]*3
-        shuffle = cnfshuffle.Shuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
+        polarity_flips = [1]*3
+        shuffle = cnfshuffle.Shuffle(cnf,
+                                     variable_permutation,
+                                     clause_permutation,
+                                     polarity_flips)
         self.assertSequenceEqual(list(shuffle.variables()),variable_permutation)
-        self.assertSequenceEqual(list(shuffle.clauses()),list(cnf.clauses()))
+        self.assertSequenceEqual(list(shuffle),list(cnf))
 
     def test_polarity_flip(self) :
         cnf = cnfformula.CNF([[(True,'x'),(True,'y'),(False,'z')]])
@@ -120,16 +123,23 @@ class TestDimacsReshuffler(TestCNFBase) :
             sys.stdout = sys.__stdout__
         self.assertMultiLineEqual(dimacs_shuffle.getvalue(), reference_output)      
 
-    def equivalence_check_helper(self, cnf, variable_permutation, clause_permutation, polarity_flip) :
+    def equivalence_check_helper(self, cnf,
+                                 variable_permutation,
+                                 constraint_permutation,
+                                 polarity_flips) :
         variables = list(cnf.variables())
         massimos_fancy_input = [variables[p] for p in variable_permutation]
         random.seed(43)
-        shuffle = cnfshuffle.Shuffle(cnf, massimos_fancy_input, clause_permutation, polarity_flip)
+        shuffle = cnfshuffle.Shuffle(cnf, massimos_fancy_input,
+                                     constraint_permutation, polarity_flips)
         reference_output = shuffle.dimacs()+"\n"
         input = StringIO.StringIO(cnf.dimacs())
         dimacs_shuffle = StringIO.StringIO()
         random.seed(43)
-        shufflereference.stableshuffle(input, dimacs_shuffle, massimos_fancy_input, clause_permutation, polarity_flip)
+        shufflereference.stableshuffle(input, dimacs_shuffle,
+                                       massimos_fancy_input,
+                                       constraint_permutation,
+                                       polarity_flips)
         self.assertMultiLineEqual(dimacs_shuffle.getvalue(), reference_output)
 
     def test_identity_equivalence(self) :

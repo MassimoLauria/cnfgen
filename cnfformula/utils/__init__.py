@@ -4,7 +4,7 @@
 """
 
 from __future__ import print_function
-from ..cnf import CNF
+from ..cnf import CNF,disj
 
 
 
@@ -67,7 +67,7 @@ def dimacs2compressed_clauses(file_handle):
         # parse literals
         for lv in [int(lit) for lit in l.split()]:
             if lv==0:
-                my_clauses.append(tuple(literal_buffer))
+                my_clauses.append(disj(*literal_buffer))
                 literal_buffer=[]
             else:
                 literal_buffer.append(lv)
@@ -100,7 +100,7 @@ def dimacs2cnf(file_handle):
     for i in xrange(1,nvariables+1):
         cnf.add_variable(i)
 
-    cnf._add_compressed_clauses(clauses)
+    cnf._add_compressed_constraints(clauses)
 
     # return the formula
     return cnf
