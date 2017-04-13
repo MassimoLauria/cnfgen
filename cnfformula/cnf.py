@@ -921,30 +921,7 @@ class CNF(object):
         self._length += parity.n_clauses()
         
 
-    @classmethod
-    def _inequality_constraint_builder(cls,variables, k, greater=False):
-        """Builder for inequality constraint
-     
-        This is a generic builder used to build all the inequality
-        constraints. By default it build a "stricly less that", and if
-        ``greater`` is True it builds a "strictly greater than".
-        """
-        polarity = greater
-        if greater:
-            k = len(variables) - k
-     
-        if k > len(variables):
-            return
-        elif k < 0:
-            yield []
-            return
-        
-        for tpl in combinations(variables, k):
-            yield [(polarity, v) for v in tpl]
-     
-
-    @classmethod 
-    def less_than_constraint(cls,variables, upperbound):
+    def add_strictly_less_than(self,variables, threshold):
         """Clauses encoding a \"strictly less than\" constraint
      
         E.g. X1 + X2 + X3 + X4 < 3
@@ -958,7 +935,7 @@ class CNF(object):
         ----------
         variables : list of variables
            variables in the constraint
-        upperbound: int
+        threshold: int
            upper bound of the constraint
      
         Returns
@@ -967,20 +944,30 @@ class CNF(object):
      
         Examples
         --------
-        >>> list(CNF.less_than_constraint(['a','b','c'],2))
+        >>> F=CNF()
+        >>> F.add_strictly_less_than(['a','b','c'],2)
+        >>> list(F)
         [[(False, 'a'), (False, 'b')], [(False, 'a'), (False, 'c')], [(False, 'b'), (False, 'c')]]
-        >>> list(CNF.less_than_constraint(['a'],1))
+        >>> F=CNF()
+        >>> F.add_strictly_less_than(['a'],1)
+        >>> list(F)
         [[(False, 'a')]]
-        >>> list(CNF.less_than_constraint(['a','b','c'],-1))
+        >>> F=CNF()
+        >>> F.add_strictly_less_than(['a','b','c'],-1)
+        >>> list(F)
         [[]]
-        >>> list(CNF.less_than_constraint(['a','b','c'],10))
+        >>> F=CNF()
+        >>> F.add_strictly_less_than(['a','b','c'],10)
+        >>> list(F)
         []
         """
-        return cls._inequality_constraint_builder(variables, upperbound, greater=False)
+        literals = [(True,v) for v in variables]
+        ineq = less(*self._check_and_compress_literals(literals),threshold=threshold)
+        self._constraints.append(ineq)
+        self._length += ineq.n_clauses()
 
 
-    @classmethod
-    def less_or_equal_constraint(cls,variables, upperbound):
+    def add_less_or_equal(self,variables, threshold):
         """Clauses encoding a \"less than or equal to\" constraint
      
         E.g. X1 + X2 + X3 + X4 <= 2
@@ -994,7 +981,7 @@ class CNF(object):
         ----------
         variables : list of variables
            variables in the constraint
-        upperbound: int
+        threshold: int
            upper bound of the constraint
      
         Returns
@@ -1003,22 +990,36 @@ class CNF(object):
      
         Examples
         --------
-        >>> list(CNF.less_than_constraint(['a','b','c'],3)) == list(CNF.less_or_equal_constraint(['a','b','c'],2))
+        >>> S=CNF()
+        >>> L=CNF()
+        >>> S.add_strictly_less_than(['a','b','c'],3)
+        >>> L.add_less_or_equal(['a','b','c'],2)
+        >>> list(S) == list(L)
         True
-        >>> list(CNF.less_or_equal_constraint(['a','b','c'],1))
+        >>> F=CNF()
+        >>> F.add_less_or_equal(['a','b','c'],1)
+        >>> list(F)
         [[(False, 'a'), (False, 'b')], [(False, 'a'), (False, 'c')], [(False, 'b'), (False, 'c')]]
-        >>> list(CNF.less_or_equal_constraint(['a','b'],0))
+        >>> F=CNF()
+        >>> F.add_less_or_equal(['a','b'],0)
+        >>> list(F)
         [[(False, 'a')], [(False, 'b')]]
-        >>> list(CNF.less_or_equal_constraint(['a','b','c'],-1))
+        >>> F=CNF()
+        >>> F.add_less_or_equal(['a','b','c'],-1)
+        >>> list(F)
         [[]]
-        >>> list(CNF.less_or_equal_constraint(['a','b','c'],10))
+        >>> F=CNF()
+        >>> F.add_less_or_equal(['a','b','c'],10)
+        >>> list(F)
         []
         """
-        return cls._inequality_constraint_builder(variables, upperbound+1, greater=False)
-     
+        literals = [(True,v) for v in variables]
+        ineq = leq(*self._check_and_compress_literals(literals),threshold=threshold)
+        self._constraints.append(ineq)
+        self._length += ineq.n_clauses()
+    
 
-    @classmethod
-    def greater_than_constraint(cls, variables, lowerbound):
+    def add_strictly_greater_than(self, variables, threshold):
         """Clauses encoding a \"strictly greater than\" constraint
      
         E.g. X1 + X2 + X3 + X4 > 2
@@ -1032,7 +1033,7 @@ class CNF(object):
         ----------
         variables : list of variables
            variables in the constraint
-        lowerbound: int
+        threshold: int
            lower bound of the constraint
      
         Returns
@@ -1041,20 +1042,30 @@ class CNF(object):
      
         Examples
         --------
-        >>> list(CNF.greater_than_constraint(['a','b','c'],2))
+        >>> F=CNF()
+        >>> F.add_strictly_greater_than(['a','b','c'],2)
+        >>> list(F)
         [[(True, 'a')], [(True, 'b')], [(True, 'c')]]
-        >>> list(CNF.greater_than_constraint(['a'],0))
+        >>> F=CNF()
+        >>> F.add_strictly_greater_than(['a'],0)
+        >>> list(F)
         [[(True, 'a')]]
-        >>> list(CNF.greater_than_constraint(['a','b','c'],-1))
+        >>> F=CNF()
+        >>> F.add_strictly_greater_than(['a','b','c'],-1)
+        >>> list(F)
         []
-        >>> list(CNF.greater_than_constraint(['a','b','c'],3))
+        >>> F=CNF()
+        >>> F.add_strictly_greater_than(['a','b','c'],3)
+        >>> list(F)
         [[]]
         """
-        return cls._inequality_constraint_builder(variables, lowerbound, greater=True)
+        literals = [(True,v) for v in variables]
+        ineq = greater(*self._check_and_compress_literals(literals),threshold=threshold)
+        self._constraints.append(ineq)
+        self._length += ineq.n_clauses()
      
 
-    @classmethod
-    def greater_or_equal_constraint(cls, variables, lowerbound):
+    def add_greater_or_equal(self, variables, threshold):
         """Clauses encoding a \"greater than or equal to\" constraint
      
         E.g. X1 + X2 + X3 + X4 > 1
@@ -1068,7 +1079,7 @@ class CNF(object):
         ----------
         variables : list of variables
            variables in the constraint
-        lowerbound: int
+        threshold: int
            lower bound of the constraint
      
         Returns
@@ -1077,20 +1088,32 @@ class CNF(object):
      
         Examples
         --------
-        >>> tuple(CNF.greater_than_constraint(['a','b','c'],1)) == tuple(CNF.greater_or_equal_constraint(['a','b','c'],2))
+        >>> S=CNF()
+        >>> L=CNF()
+        >>> S.add_strictly_greater_than(['a','b','c'],1)
+        >>> L.add_greater_or_equal(['a','b','c'],2)
+        >>> list(L) == list(S)
         True
-        >>> list(CNF.greater_or_equal_constraint(['a','b','c'],3))
+        >>> F=CNF()
+        >>> F.add_greater_or_equal(['a','b','c'],3)
+        >>> list(F)
         [[(True, 'a')], [(True, 'b')], [(True, 'c')]]
-        >>> list(CNF.greater_or_equal_constraint(['a'],0))
+        >>> F=CNF()
+        >>> F.add_greater_or_equal(['a'],0)
+        >>> list(F)
         []
-        >>> list(CNF.greater_or_equal_constraint(['a','b','c'],4))
+        >>> F=CNF()
+        >>> F.add_greater_or_equal(['a','b','c'],4)
+        >>> list(F)
         [[]]
         """
-        return cls._inequality_constraint_builder(variables, lowerbound - 1, greater=True)
+        literals = [(True,v) for v in variables]
+        ineq = geq(*self._check_and_compress_literals(literals),threshold=threshold)
+        self._constraints.append(ineq)
+        self._length += ineq.n_clauses()
 
 
-    @classmethod
-    def equal_to_constraint(cls, variables, value):
+    def add_equal_to(self, variables, value):
         """Clauses encoding a \"equal to\" constraint
      
         E.g. X1 + X2 + X3 + X4 = 1
@@ -1114,14 +1137,12 @@ class CNF(object):
         -------
             a list of clauses
         """
-        for c in cls.less_or_equal_constraint(variables, value):
-            yield c
-        for c in cls.greater_or_equal_constraint(variables, value):
-            yield c
-     
+        literals = [(True,v) for v in variables]
+        equ = eq(*self._check_and_compress_literals(literals),value=value)
+        self._constraints.append(equ)
+        self._length += equ.n_clauses()
 
-    @classmethod
-    def loose_majority_constraint(cls, variables):
+    def add_loose_majority(self, variables):
         """Clauses encoding a \"at least half\" constraint
      
         Parameters
@@ -1133,12 +1154,10 @@ class CNF(object):
         -------
             a list of clauses
         """
-        threshold = (len(variables)+1)/2
-        return cls.greater_or_equal_constraint(variables, threshold)
+        threshold = (len(variables)+1)//2
+        self.add_greater_or_equal(variables, threshold)
 
-
-    @classmethod
-    def loose_minority_constraint(cls, variables):
+    def add_loose_minority(self, variables):
         """Clauses encoding a \"at most half\" constraint
      
         Parameters
@@ -1150,12 +1169,11 @@ class CNF(object):
         -------
             a list of clauses
         """
-        threshold = len(variables)/2
-        return cls.less_or_equal_constraint(variables, threshold)
-     
+        threshold = len(variables)//2
+        return self.add_less_or_equal(variables, threshold)
+    
 
-    @classmethod
-    def exactly_half_ceil(cls, variables):
+    def add_exactly_half_ceil(self, variables):
         """Clauses encoding a \"exactly half\" constraint (rounded up)
      
         Parameters
@@ -1168,11 +1186,9 @@ class CNF(object):
             a list of clauses
         """
         threshold = (len(variables)+1)/2
-        return cls.equal_to_constraint(variables,threshold)
+        return self.add_equal_to(variables,threshold)
      
-
-    @classmethod
-    def exactly_half_floor(cls, variables):
+    def add_exactly_half_floor(self, variables):
         """Clauses encoding a \"exactly half\" constraint (rounded down)
      
         Parameters
@@ -1185,7 +1201,7 @@ class CNF(object):
             a list of clauses
         """
         threshold = len(variables)/2
-        return cls.equal_to_constraint(variables,threshold)
+        return self.add_equal_to(variables,threshold)
 
 
     class unary_mapping(object):
@@ -1541,7 +1557,7 @@ class xor(tuple):
             literals in the sum
 
         value : integer
-            a boolean value
+            the value of the parity
 
         """
         if "value" not in kw:
@@ -1577,44 +1593,53 @@ class xor(tuple):
         
     
     
-class less(namedtuple("less",['literals','threshold'])):
-    """Less-than constraint
+class less(tuple):
 
-    Represent a 'less than' constraint over a set of literals.
-    In particular the constraint claims that the boolean values of the
-    sequence of literals (contained in the field `literals`) must sum
-    to a number which is strictly less than the field `threshold`.
+    def __new__(cls,*args,**kw):
+        """Less-than constraint
 
-    For example the encoding of 
+        Represent a 'less than' constraint over a set of literals.
+        In particular the constraint claims that the boolean values of the
+        sequence of literals (contained in the field `literals`) must sum
+        to a number which is strictly less than the field `threshold`.
 
-    .. math::
+        For example the encoding of 
 
-         x_2 + \\neg x_3 + x_7 < 2
+        .. math::
 
-    as 
+             x_2 + \\neg x_3 + x_7 < 2
 
-    ::
+        as 
 
-         less((2,-3,7),2)
+        ::
 
-    Repeated or opposite literals are forbidden. In case one of these
-    things occur the `n_clauses` and `clauses` methods have
-    undefined behavior.
+             less((2,-3,7),2)
 
-    Parameters
-    ----------
-    literals : tuple(int)
-       literals in the sum
+        Repeated or opposite literals are forbidden. In case one of these
+        things occur the `n_clauses` and `clauses` methods have
+        undefined behavior.
 
-    threshold : integer
-       the threshold value
+        Parameters
+        ----------
+        *args : zero or more int
+            literals in the sum
 
-    """
-    __slots__ = ()
+        threshold : integer
+           the threshold value
+
+        """
+        if "threshold" not in kw:
+            raise TypeError("LESS THAN constraints must have \'threshold\' keyword argument")
+        self = super(less,cls).__new__(cls,args)
+        self.threshold = kw['threshold']
+        return self
+
+    def __eq__(self,other):
+        return self.threshold == other.threshold and super(less,self).__eq__(other)
 
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
-        if self.threshold > len(self.literals):
+        if self.threshold > len(self):
             return 0
         elif self.threshold <= 0:
             return 1
@@ -1626,102 +1651,120 @@ class less(namedtuple("less",['literals','threshold'])):
             else:
                 return n*binom(n-1,k-1) // k 
                 
-        return binom(len(self.literals),self.threshold)
+        return binom(len(self),self.threshold)
 
     def clauses(self):
         """Clauses to represent the constraint"""
-        if self.threshold > len(self.literals):
+        if self.threshold > len(self):
             return
         elif self.threshold < 0:
             yield []
             return
 
-        for cls in combinations([-l for l in self.literals], self.threshold):
+        for cls in combinations([-l for l in self], self.threshold):
             yield cls
 
-class leq(namedtuple("leq",['literals','threshold'])):
-    """Less-than-or-equal-to constraint
+class leq(tuple):
 
-    Represent a 'less than or equal to' constraint over a set of
-    literals. In particular the constraint claims that the boolean
-    values of the sequence of literals (contained in the field
-    `literals`) must sum to a number which less than or equal to the
-    field `threshold`.
+    def __new__(cls,*args,**kw):
+        """Less-than-or-equal-to constraint
 
-    For example the encoding of 
+        Represent a 'less than or equal to' constraint over a set of
+        literals. In particular the constraint claims that the boolean
+        values of the sequence of literals (contained in the field
+        `literals`) must sum to a number which less than or equal to the
+        field `threshold`.
 
-    .. math::
+        For example the encoding of 
 
-         x_2 + \\neg x_3 + \\neq x_4 + x_7 \leq 2
+        .. math::
 
-    as 
+             x_2 + \\neg x_3 + \\neq x_4 + x_7 \leq 2
 
-    ::
+        as 
 
-         leq((2,-3,-4,7),2)
+        ::
 
-    If there are repeated or opposite literals, then the constraint
-    could make no sense. In particular `n_clauses` and `clauses`
-    method have undefined behavior.
+             leq((2,-3,-4,7),2)
 
-    Parameters
-    ----------
-    literals : tuple(int)
-       literals in the sum
+        If there are repeated or opposite literals, then the constraint
+        could make no sense. In particular `n_clauses` and `clauses`
+        method have undefined behavior.
 
-    threshold : integer
-       the threshold value
+        Parameters
+        ----------
+        *args : zero or more int
+            literals in the sum
 
-    """
-    __slots__ = ()
+        threshold : integer
+           the threshold value
 
+        """
+        if "threshold" not in kw:
+            raise TypeError("LESS OR EQUAL constraints must have \'threshold\' keyword argument")
+        self = super(leq,cls).__new__(cls,args)
+        self.threshold = kw['threshold']
+        return self
+
+    def __eq__(self,other):
+        return self.threshold == other.threshold and super(leq,self).__eq__(other)
+    
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
-        return less(self.literals,self.threshold+1).n_clauses()
+        return less(*self,threshold=self.threshold+1).n_clauses()
 
     def clauses(self):
         """Clauses to represent the constraint"""
-        return less(self.literals,self.threshold+1).clauses()
+        return less(*self,threshold=self.threshold+1).clauses()
 
 
-class greater(namedtuple("greater",['literals','threshold'])):
-    """Greater-than constraint
+class greater(tuple):
+    
+    def __new__(cls,*args,**kw):
+        """Greater-than constraint
 
-    Represent a 'greater than' constraint over a set of literals.
-    In particular the constraint claims that the boolean values of the
-    sequence of literals (contained in the field `literals`) must sum
-    to a number which greater than the field `threshold`.
+        Represent a 'greater than' constraint over a set of literals.
+        In particular the constraint claims that the boolean values of the
+        sequence of literals (contained in the field `literals`) must sum
+        to a number which greater than the field `threshold`.
 
-    For example the encoding of 
+        For example the encoding of 
 
-    .. math::
+        .. math::
 
-         x_2 + \\neg x_3 + \\neq x_4 + x_7 > 2
+             x_2 + \\neg x_3 + \\neq x_4 + x_7 > 2
 
-    as 
+        as 
 
-    ::
+        ::
 
-         greater((2,-3,-4,7),2)
+             greater((2,-3,-4,7),2)
 
-    If there are repeated or opposite literals, then the constraint
-    could make no sense. In particular `n_clauses` and `clauses`
-    method have undefined behavior.
+        If there are repeated or opposite literals, then the constraint
+        could make no sense. In particular `n_clauses` and `clauses`
+        method have undefined behavior.
 
-    Parameters
-    ----------
-    literals : tuple(int)
-       literals in the sum
+        Parameters
+        ----------
+        *args : zero or more int
+            literals in the sum
 
-    threshold : integer
-       the threshold value
+        threshold : integer
+           the threshold value
 
-    """
-    __slots__ = ()
+        """
+        if "threshold" not in kw:
+            raise TypeError("GREATER THAN constraints must have \'threshold\' keyword argument")
+        self = super(greater,cls).__new__(cls,args)
+        self.threshold = kw['threshold']
+        return self
 
+    def __eq__(self,other):
+        return self.threshold == other.threshold and super(greater,self).__eq__(other)
+        
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
-        if self.threshold >= len(self.literals):
+        if self.threshold >= len(self):
             return 1
         elif self.threshold < 0:
             return 0
@@ -1734,108 +1777,124 @@ class greater(namedtuple("greater",['literals','threshold'])):
                 return n*binom(n-1,k-1) // k 
 
         # logically it should be binom(LEN,LEN-THR)
-        return binom(len(self.literals),self.threshold)
+        return binom(len(self),self.threshold)
 
     def clauses(self):
         """Clauses to represent the constraint"""
-        if self.threshold >= len(self.literals):
+        if self.threshold >= len(self):
             yield []
             return
         elif self.threshold < 0:
             return
 
-        for cls in combinations(self.literals, len(self.literals)-self.threshold):
+        for cls in combinations(self, len(self)-self.threshold):
             yield cls
 
 
-class geq(namedtuple("geq",['literals','threshold'])):
-    """Greater-than-or-equal-to constraint
+class geq(tuple):
+    def __new__(cls,*args,**kw):
+        """Greater-than-or-equal-to constraint
 
-    Represent a 'greater than or equal to' constraint over a set of
-    literals. In particular the constraint claims that the boolean
-    values of the sequence of literals (contained in the field
-    `literals`) must sum to a number which greater than or equal to the
-    field `threshold`.
+        Represent a 'greater than or equal to' constraint over a set of
+        literals. In particular the constraint claims that the boolean
+        values of the sequence of literals (contained in the field
+        `literals`) must sum to a number which greater than or equal to the
+        field `threshold`.
 
-    For example the encoding of 
+        For example the encoding of 
 
-    .. math::
+        .. math::
 
-         x_2 + \\neg x_3 + \\neq x_4 + x_7 \geq 2
+             x_2 + \\neg x_3 + \\neq x_4 + x_7 \geq 2
 
-    as 
+        as 
 
-    ::
+        ::
 
-         geq((2,-3,-4,7),2)
+             geq((2,-3,-4,7),2)
 
-    If there are repeated or opposite literals, then the constraint
-    could make no sense. In particular `n_clauses` and `clauses`
-    method have undefined behavior.
+        If there are repeated or opposite literals, then the constraint
+        could make no sense. In particular `n_clauses` and `clauses`
+        method have undefined behavior.
 
-    Parameters
-    ----------
-    literals : tuple(int)
-       literals in the sum
+        Parameters
+        ----------
+        *args : zero or more int
+            literals in the sum
 
-    threshold : integer
-       the threshold value
+        threshold : integer
+           the threshold value
 
-    """
-    __slots__ = ()
+        """
+        if "threshold" not in kw:
+            raise TypeError("GREATER OR EQUAL constraints must have \'threshold\' keyword argument")
+        self = super(geq,cls).__new__(cls,args)
+        self.threshold = kw['threshold']
+        return self
 
+    def __eq__(self,other):
+        return self.threshold == other.threshold and super(geq,self).__eq__(other)
+    
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
-        return greater(self.literals,self.threshold-1).n_clauses()
+        return greater(*self,threshold=self.threshold-1).n_clauses()
 
     def clauses(self):
         """Clauses to represent the constraint"""
-        return greater(self.literals,self.threshold-1).clauses()
+        return greater(*self,threshold=self.threshold-1).clauses()
 
-class eq(namedtuple("eq",['literals','value'])):
-    """Equal-to constraint
+class eq(tuple):
+    def __new__(cls,*args,**kw):
+        """Equal-to constraint
 
-    Represent an 'equal to' constraint over a set of literals.
-    In particular the constraint claims that the boolean values of the
-    sequence of literals (contained in the field `literals`) must sum
-    to a number which equal to the field `value`.
+        Represent an 'equal to' constraint over a set of literals.
+        In particular the constraint claims that the boolean values of the
+        sequence of literals (contained in the field `literals`) must sum
+        to a number which equal to the field `value`.
 
-    For example the encoding of 
+        For example the encoding of 
 
-    .. math::
+        .. math::
 
-         x_2 + \\neg x_3 + \\neq x_4 + x_7 = 2
+             x_2 + \\neg x_3 + \\neq x_4 + x_7 = 2
 
-    as 
+        as 
 
-    ::
+        ::
 
-         eq((2,-3,-4,7),2)
+             eq((2,-3,-4,7),2)
 
-    If there are repeated or opposite literals, then the constraint
-    could make no sense. In particular `n_clauses` and `clauses`
-    method have undefined behavior.
+        If there are repeated or opposite literals, then the constraint
+        could make no sense. In particular `n_clauses` and `clauses`
+        method have undefined behavior.
 
-    Parameters
-    ----------
-    literals : tuple(int)
-       literals in the sum
+        Parameters
+        ----------
+        *args : zero or more int
+            literals in the sum
 
-    value : integer
-       expected value of the sum
+        value : integer
+           expected value of the sum
 
-    """
-    __slots__ = ()
+        """
+        if "value" not in kw:
+            raise TypeError("EQUAL TO constraints must have \'threshold\' keyword argument")
+        self = super(eq,cls).__new__(cls,args)
+        self.value = kw['value']
+        return self
 
+    def __eq__(self,other):
+        return self.value == other.value and super(eq,self).__eq__(other)
+    
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
-        return less(self.literals,self.value+1).n_clauses() \
-            + \
-            greater(self.literals,self.value-1).n_clauses()
+        return leq(*self,threshold=self.value).n_clauses() \
+               + \
+               geq(*self,threshold=self.value).n_clauses()
 
     def clauses(self):
         """Clauses to represent the constraint"""
-        for c in less(self.literals,self.value+1).clauses():
+        for c in leq(*self,threshold=self.value).clauses():
             yield c
-        for c in greater(self.literals,self.value-1).clauses():
+        for c in geq(*self,threshold=self.value).clauses():
             yield c

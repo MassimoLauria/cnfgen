@@ -42,11 +42,8 @@ def CountingPrinciple(M,p):
     
     # Each element of the domain is in exactly one part.
     for el in range(M):
-
         edge_vars = [var_name(tpl) for tpl in incidence[el]]
-
-        for cls in CNF.equal_to_constraint(edge_vars,1):
-            cnf.add_clause(cls)
+        cnf.add_equal_to(edge_vars,1)
 
     return cnf
 

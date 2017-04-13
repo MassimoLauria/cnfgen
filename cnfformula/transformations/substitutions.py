@@ -179,10 +179,13 @@ class MajoritySubstitution(BaseSubstitution):
         variables = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
 
         threshold = (self._rank + 1) // 2 # loose majority
+        temp = CNF()
         if polarity:
-            return list(self.greater_or_equal_constraint(variables,threshold))
+            temp.add_greater_or_equal(variables,threshold)
         else:
-            return list(self.less_than_constraint(variables,threshold))
+            temp.add_strictly_less_than(variables,threshold)
+
+        return list(temp)
         
         
 
