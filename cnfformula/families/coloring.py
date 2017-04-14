@@ -58,6 +58,11 @@ def GraphColoringFormula(G,colors,functional=True):
     # Fix the vertex order
     V=enumerate_vertices(G)
 
+    # Create the variables
+    for vertex in V:
+        for color in colors:
+            col.add_variable('x_{{{0},{1}}}'.format(vertex,color))
+        
     # Each vertex has a color
     for vertex in V:
         clause = []
