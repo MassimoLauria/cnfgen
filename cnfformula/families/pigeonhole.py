@@ -3,7 +3,7 @@
 """Implementation of the pigeonhole principle formulas
 """
 
-from cnfformula.cnf import CNF
+from cnfformula.cnf import CNF,binary_mapping,unary_mapping
 from cnfformula.cmdline import BipartiteGraphHelper
 from cnfformula.graphs import bipartite_sets
 
@@ -78,9 +78,8 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     php=CNF()
     php.header="{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes)\
         + php.header
-    php.mode_unchecked()
     
-    mapping=php.unary_mapping(
+    mapping=unary_mapping(
         xrange(1,pigeons+1),
         xrange(1,holes+1),
         var_name=var_name,
@@ -88,13 +87,11 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
         functional = functional,
         surjective = onto)
 
-    for v in mapping.variables():
-        php.add_variable(v)
-
-    for c in mapping.clauses():
-        php.add_clause(c)
-
+    php.mode_unchecked()
+    mapping.load_variables_to_formula(php)
+    mapping.load_clauses_to_formula(php)
     php.mode_default()
+
     return php
 
 @cnfformula.families.register_cnf_generator
@@ -145,24 +142,21 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
 
     gphp=CNF()
     gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)
-    gphp.mode_unchecked()
     
     Left, Right = bipartite_sets(graph)
 
-    mapping = gphp.unary_mapping(Left,Right,
-                                 sparsity_pattern=graph,
-                                 var_name=var_name,
-                                 injective = True,
-                                 functional = functional,
-                                 surjective = onto)
+    mapping = unary_mapping(Left,Right,
+                            sparsity_pattern=graph,
+                            var_name=var_name,
+                            injective = True,
+                            functional = functional,
+                            surjective = onto)
     
-    for v in mapping.variables():
-        gphp.add_variable(v)
-
-    for c in mapping.clauses():
-        gphp.add_clause(c)
-
+    gphp.mode_unchecked()
+    mapping.load_variables_to_formula(gphp)
+    mapping.load_clauses_to_formula(gphp)
     gphp.mode_default()
+
     return gphp
 
 @cnfformula.families.register_cnf_generator
@@ -182,19 +176,16 @@ def BinaryPigeonholePrinciple(pigeons,holes):
     """
 
     bphp=CNF()
-    bphp.mode_unchecked()
     bphp.header="Binary Pigeonhole Principle for {0} pigeons and {1} holes\n".format(pigeons,holes)\
                  + bphp.header
     
-    bphpgen=bphp.binary_mapping(xrange(1,pigeons+1), xrange(1,holes+1), injective = True)
-
-    for v in bphpgen.variables():
-        bphp.add_variable(v)
-        
-    for c in bphpgen.clauses():
-        bphp.add_clause(c)
-
+    mapping=binary_mapping(xrange(1,pigeons+1),
+                           xrange(1,holes+1), injective = True)
+    bphp.mode_unchecked()
+    mapping.load_variables_to_formula(bphp)
+    mapping.load_clauses_to_formula(bphp)
     bphp.mode_default()
+
     return bphp
 
 @cnfformula.cmdline.register_cnfgen_subcommand

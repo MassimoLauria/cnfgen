@@ -80,9 +80,7 @@ def PerfectMatchingPrinciple(G):
     for v in enumerate_vertices(G):
 
         edge_vars = [var_name(u,v) for u in neighbors(G,v)]
-
-        for cls in CNF.equal_to_constraint(edge_vars,1):
-            cnf.add_clause(cls)
+        cnf.add_equal_to(edge_vars,1)
 
     return cnf
 

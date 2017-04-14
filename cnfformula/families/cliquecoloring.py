@@ -83,8 +83,7 @@ def CliqueColoring(n,k,c):
     # some vertex is i'th member of clique
     formula.mode_strict()
     for k in range(1,k+1):
-        for cl in CNF.equal_to_constraint([Q(k,v) for v in range(1,n+1)], 1):
-            formula.add_clause(cl)
+        formula.add_equal_to([Q(k,v) for v in range(1,n+1)], 1)
 
     # clique members are connected by edges
     for v in range(1,n+1):
@@ -96,8 +95,7 @@ def CliqueColoring(n,k,c):
 
     # every vertex v has exactly one colour
     for v in range(1,n+1):
-        for cl in CNF.equal_to_constraint([R(v,ell) for ell in range(1,c+1)], 1):
-            formula.add_clause(cl)
+        formula.add_equal_to([R(v,ell) for ell in range(1,c+1)], 1)
 
     # neighbours have distinct colours
     for u,v in combinations(range(1,n+1),2):
