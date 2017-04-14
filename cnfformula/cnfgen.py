@@ -70,12 +70,13 @@ def setup_command_line_args(parser):
                         formula to standard output. (default: -)
                         """)
     parser.add_argument('--output-format','-of',
-                        choices=['latex','dimacs'],
+                        choices=['latex','dimacs','opb'],
                         default='dimacs',
                         help="""
                         Output format of the formulas. 'latex' is
-                        convenient to insert formulas into papers, and
-                        'dimacs' is the format used by sat solvers.
+                        convenient to insert formulas into papers, 
+                        'dimacs' and 'opb' are formats used by CNF 
+                        and pseudoboolean sat solvers, respectively. 
                         (default: dimacs)
                         """)
 
@@ -257,6 +258,10 @@ a sequence of transformations.
     elif args.output_format == 'dimacs':
         output = cnf.dimacs(export_header=args.verbose,
                             extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
+
+    elif args.output_format == 'opb':
+        output = cnf.opb(export_header=args.verbose,
+                         extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
 
     else:
         output = cnf.dimacs(export_header=args.verbose,

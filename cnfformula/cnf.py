@@ -737,6 +737,114 @@ class CNF(object):
             for cls in cnst.clauses():
                 output.write("\n" + " ".join([str(l) for l in cls + (0,)]))
 
+    def opb(self, export_header=True, extra_text=None):
+        """Produce the OPB encoding of the formula
+
+        The formula is rendered in the OPB format, which is
+        a particularly popular input format for pseudo boolean SAT
+        solvers [1]_.
+
+        Parameters
+        ----------
+        export_header : bool
+            determines whether the formula header should be inserted as
+            a comment in the OPB output.
+
+        extra_text : str, optional
+            Additional text attached to the header
+
+        Returns
+        -------
+        string
+            the string contains the OPB code
+
+
+        Examples
+        --------
+        >>> c=CNF([[(False,"x_1"),(True,"x_2"),(False,"x_3")],\
+                   [(False,"x_2"),(False,"x_4")], \
+                   [(True,"x_2"),(True,"x_3"),(False,"x_4")]])
+        >>> print(c.opb(export_header=False))
+        * #variable= 4 #constraint= 3
+        *
+        -1 x1 +1 x2 -1 x3 >= -1;
+        -1 x2 -1 x4 >= -1;
+        +1 x2 +1 x3 -1 x4 >= 0;
+        <BLANKLINE>
+
+        >>> c=CNF()
+        >>> print(c.opb(export_header=False))
+        * #variable= 0 #constraint= 0
+        *
+        <BLANKLINE>
+
+        References
+        ----------
+        .. [1] http://www.cril.univ-artois.fr/PB12/format.pdf
+
+        """
+        from cStringIO import StringIO
+        output = StringIO()
+
+        # count the constraints (can't encode xor in OPB directly)
+        nvariables   = len(self._index2name)-1
+        nconstraints = 0
+        for c in self._constraints:
+            if type(c)==xor:
+                nconstraints += c.n_clauses()
+            else:
+                nconstraints += 1
+                
+        output.write("* #variable= {} #constraint= {}\n*\n".format(
+            nvariables,nconstraints))
+
+        # A nice header
+        if export_header:
+            for line in self.header.split("\n")[:-1]:
+                output.write(("* "+line).rstrip()+"\n")
+
+            if extra_text is not None:
+                for line in extra_text.split("\n"):
+                    output.write(("* "+line).rstrip()+"\n")
+
+        def _print_ineq(lits,sign, thr):
+
+            lhs = " ".join( "{}1 x{}".format("+" if l >= 0 else "-",abs(l)) for l in lits)
+            rhs = str(thr - len([i for i in lits if i<0]))
+            output.write(lhs + " " + sign + " " + rhs + ";\n")
+                    
+        # Normalize inequalities
+        for cnst in self._constraints:
+
+            new_cnst = cnst
+
+            # Representation clause by clause
+            if type(new_cnst) in [disj,xor]:
+                for cls in new_cnst.clauses():
+                    _print_ineq(cls,">=",1)
+                    continue
+                
+            # Representation by equation
+            if type(new_cnst)==eq:
+                _print_ineq(new_cnst,"=",new_cnst.value)
+                continue
+
+            # Representation by inequality
+            if type(new_cnst)==geq:
+                _print_ineq(new_cnst,">=",new_cnst.threshold)
+
+            elif type(new_cnst)==greater:
+                _print_ineq(new_cnst,">=",new_cnst.threshold+1)
+
+            elif type(new_cnst)==leq:
+                _print_ineq([-l for l in new_cnst],">=", len(new_cnst) - new_cnst.threshold)
+
+            elif type(new_cnst)==less:
+                _print_ineq([-l for l in new_cnst],">=", len(new_cnst) - new_cnst.threshold + 1)
+        
+        return output.getvalue()
+    
+                
     def latex(self, export_header=True, extra_text=None, full_document=False):
         """Output a LaTeX version of the CNF formula
 
