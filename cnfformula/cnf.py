@@ -1536,10 +1536,19 @@ class disj(tuple):
         self = super(disj,cls).__new__(cls,args)
         return self
 
+    def __repr__(self):
+        return "{}({})".format("disj",
+                               ", ".join(str(i) for i in self))
+
+    def __str__(self):
+        literals = [ "{}{}".format("" if l>0 else "¬",abs(l)) for l in self ]
+        return " ∨ ".join(literals)
+    
+
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
         return 1
-    
+
     def clauses(self):
         """Clauses to represent the constraint"""
         yield self
@@ -1584,6 +1593,15 @@ class xor(tuple):
 
     def __eq__(self,other):
         return self.value == other.value and super(xor,self).__eq__(other)
+
+    def __repr__(self):
+        return "{}({}, value={})".format("xor",
+                                         ", ".join(str(i) for i in self),
+                                         self.value)
+
+    def __str__(self):
+        literals = [ "{}{}".format("" if l>0 else "¬",abs(l)) for l in self ]
+        return "{} {} {} (mod 2)".format(" ⊕ ".join(literals),"==",self.value)
     
     def n_clauses(self):
         """Number of clauses to represent a XOR"""
@@ -1659,8 +1677,8 @@ class less(tuple):
                                              self.threshold)
 
     def __str__(self):
-        literals = [ "{}{}".format("" if l>0 else "not ",abs(l)) for l in self ]
-        return "({}) {} {}".format(", ".join(literals),"<",self.threshold)
+        literals = [ "{}{}".format("" if l>0 else "¬",abs(l)) for l in self ]
+        return "({}) {} {}".format(" + ".join(literals),"<",self.threshold)
     
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
@@ -1740,8 +1758,8 @@ class leq(tuple):
                                              self.threshold)
 
     def __str__(self):
-        literals = [ "{}{}".format("" if l>0 else "not ",abs(l)) for l in self ]
-        return "({}) {} {}".format(", ".join(literals),"<=",self.threshold)
+        literals = [ "{}{}".format("" if l>0 else "¬",abs(l)) for l in self ]
+        return "{} {} {}".format(" + ".join(literals),"<=",self.threshold)
     
         
     def n_clauses(self):
@@ -1803,8 +1821,8 @@ class greater(tuple):
                                              self.threshold)
 
     def __str__(self):
-        literals = [ "{}{}".format("" if l>0 else "not ",abs(l)) for l in self ]
-        return "({}) {} {}".format(", ".join(literals),">",self.threshold)
+        literals = [ "{}{}".format("" if l>0 else "¬",abs(l)) for l in self ]
+        return "{} {} {}".format(" + ".join(literals),">",self.threshold)
         
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
@@ -1885,8 +1903,8 @@ class geq(tuple):
                                              self.threshold)
 
     def __str__(self):
-        literals = [ "{}{}".format("" if l>0 else "not ",abs(l)) for l in self ]
-        return "({}) {} {}".format(", ".join(literals),">=",self.threshold)
+        literals = [ "{}{}".format("" if l>0 else "¬",abs(l)) for l in self ]
+        return "{} {} {}".format(" + ".join(literals),">=",self.threshold)
     
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
@@ -1938,15 +1956,15 @@ class eq(tuple):
 
     def __eq__(self,other):
         return self.value == other.value and super(eq,self).__eq__(other)
-    F=cnff
+
     def __repr__(self):
         return "{}({}, value={})".format("eq",
                                          ", ".join(str(i) for i in self),
                                          self.value)
 
     def __str__(self):
-        literals = [ "{}{}".format("" if l>0 else "not ",abs(l)) for l in self ]
-        return "({}) {} {}".format(", ".join(literals),"==",self.value)
+        literals = [ "{}{}".format("" if l>0 else "¬",abs(l)) for l in self ]
+        return "{} {} {}".format(" + ".join(literals),"==",self.value)
     
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
