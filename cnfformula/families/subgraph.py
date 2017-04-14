@@ -3,7 +3,7 @@
 """Implementation of formulas that check for subgraphs
 """
 
-from cnfformula.cnf import CNF
+from cnfformula.cnf import CNF,unary_mapping
 from cnfformula.cmdline import SimpleGraphHelper
 
 import cnfformula.families
@@ -96,20 +96,17 @@ def SubgraphFormula(graph,templates, symmetric=False):
     var_name = lambda i,j: "S_{{{0},{1}}}".format(i,j)
 
     if symmetric:
-        mapping = F.unary_mapping(range(k),range(N),var_name=var_name,
-                                  functional=True,injective=True,
-                                  nondecreasing=True)
+        mapping = unary_mapping(range(k),range(N),var_name=var_name,
+                                functional=True,injective=True,
+                                nondecreasing=True)
     else:
-        mapping = F.unary_mapping(range(k),range(N),var_name=var_name,
-                                  functional=True,injective=True,
-                                  nondecreasing=False)
+        mapping = unary_mapping(range(k),range(N),var_name=var_name,
+                                functional=True,injective=True,
+                                nondecreasing=False)
 
-    for v in mapping.variables():
-        F.add_variable( v )
+    mapping.load_variables_to_formula(F)
+    mapping.load_clauses_to_formula(F)
 
-    for cls in mapping.clauses():
-        F.add_clause( cls )
-        
     # The selectors choose a template subgraph.  A mapping must map
     # edges to edges and non-edges to non-edges for the active
     # template.
@@ -205,15 +202,12 @@ def BinaryCliqueFormula(G,k):
     F=CNF()
     F.header="Binary {0}-clique formula\n".format(k) + F.header
     
-    clauses_gen=F.binary_mapping(xrange(1,k+1), G.nodes(),
-                                 injective = True,
-                                 nondecreasing = True)
+    mapping=CNF.binary_mapping(xrange(1,k+1), G.nodes(),
+                               injective = True,
+                               nondecreasing = True)
 
-    for v in clauses_gen.variables():
-        F.add_variable(v)
-        
-    for c in clauses_gen.clauses():
-        F.add_clause(c)
+    mapping.load_variables_to_formula(F)
+    mapping.load_clauses_to_formula(F)
 
     for (i1,i2),(v1,v2) in product(combinations(xrange(1,k+1),2),
                                    combinations(G.nodes(),2)):

@@ -78,8 +78,7 @@ def DominatingSet(G,d, alternative = False):
                 F.add_clause( [ (False,D(u)),(False,D(v)), (False,M(u,i)), (False,M(v,i))    ])
     else:
         for i in range(1,d+1):
-            for c in CNF.less_or_equal_constraint([M(v,i) for v in V],1):
-                F.add_clause(c)
+            F.add_less_or_equal([M(v,i) for v in V],1)
                 
     # (Active) Vertices in the sequence are not repeated
     if alternative:
