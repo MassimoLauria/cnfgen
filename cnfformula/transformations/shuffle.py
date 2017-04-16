@@ -29,9 +29,10 @@ def Shuffle(cnf,
                variable_permutation=None,
                constraint_permutation=None,
                polarity_flips=None):
-    """Reshuffle the given cnf. Returns a formula logically
-    equivalent to the input with the following transformations
-    applied in order:
+    """Reshuffle the given cnf. 
+
+    Returns a formula logically equivalent to the input with the
+    following transformations applied in order:
 
     1. Polarity flips. polarity_flip is a {-1,1}^n vector. If the i-th
     entry is -1, all the literals with the i-th variable change its
@@ -44,6 +45,7 @@ def Shuffle(cnf,
     3. Constraint permutations. constraint_permutation is
     a permutation of [0..m-1]. The resulting clauses are reordered
     according to the permutation.
+
     """
     
     # empty cnf

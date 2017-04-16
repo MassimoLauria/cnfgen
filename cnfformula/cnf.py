@@ -1809,11 +1809,11 @@ class less(tuple):
         if self.threshold > len(self):
             return
         elif self.threshold < 0:
-            yield ()
+            yield disj()
             return
 
         for cls in combinations([-l for l in self], self.threshold):
-            yield cls
+            yield disj(*cls)
 
 class leq(tuple):
 
@@ -1952,13 +1952,13 @@ class greater(tuple):
     def clauses(self):
         """Clauses to represent the constraint"""
         if self.threshold >= len(self):
-            yield ()
+            yield disj()
             return
         elif self.threshold < 0:
             return
 
         for cls in combinations(self, len(self)-self.threshold):
-            yield cls
+            yield disj(*cls)
 
 
 class geq(tuple):
