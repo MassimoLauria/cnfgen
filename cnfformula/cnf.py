@@ -733,9 +733,8 @@ class CNF(object):
             output.write("\n")   # this newline makes `lingeling` solver happy
 
         # Clauses
-        for cnst in self._constraints:
-            for cls in cnst.clauses():
-                output.write("\n" + " ".join([str(l) for l in cls + (0,)]))
+        for cls in self._compressed_clauses():
+            output.write("\n" + " ".join([str(l) for l in cls + (0,)]))
 
     def opb(self, export_header=True, extra_text=None):
         """Produce the OPB encoding of the formula
@@ -841,6 +840,8 @@ class CNF(object):
 
             elif type(new_cnst)==less:
                 _print_ineq([-l for l in new_cnst],">=", len(new_cnst) - new_cnst.threshold + 1)
+            else:
+                raise RuntimeError("[Internal Error] Unknown type of constraints found.")
         
         return output.getvalue()
     
