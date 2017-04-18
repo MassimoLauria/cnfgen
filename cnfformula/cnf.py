@@ -2085,3 +2085,151 @@ class eq(tuple):
             yield c
         for c in geq(*self,threshold=self.value).clauses():
             yield c
+
+
+class weighted_eq(tuple):
+    def __new__(cls,*args,**kw):
+        """Linear equation constraint
+
+        Represent a general linear equation constraint. It is
+        different for :py:class:`eq` because the constraint can have
+        arbitrary integer weights on the variables but it is expressed
+        in term of positive literals only.
+
+        The object is a tuple of (weight,variable index) pairs, and
+        the field :py:attr:`value` is an integer.
+
+        The constraint claims that the boolean values, multiplied by
+        their respective weights, of the sequence of literals
+        (contained in the field `literals`) must sum to a number which
+        equal to the field :py:attr:`value`.
+
+        For example the encoding of 
+
+        .. math::
+
+             3 x_1 + 4 x_3 - 2 x_5 - x_7 = 0
+
+        is
+
+        ::
+
+             weighted_eq((3,1),(4,3),(-2,5),(-1,7),value=0)
+
+        Variable identifiers are expected to be positive.
+
+        Parameters
+        ----------
+        *args : zero or more (int,positive int) pairs
+            weighted sum of variables
+
+        value : integer
+           expected value of the sum
+
+        """
+        if "value" not in kw:
+            raise TypeError("WEIGHTED EQUALITY constraints must have \'value\' keyword argument")
+        self = super(weighted_eq,cls).__new__(cls,args)
+        self.value = kw['value']
+        return self
+
+    def __eq__(self,other):
+        return self.value == other.value and super(weighted_eq,self).__eq__(other)
+
+    def __repr__(self):
+        return "{}({}, value={})".format("weighted_eq",
+                                         ", ".join(str(i) for i in self),
+                                         self.value)
+
+    def __str__(self):
+        terms = [ "{}{}".format(w,v) for w,v in self ]
+        return "{} {} {}".format(" + ".join(literals),"==",self.value)
+    
+    def n_clauses(self):
+        """Number of clauses to represent the constraints"""
+        return len(list(self.clauses()))        
+
+        
+    def clauses(self):
+        """Clauses to represent the constraint"""
+
+        
+        domains = tuple([((w,v),(0,-v)) for w,v in self])
+
+        for summands in product(*domains):
+            if sum(w for w,_ in summands) != self.value:
+                yield disj(*(-v for _,v in summands))
+        
+class weighted_geq(tuple):
+    def __new__(cls,*args,**kw):
+        """Linear inequality constraint (greater than or equal to)
+
+        Represent a general linear inequality constraint. It is
+        different for :py:class:`geq` because the constraint can have
+        arbitrary integer weights on the variables but it is expressed
+        in term of positive literals only.
+
+        The object is a tuple of (weight,variable index) pairs, and
+        the field :py:attr:`threshold` is an integer.
+
+        The constraint claims that the boolean values, multiplied by
+        their respective weights, of the sequence of literals
+        (contained in the field `literals`) must sum to a number which
+        greater than or equal to the field :py:attr:`threshold`.
+
+        For example the encoding of 
+
+        .. math::
+
+             3 x_1 + 4 x_3 - 2 x_5 - x_7 \geq 0
+
+        is
+
+        ::
+
+             weighted_geq((3,1),(4,3),(-2,5),(-1,7),value=0)
+
+        Variable identifiers are expected to be positive.
+
+        Parameters
+        ----------
+        *args : zero or more (int,positive int) pairs
+            weighted sum of variables
+
+        threshold : integer
+           expected lower bound of the sum
+
+        """
+        if "threshold" not in kw:
+            raise TypeError("WEIGHTED GREATER OR EQUAL constraints must have \'threshold\' keyword argument")
+        self = super(weighted_geq,cls).__new__(cls,args)
+        self.threshold = kw['threshold']
+        return self
+
+    def __eq__(self,other):
+        return self.threshold == other.threshold and super(weighted_geq,self).__eq__(other)
+
+    def __repr__(self):
+        return "{}({}, value={})".format("weighted_geq",
+                                         ", ".join(str(i) for i in self),
+                                         self.threshold)
+
+    def __str__(self):
+        terms = [ "{}{}".format(w,v) for w,v in self ]
+        return "{} {} {}".format(" + ".join(literals),">=",self.threshold)
+    
+    def n_clauses(self):
+        """Number of clauses to represent the constraints"""
+        return len(list(self.clauses()))        
+
+        
+    def clauses(self):
+        """Clauses to represent the constraint"""
+
+        
+        domains = tuple([((w,v),(0,-v)) for w,v in self])
+
+        for summands in product(*domains):
+            if sum(w for w,_ in summands) < self.threshold:
+                yield disj(*(-v for _,v in summands))
+        
