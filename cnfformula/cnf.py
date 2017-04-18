@@ -1239,9 +1239,6 @@ class CNF(object):
            variables in the constraint
         value: int
            target values
-     
-        Returns
-        -------
             a list of clauses
         """
         literals = [(True,v) for v in variables]
@@ -1256,10 +1253,6 @@ class CNF(object):
         ----------
         variables : list of variables
            variables in the constraint
-     
-        Returns
-        -------
-            a list of clauses
         """
         threshold = (len(variables)+1)//2
         self.add_greater_or_equal(variables, threshold)
@@ -1271,10 +1264,6 @@ class CNF(object):
         ----------
         variables : list of variables
            variables in the constraint
-     
-        Returns
-        -------
-            a list of clauses
         """
         threshold = len(variables)//2
         return self.add_less_or_equal(variables, threshold)
@@ -1287,10 +1276,6 @@ class CNF(object):
         ----------
         variables : list of variables
            variables in the constraint
-     
-        Returns
-        -------
-            a list of clauses
         """
         threshold = (len(variables)+1)/2
         return self.add_equal_to(variables,threshold)
@@ -1302,15 +1287,106 @@ class CNF(object):
         ----------
         variables : list of variables
            variables in the constraint
-     
-        Returns
-        -------
-            a list of clauses
         """
         threshold = len(variables)/2
         return self.add_equal_to(variables,threshold)
 
 
+    def add_linear(self, *args):
+        """Add clauses encoding an integer linear constraint
+     
+        Integer linear constraints can be added as constraints
+        to the formula, as a shortcut for an equivalent set of
+        clauses. Consider for example
+
+        .. math::
+
+            x_1 + 2 x_2 + 4 x_3 \geq 3
+        
+        that can be encoded as clauses
+     
+        .. math::
+
+            (\neg x_1  \lor x_2 \lor x_3) \wedge (x_1  \lor \neg x_2 \lor x_3) \wedge (x_1  \lor x_2 \lor x_3)
+
+        This inequality can be added to a formula `F` using
+
+        ::
+
+            F.add_linear(1,"x_1",2,"x_2",4,"x_3",">=", 3)
+
+        The arguments of :py:meth:`add_linear` are given as a sequence
+        of integer and strings: the second to last element is one
+        among `==`, `>=`, `<=`, `>`, `<` and determines the type of
+        constraint, the last element determines the value to which the
+        linear form is compared to. The preceding arguments must form
+        an even length sequence in which the summands are represented
+        by alternating the weight of each variable in the sum with
+        its name.
+
+
+        Examples
+        --------
+        >>> F = CNF()
+        >>> F.add_linear(1,"x_1",2,"x_2",4,"x_3",">=", 7)
+        >>> len(F)
+        7
+        >>> F = CNF()
+        >>> F.add_linear(1,"x_1",2,"x_2",4,"x_3",">=", 0)
+        >>> list(F)
+        []
+        >>> F = CNF()
+        >>> F.add_linear(1,"x_1",2,"x_2",4,"x_3","==", 5)
+        >>> len(F)
+        7
+        >>> F = CNF()
+        >>> F.add_linear(1,"x_1",2,"x_2",4,"x_3",">", 0)
+        >>> len(F)
+        1
+        
+        Parameters
+        ----------
+        *args : sequence of int and strings
+            See above.
+
+        """
+        if len(args)<2:
+            raise ValueError("Linear constraints require at least 2 args: comparison operator and value.")
+        variables = [(True,v) for v in args[1:-2:2]]
+        weights   = args[ :-2:2]
+        value     = args[-1]
+        op        = args[-2]
+
+        variables = self._check_and_compress_literals(variables)
+        cnst=None
+        
+        if op == '==':
+
+            cnst = weighted_eq(*zip(weights,variables),value=value)
+
+        elif op == '>=':
+
+            cnst = weighted_geq(*zip(weights,variables),threshold=value)
+
+        elif op == '>':
+
+            cnst = weighted_geq(*zip(weights,variables),threshold=value+1)
+
+        elif op == '<=':
+
+            cnst = weighted_geq(*zip((-w for w in weights),variables),threshold= - value)
+
+        elif op == '<':
+
+            cnst = weighted_geq(*zip((-w for w in weights),variables),threshold= - value + 1)
+
+        else:
+            raise ValueError("Comparison operator must be among ==, >=, <=, >, <.")
+        
+        self._constraints.append(cnst)
+        self._length += cnst.n_clauses()
+
+    
 class unary_mapping(object):
     """Unary CNF representation of a mapping between two sets."""
 
