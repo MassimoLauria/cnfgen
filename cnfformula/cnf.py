@@ -1629,7 +1629,7 @@ class disj(tuple):
 
             x_1 \vee \\neg x_3 \vee x_7
 
-        as 
+        is 
 
         ::
 
@@ -1677,7 +1677,7 @@ class xor(tuple):
 
             x_1 \\oplus \\neg x_3 \\oplus x_7 = 1 \\pmod{2}
 
-        as 
+        is 
 
         ::
         
@@ -1750,11 +1750,11 @@ class less(tuple):
 
              x_2 + \\neg x_3 + x_7 < 2
 
-        as 
+        is 
 
         ::
 
-             less((2,-3,7),2)
+             less(2,-3,7,value=2)
 
         Repeated or opposite literals are forbidden. In case one of these
         things occur the `n_clauses` and `clauses` methods have
@@ -1831,11 +1831,11 @@ class leq(tuple):
 
              x_2 + \\neg x_3 + \\neq x_4 + x_7 \leq 2
 
-        as 
+        is 
 
         ::
 
-             leq((2,-3,-4,7),2)
+             leq(2,-3,-4,7,value=2)
 
         If there are repeated or opposite literals, then the constraint
         could make no sense. In particular `n_clauses` and `clauses`
@@ -1894,11 +1894,11 @@ class greater(tuple):
 
              x_2 + \\neg x_3 + \\neq x_4 + x_7 > 2
 
-        as 
+        is 
 
         ::
 
-             greater((2,-3,-4,7),2)
+             greater(2,-3,-4,7,value=2)
 
         If there are repeated or opposite literals, then the constraint
         could make no sense. In particular `n_clauses` and `clauses`
@@ -1976,11 +1976,11 @@ class geq(tuple):
 
              x_2 + \\neg x_3 + \\neq x_4 + x_7 \geq 2
 
-        as 
+        is 
 
         ::
 
-             geq((2,-3,-4,7),2)
+             geq(2,-3,-4,7,value=2)
 
         If there are repeated or opposite literals, then the constraint
         could make no sense. In particular `n_clauses` and `clauses`
@@ -2036,11 +2036,11 @@ class eq(tuple):
 
              x_2 + \\neg x_3 + \\neq x_4 + x_7 = 2
 
-        as 
+        is 
 
         ::
 
-             eq((2,-3,-4,7),2)
+             eq(2,-3,-4,7, value=2)
 
         If there are repeated or opposite literals, then the constraint
         could make no sense. In particular `n_clauses` and `clauses`
@@ -2056,7 +2056,7 @@ class eq(tuple):
 
         """
         if "value" not in kw:
-            raise TypeError("EQUAL TO constraints must have \'threshold\' keyword argument")
+            raise TypeError("EQUAL TO constraints must have \'value\' keyword argument")
         self = super(eq,cls).__new__(cls,args)
         self.value = kw['value']
         return self
