@@ -821,15 +821,13 @@ class CNF(object):
             if type(new_cnst) in [disj,xor]:
                 for cls in new_cnst.clauses():
                     _print_ineq(cls,">=",1)
-                    continue
                 
             # Representation by equation
-            if type(new_cnst)==eq:
+            elif type(new_cnst)==eq:
                 _print_ineq(new_cnst,"=",new_cnst.value)
-                continue
 
             # Representation by inequality
-            if type(new_cnst)==geq:
+            elif type(new_cnst)==geq:
                 _print_ineq(new_cnst,">=",new_cnst.threshold)
 
             elif type(new_cnst)==greater:
@@ -841,7 +839,7 @@ class CNF(object):
             elif type(new_cnst)==less:
                 _print_ineq([-l for l in new_cnst],">=", len(new_cnst) - new_cnst.threshold + 1)
             else:
-                raise RuntimeError("[Internal Error] Unknown type of constraints found.")
+                raise RuntimeError("[Internal Error] Unknown type of constraints found: {}".format(type(new_cnst)))
         
         return output.getvalue()
     
