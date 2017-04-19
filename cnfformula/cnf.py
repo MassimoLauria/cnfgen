@@ -806,40 +806,54 @@ class CNF(object):
                 for line in extra_text.split("\n"):
                     output.write(("* "+line).rstrip()+"\n")
 
-        def _print_ineq(lits,sign, thr):
+        def _print_lit_ineq(lits,sign, thr):
 
             lhs = " ".join( "{}1 x{}".format("+" if l >= 0 else "-",abs(l)) for l in lits)
             rhs = str(thr - len([i for i in lits if i<0]))
             output.write(lhs + " " + sign + " " + rhs + ";\n")
+
+        def _print_lin_ineq(cnst):
+
+            lhs = " ".join( "{} x{}".format(w,v) for w,v in cnst)
+            if type(cnst)==weighted_eq:
+                rhs = str(cnst.value)
+                op  = "="
+            elif type(cnst)==weighted_geq:
+                rhs = str(cnst.threshold)
+                op  = ">="
+            else:
+                raise RuntimeError("[Internal Error] Unknown type of constraints found: {}".format(type(cnst)))
+            output.write(lhs + " " + op + " " + rhs + ";\n")
                     
         # Normalize inequalities
         for cnst in self._constraints:
 
-            new_cnst = cnst
-
             # Representation clause by clause
-            if type(new_cnst) in [disj,xor]:
-                for cls in new_cnst.clauses():
-                    _print_ineq(cls,">=",1)
+            if type(cnst) in [disj,xor]:
+                for cls in cnst.clauses():
+                    _print_lit_ineq(cls,">=",1)
                 
             # Representation by equation
-            elif type(new_cnst)==eq:
-                _print_ineq(new_cnst,"=",new_cnst.value)
+            elif type(cnst)==eq:
+                _print_lit_ineq(cnst,"=",cnst.value)
 
             # Representation by inequality
-            elif type(new_cnst)==geq:
-                _print_ineq(new_cnst,">=",new_cnst.threshold)
+            elif type(cnst)==geq:
+                _print_lit_ineq(cnst,">=",cnst.threshold)
 
-            elif type(new_cnst)==greater:
-                _print_ineq(new_cnst,">=",new_cnst.threshold+1)
+            elif type(cnst)==greater:
+                _print_lit_ineq(cnst,">=",cnst.threshold+1)
 
-            elif type(new_cnst)==leq:
-                _print_ineq([-l for l in new_cnst],">=", len(new_cnst) - new_cnst.threshold)
+            elif type(cnst)==leq:
+                _print_lit_ineq([-l for l in cnst],">=", len(cnst) - cnst.threshold)
 
-            elif type(new_cnst)==less:
-                _print_ineq([-l for l in new_cnst],">=", len(new_cnst) - new_cnst.threshold + 1)
+            elif type(cnst)==less:
+                _print_lit_ineq([-l for l in cnst],">=", len(cnst) - cnst.threshold + 1)
+
+            elif type(cnst) in [weighted_eq,weighted_geq]:
+                _print_lin_ineq(cnst)
             else:
-                raise RuntimeError("[Internal Error] Unknown type of constraints found: {}".format(type(new_cnst)))
+                raise RuntimeError("[Internal Error] Unknown type of constraints found: {}".format(type(cnst)))
         
         return output.getvalue()
     
