@@ -431,7 +431,8 @@ class CNF(object):
         -1 2 0
 
         """
-        self._length += sum(c.n_clauses() for c in constraints)
+        if self._length is not None:
+            self._length += sum(c.n_clauses() for c in constraints)
         self._constraints.extend(constraints)
 
 
@@ -572,7 +573,8 @@ class CNF(object):
             the sequence of literals is not made by pairs of immutable objects.
         """
         self._constraints.append( disj(*self._check_and_compress_literals(clause)))
-        self._length += 1
+        if self._length is not None:
+            self._length += 1
   
 
     def variables(self):
@@ -1043,7 +1045,8 @@ class CNF(object):
         literals = [(True,v) for v in variables]
         parity = xor(*self._check_and_compress_literals(literals),value=constant)
         self._constraints.append(parity)
-        self._length += parity.n_clauses()
+        if self._length is not None:
+            self._length += parity.n_clauses()
         
 
     def add_strictly_less_than(self,variables, threshold):
@@ -1089,7 +1092,8 @@ class CNF(object):
         literals = [(True,v) for v in variables]
         ineq = less(*self._check_and_compress_literals(literals),threshold=threshold)
         self._constraints.append(ineq)
-        self._length += ineq.n_clauses()
+        if self._length is not None:
+            self._length += ineq.n_clauses()
 
 
     def add_less_or_equal(self,variables, threshold):
@@ -1141,7 +1145,8 @@ class CNF(object):
         literals = [(True,v) for v in variables]
         ineq = leq(*self._check_and_compress_literals(literals),threshold=threshold)
         self._constraints.append(ineq)
-        self._length += ineq.n_clauses()
+        if self._length is not None:
+            self._length += ineq.n_clauses()
     
 
     def add_strictly_greater_than(self, variables, threshold):
@@ -1187,7 +1192,8 @@ class CNF(object):
         literals = [(True,v) for v in variables]
         ineq = greater(*self._check_and_compress_literals(literals),threshold=threshold)
         self._constraints.append(ineq)
-        self._length += ineq.n_clauses()
+        if self._length is not None:
+            self._length += ineq.n_clauses()
      
 
     def add_greater_or_equal(self, variables, threshold):
@@ -1235,7 +1241,8 @@ class CNF(object):
         literals = [(True,v) for v in variables]
         ineq = geq(*self._check_and_compress_literals(literals),threshold=threshold)
         self._constraints.append(ineq)
-        self._length += ineq.n_clauses()
+        if self._length is not None:
+            self._length += ineq.n_clauses()
 
 
     def add_equal_to(self, variables, value):
