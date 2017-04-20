@@ -3,9 +3,9 @@ import random
 
 def stableshuffle(inputfile,
                   outputfile,
-                  variable_permutation=None,
-                  clause_permutation=None,
-                  polarity_flip=None):
+                  variables_permutation=None,
+                  clauses_permutation=None,
+                  polarity_flips=None):
 
     subst= None
     line_counter = 0
@@ -28,13 +28,13 @@ def stableshuffle(inputfile,
                                  "line {} contains a second spec line.".format(line_counter))
             _,_,nstr,mstr = l.split()
             n = int(nstr)
-            subst = substitution(n, variable_permutation, polarity_flip)
+            subst = substitution(n, variables_permutation, polarity_flips)
             m = int(mstr)
 
             # Clause permutation
-            if clause_permutation==None:
-                clause_permutation=range(m)
-                random.shuffle(clause_permutation)
+            if clauses_permutation==None:
+                clauses_permutation=range(m)
+                random.shuffle(clauses_permutation)
             
             clause_buffer=[None]*m
 
@@ -53,7 +53,7 @@ def stableshuffle(inputfile,
         if clause[-1] != 0:
             raise ValueError("Syntax error: last clause was incomplete")
 
-        clause_buffer[clause_permutation[clause_counter]] = \
+        clause_buffer[clauses_permutation[clause_counter]] = \
             " ".join([str(subst[i]) for i in clause])
         clause_counter += 1
 
@@ -64,22 +64,22 @@ def stableshuffle(inputfile,
         print(clause,file=outputfile)
 
 
-def substitution(n, variable_permutation = None,
-                 polarity_flip = None) :
-    if variable_permutation is None :
-        variable_permutation = range(1,n+1)
-        random.shuffle(variable_permutation)
+def substitution(n, variables_permutation = None,
+                 polarity_flips = None) :
+    if variables_permutation is None :
+        variables_permutation = range(1,n+1)
+        random.shuffle(variables_permutation)
     else:
-        assert len(variable_permutation)==n
+        assert len(variables_permutation)==n
 
-    vars = [0] + variable_permutation
+    vars = [0] + variables_permutation
 
-    if polarity_flip is None :
-        polarity_flip = [random.choice([-1,1]) for x in xrange(n)]
+    if polarity_flips is None :
+        polarity_flips = [random.choice([-1,1]) for x in xrange(n)]
     else:
-        assert len(polarity_flip)==n
+        assert len(polarity_flips)==n
 
-    flip = [0] + polarity_flip
+    flip = [0] + polarity_flips
 
     subst=[None]*(2*n+1)
     for i,p in enumerate(vars):
