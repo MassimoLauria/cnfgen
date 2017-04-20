@@ -23,11 +23,9 @@ class TestFlip(TestCNFBase) :
     def test_polarity_shuffle_vs_flip(self) :
         cnf = CNF([[(True,'x'),(True,'y'),(False,'z')]])
 
-        variable_permutation = list(cnf.variables())
-        clause_permutation = range(len(cnf))
-        polarity_flip = [-1]*len(variable_permutation)
-        
-        shuffled = Shuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
+        polarity_flips = [-1]*3
+        shuffled = Shuffle(cnf,
+                           polarity_flips = polarity_flips)
         flipped  = FlipPolarity(cnf)
         self.assertCnfEqual(flipped,shuffled)
 
@@ -37,7 +35,7 @@ class TestDimacsFlip(TestCNFBase) :
 
     def test_cmdline_flip(self) :
 
-        cnf = self.random_cnf(4,10,3)
+        cnf = self.random_cnf(4,10,100)
         shuffle = FlipPolarity(cnf)
         
         reference_output = shuffle.dimacs(export_header=False) + '\n'
