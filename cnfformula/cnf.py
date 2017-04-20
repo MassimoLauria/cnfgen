@@ -254,9 +254,13 @@ class CNF(object):
     def __len__(self):
         """Number of clauses in the formula
         """
+        if self._length is None:
+            self._length = 0
+            for cnst in self._constraints:
+                self._length += cnst.n_clauses()
+
         return self._length
 
-        
     
     #
     # Internal implementation methods, use at your own risk!
@@ -1398,7 +1402,8 @@ class CNF(object):
             raise ValueError("Comparison operator must be among ==, >=, <=, >, <.")
         
         self._constraints.append(cnst)
-        self._length += cnst.n_clauses()
+        # Too expensive to count the number of generated clause. Invalidate the estimate.
+        self._length = None
 
     
 class unary_mapping(object):
