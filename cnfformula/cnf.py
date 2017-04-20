@@ -2249,11 +2249,7 @@ class weighted_eq(tuple):
     
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
-        cnt = 0
-        for c in self.clauses():
-            cnt += 1
-        return cnt
-
+        return sum(1 for _ in self.clauses())
         
     def clauses(self):
         """Clauses to represent the constraint"""
@@ -2322,14 +2318,10 @@ class weighted_geq(tuple):
     def __str__(self):
         terms = [ "{}{}".format(w,v) for w,v in self ]
         return "{} {} {}".format(" + ".join(literals),">=",self.threshold)
-    
+
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
-        cnt = 0
-        for c in self.clauses():
-            cnt += 1
-        return cnt
-
+        return sum(1 for _ in self.clauses())
         
     def clauses(self):
         """Clauses to represent the constraint"""
