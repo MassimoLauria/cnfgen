@@ -238,6 +238,10 @@ class CNF(object):
             for clause in cnst.clauses():
                 length += 1
                 yield clause
+
+        if self._length is None:
+            self._length = length
+
         assert length == self._length
 
     def __iter__(self):

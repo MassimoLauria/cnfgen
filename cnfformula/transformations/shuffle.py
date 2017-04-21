@@ -4,18 +4,50 @@
 
 import random
 
+from cnfformula.transformations.expand import Expand
 
 from ..cmdline  import register_cnf_transformation_subcommand
 from ..transformations import register_cnf_transformation
 
-from ..cnf import CNF, disj, xor, less, greater, geq, leq
+from ..cnf import CNF
+from ..cnf import disj, xor
+from ..cnf import less, greater, geq, leq, eq
+from ..cnf import weighted_eq, weighted_geq
+
+
+def _shuffle_literals(constraint,substitution):
+    """Shuffle the literals in the low level representation of constraints."""
+    literals = (substitution[l] for l in constraint)
+
+    if type(constraint)==disj:
+        return disj(*literals)
+
+    elif type(constraint) in [xor,eq]:
+        return type(constraint)(*literals,value=constraint.value)
+
+    elif type(constraint) in [less, greater, geq, leq]:
+        return type(constraint)(*literals,threshold=constraint.threshold)
+
+    elif type(constraint) in [weighted_eq,weighted_geq]:
+
+        offset = sum(-w for (w,v) in constraint if substitution[v]<0)
+        terms  = ((w*substitution[v]//abs(substitution[v]),abs(substitution[v])) for (w,v) in constraint)
+
+        if type(constraint) == weighted_eq:
+            return weighted_eq(*terms,value=constraint.value+offset)
+        elif type(constraint) == weighted_geq:
+            return weighted_geq(*terms,threshold=constraint.threshold+offset)
+        else:
+            ValueError("The constraint type is unknown: {}".format(type(constraint)))
+    else:
+        raise ValueError("The constraint type is unknown: {}".format(type(constraint)))
 
 @register_cnf_transformation
 def Shuffle(F,**kwargs):
     """Reshuffle the given cnf. 
 
     Returns a formula logically equivalent to the input, a CNF with
-    :math:`n` variables and :math:`m` clauses, with the following
+    :math:`n` variables and :math:`m` constraints, with the following
     transformations applied in order:
 
     Parameters
@@ -31,20 +63,20 @@ def Shuffle(F,**kwargs):
     polarity_flips: list(-1,1) or 'random', optional 
         This is a :math:`\{-1,1\}^n` vector. If the :math:`i`-th
         entry is -1, all the literals with the :math:`i`-th variable
-        change its sign. If `'random'` then theflips are picked at
+        change its sign. If `'random'` then the flips are picked at
         random. If `None` or the parameter is not set, then the
         literals are not flipped. (default:  None)
     
-    clauses_permutation: list(int) or 'random', optional 
-        it is a permutation of [0..m-1]. The resulting clauses are
+    constraints_permutation: list(int) or 'random', optional 
+        it is a permutation of [0..m-1]. The resulting constrains are
         reordered according to the permutation. If `'random'` then the
         permutation is picked at random. If `None` or the parameter is
-        not set, then the clauses are shuffled. (default:  None)
+        not set, then the constraints are shuffled. (default:  None)
 
     """
-    variables_permutation = kwargs.pop('variables_permutation',  None)
-    polarity_flips        = kwargs.pop('polarity_flips',         None)
-    clauses_permutation   = kwargs.pop('clauses_permutation',    None)
+    variables_permutation   = kwargs.pop('variables_permutation',   None)
+    polarity_flips          = kwargs.pop('polarity_flips',          None)
+    constraints_permutation = kwargs.pop('constraints_permutation', None)
     
     # empty cnf
     out=CNF(header='')
@@ -85,29 +117,30 @@ def Shuffle(F,**kwargs):
         substitution[-i]= -substitution[i]
 
     
-    # permutation of clauses
+    # permutation of constraints
     #
-    M=len(F)
-    compressed_clauses = None
-    if clauses_permutation==None:
+    M=len(F._constraints)
 
-        clauses_permutation = range(M)
+    if constraints_permutation is None:
 
-    elif clauses_permutation == 'random':
+        constraints_permutation = range(M)
 
-        clauses_permutation=range(M)
-        random.shuffle(clauses_permutation)
+    elif constraints_permutation == 'random':
+
+        constraints_permutation=range(M)
+        random.shuffle(constraints_permutation)
 
     else:
-        assert len(clauses_permutation)==M
+        assert len(constraints_permutation)==M
         
     # load clauses
     out._constraints = [None]*M
-    out._length  = M
-    for (old,clause) in enumerate(F._compressed_clauses()):
-        out._constraints[clauses_permutation[old]]= disj(*(substitution[l] for l in clause))
+    out._length  = None
+    for (old,cnst) in enumerate(F._constraints):
+        out._constraints[constraints_permutation[old]]= _shuffle_literals(cnst,substitution)
 
     # return the formula
+    out.mode_default()
     return out
 
 
@@ -116,7 +149,7 @@ class ShuffleCmd:
     """Shuffle 
     """
     name='shuffle'
-    description='Permute variables, clauses and polarity of literals at random'
+    description='Permute variables, constraints and polarity of literals at random'
 
     @staticmethod
     def setup_command_line(parser):
@@ -128,14 +161,14 @@ class ShuffleCmd:
                             action='store_true',
                             dest='no_variables_permutation',
                             help="No permutation of variables")
-        parser.add_argument('--no-clauses-permutation','-c',
+        parser.add_argument('--no-constraints-permutation','-c',
                             action='store_true',
-                            dest='no_clauses_permutation',
+                            dest='no_constraints_permutation',
                             help="No permutation of constraints")
     
     @staticmethod
     def transform_cnf(F,args):
         return Shuffle(F,
-                       variables_permutation  = None if args.no_variables_permutation else 'random',
-                       clauses_permutation    = None if args.no_clauses_permutation   else 'random',
-                       polarity_flips         = None if args.no_polarity_flips        else 'random')
+                       variables_permutation   = None if args.no_variables_permutation   else 'random',
+                       constraints_permutation = None if args.no_constraints_permutation else 'random',
+                       polarity_flips          = None if args.no_polarity_flips          else 'random')
