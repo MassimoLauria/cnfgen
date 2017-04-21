@@ -1,12 +1,16 @@
 import cnfformula.utils.cnfshuffle as cnfshuffle
 
 from . import TestCNFBase
-from cnfformula import FlipPolarity,Shuffle,cnfgen,CNF
+from cnfformula import Shuffle,cnfgen,CNF
 
 from cnfformula.utils.dimacstransform import command_line_utility as dimacstransform
 
 import random
 import StringIO
+
+def FlipPolarity(F):
+    n = sum(1 for _ in F.variables())
+    return Shuffle(F,polarity_flips=[-1]*n)
 
 class TestFlip(TestCNFBase) :
     def test_double_flip(self) :
@@ -19,16 +23,6 @@ class TestFlip(TestCNFBase) :
         flipped  = FlipPolarity(CNF([[(False,'x'),(False,'y'),(True,'z')]]))
         expected = CNF([[(True,'x'),(True,'y'),(False,'z')]])
         self.assertCnfEqual(expected,flipped)
-
-    def test_polarity_shuffle_vs_flip(self) :
-        cnf = CNF([[(True,'x'),(True,'y'),(False,'z')]])
-
-        polarity_flips = [-1]*3
-        shuffled = Shuffle(cnf,
-                           polarity_flips = polarity_flips)
-        flipped  = FlipPolarity(cnf)
-        self.assertCnfEqual(flipped,shuffled)
-
 
 
 class TestDimacsFlip(TestCNFBase) :
