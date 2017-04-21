@@ -24,7 +24,7 @@ from collections import Counter
 from collections import namedtuple
 
 import re
-from math import ceil,log
+from math import ceil,log,factorial
 
 from . import prjdata as pd
 from .graphs import bipartite_sets,neighbors
@@ -1897,11 +1897,7 @@ class less(tuple):
             return 1
 
         def binom(n,k):
-            k = min(k,n-k)
-            if k==0:
-                return 1
-            else:
-                return n*binom(n-1,k-1) // k 
+            return factorial(n) // factorial(k) // factorial(n - k)
                 
         return binom(len(self),self.threshold)
 
@@ -2041,11 +2037,7 @@ class greater(tuple):
             return 0
 
         def binom(n,k):
-            k = min(k,n-k)
-            if k==0:
-                return 1
-            else:
-                return n*binom(n-1,k-1) // k 
+            return factorial(n) // factorial(k) // factorial(n - k)
 
         # logically it should be binom(LEN,LEN-THR)
         return binom(len(self),self.threshold)
