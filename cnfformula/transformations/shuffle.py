@@ -172,3 +172,18 @@ class ShuffleCmd:
                        variables_permutation   = None if args.no_variables_permutation   else 'random',
                        constraints_permutation = None if args.no_constraints_permutation else 'random',
                        polarity_flips          = None if args.no_polarity_flips          else 'random')
+
+@register_cnf_transformation_subcommand
+class FlipCmd:
+    name='flip'
+    description='negate all variables in the formula'
+
+    @staticmethod
+    def setup_command_line(parser):
+        pass
+
+    @staticmethod
+    def transform_cnf(F, args):
+
+        N=sum(1 for _ in F.variables())
+        return Shuffle(F, polarity_flips=[-1]*N)
