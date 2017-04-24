@@ -39,8 +39,15 @@ class TestCNFBase(unittest.TestCase):
         dimacs = dimacs.rstrip('\n')
         output = cnf.dimacs(export_header=False)
         output = output.rstrip('\n')
-        self.assertEqual(output,dimacs)
+        self.assertMultiLineEqual(output,dimacs)
 
+    def assertCnfEqualsOPB(self, cnf, opb):
+        opb = textwrap.dedent(opb)
+        opb = opb.rstrip('\n')
+        output = cnf.opb(export_header=False)
+        output = output.rstrip('\n')
+        self.assertMultiLineEqual(output,opb)
+        
     def assertCnfEquivalentModuloVariables(self, cnf1, cnf2):
         print cnf1._constraints
         print cnf2._constraints
