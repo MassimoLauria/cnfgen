@@ -35,6 +35,7 @@ class TestCNFBase(unittest.TestCase):
         self.assertSetEqual(set1,set2)
 
     def assertCnfEqualsDimacs(self, cnf, dimacs):
+        cnf._check_coherence()
         dimacs = textwrap.dedent(dimacs)
         dimacs = dimacs.rstrip('\n')
         output = cnf.dimacs(export_header=False)
@@ -42,6 +43,7 @@ class TestCNFBase(unittest.TestCase):
         self.assertMultiLineEqual(output,dimacs)
 
     def assertCnfEqualsOPB(self, cnf, opb):
+        cnf._check_coherence()
         opb = textwrap.dedent(opb)
         opb = opb.rstrip('\n')
         output = cnf.opb(export_header=False)
