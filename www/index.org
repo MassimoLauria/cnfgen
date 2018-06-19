@@ -1,0 +1,390 @@
+#+TITLE:     
+#+AUTHOR:    Massimo Lauria
+#+EMAIL:     lauria.massimo@gmail.com
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:nil toc:nil \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+HTML_HEAD_EXTRA: <meta charset='utf-8'>
+#+HTML_HEAD_EXTRA: <meta http-equiv="X-UA-Compatible" content="chrome=1">
+#+HTML_HEAD_EXTRA: <meta name="description" content="CNFgen: Combinatorial benchmarks for SAT solvers">
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+#+HTML_HEAD: <style type="text/css"> .title  { height: 0; margin: 0;} </style>
+
+
+#+begin_html
+<!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="http://github.com/MassimoLauria/cnfgen">View on GitHub</a>
+
+          <h1 id="project_title"><a id="project_title" href="https://massimolauria.net/cnfgen">CNFgen</a></h1>
+          <h2 id="project_tagline">Combinatorial benchmarks for SAT solvers</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/MassimoLauria/cnfgen/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/MassimoLauria/cnfgen/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+#+end_html
+#+begin_html
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+#+end_html
+
+CNFgen is produces combinatorial benchmarks in DIMACS format, ready to
+be fed to  SAT solvers. These benchmarks come mostly  from research in
+Proof  Complexity  (e.g.  pigeonhole  principle,  ordering  principle,
+k-clique, …).  Many of these formulas  encode structured combinatorial
+problems well known to be challenging for certain SAT solvers.
+
+* Features
+
+  - =cnfgen= generator for [[file:background.org][CNF formula]] benchmarks,
+  - the =cnfformula=  library ([[http://cnfgen.readthedocs.io/en/latest/][read  the docs]])  for more  flexible CNF
+    generation and manipulation,
+  - CNF based on graph structures (see the supported [[file:graphformats.org][graph formats]]),
+  - behind-the-scene integration with many SAT solvers,
+  - output in DIMACS and LaTeX formats,
+  - formula [[file:transformation.org][post-processing]].
+
+* Installation
+  
+  You can install CNFgen from  [[http://pypi.python.org][Python Package Index]], together with all
+  its dependencies, typing either
+
+  : easy_install [--user] cnfgen
+
+  or
+
+  : pip install  [--user] cnfgen
+
+  Otherwise it  is possible to install from source using
+   
+  : python setup.py install [--user]
+
+  The =--user= option  allows to install the package in  the user home
+  directory. If you  do that please check that the  location where the
+  command   line   utilities   are   installed   is   in   your   PATH
+  environment variable.
+   
+* Usage
+
+  Run =cnfgen -h= to get information on how to invoke =cnfgen=. To get
+  more information  on how to  generate some specific type  of formula
+  run =cnfgen <formula_type> -h=. See  [[commandline][below]] for a gentler explanation
+  of  to  how  invoke  =cnfgen=.   A  quick  guide  for  each  formula
+  family follows.
+
+  + [[php][Pigeonhole principle]]
+  + [[gphp][Graph pigeonhole principle]]
+  + [[tseitin][Tseitin formulas]] 
+  + [[op][Ordering principle]]
+  + [[gop][Graph ordering principle]]
+  + [[matching][Matching principle]]
+  + [[gmatching][Graph matching principle]]
+  + [[count][Counting principle]] 
+  + [[peb][Pebbling formula]]
+  + [[stone][Stones formula]]
+  + [[giso][Graph isomorphism formula]]
+  + [[gauto][Graph automorphism formula]]
+  + [[ram][Ramsey number formula]]
+  + [[ramlb][Ramsey counterexample]] 
+  + [[kclique][K-clique formula]]
+  + [[kcolor][K-coloring formula]]
+  + [[cliquecolor][Clique-coloring formula]]
+  + [[randkcnf][Random k-CNF]]
+  + [[and][Single conjunction]]
+  + [[or][Single disjunction]]
+
+*** Pigeonhole principle<<php>>
+
+    Pigeonhole principle from $m$ pigeons to $n$ holes,
+
+    : cnfgen php <m> <n>
+
+    You can  add functional  and onto clauses  using the  command line
+    options.
+
+    : cnfgen php [--functional] [--onto] <m> <n>
+
+*** Graph pigeonhole Principle<<gphp>>
+
+    The variant  of pigeonhole principle over  bipartite graphs, given
+    in input or generated from the command line.
+     
+    : cnfgen gphp -i <bipartite_graph>
+
+    : cnfgen gphp --bregular <P> <H> <d>
+
+    The latter  command produces  a pigeonhole  formula over  a random
+    bipartite graph with $P$ pigeons, $H$ holes, and degree $d$ on the
+    left  side. The  graph  is  regular on  the  right  side as  well,
+    therefore $H$ must divide $P\cdot d$.
+
+*** Tseitin  formulas<<tseitin>>
+
+    The  Tseitin formula  on  a graph  =<G>= (given  in  input) has  the
+    command line
+
+    : cnfgen tseitin –charge <type> -i <G>
+
+    The initial  charge of vertices is  either =first=  (only the
+    first  vertex is  labeled 1) or  one  of =random=,  =randomodd=,
+    =randomeven=.
+
+    For example this produces a =tseitin= formula over a 10 by 10 grid
+    graph, with random labeling of the vertices.
+    
+    : cnfgen tseitin --charge random --grid 10 10
+    
+*** Ordering principle<<op>>
+
+    The ordering principle over N elements is generated by
+
+    : cnfgen op <N>
+
+    It is possible to consider total orders with 
+
+    : cnfgen -t op <N>
+
+*** Graph ordering principle<<gop>>
+
+    
+    The graph ordering principle over an input graph =<G>= is produced by
+
+    : cnfgen gop -i <G>
+    
+    The  vanilla ordering  principle equivalent  to the  graph ordering
+    principle if  the underlying graph is  the complete one, as  in the
+    example
+
+    : cnfgen gop --complete 30
+   
+*** Matching principle<<matching>>
+
+    The formula claims that =<N>= elements can be matched in pairs.
+
+    : cnfgen matching <N>
+    
+*** Graph matching principle<<gmatching>>
+
+    The formula claims a graph =<G>= in input has a perfect matching
+
+    : cnfgen gmatching -i <G>
+
+    The matching formula  is equivalent to the  graph matching formula
+    over a complete graph
+
+    : cnfgen gmatching --complete 10
+
+*** Counting principle<<count>> 
+
+    A  formula  that  claims  that  a  set  of  =<M>=  elements  can  be
+    partitioned into sets of size =<p>=.
+
+    : cnfgen count <M> <p>
+
+    so that 
+
+    : cnfgen count 10 4
+    
+    gives an unsatisfiable formula while
+
+    : cnfgen count 9 3 
+
+    gives a satisfiable one.
+    
+*** Pebbling formula<<peb>>
+
+    We can  generate a pebbling  formula for a directed  acyclic graph
+    =<D>= in input using 
+
+    : cnfgen peb -i <D>
+
+    and,  for  example,  we  can generate  the  pebbling  formula  for
+    a rooted binary tree of height 10 with
+    
+    : cnfgen peb --tree 10
+
+*** Stones formulas<<stone>>
+
+    A variant of  the pebbling formula. To generate  the stone formula
+    for a directed acyclic graph =<D>=  in input and with a collection
+    of =<s>= stones use
+
+    : cnfgen stone -i <D> <s>
+
+*** Graph isomorphism formula<<giso>>
+
+    Produce  a  CNF  that  claims  two graphs  =<G1>=  and  =<G2>=  to
+    be isomorphic.
+
+    : cnfgen giso -1 <G1> -2 <G2>
+
+*** Graph automorphism formula<<gauto>>
+
+    Produce a CNF that claims that a graph =<G>= has no nontrivial automorphism.
+
+    : cnfgen gauto -i <G>
+
+*** Ramsey number formula<<ram>>
+   
+    The command line
+
+    : cnfgen ram <s> <k> <N>
+
+    produces a  formula that claims  that the Ramsey number  r(s,k) is
+    larger than N.
+
+*** Ramsey counterexample<<ramlb>>
+
+    The formula  claims that  the graph  =<G>= given  in input  is not
+    a counter example for the Ramsey number $r(k,s)$. Namely it claims
+    that the graph  has either a clique of size  =<k>= or an independent
+    set of size =<s>=.
+
+    : cnfgen ramlb <k> <s> -i <G>
+
+*** K-clique formula<<kclique>>
+
+    The formula  claims that there is no clique of
+    size at least <k> in the input graph =<G>=. 
+
+    : cnfgen kclique <k> -i <G>
+
+    It is  possible to  plant a  clique in the  graph with  the option
+    =--plantclique=. The formula generated by
+
+    : cnfgen kclique 10 --gnp 200 0.5 --plantclique 15
+    
+    claims that  there is a clique  of size 10 in  a random Erdös-Renyi
+    graph with 200 vertices where a clique of size 15 has been planted.
+
+*** K-coloring formula<<kcolor>>
+
+    The formula asserts  that the input graph =<G>=  is colorable with
+    <k> colors.
+    
+    : cnfgen kcolor <k> -i <G>
+
+    For example a formula generated as 
+ 
+    : cnfgen kcolor --gnd 100 2 --plantclique 4 
+    
+    is clearly unsatisfiable.
+
+*** K-coloring formula<<cliquecolor>>
+
+    The  formula  asserts that  there  exists  a  graph $G$  of  =<n>=
+    vertices that simultaneously 
+
+    + contains a clique of =<k>= vertices
+    + it has a coloring with =<c>= colors.
+
+    : cnfgen cliquecoloring <n> <k> <c>
+
+    In particular the theoretical interesting  cases are when =<k>= is
+    greater than =<c>=. For example
+
+    : cnfgen cliquecoloring 100 25 24
+    
+    is clearly unsatisfiable.
+
+*** Random K-CNF<<randkcnf>>
+
+    Sample  a random  CNF with  =<m>= clauses  of =<k>=  literals over
+    =<n>= variables. Clauses are sampled without replacement.
+
+    *Warning*  the sampling  could  take infinite  time  if the  ratio
+    between remaining clauses and clauses to sample is too small.
+
+    : cnfgen kcnf <k> <n> <m>
+
+*** Single conjunction<<and>>
+
+    Produce  a  CNF   made  by  unit  clauses,   =<p>=  positives  and
+    =<n>= negatives.
+
+    : cnfgen and <p> <n>
+
+*** Single disjunction<<or>>
+
+    Produce  a  CNF   made  by a single clause, with =<p>= positives literals and
+    =<n>= negatives ones.
+
+    : cnfgen or <p> <n>
+
+
+* The CNFgen command line<<commandline>>
+
+  The command line for producing a DIMACS file is
+
+  : cnfgen [-o <output_file>] <formula_type> <formula_parameters>
+
+  where each  choice of  =<formula_type>= has  its own  parameters and
+  options.  For  example here's  how  to  get a  pigeonhole  principle
+  formula from 10 pigeons to 7 holes printed to standard output:
+
+  : cnfgen php 10 7 
+
+  We  implement   several  families  of  formula   in  =cnfgen=  tool.
+  For  a  full  list  of implemented  formula  families  type  =cnfgen
+  --help=. To get specific information on one family use
+
+  : cnfgen <formula_type> --help
+
+  Some formulas require input graph(s), and the =cnfgen= tool supports
+  several [[file:graphformats.org][graph  file formats]]. More importantly  =cnfgen= can generate
+  (and  save on  a  side) the  graph itself.  Here's  how to  generate
+  a formula encoding the Graph  ordering principle on a random regular
+  graph with 10 vertices and degree 3.
+
+  : cnfgen gop --gnd 10 3
+
+  Or the formula claiming the 3-colorability formula of a 15 by 15 grid graph. 
+
+  : cnfgen kcolor 3 --grid 15 15
+
+  In the  next example we generate  the formula that claims  the graph
+  isomorphism between (1) the bidimensional  torus of 3x1 and (2) the complete
+  graph over three vertices. This formula is clearly satisfiable.
+
+  : cnfgen giso --torus1 3 1 --complete2 3
+
+* Acknowledgments
+
+  The CNFgen project is  by Massimo Lauria ([[mailto:lauria.massimo@gmail.com][lauria.massimo@gmail.com]]),
+  with helps  and contributions by  Marc Vinyals, Jan  Elffers, Mladen
+  Mikša and [[http://www.csc.kth.se/~jakobn/][Jakob Nordström]] from  KTH Royal Institute of Technology in
+  Stockholm, Sweden. The work on this software has been funded
+  
+  - [2016-2017] The European Research Council (ERC) under the European
+    Union's Horizon 2020 research and innovation programme (grant
+    agreement ERC-2014-CoG 648276 AUTAR)
+
+  - [2012-2015] The  European Research Council under  the European Union's
+    Seventh  Framework Programme  (FP7/2007--2013)  ERC grant  agreement
+    no. 279611.
+  
+
+
+#+begin_html
+    </section></div>
+#+end_html
+#+begin_html
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">CNFgen maintained by <a href="https://github.com/MassimoLauria">Massimo Lauria</a></p>
+      </footer>
+    </div>
+#+end_html
+
+# Local variables:
+# org-html-preamble: nil
+# org-html-postamble: nil
+# org-html-toplevel-hlevel: 3
+# org-html-head-include-default-style: nil
+# End:
