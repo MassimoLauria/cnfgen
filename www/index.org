@@ -18,7 +18,7 @@
         <header class="inner">
           <a id="forkme_banner" href="http://github.com/MassimoLauria/cnfgen">View on GitHub</a>
 
-          <h1 id="project_title"><a id="project_title" href="https://massimolauria.net/cnfgen">CNFgen</a></h1>
+          <h1 id="project_title"><a id="project_title" href="http://massimolauria.net/cnfgen">CNFgen</a></h1>
           <h2 id="project_tagline">Combinatorial benchmarks for SAT solvers</h2>
 
             <section id="downloads">
