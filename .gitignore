@@ -9,3 +9,4 @@ dist/
 *.egg-info/
 .dir-locals.el
 gh-pages
+.python-version

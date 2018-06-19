@@ -1,17 +1,17 @@
-PROJECT=cnfgen
-PYTHON_BIN = python2
-VIRTUALENV = $(HOME)/.virtualenvs/$(PROJECT)-venv
+PROJECT:=cnfgen
+VIRTUALENV:= $(HOME)/.pyenv/versions/$(PROJECT)-venv
+PYTHON=python
 
 all : test
 
-.PHONY: test install package upload devinstall docbuild editor-tools doc-tools venv
+.PHONY: test install package upload docbuild editor-tools doc-tools venv
 
 test: venv
 	. $(VIRTUALENV)/bin/activate && \
 	python setup.py nosetests --with-doctest
 
 install:
-	python setup.py install --user --prefix=
+	$(PYTHON) setup.py install --user --prefix=
 
 clean:
 	rm -fr build
@@ -22,7 +22,7 @@ clean:
 	find . -name 'flycheck*.py' -delete
 
 package: clean
-	python setup.py sdist bdist bdist_egg bdist_wheel
+	$(PYTHON) setup.py sdist bdist bdist_egg bdist_wheel
 
 upload: package
 	twine upload dist/*
@@ -30,38 +30,43 @@ upload: package
 
 
 #
-# Develop
-# 
-devinstall: venv
-	. $(VIRTUALENV)/bin/activate && \
-	python setup.py install
-
-docbuild: devinstall
-	. $(VIRTUALENV)/bin/activate && \
-	sphinx-apidoc -e -o docs cnfformula cnfformula/tests/ && \
-	$(MAKE) -C docs html
-
+# Development is based on pyenv
 #
-# Install tools
+# The environment is based on the laters 2.7 python with is neither
+# a '-dev' nor an 'rc*' version. At least according to the list produced by
 #
-editor-tools : venv
+# $ pyenv install -l
+#
+DEV_DEPENDENCES:=pylint nose
+DOC_DEPENDENCES:=sphinx sphinx-autobuild numpydoc sphinx_rtd_theme
+
+PYENV:= $(shell command -v pyenv 2> /dev/null)
+PYENV_PYVERSION:=$(shell pyenv install -l | grep '[[:space:]]2.7[[:digit:]]*[^-r]' | tail -1)
+
+docs-build: docs-install-tools
 	. $(VIRTUALENV)/bin/activate && \
-	pip install pylint nose
+	python setup.py install && \
+	sphinx-apidoc -e -o docs cnfformula  && \
+	$(MAKE) -C docs html && \
+	pip uninstall -y $(PROJECT)
 
-doc-tools : venv
+docs-install-tools : venv
 	. $(VIRTUALENV)/bin/activate && \
-	pip install sphinx sphinx-autobuild numpydoc sphinx_rtd_theme
+	pip install $(DOC_DEPENDENCES)
 
 
-#
-# virtualenv setup
-#
 venv: $(VIRTUALENV)/bin/activate
 
 $(VIRTUALENV)/bin/activate: requirements.txt
-	type pip >/dev/null || easy_install --user pip
-	type virtualenv>/dev/null || easy_install --user virtualenv
-	test -d $(VIRTUALENV) || virtualenv -p $(PYTHON_BIN) $(VIRTUALENV)
+ifndef PYENV
+    $(error "Development is based on pyenv, please install it.")
+endif
+	@echo "Setting up virtualenv $(PROJECT) using python $(PYENV_PYVERSION)"
+	rm -f .python-version
+	pyenv install -s $(PYENV_PYVERSION)
+	pyenv virtualenv $(PYENV_PYVERSION) $(PROJECT)-venv
+	pyenv local $(PROJECT)-venv
 	. $@ && pip install -Ur requirements.txt
+	. $@ && pip install $(DEV_DEPENDENCES)
 	touch $@
 
