@@ -1,0 +1,338 @@
+#+TITLE:     
+#+AUTHOR:    Massimo Lauria
+#+EMAIL:     lauria.massimo@gmail.com
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:nil toc:nil \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+HTML_HEAD_EXTRA: <meta charset='utf-8'>
+#+HTML_HEAD_EXTRA: <meta http-equiv="X-UA-Compatible" content="chrome=1">
+#+HTML_HEAD_EXTRA: <meta name="description" content="CNFgen: Combinatorial benchmarks for SAT solvers">
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+#+HTML_HEAD: <style type="text/css"> .title  { height: 0; margin: 0;} </style>
+
+
+#+begin_html
+<!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/MassimoLauria/cnfgen">View on GitHub</a>
+
+          <h1 id="project_title"><a id="project_title" href="https://massimolauria.github.io/cnfgen">CNFgen</a></h1>
+          <h2 id="project_tagline">Combinatorial benchmarks for SAT solvers</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/MassimoLauria/cnfgen/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/MassimoLauria/cnfgen/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+#+end_html
+#+begin_html
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+#+end_html
+
+
+  The  structure of  some  formula  recipes in  =cnfgen=  is based  on
+  graphs, which  can be either *simple*  undirected graphs, *biparite*
+  graphs, *directed* graphs or *dag*  (directed acyclic graphs). It is
+  possible  either to  read  graphs  from files  or  to generate  them
+  internally.  The  =cnfgen= tool  accepts  and  saves graphs  in  the
+  following file formats.
+
+  + GML format ([[http://www.infosun.fim.uni-passau.de/Graphlet/GML/gml-tr.html][specification]])
+  + DOT format if =NetworkX= library supports it ([[http://www.graphviz.org/content/dot-language][specification]])
+  + DIMACS edge format ([[http://prolland.free.fr/works/research/dsat/dimacs.html][specification]])
+  + KTH adjacency list format ([[kthformat][specification]])
+  + Matrix format ([[matrix][specification]])
+
+  Different file  formats are  suitable for  specific graph  types, as
+  shown in this table.
+
+  |-------------+-------------------------+-------+-------+-----------+--------+--------|
+  | Graph type  | Description             | GML   | DOT   | KTH lists | DIMACS | Matrix |
+  |-------------+-------------------------+-------+-------+-----------+--------+--------|
+  | =simple=    | simple undirected graph | *Yes* | *Yes* | *Yes*     | *Yes*  | *No*   |
+  |-------------+-------------------------+-------+-------+-----------+--------+--------|
+  | =digraph=   | directed graph          | *Yes* | *Yes* | *Yes*     | *Yes*  | *No*   |
+  |-------------+-------------------------+-------+-------+-----------+--------+--------|
+  | =dag=       | directed acyclic graph  | *Yes* | *Yes* | *Yes*     | *No*   | *No*   |
+  |-------------+-------------------------+-------+-------+-----------+--------+--------|
+  | =bipartite= | bipartite graphs        | *Yes* | *Yes* | *Yes*     | *No*   | *Yes*  |
+  |-------------+-------------------------+-------+-------+-----------+--------+--------|
+
+  If  the file  ends with  one of  the extensions  =.kthlist=, =.gml=,
+  =.dot=, =.matrix=, =.dimacs= then the  program assumes that the file
+  is the  corresponding format. It  is possible to specify  the format
+  using the  =-gf= option in  the command line, which  is particularly
+  useful when the graph is read  from standard input or written on the
+  standard  output, or  when the  file  extension does  not match  its
+  file format.
+
+
+** GML and DOT format — bipartite graphs representation
+
+   The convention adopted  to specify bipartite graphs in  [[http://www.graphviz.org/content/dot-language][DOT]] and [[http://www.infosun.fim.uni-passau.de/Graphlet/GML/gml-tr.html][GML]]
+   formats is that to use a simple graph, where each vertex has either
+   the  attribute =bipartite=0=  or the  attribute =bipartite=1=  set.
+   This is the same convention used by graph library [[https://networkx.github.io/][NetworkX]].
+
+
+* KTH adjacency list format<<kthformat>>
+
+  [[[file:KTHlistFormat.txt][Full specification]] by [[http://www.csc.kth.se/~jakobn/][Jakob Nordström]]]
+
+
+  The =kthlist=  adjacency list  graph format  has been  introduced by
+  [[http://www.csc.kth.se/~jakobn/][Jakob Nordström]] of the Proof  Complexity [[http://www.csc.kth.se/~jakobn/project-proofcplx/][research group]] at KTH Royal
+  Institute  of  Technologyas  as  an  efficient  and  simple  way  to
+  represent  sparse  graphs  for   applications  in  SAT  solving  and
+  proof complexity.
+
+
+  The  format can  specify  all four  types of  graph,  but the  exact
+  interpretation  of   the  file  depends   a  bit  on   the  context.
+
+** KTH predecessors list format — =digraph=
+
+   The =kthlist=  format  as   a  straightforward  interpretation  as
+   a directed graph, as described in the format specification.
+
+** KTH adjacency list format — =dag=
+
+   When CNFgen expects  a directed acyclic graph, it  expects the file
+   in  =kthlist= format  to  express very  explicitly the  topological
+   order  of the  vertices. Namely  the  sequence of  $1$,... ,$n$  is
+   expected to  be a topological  order from  sources to sinks  of the
+   vertices,  and   formula  constructions  in  CNFgen   will  respect
+   this order.
+
+** KTH predecessors list format — =simple=
+
+   If a vertex $v$ has $u$ in  its adjacency list then the $v$ must be
+   explicitly listed in the adjacency  list of $u$, otherwise the file
+   is considered not well defined.  Nevertheless CNFgen is liberal and
+   does not expect that. For CNFgen an edge $\{u,v\}$ considered to be
+   in graph when either  $u$ is in the list of $v$, or  when $v$ is in
+   the list of  $u$, or both. Naturally all  =simple= graphs generated
+   by CNFgen  are correct =kthlist=  files according to  the strictest
+   interpretation of the format.
+
+   Here’s an  example of how  a graph  with missing inverted  edges is
+   interpreted as an undirected graph. The file
+  
+   : c
+   : c This is a DAG of 5 vertices
+   : c
+   : 5
+   : 1  : 0
+   : 2  : 0
+   : 3  : 1  0 
+   : 4  : 2  3  0  
+   : 5  : 2  4  0
+    
+   represents the directed acyclic graph
+
+#+BEGIN_SRC dot :file images/adjformatDAG.png :exports results
+digraph {
+ 1 -> 3;
+ 3 -> 4;
+ 2 -> 5;
+ 2 -> 4;
+ 4 -> 5;
+}
+#+END_SRC
+
+#+RESULTS:
+[[file:images/adjformatDAG.png]]
+
+   and the simple undirected graph 
+
+#+BEGIN_SRC dot :file images/adjformatS.png :exports results
+graph {
+ 1 -- 3;
+ 3 -- 4;
+ 2 -- 5;
+ 2 -- 4;
+ 4 -- 5;
+}
+#+END_SRC
+
+#+RESULTS:
+[[file:images/adjformatS.png]]
+
+** KTH predecessors list format — =bipartite=
+
+   The interpretation  of a file  as a bipartite graph  is essentially
+   the same as  it is for undirected graphs, with  the difference that
+   the  bipartition is  made explicit  by listing  just the  adjacency
+   lists of the vertices on the left side.
+
+   : c listing only left side vertices (bipartite graph)
+   : 11
+   : 1 : 7  8  9 0
+   : 2 : 6  7  9 0
+   : 3 : 8  9 11 0
+   : 4 : 8 10 11 0
+   : 5 : 6 10 11 0
+
+   The  difference  with  the  undirected graph  is  specification  is
+   important. Notice  that according to  the format spec  the previous
+   example is  not a  correct =kthlist= file  for an  undirected graph
+   because it  lacks the  adjacency lists of  the right  side vertices
+   too.  The  following   is  the  same  graph,  but   encoded  as  an
+   undirected graph.
+
+   : c listing left and right side vertices (undirected graph)
+   : 11
+   : 1 : 7  8  9 0
+   : 2 : 6  7  9 0
+   : 3 : 8  9 11 0
+   : 4 : 8 10 11 0
+   : 5 : 6 10 11 0
+   : 6 : 2  5  0
+   : 7 : 1  2  0
+   : 8 : 1  3  4 0
+   : 9 : 1  2  3 0
+   : 10 : 4 5 0
+   : 11 : 3 4 5 0
+   
+
+#+BEGIN_SRC dot :cmd neato :file images/kthformatBI.png :exports results
+  graph {
+   1  [pos="0,5!"]
+   2  [pos="0,4!"]
+   3  [pos="0,3!"]
+   4  [pos="0,2!"]
+   5  [pos="0,1!"]
+   6  [pos="2,5.5!"]
+   7  [pos="2,4.5!"]
+   8  [pos="2,3.5!"]
+   9  [pos="2,2.5!"]
+   10 [pos="2,1.5!"]
+   11 [pos="2,0.5!"]
+   1 -- {7 8 9}
+   2 -- {6 7 9}
+   3 -- {8 9 11}
+   4 -- {8 10 11}
+   5 -- {6 10 11}
+  }
+#+END_SRC
+
+#+RESULTS:
+[[file:images/kthformatBI.png]]
+
+** Using =simple= files where =bipartite= files are expected (deprecated)
+
+   CNFgen parser  is forgiving in  the sense that  when an edge  in an
+   undirected  graph is  specified only  in one  of the  two adjacency
+   lists, CNFgen still accept the input (which formally is not a legal
+   =kthlist= files). This means that  any =kthlist= file for bipartite
+   graphs could be interpreted as a file for undirected graphs as well.
+   
+   It makes sense  to allow the same in the  opposite direction, then.
+   Unfortunately this requires  to fix some ambiguity.  We stress that
+   using  =kthfile=  undirected graphs  when  a  =bipartite= graph  is
+   expected could lead to some surprises and therefore it is deprecated.
+
+   The precise  rule of  how a  =simple= graph  can be  interpreted as
+   a =bipartite= graph is as follows. Vertices are colored with either
+   left (=L=)  or right (=R=) colors  during the parsing of  the file.
+   At the beginning the coloring is completely unspecified, and colors
+   are assigned  to some  vertices every time  the parser  process the
+   adjacency list of a vertex. When the parser finds an adjacency list
+
+   : i : <j1> <j2> <j3> ... <jk> 0
+
+   it attempts  to color as  =L : R  R R ...  R=. If this is
+   compatible with the coloring computed so  far, it moves to the next
+   list.  Otherwise it  attempts  the coloring  =R  : L  L  L ...  L=.
+   If neither of this attempts work, then the parser emits an error. 
+
+   Essentially  an error  occurs when  a vertex  $v$ has  been already
+   assigned by to one color because  of previous lines, and a new line
+   forces $v$ to the other color.
+
+   If a vertex has no color by the end of the parsing (i.e. the vertex
+   did not occur  in any adjacency list and its  own adjacency list is
+   not specified) then it is assigned the color =R=.
+   
+   *Remarks* this  bi-coloring process is arbitrary  and greedy, hence
+   it  is possible  that  the  parsing fails  even  if  the graph  was
+   actually  bipartite   but  the  bipartition  was   not  discovered.
+   Furthermore the same graph  may get different bipartition depending
+   on how it is represented as a =kthlist= file. Notice that:
+
+   + isolated vertices may be colored  either =L= or =R=, depending on
+     whether    the   file    specifies   it    adjacency   list    or
+     not, respectively.
+   + the order  of the vertices is important. The  first time a vertex
+     occur the parser attempts first to color it =L= and then =R=.
+  
+
+* Matrix format<<matrix>>
+
+  The matrix format  is suitable to represent the  adjacency matrix of
+  a bipartite  graph, where  rows correspond to  vertices on  the left
+  side and columns to vertices on the right side.
+
+  The  file  consists  on  two   numbers  =r=  and  =c=  separated  by
+  whitespace, followed by a whitespace separated sequence of zeros and
+  ones of length $r\times c$. Here's a well formatted example.
+
+#+BEGIN_EXAMPLE
+5 6
+0 1 1 1 0 0
+1 1 0 1 0 0
+0 0 1 1 0 1
+0 0 1 0 1 1
+1 0 0 0 1 1
+#+END_EXAMPLE
+
+  which represents the bipartite graph
+
+#+BEGIN_SRC dot :cmd neato :file images/matrixformatEG.png :exports results
+  graph {
+   l1 [label=1,pos="0,5!"]
+   l2 [label=2,pos="0,4!"]
+   l3 [label=3,pos="0,3!"]
+   l4 [label=4,pos="0,2!"]
+   l5 [label=5,pos="0,1!"]
+   r1 [label=1,pos="2,5.5!"]
+   r2 [label=2,pos="2,4.5!"]
+   r3 [label=3,pos="2,3.5!"]
+   r4 [label=4,pos="2,2.5!"]
+   r5 [label=5,pos="2,1.5!"]
+   r6 [label=6,pos="2,0.5!"]
+   l1 -- {r2 r3 r4}
+   l2 -- {r1 r2 r4}
+   l3 -- {r3 r4 r6}
+   l4 -- {r3 r5 r6}
+   l5 -- {r1 r5 r6}
+  }
+#+END_SRC
+
+#+RESULTS:
+[[file:images/matrixformatEG.png]]
+
+
+#+begin_html
+    </section></div>
+#+end_html
+#+begin_html
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">CNFgen maintained by <a href="https://github.com/MassimoLauria">MassimoLauria</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+#+end_html
+
+# Local variables:
+# org-html-preamble: nil
+# org-html-postamble: nil
+# org-html-toplevel-hlevel: 3
+# org-html-head-include-default-style: nil
+# End:

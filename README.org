@@ -40,7 +40,7 @@
 
   : cnfgen <formula_type> --help
 
-  See the webpage of the project at http://massimolauria.github.io/cnfgen/
+  See the webpage of the project at http://massimolauria.net/cnfgen/
 
 ** Installation
    
@@ -67,4 +67,4 @@
    Please contribute to the code by sending pull requests. 
 
 
-Copyright 2012, 2013, 2014, 2015, 2016 © Massimo Lauria ([[mailto:lauria.massimo@gmail.com][lauria.massimo@gmail.com]])
+Copyright 2012, 2013, 2014, 2015, 2016, 2017, 2018 © Massimo Lauria ([[mailto:lauria.massimo@gmail.com][lauria.massimo@gmail.com]])

@@ -1,0 +1,106 @@
+#+TITLE:     
+#+AUTHOR:    Massimo Lauria
+#+EMAIL:     lauria.massimo@gmail.com
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:nil toc:nil \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+HTML_HEAD_EXTRA: <meta charset='utf-8'>
+#+HTML_HEAD_EXTRA: <meta http-equiv="X-UA-Compatible" content="chrome=1">
+#+HTML_HEAD_EXTRA: <meta name="description" content="CNFgen: Combinatorial benchmarks for SAT solvers">
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+#+HTML_HEAD: <style type="text/css"> .title  { height: 0; margin: 0;} </style>
+
+
+#+begin_html
+<!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/MassimoLauria/cnfgen">View on GitHub</a>
+
+          <h1 id="project_title"><a id="project_title" href="https://massimolauria.github.io/cnfgen">CNFgen</a></h1>
+          <h2 id="project_tagline">Combinatorial benchmarks for SAT solvers</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/MassimoLauria/cnfgen/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/MassimoLauria/cnfgen/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+#+end_html
+#+begin_html
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+#+end_html
+
+* What is a CNF?
+
+  A propositional formula a  representation of a function oven {0,1}
+  variables. Consider such a variable  x, then ¬x is a formula
+  which  has  value 1-x.  This  is  called  the /negation/  of  x.
+  Expressions of the form x  and ¬x are called \literals/, and
+  a /clause/ is a disjunction
+
+  l₁ v l₂ v … 
+
+  where each lᵢ is a literal. A clause evaluates to one if and only
+  if *at  least* one of the  literals evaluates to  one. Otherwise the
+  clause evaluates to zero.
+  A CNF is a conjunction of clauses
+
+  C₁ ∧ C₂ ∧ … 
+
+  and the CNF evaluates to one if *all* clauses evaluates to one.
+
+  To  *falsify* a  formula we  need an  input for  which the  formula
+  evaluates to 0;  to *satisfy* a formula we need  an input for which
+  it evaluates to 1.  Observe that  to falsify a CNF it is sufficient
+  to pick  a clause  and set  the variables  in such  a way  that all
+  literals in  the clause  evaluate to zero.   There is  no efficient
+  algorithm that decides whether a CNF is satisfiable or not.
+
+* DIMACS encoding of CNFs
+
+  The program outputs  CNF formulas encoded in  /dimacs/ format, which
+  has the following structure:
+
+  at the  beginning of the  file there may  be an arbitrary  number of
+  comment lines,  which must start  with character =c=. The  first non
+  comment line specifies  how many variables and how  many clauses are
+  in  the CNF  formulas.  The  next lines  are  sequence  of non  zero
+  integers followed by zero.
+  : p cnf <N> <M>
+  : <i> <i> <i> <i> 0
+  : <i> <i> <i> 0
+  : ...
+  Each  line  after  the  specification represents  a  clause  in  the
+  following way:  a  positive number t is the positive  literal on the
+  variable indexed by t. A negative number t is the negated literal on
+  the variable indexed by -t.
+
+  For example if the formula is defined  on n variables x₁, x₂, x₃, …,
+  then the line =3 -1 5 6 -4 0=  encodes the clause x3 v ¬x₁ v x₅ v x₆
+  v ¬x₄.
+
+
+
+
+#+begin_html
+    </section></div>
+#+end_html
+#+begin_html
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">CNFgen maintained by <a href="https://github.com/MassimoLauria">MassimoLauria</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+#+end_html
+
+# Local variables:
+# org-html-preamble: nil
+# org-html-postamble: nil
+# org-html-toplevel-hlevel: 3
+# org-html-head-include-default-style: nil
+# End:
