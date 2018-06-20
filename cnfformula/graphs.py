@@ -37,8 +37,8 @@ def supported_formats():
 #################################################################
 
 import sys
-import StringIO
 import io
+from io import StringIO
 import os
 
 try:
@@ -269,7 +269,7 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
 
         try:
             G=grtype(networkx.read_gml(input_file))
-        except networkx.NetworkXError,errmsg:
+        except networkx.NetworkXError as errmsg:
             raise ValueError("[Parse error in GML input] {} ".format(errmsg))
 
     elif file_format=='kthlist':

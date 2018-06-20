@@ -206,7 +206,7 @@ def find_methods_in_package(package,test, sortkey=None):
             obj = getattr(module, objname)
             if test(obj):
                 result.append(obj)
-    result.sort(key=sortkey)
+    # result.sort(key=sortkey)
     return result
             
 
@@ -318,7 +318,7 @@ class DirectedAcyclicGraphHelper(GraphHelper):
                 D=readGraph(getattr(args,'input'+suffix),
                             "dag",
                             getattr(args,'graphformat'+suffix))
-            except ValueError,e:
+            except ValueError as e:
                 print("ERROR ON '{}'. {}".format(getattr(args,'input'+suffix).name,e),file=sys.stderr)
                 exit(-1)
         else:
@@ -477,7 +477,7 @@ class SimpleGraphHelper(GraphHelper):
                 G=readGraph(getattr(args,'input'+suffix),
                             "simple",
                             getattr(args,'graphformat'+suffix))
-            except ValueError,e:
+            except ValueError as e:
                 print("ERROR ON '{}'. {}".format(
                     getattr(args,'input'+suffix).name,e),
                       file=sys.stderr)
@@ -712,7 +712,7 @@ class BipartiteGraphHelper(GraphHelper):
                 G=readGraph(getattr(args,"input"+suffix),
                             "bipartite",
                             getattr(args,"graphformat"+suffix))
-            except ValueError,e:
+            except ValueError as e:
                 print("ERROR ON '{}'. {}".format(getattr(args,"input"+suffix).name,e),file=sys.stderr)
                 exit(-1)
                             

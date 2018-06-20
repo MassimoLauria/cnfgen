@@ -398,7 +398,7 @@ class CNF(object):
         # Add the compressed clause
         try:
             self._clauses.append( self._compress_clause(clause) )
-        except KeyError,error:
+        except KeyError as error:
             if not auto_variables:
                 raise ValueError("The clause contains unknown variable: {}".format(error))
             else:
