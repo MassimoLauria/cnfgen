@@ -135,7 +135,7 @@ def EvenColoringFormula(G):
         edge_vars = [ var_name(u,v) for u in neighbors(G,v) ]
         
         for cls in CNF.equal_to_constraint(edge_vars,
-                                           len(edge_vars)/2):
+                                           len(edge_vars)//2):
             F.add_clause(cls,strict=True)
 
     return F
