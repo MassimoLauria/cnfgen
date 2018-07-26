@@ -9,7 +9,7 @@ solvers, see
   `cnfformula.utils.solver.supported_satsolvers`
 """
 
-from __future__ import print_function
+
 import sys
 
 __all__ = ["supported_satsolvers", "is_satisfiable", "have_satsolver"]
@@ -353,7 +353,7 @@ def supported_satsolvers():
 
     Output the list of all solvers supported by CNFgen.
     """
-    return _SATSOLVER_INTERFACE.keys()
+    return list(_SATSOLVER_INTERFACE.keys())
 
 
 def have_satsolver(solvers=None):

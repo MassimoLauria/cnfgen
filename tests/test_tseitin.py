@@ -1,7 +1,7 @@
 from cnfformula import TseitinFormula
 
 from . import TestCNFBase
-from test_commandline_helper import TestCommandline
+from .test_commandline_helper import TestCommandline
 
 import sys
 import unittest
@@ -53,10 +53,10 @@ class TestTseitin(TestCNFBase):
     def test_star(self):
         graph=nx.star_graph(10)
         F = TseitinFormula(graph)
-        self.assertEquals(len(list(F.variables())),10)
-        self.assertEquals(len(list(F.clauses())),2**9+10)
-        self.assertEquals(len([C for C in F.clauses() if len(C)==10]),2**9)
-        self.assertEquals(len([C for C in F.clauses() if len(C)==1]),10)
+        self.assertEqual(len(list(F.variables())),10)
+        self.assertEqual(len(list(F.clauses())),2**9+10)
+        self.assertEqual(len([C for C in F.clauses() if len(C)==10]),2**9)
+        self.assertEqual(len([C for C in F.clauses() if len(C)==1]),10)
         for C in F.clauses():
             if len(C)==1:
                 self.assertFalse(C[0][0])

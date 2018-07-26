@@ -1,13 +1,13 @@
 import cnfformula.utils.cnfshuffle as cnfshuffle
 
 from . import TestCNFBase
-from test_cnfformula import TestCNF
+from .test_cnfformula import TestCNF
 from cnfformula import FlipPolarity,Shuffle,cnfgen,CNF
 
 from cnfformula.utils.dimacstransform import command_line_utility as dimacstransform
 
 import random
-import StringIO
+import io
 
 class TestFlip(TestCNF) :
     def test_double_flip(self) :
@@ -25,7 +25,7 @@ class TestFlip(TestCNF) :
         cnf = CNF([[(True,'x'),(True,'y'),(False,'z')]])
 
         variable_permutation = list(cnf.variables())
-        clause_permutation = range(len(cnf))
+        clause_permutation = list(range(len(cnf)))
         polarity_flip = [-1]*len(variable_permutation)
         
         shuffled = Shuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
@@ -43,8 +43,8 @@ class TestDimacsFlip(TestCNF) :
         
         reference_output = shuffle.dimacs(export_header=False) + '\n'
 
-        input_stream = StringIO.StringIO(cnf.dimacs())
-        dimacs_flip = StringIO.StringIO()
+        input_stream = io.StringIO(cnf.dimacs())
+        dimacs_flip = io.StringIO()
 
         argv=['dimacstransform', '-q','--input', '-', '--output', '-', 'flip']
         try:

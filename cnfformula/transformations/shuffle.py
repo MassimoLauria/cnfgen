@@ -52,7 +52,7 @@ def Shuffle(cnf,
 
     # polarity flip
     if polarity_flip==None:
-        polarity_flip=[random.choice([-1,1]) for x in xrange(N)]
+        polarity_flip=[random.choice([-1,1]) for x in range(N)]
     else:
         assert len(polarity_flip)==N
 
@@ -74,7 +74,7 @@ def Shuffle(cnf,
     # permutation of clauses
     #
     if clause_permutation==None:
-        clause_permutation=range(M)
+        clause_permutation=list(range(M))
         random.shuffle(clause_permutation)
 
     # load clauses
@@ -104,5 +104,5 @@ class ShuffleCmd:
     def transform_cnf(F,args):
         return Shuffle(F,
                        variable_permutation=None if not args.no_variable_permutations else list(F.variables()),
-                       clause_permutation=None if not args.no_clause_permutations else range(len(F)),
+                       clause_permutation=None if not args.no_clause_permutations else list(range(len(F))),
                        polarity_flip=None if not args.no_polarity_flips else [1]*len(list(F.variables())))

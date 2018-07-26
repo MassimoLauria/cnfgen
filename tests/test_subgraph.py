@@ -8,7 +8,7 @@ from cnfformula.families.subgraph import RamseyWitnessFormula
 
 
 from cnfformula.graphs import readGraph,writeGraph
-from StringIO import StringIO as sio
+from io import StringIO as sio
 
 from . import TestCNFBase
 from .test_commandline_helper import TestCommandline

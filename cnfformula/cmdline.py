@@ -11,7 +11,7 @@ https://github.com/MassimoLauria/cnfgen.git
 
 """
 
-from __future__ import print_function
+
 
     
 import sys
@@ -194,7 +194,7 @@ def find_methods_in_package(package,test, sortkey=None):
     result = []
 
     if sortkey == None :
-        sortkey = lambda x : x
+        sortkey = str
     
     for loader, module_name, _ in  pkgutil.walk_packages(package.__path__):
         module_name = package.__name__+"."+module_name
@@ -318,7 +318,7 @@ class DirectedAcyclicGraphHelper(GraphHelper):
                 D=readGraph(getattr(args,'input'+suffix),
                             "dag",
                             getattr(args,'graphformat'+suffix))
-            except ValueError,e:
+            except ValueError as e:
                 print("ERROR ON '{}'. {}".format(getattr(args,'input'+suffix).name,e),file=sys.stderr)
                 exit(-1)
         else:
@@ -477,7 +477,7 @@ class SimpleGraphHelper(GraphHelper):
                 G=readGraph(getattr(args,'input'+suffix),
                             "simple",
                             getattr(args,'graphformat'+suffix))
-            except ValueError,e:
+            except ValueError as e:
                 print("ERROR ON '{}'. {}".format(
                     getattr(args,'input'+suffix).name,e),
                       file=sys.stderr)
@@ -712,7 +712,7 @@ class BipartiteGraphHelper(GraphHelper):
                 G=readGraph(getattr(args,"input"+suffix),
                             "bipartite",
                             getattr(args,"graphformat"+suffix))
-            except ValueError,e:
+            except ValueError as e:
                 print("ERROR ON '{}'. {}".format(getattr(args,"input"+suffix).name,e),file=sys.stderr)
                 exit(-1)
                             

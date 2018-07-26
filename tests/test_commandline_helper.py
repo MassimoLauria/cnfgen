@@ -1,6 +1,6 @@
 import unittest
 from contextlib import contextmanager
-from cStringIO import StringIO
+from io import StringIO
 import sys
 
 from cnfformula import cnfgen

@@ -94,7 +94,7 @@ class TseitinCmdHelper(object):
             charge=[1]+[0]*(G.order()-1)
 
         else: # random vector
-            charge=[random.randint(0,1) for _ in xrange(G.order()-1)]
+            charge=[random.randint(0,1) for _ in range(G.order()-1)]
 
             parity=sum(charge) % 2
 

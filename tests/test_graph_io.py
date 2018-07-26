@@ -7,7 +7,7 @@ from cnfformula.graphs import readGraph,writeGraph,supported_formats
 from cnfformula.graphs import find_read_dot,has_dot_library
 from cnfformula.graphs import bipartite_sets
 
-from StringIO import StringIO as sio
+from io import StringIO as sio
 import networkx as nx
 
 from . import example_filename

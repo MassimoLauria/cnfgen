@@ -17,7 +17,7 @@ https://github.com/MassimoLauria/cnfgen.git
 """
 
 
-from __future__ import print_function
+
 from itertools import product,islice
 from itertools import combinations,combinations_with_replacement
 from collections import Counter
@@ -283,7 +283,7 @@ class CNF(object):
         varnames=self._index2name
         
         # number of variables and clauses
-        N=len(varindex.keys())
+        N=len(list(varindex.keys()))
         
         # Consistency in the variable dictionary
         if N != len(varnames)-1:
@@ -398,7 +398,7 @@ class CNF(object):
         # Add the compressed clause
         try:
             self._clauses.append( self._compress_clause(clause) )
-        except KeyError,error:
+        except KeyError as error:
             if not auto_variables:
                 raise ValueError("The clause contains unknown variable: {}".format(error))
             else:
@@ -473,7 +473,7 @@ class CNF(object):
         """
         assert self._coherent
         vars_iterator = iter(self._index2name)
-        vars_iterator.next()
+        next(vars_iterator)
         return vars_iterator
     
     def clauses(self):
@@ -525,7 +525,7 @@ class CNF(object):
         .. [1] http://www.satlib.org/Benchmarks/SAT/satformat.ps
 
         """
-        from cStringIO import StringIO
+        from io import StringIO
         output = StringIO()
         self._dimacs_dump_clauses(output, export_header, extra_text)
         return output.getvalue()
@@ -626,7 +626,7 @@ class CNF(object):
 \usepackage{listings}
 """
         
-        from cStringIO import StringIO
+        from io import StringIO
         output = StringIO()
         
         # formula header as a LaTeX comment
@@ -1278,7 +1278,7 @@ class CNF(object):
 
         
         def variables(self):
-            for v,b in product(self.Domain,xrange(0,self.Bits)):
+            for v,b in product(self.Domain,range(0,self.Bits)):
                 yield self.var_name(v,b)
                 
 
@@ -1341,7 +1341,7 @@ class CNF(object):
         def forbid_bitstring(self, i, bs):
             """Generates a clause that exclude 'i -> bs' mapping """
             return [ ( bs[b]==0, self.var_name(i,self.Bits-1-b))
-                     for b in xrange(self.Bits) ] 
+                     for b in range(self.Bits) ] 
 
         def forbid_image(self, i, j):
             """Generates a clause that exclude 'i -> j' mapping """
