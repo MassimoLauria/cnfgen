@@ -221,7 +221,7 @@ a sequence of transformations.
     # Generate the formula
     try:
         cnf = args.generator.build_cnf(args)
-    except ValueError as e:
+    except (ValueError, AttributeError) as e:
         print(e, file=sys.stderr)
         sys.exit(os.EX_DATAERR)
 
