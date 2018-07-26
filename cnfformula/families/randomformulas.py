@@ -21,7 +21,7 @@ list assignments.
 """
     for assignment in assignments:
 
-        if  any( assignment.has_key(var) and polarity == assignment[var]
+        if  any( var in assignment and polarity == assignment[var]
                  for (polarity, var) in cls):
             continue
 
@@ -50,7 +50,7 @@ def all_clauses(k, indices, planted_assignments):
     for domain in itertools.combinations(indices, k):
         for polarity in itertools.product([True,False], repeat=k):
 
-            cls =  zip(polarity,('x_{0}'.format(i) for i in domain))
+            cls =  list(zip(polarity,('x_{0}'.format(i) for i in domain)))
             if clause_satisfied(cls, planted_assignments):
                 yield cls
 
@@ -109,7 +109,7 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
     F = CNF()
     F.header = "Random {}-CNF over {} variables and {} clauses\n".format(k,n,m) + F.header
 
-    indices = xrange(1,n+1)
+    indices = range(1,n+1)
     for i in indices:
         F.add_variable('x_{0}'.format(i))
     try:

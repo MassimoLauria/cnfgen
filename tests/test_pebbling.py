@@ -1,7 +1,7 @@
 from cnfformula import CNF,PebblingFormula
 import sys
 from . import TestCNFBase
-from test_commandline_helper import TestCommandline
+from .test_commandline_helper import TestCommandline
 
 import networkx as nx
 
@@ -26,24 +26,24 @@ class TestPebbling(TestCNFBase) :
         self.assertTrue(peb._check_coherence())
         clauses = \
             [[(True,0)]] + \
-            [[(False,i-1),(True,i)] for i in xrange(1,10)] + \
+            [[(False,i-1),(True,i)] for i in range(1,10)] + \
             [[(False,9)]]
-        self.assertListEqual(list(peb.variables()),range(10))
+        self.assertListEqual(list(peb.variables()),list(range(10)))
         self.assertSetSetEqual(peb.clauses(),clauses)
 
     def test_pyramid(self) :
         G=nx.DiGraph()
         G.add_node(10)
-        for i in xrange(0,10) :
+        for i in range(0,10) :
             G.add_node(i)
             G.add_edge(i,10)
         peb = PebblingFormula(G)
         self.assertTrue(peb._check_coherence())
         clauses = \
-            [[(True,i)] for i in xrange(10)] + \
-            [[(False,i) for i in xrange(10)] + [(True,10)]] + \
+            [[(True,i)] for i in range(10)] + \
+            [[(False,i) for i in range(10)] + [(True,10)]] + \
             [[(False,10)]]
-        self.assertListEqual(list(peb.variables()),range(11))
+        self.assertListEqual(list(peb.variables()),list(range(11)))
         self.assertSetSetEqual(peb.clauses(),clauses)
         
     def test_cycle(self) :
@@ -55,7 +55,7 @@ class TestPebblingCommandline(TestCommandline):
     def test_tree(self):
         for sz in range(1,5):
             G = nx.balanced_tree(2,sz,nx.DiGraph()).reverse()
-            G = nx.relabel_nodes(G,dict(zip(G.nodes(),reversed(G.nodes()))),True)
+            G = nx.relabel_nodes(G,dict(list(zip(G.nodes(),reversed(G.nodes())))),True)
             G.name = 'Complete binary tree of height {}'.format(sz)
             F = PebblingFormula(G)
             self.checkFormula(sys.stdin,F, ["cnfgen","-q","peb", "--tree", sz])

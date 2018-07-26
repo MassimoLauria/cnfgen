@@ -38,7 +38,7 @@ class TestGraphOrderingPrinciple(TestCNFBase):
                 for smart in (True,False):
                     for plant in (True,False):
                         for knuth in (0,2,3):
-                            print (elements,total,smart,plant,knuth)
+                            print((elements,total,smart,plant,knuth))
                             graph = nx.complete_graph(elements)
                             F = GraphOrderingPrinciple(graph,total,smart,plant,knuth)
                             G = OrderingPrinciple(elements,total,smart,plant,knuth)
@@ -56,7 +56,7 @@ class TestOrderingPrincipleCommandline(TestCommandline):
                             if smart : parameters.append("--smart")
                             if plant : parameters.append("--plant")
                             if knuth : parameters.append("--knuth{}".format(knuth))
-                            switches = len(filter(None,(total,smart,knuth)))
+                            switches = len([_f for _f in (total,smart,knuth) if _f])
                             if (switches>1) :
                                 self.checkCrash(sys.stdin,parameters)
                             else :
@@ -75,7 +75,7 @@ class TestGraphOrderingPrincipleCommandline(TestCommandline):
                             if smart : parameters.append("--smart")
                             if plant : parameters.append("--plant")
                             if knuth : parameters.append("--knuth{}".format(knuth))
-                            switches = len(filter(None,(total,smart,knuth)))
+                            switches = len([_f for _f in (total,smart,knuth) if _f])
                             if (switches>1) :
                                 self.checkCrash(sys.stdin,parameters)
                             else :

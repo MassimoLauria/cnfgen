@@ -10,7 +10,7 @@ sources to a *single sink*.
 CNF formulas interesting for proof complexity.
 """
 
-from __future__ import print_function
+
 
 import os
 

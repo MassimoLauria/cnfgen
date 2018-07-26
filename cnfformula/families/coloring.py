@@ -41,7 +41,7 @@ def GraphColoringFormula(G,colors,functional=True):
     col=CNF()
 
     if isinstance(colors,int) and colors>=0:
-        colors = range(1,colors+1)
+        colors = list(range(1,colors+1))
     
     if not isinstance(list, collections.Iterable):
         ValueError("Parameter \"colors\" is expected to be a iterable")
@@ -167,7 +167,7 @@ class KColorCmdHelper(object):
         - `args`: command line options
         """
         G = SimpleGraphHelper.obtain_graph(args)
-        return GraphColoringFormula(G,range(1,args.k+1))
+        return GraphColoringFormula(G,list(range(1,args.k+1)))
 
 
 

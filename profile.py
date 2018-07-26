@@ -3,7 +3,7 @@
 Profile script for CNFgen package
 """
 
-from __future__ import print_function
+
 import os
 import sys
 from contextlib import contextmanager

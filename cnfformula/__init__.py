@@ -29,7 +29,7 @@ def _load_formula_generators():
     # Load the formula generators in the `cnfformula` namespace
     self_ref = sys.modules[__name__]
     self_ref.__dict__.update(loot)
-    __all__.extend(name for name in loot.keys() if name not in __all__)
+    __all__.extend(name for name in list(loot.keys()) if name not in __all__)
 
 
 
@@ -55,7 +55,7 @@ def _load_formula_transformations():
     # Load the formula object into the namespace
     self_ref = sys.modules[__name__]
     self_ref.__dict__.update(loot)
-    __all__.extend(name for name in loot.keys() if name not in __all__)
+    __all__.extend(name for name in list(loot.keys()) if name not in __all__)
 
 
 _load_formula_generators()

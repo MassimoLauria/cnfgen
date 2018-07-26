@@ -26,10 +26,10 @@ class TestCNF(TestCNFBase) :
 
     @staticmethod
     def random_cnf(width, num_variables, num_clauses) :
-        return TestCNF.cnf_from_variables_and_clauses(xrange(1,num_variables+1), [
+        return TestCNF.cnf_from_variables_and_clauses(range(1,num_variables+1), [
                 [(random.choice([True,False]),x+1)
-                 for x in random.sample(xrange(num_variables),width)]
-                for C in xrange(num_clauses)])
+                 for x in random.sample(range(num_variables),width)]
+                for C in range(num_clauses)])
     
     def test_empty(self) :
         F=cnfformula.CNF()

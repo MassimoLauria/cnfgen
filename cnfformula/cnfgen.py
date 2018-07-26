@@ -28,7 +28,7 @@ p cnf 5 3
 
 """
 
-from __future__ import print_function
+
 
 import os
 import sys
@@ -115,7 +115,7 @@ def search_cmdline_input_file(list_args):
     list_args : list of parsed command lines
     """
     for l in list_args:
-        data = vars(l).iteritems()
+        data = iter(vars(l).items())
         data = [ v for k,v in data if not k.startswith("_")]
         data = [ f for f in data if isinstance(f,file)]
         data = [ f for f in data if (f != sys.stdin) and f.mode=='r']
@@ -142,8 +142,8 @@ def command_line_utility(argv=sys.argv):
 
 
     # Formula generators cmdline setup 
-    import families
-    import transformations
+    from . import families
+    from . import transformations
     from .cmdline import is_cnfgen_subcommand
     from .cmdline import is_cnf_transformation_subcommand
     from .cmdline import find_methods_in_package

@@ -11,7 +11,7 @@ increase the hardness of the formula
 Accept a cnf in dimacs format in input
 """
 
-from __future__ import print_function
+
 import os
 
 from . import dimacs2cnf
