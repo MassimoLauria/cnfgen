@@ -63,6 +63,7 @@ ifndef PYENV
 endif
 	@echo "Setting up virtualenv $(PROJECT) using python $(PYENV_PYVERSION)"
 	rm -f .python-version
+	pyenv virtualenv-delete -f $(PROJECT)-venv
 	pyenv install -s $(PYENV_PYVERSION)
 	pyenv virtualenv $(PYENV_PYVERSION) $(PROJECT)-venv
 	pyenv local $(PROJECT)-venv

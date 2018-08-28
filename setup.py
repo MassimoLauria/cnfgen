@@ -21,8 +21,10 @@ setup(
             'cnfgen=cnfformula.cnfgen:command_line_utility',
             'cnftransform=cnfformula.utils.dimacstransform:command_line_utility'],
     },
-    install_requires=['networkx','pyparsing'],
+    install_requires=['networkx>=1.9,<2.0','pydotplus'],
     # make some tests
     test_suite='nose.collector',
-    tests_require=['nose']
+    tests_require=['nose'],
+    # only for python 2
+    python_requires='>=2.7,<3.0'
 )
