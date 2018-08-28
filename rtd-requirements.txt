@@ -1,2 +1,3 @@
-networkx<2.0
+networkx>=1.9,<2.0
+pydotplus
 numpydoc
