@@ -1,4 +1,4 @@
-#+TITLE:     
+#+TITLE:     CNFgen - formula transformations
 #+AUTHOR:    Massimo Lauria
 #+EMAIL:     lauria.massimo@gmail.com
 #+LANGUAGE:  en
@@ -9,10 +9,10 @@
 #+HTML_HEAD_EXTRA: <meta http-equiv="X-UA-Compatible" content="chrome=1">
 #+HTML_HEAD_EXTRA: <meta name="description" content="CNFgen: Combinatorial benchmarks for SAT solvers">
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-#+HTML_HEAD: <style type="text/css"> .title  { height: 0; margin: 0;} </style>
+#+HTML_HEAD: <style type="text/css"> .title  { height: 0; margin: 0; display: none; } </style>
 
 
-#+begin_html
+#+BEGIN_EXPORT html
 <!-- HEADER -->
     <div id="header_wrap" class="outer">
         <header class="inner">
@@ -27,11 +27,11 @@
             </section>
         </header>
     </div>
-#+end_html
-#+begin_html
+#+END_EXPORT
+#+BEGIN_EXPORT html
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-#+end_html
+#+END_EXPORT
 
 Often we want to increase the hardness of formulas in a controlled way
 to study their proof complexity or how SAT solvers perform on them.
@@ -164,10 +164,11 @@ to study their proof complexity or how SAT solvers perform on them.
   that, but the XOR is a good example of how to make a formula harder.
 
 
-#+begin_html
+#+BEGIN_EXPORT html
     </section></div>
-#+end_html
-#+begin_html
+#+END_EXPORT
+
+#+BEGIN_EXPORT html
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
       <footer class="inner">
@@ -175,7 +176,7 @@ to study their proof complexity or how SAT solvers perform on them.
         <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
-#+end_html
+#+END_EXPORT
 
 # Local variables:
 # org-html-preamble: nil

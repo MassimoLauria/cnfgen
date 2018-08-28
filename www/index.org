@@ -1,4 +1,4 @@
-#+TITLE:     
+#+TITLE:     CNFgen
 #+AUTHOR:    Massimo Lauria
 #+EMAIL:     lauria.massimo@gmail.com
 #+LANGUAGE:  en
@@ -9,10 +9,10 @@
 #+HTML_HEAD_EXTRA: <meta http-equiv="X-UA-Compatible" content="chrome=1">
 #+HTML_HEAD_EXTRA: <meta name="description" content="CNFgen: Combinatorial benchmarks for SAT solvers">
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-#+HTML_HEAD: <style type="text/css"> .title  { height: 0; margin: 0;} </style>
+#+HTML_HEAD: <style type="text/css"> .title  { height: 0; margin: 0; display: none; } </style>
 
 
-#+begin_html
+#+BEGIN_EXPORT html
 <!-- HEADER -->
     <div id="header_wrap" class="outer">
         <header class="inner">
@@ -27,11 +27,13 @@
             </section>
         </header>
     </div>
-#+end_html
-#+begin_html
+#+END_EXPORT
+
+
+#+BEGIN_EXPORT html
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-#+end_html
+#+END_EXPORT
 
 CNFgen is produces combinatorial benchmarks in DIMACS format, ready to
 be fed to  SAT solvers. These benchmarks come mostly  from research in
@@ -369,18 +371,18 @@ problems well known to be challenging for certain SAT solvers.
     no. 279611.
   
 
-
-#+begin_html
+#+BEGIN_EXPORT html
     </section></div>
-#+end_html
-#+begin_html
+#+END_EXPORT
+
+#+BEGIN_EXPORT html
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
       <footer class="inner">
         <p class="copyright">CNFgen maintained by <a href="https://github.com/MassimoLauria">Massimo Lauria</a></p>
       </footer>
     </div>
-#+end_html
+#+END_EXPORT
 
 # Local variables:
 # org-html-preamble: nil

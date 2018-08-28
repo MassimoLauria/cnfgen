@@ -5,7 +5,7 @@
 ;;
 ;; $ emacs -Q -batch --visit=file.org -l setup.el -f my-export-org
 ;;
-;; The script requires a decent version of org-mode (say 6.33x).
+;; The script requires a decent version of org-mode (say >8).
 ;; Any Emacs 24.x should have it installed by default. For older emacs
 ;; installations the script breaks. In particular the Emacs 22 shipped
 ;; with MacOSX still has org-mode 4.6x.
@@ -36,10 +36,6 @@
   (cond
    ((fboundp 'org-html-export-as-html)  ; org-mode 8
     (org-html-export-to-html))
-   ((and (fboundp 'org-export-as-html) (string< "7.9" org-version)) ; org-mode (7.9)
-    (org-export-as-html 1 stylesheet-p-list nil nil))
-   ((and (fboundp 'org-export-as-html) (string< "6.32" org-version)) ; older org-mode (6.33)
-    (org-export-as-html 1 nil stylesheet-p-list nil nil))
    (t
     (message "Org-mode is too old or missing. Can't convert to HTML"))))
 
@@ -47,4 +43,4 @@
 
 (defun version-report ()
   (message (format "EMACS: %s" (emacs-version)))
-  (message (format "ORG-MODE: %s (required >= 6.33x)" org-version)))
+  (message (format "ORG-MODE: %s (required >= 8)" org-version)))
