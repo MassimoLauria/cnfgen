@@ -22,7 +22,7 @@ clean:
 	find . -name 'flycheck*.py' -delete
 
 package: clean
-	$(PYTHON) setup.py sdist bdist bdist_egg bdist_wheel
+	$(PYTHON) setup.py sdist bdist_egg bdist_wheel
 
 upload: package
 	twine upload dist/*
