@@ -13,5 +13,5 @@ __version__             = __version_long__
 
 __copyright__           = '2012-2018 '+ __author__ + ' <' + __author_email__ + '>'
 __license__             = 'GPL-3'
-__url__                 = 'https://massimolauria.github.io/cnfgen'
+__url__                 = 'https://massimolauria.net/cnfgen'
 __repo_url__            = 'https://github.com/MassimoLauria/cnfgen'
