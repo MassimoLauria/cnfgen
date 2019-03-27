@@ -1029,7 +1029,7 @@ class CNF(object):
         -------
             a list of clauses
         """
-        threshold = (len(variables)+1)/2
+        threshold = int((len(variables)+1)/2)
         return cls.greater_or_equal_constraint(variables, threshold)
 
     @classmethod
@@ -1045,7 +1045,7 @@ class CNF(object):
         -------
             a list of clauses
         """
-        threshold = len(variables)/2
+        threshold = int(len(variables)/2)
         return cls.less_or_equal_constraint(variables, threshold)
      
     @classmethod
@@ -1061,7 +1061,7 @@ class CNF(object):
         -------
             a list of clauses
         """
-        threshold = (len(variables)+1)/2
+        threshold = int((len(variables)+1)/2)
         return cls.equal_to_constraint(variables,threshold)
      
     @classmethod
@@ -1077,7 +1077,7 @@ class CNF(object):
         -------
             a list of clauses
         """
-        threshold = len(variables)/2
+        threshold = int(len(variables)/2)
         return cls.equal_to_constraint(variables,threshold)
 
     class unary_mapping(object):
