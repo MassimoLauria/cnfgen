@@ -201,7 +201,7 @@ class TestPlantClique(TestArgparse) :
         self.assertEqual(G.size(),45)
 
     def test_add(self):
-        G = self.parse(["--gnm", "10", "15", "--plantclique", "5"])
+        G = self.parse(["--gnm", "10", "15", "--plantclique", "6"])
         self.assertEqual(G.order(),10)
         self.assertGreaterEqual(G.size(),20)
         self.assertLessEqual(G.size(),35)
