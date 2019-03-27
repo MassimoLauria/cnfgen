@@ -8,6 +8,7 @@ from cnfformula.graphs import find_read_dot,has_dot_library
 from cnfformula.graphs import bipartite_sets
 
 from io import StringIO as sio
+from io import BytesIO
 import networkx as nx
 
 from . import example_filename
@@ -73,7 +74,7 @@ class TestGraphIO(unittest.TestCase) :
 
     def test_low_level_gml_read_path2(self) :
 
-        G = nx.read_gml(sio(gml_path2))
+        G = nx.read_gml(BytesIO(gml_path2.encode("ascii")))
 
         self.assertEqual(G.order(), 3)
         self.assertEqual(len(G.edges()), 2)
@@ -104,8 +105,8 @@ class TestGraphIO(unittest.TestCase) :
 
     def test_readGraph_gml_path2(self) :
 
-        self.assertRaises(ValueError, readGraph, sio(gml_path2), graph_type='simple')
-        G = readGraph(sio(gml_path2), graph_type='simple', file_format = 'gml')
+        self.assertRaises(ValueError, readGraph, BytesIO(gml_path2.encode("ascii")), graph_type='simple')
+        G = readGraph(BytesIO(gml_path2.encode("ascii")), graph_type='simple', file_format = 'gml')
         self.assertEqual(G.order(), 3)
         self.assertEqual(len(G.edges()), 2)
 
@@ -146,7 +147,7 @@ class TestGraphIO(unittest.TestCase) :
         if 'dot' not in supported_formats()['simple']:
             self.skipTest("No support for Dot file I/O.")
         
-        with open(example_filename('path2.dot'),'r') as ifile:
+        with open(example_filename('path2.dot'), 'rb') as ifile:
 
             # Parsing should fail here
             self.assertRaises(ValueError, readGraph, ifile, graph_type='simple', file_format='gml')

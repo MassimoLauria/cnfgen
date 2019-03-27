@@ -37,7 +37,7 @@ def supported_formats():
 #################################################################
 
 import sys
-from io import StringIO
+from io import StringIO, BytesIO
 import io
 import os
 
@@ -148,9 +148,9 @@ def _process_graph_io_arguments(iofile,
     """Test if the argument for the graph I/O functions make sense"""
 
     # Check the file
-    if not isinstance(iofile,io.TextIOBase) and \
-       not isinstance(iofile,file) and \
-       not isinstance(iofile,StringIO.StringIO):
+    if not isinstance(iofile, io.TextIOBase) and \
+       not isinstance(iofile, io.IOBase) and \
+       not isinstance(iofile, StringIO):
         raise ValueError("The IO stream \"{}\" does not correspond to a file".format(iofile))
 
     # Check the graph type specification
@@ -168,7 +168,7 @@ def _process_graph_io_arguments(iofile,
         else:
             grtype=networkx.Graph
     else:
-        raise RuntimeError("Unchecked graph type argument: {}".format(grtype))
+        raise RuntimeError("Unchecked graph type argument: {}".format(graph_type))
 
     # Check/discover file format specification
     if file_format=='autodetect':
