@@ -58,7 +58,7 @@ It is possible to bicolor the numbers from
         ptn.add_variable(V(i))
 
         
-    for x,y in combinations(list(range(1,N+1)),2):
+    for x,y in combinations(range(1,N+1),2):
         z = int(sqrt(x**2 +  y**2))
         if z <=N and z**2 == x**2 + y**2:
             ptn.add_clause([ (True, V(x)), (True, V(y)), (True, V(z))],strict=True)

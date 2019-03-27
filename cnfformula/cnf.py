@@ -283,7 +283,7 @@ class CNF(object):
         varnames=self._index2name
         
         # number of variables and clauses
-        N=len(list(varindex.keys()))
+        N=len(varindex.keys())
         
         # Consistency in the variable dictionary
         if N != len(varnames)-1:

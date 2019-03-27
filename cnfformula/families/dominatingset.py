@@ -68,7 +68,7 @@ def DominatingSet(G,d, alternative = False):
     # Create variables
     for v in V:
         F.add_variable(D(v))
-    for i,v in product(list(range(1,d+1)),V):
+    for i,v in product(range(1,d+1),V):
         F.add_variable(M(v,i))
     
     # No two (active) vertices map to the same index
@@ -84,10 +84,10 @@ def DominatingSet(G,d, alternative = False):
     # (Active) Vertices in the sequence are not repeated
     if alternative:
         for v in V:
-            for i,j in combinations(list(range(1,d+1)),2):
+            for i,j in combinations(range(1,d+1),2):
                 F.add_clause([(False,D(v)),(False,M(v,i)),(False,M(v,j))])
     else:
-        for i,j in combinations_with_replacement(list(range(1,d+1)),2):
+        for i,j in combinations_with_replacement(range(1,d+1),2):
             i,j = min(i,j),max(i,j)
             for u,v in combinations(V,2):
                 u,v = max(u,v),min(u,v)
@@ -95,7 +95,7 @@ def DominatingSet(G,d, alternative = False):
 
     # D(v) = M(v,1) or M(v,2) or ... or M(v,d)        
     if not alternative:
-        for i,v in product(list(range(1,d+1)),V):
+        for i,v in product(range(1,d+1),V):
             F.add_clause([(False,M(v,i)),(True,D(v))])
     for v in V:
         F.add_clause([(False,D(v))] + [(True,M(v,i)) for i in range(1,d+1)])

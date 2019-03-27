@@ -154,7 +154,7 @@ def _process_graph_io_arguments(iofile,
         raise ValueError("The IO stream \"{}\" does not correspond to a file".format(iofile))
 
     # Check the graph type specification
-    if graph_type not in list(_graphformats.keys()):
+    if graph_type not in _graphformats:
         raise ValueError("The graph type must be one of "+list(_graphformats.keys()))
 
     elif graph_type in {"dag","digraph"}:
@@ -801,7 +801,7 @@ def _write_graph_kthlist_format(G,output_file, bipartition = False):
         if G.is_directed():
             nbors = [indices[w] for w in G.predecessors(v)]
         else:
-            nbors = [indices[w] for w in list(G.adj[v].keys())]
+            nbors = [indices[w] for w in G.adj[v].keys()]
 
         nbors.sort()
 

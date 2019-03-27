@@ -36,7 +36,7 @@ def CountingPrinciple(M,p):
 
     # Incidence lists
     incidence=[[] for _ in range(M)]
-    for tpl in combinations(list(range(M)),p):
+    for tpl in combinations(range(M),p):
         for i in tpl:
             incidence[i].append(tpl)
     
