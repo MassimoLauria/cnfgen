@@ -41,13 +41,8 @@ from io import StringIO, BytesIO
 import io
 import os
 
-try:
-    import networkx
-    import networkx.algorithms
-except ImportError:
-    print("ERROR: Missing 'networkx' library: we cannot use graph based formulas.",
-          file=sys.stderr)
-    exit(-1)
+import networkx
+import networkx.algorithms
 
 
 def has_dot_library():

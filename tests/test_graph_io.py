@@ -148,13 +148,12 @@ class TestGraphIO(unittest.TestCase) :
             self.skipTest("No support for Dot file I/O.")
         
         with open(example_filename('path2.dot'), 'rb') as ifile:
-
             # Parsing should fail here
             self.assertRaises(ValueError, readGraph, ifile, graph_type='simple', file_format='gml')
 
-            ifile.seek(0)
-            
+        with open(example_filename('path2.dot'), 'r') as ifile:
             # Parser should guess that it is a dot file
+            # read_dot() expects a file opened in text mode
             G = readGraph(ifile, graph_type='simple')
             self.assertEqual(G.order(), 3)
             self.assertEqual(len(G.edges()), 2)

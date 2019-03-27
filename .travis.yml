@@ -4,9 +4,9 @@ python:
   - "3.6"
 # dependencies
 env:
-  - NETWORKX_VERSION=1.9.0
-  - NETWORKX_VERSION=1.10
-  - NETWORKX_VERSION=1.11
+  - NETWORKX_VERSION=2.0
+  - NETWORKX_VERSION=2.1
+  - NETWORKX_VERSION=2.2
 install:
   - pip install -q networkx==$NETWORKX_VERSION
   - pip install -r requirements.txt
