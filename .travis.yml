@@ -1,7 +1,9 @@
 language: python
 python:
+  - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7"
 # dependencies
 env:
   - NETWORKX_VERSION=1.9.0
