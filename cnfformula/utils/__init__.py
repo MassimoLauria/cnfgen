@@ -3,7 +3,7 @@
 """Various utilities for the manipulation of the CNFs.
 """
 
-from __future__ import print_function
+
 from ..cnf import CNF
 
 
@@ -97,7 +97,7 @@ def dimacs2cnf(file_handle):
 
     cnf = CNF(header=header)
 
-    for i in xrange(1,nvariables+1):
+    for i in range(1,nvariables+1):
         cnf.add_variable(i)
 
     cnf._add_compressed_clauses(clauses)

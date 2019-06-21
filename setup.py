@@ -26,6 +26,6 @@ setup(
     # make some tests
     test_suite='nose.collector',
     tests_require=['nose'],
-    # only for python 2
-    python_requires='>=2.7,<3.0'
+    # only for python 3
+    python_requires='>=3.4'
 )

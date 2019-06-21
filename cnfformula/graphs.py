@@ -4,7 +4,7 @@
 formulas that are graph based.
 """
 
-from __future__ import print_function
+
 
 
 __all__ = ["supported_formats",
@@ -37,7 +37,7 @@ def supported_formats():
 #################################################################
 
 import sys
-import StringIO
+from io import StringIO, BytesIO
 import io
 import os
 
@@ -83,7 +83,7 @@ def has_dot_library():
 
 # Check that DOT is a supported format
 if not has_dot_library():
-    for k in _graphformats.values():
+    for k in list(_graphformats.values()):
         try:
             k.remove('dot')
         except ValueError:
@@ -148,14 +148,14 @@ def _process_graph_io_arguments(iofile,
     """Test if the argument for the graph I/O functions make sense"""
 
     # Check the file
-    if not isinstance(iofile,io.TextIOBase) and \
-       not isinstance(iofile,file) and \
-       not isinstance(iofile,StringIO.StringIO):
+    if not isinstance(iofile, io.TextIOBase) and \
+       not isinstance(iofile, io.IOBase) and \
+       not isinstance(iofile, StringIO):
         raise ValueError("The IO stream \"{}\" does not correspond to a file".format(iofile))
 
     # Check the graph type specification
-    if graph_type not in _graphformats.keys():
-        raise ValueError("The graph type must be one of "+_graphformats.keys())
+    if graph_type not in _graphformats:
+        raise ValueError("The graph type must be one of "+list(_graphformats.keys()))
 
     elif graph_type in {"dag","digraph"}:
         if multi_edges:
@@ -168,7 +168,7 @@ def _process_graph_io_arguments(iofile,
         else:
             grtype=networkx.Graph
     else:
-        raise RuntimeError("Unchecked graph type argument: {}".format(grtype))
+        raise RuntimeError("Unchecked graph type argument: {}".format(graph_type))
 
     # Check/discover file format specification
     if file_format=='autodetect':
@@ -251,7 +251,7 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
     """
 
     # file name instead of file object
-    if isinstance(input_file,(str,unicode)):
+    if isinstance(input_file,str):
         with open(input_file,'r') as file_handle:
             return readGraph(file_handle,graph_type,file_format,multi_edges)
 
@@ -269,7 +269,7 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
 
         try:
             G=grtype(networkx.read_gml(input_file))
-        except networkx.NetworkXError,errmsg:
+        except networkx.NetworkXError as errmsg:
             raise ValueError("[Parse error in GML input] {} ".format(errmsg))
 
     elif file_format=='kthlist':
@@ -338,7 +338,7 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
     """
 
     # file name instead of file object
-    if isinstance(output_file,(str,unicode)):
+    if isinstance(output_file,str):
         with open(output_file,'w') as file_handle:
             return writeGraph(G,file_handle,graph_type,file_format)
 
@@ -542,8 +542,8 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
             if nvertex<0:
                 raise ValueError("[Input error] "+
                                  "Non negative number of vertices expected at line {}.".format(i))
-            G.add_nodes_from(xrange(1,nvertex+1))
-            G.ordered_vertices=xrange(1,nvertex+1)
+            G.add_nodes_from(range(1,nvertex+1))
+            G.ordered_vertices=range(1,nvertex+1)
             continue
 
         # Load edges from this line
@@ -653,7 +653,7 @@ def _read_graph_dimacs_format(inputfile,graph_class=networkx.Graph):
                                  "Dimacs \'edge\' format expected.")
             n = int(nstr)
             m = int(mstr)
-            G.add_nodes_from(xrange(1,n+1))
+            G.add_nodes_from(range(1,n+1))
             continue
 
         # parse spec line
@@ -742,7 +742,7 @@ def _read_graph_matrix_format(inputfile):
         for i in range(1,n+1):
             for j in range(n+1,n+m+1):
 
-                (b,l) = scanner.next()
+                (b,l) = next(scanner)
                 if b==1:
                     G.add_edge(i,j)
                 elif b==0:
@@ -754,7 +754,7 @@ def _read_graph_matrix_format(inputfile):
 
     # check that there are is no more data
     try:
-        (b,l) = scanner.next()
+        (b,l) = next(scanner)
         raise ValueError("[Input error at line {}] There are more than {}x{} entries".format(l,n,m))
     except StopIteration:
         pass
@@ -793,7 +793,7 @@ def _write_graph_kthlist_format(G,output_file, bipartition = False):
     else:
         V    = enumerate_vertices(G)
         
-    from cStringIO import StringIO
+    from io import StringIO
     output = StringIO()
 
     for v in V:
@@ -904,8 +904,8 @@ def bipartite_random_left_regular(l,r,d,seed=None):
     G=networkx.Graph()
     G.name = "bipartite_random_left_regular({},{},{})".format(l,r,d)
 
-    L=range(0,l)
-    R=range(l,l+r)
+    L=list(range(0,l))
+    R=list(range(l,l+r))
     d=min(r,d)
 
     for u in L:
@@ -963,8 +963,8 @@ def bipartite_shift(N,M,pattern=[]):
     G=networkx.Graph()
     G.name = "bipartite_shift_regular({},{},{})".format(N,M,pattern)
 
-    L=range(1,N+1)
-    R=range(N+1,N+M+1)
+    L=list(range(1,N+1))
+    R=list(range(N+1,N+M+1))
 
     for u in L:
         G.add_node(u,bipartite=0)
@@ -1030,8 +1030,8 @@ def bipartite_random_regular(l,r,d,seed=None):
     G=networkx.Graph()
     G.name = "bipartite_random_regular({},{},{})".format(l,r,d)
 
-    L=range(0,l)
-    R=range(l,l+r)
+    L=list(range(0,l))
+    R=list(range(l,l+r))
 
     for u in L:
         G.add_node(u,bipartite=0)
@@ -1040,7 +1040,7 @@ def bipartite_random_regular(l,r,d,seed=None):
         G.add_node(v,bipartite=1)
 
     A=L*d
-    B=R*(l*d / r)
+    B=R*(l*d // r)
     assert len(B)==l*d
 
     for i in range(l*d):
@@ -1208,7 +1208,7 @@ def sample_missing_edges(G,m, seed=None):
         # Sparse case: sample and retry
         missing_edges=set()
 
-        for _ in xrange(100*m):
+        for _ in range(100*m):
 
             if len(missing_edges) >= m:
                 break

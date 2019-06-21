@@ -76,12 +76,12 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
     # every pair occurs with a specific orientation.
     # Allow minimum on last vertex if 'plant' options.
 
-    for med in xrange(len(V) - (plant and 1)):
+    for med in range(len(V) - (plant and 1)):
         clause = []
-        for lo in xrange(med):
+        for lo in range(med):
             if graph.has_edge(V[med], V[lo]):
                 clause += [(True, varname(V[lo], V[med]))]
-        for hi in xrange(med+1, len(V)):
+        for hi in range(med+1, len(V)):
             if not graph.has_edge(V[med], V[hi]):
                 continue
             elif smart:

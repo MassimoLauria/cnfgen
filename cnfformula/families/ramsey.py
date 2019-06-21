@@ -54,7 +54,7 @@ It is possible to bicolor the numbers from
         return "x_{{{}}}".format(i)
 
     # Variables represent the coloring of the number
-    for i in xrange(1,N+1):
+    for i in range(1,N+1):
         ptn.add_variable(V(i))
 
         
@@ -88,13 +88,13 @@ def RamseyLowerBoundFormula(s,k,N):
     #
     # One variable per edge (indices are ordered)
     #
-    for edge in combinations(xrange(1,N+1),2):
+    for edge in combinations(range(1,N+1),2):
         ram.add_variable('e_{{{0},{1}}}'.format(*edge))
     
     #
     # No independent set of size s
     #
-    for vertex_set in combinations(xrange(1,N+1),s):
+    for vertex_set in combinations(range(1,N+1),s):
         clause=[]
         for edge in combinations(vertex_set,2):
             clause += [(True,'e_{{{0},{1}}}'.format(*edge))]
@@ -103,7 +103,7 @@ def RamseyLowerBoundFormula(s,k,N):
     #
     # No clique of size k
     #
-    for vertex_set in combinations(xrange(1,N+1),k):
+    for vertex_set in combinations(range(1,N+1),k):
         clause=[]
         for edge in combinations(vertex_set,2):
             clause+=[(False,'e_{{{0},{1}}}'.format(*edge))]

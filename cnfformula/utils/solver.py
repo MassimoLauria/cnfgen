@@ -9,7 +9,7 @@ solvers, see
   `cnfformula.utils.solver.supported_satsolvers`
 """
 
-from __future__ import print_function
+
 import sys
 
 __all__ = ["supported_satsolvers", "is_satisfiable", "have_satsolver"]
@@ -65,7 +65,7 @@ def _satsolve_filein_fileout(F, cmd='minisat',verbose=0):
     # files
     cnf = tempfile.NamedTemporaryFile(delete=False)
     sat = tempfile.NamedTemporaryFile(delete=False)
-    cnf.write(F.dimacs())
+    cnf.write(F.dimacs().encode("ascii"))
     cnf.close()
     sat.close()
 
@@ -189,7 +189,7 @@ def _satsolve_stdin_stdout(F, cmd='lingeling',verbose=0):
         p = subprocess.Popen(args=cmd.split(),
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE)
-        (output, err) = p.communicate(F.dimacs())
+        (output, err) = p.communicate(F.dimacs().encode("ascii"))
     except OSError:
         pass
 
@@ -272,7 +272,7 @@ def _satsolve_filein_stdout(F, cmd='sat4j', verbose=0):
 
     # Input formula must be on file.
     cnf = tempfile.NamedTemporaryFile(delete=False)
-    cnf.write(F.dimacs())
+    cnf.write(F.dimacs().encode("ascii"))
     cnf.close()
 
     output = ""
@@ -353,7 +353,7 @@ def supported_satsolvers():
 
     Output the list of all solvers supported by CNFgen.
     """
-    return _SATSOLVER_INTERFACE.keys()
+    return list(_SATSOLVER_INTERFACE.keys())
 
 
 def have_satsolver(solvers=None):

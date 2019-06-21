@@ -1,3 +1,9 @@
+# PyCharm
+.idea/
+
+# Virtual Env
+env/
+
 *.cnf
 *.pyc
 *.pyo

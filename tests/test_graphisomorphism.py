@@ -7,7 +7,7 @@ from . import TestCNFBase
 
 import unittest
 import networkx as nx
-import StringIO
+import io
 
 
 class TestGraphIsomorphism(TestCNFBase):
