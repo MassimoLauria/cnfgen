@@ -32,12 +32,12 @@ upload: package
 #
 # Development is based on pyenv
 #
-# The environment is based on the laters 2.7 python with is neither
+# The environment is based on the latest 3.6 python with is neither
 # a '-dev' nor an 'rc*' version. At least according to the list produced by
 #
 # $ pyenv install -l
 #
-DEV_DEPENDENCES:=pylint nose
+DEV_DEPENDENCES:=pylint nose flake8
 DOC_DEPENDENCES:=sphinx sphinx-autobuild numpydoc sphinx_rtd_theme
 
 PYENV:= $(shell command -v pyenv 2> /dev/null)

@@ -7,11 +7,11 @@ __author__              = 'Massimo Lauria'
 __author_email__        = 'lauria.massimo@gmail.com'
 __aurhor_string__       = __author__ + ' <' + __author_email__ + '>'
 
-__version_short__       = '0.7.3'
-__version_long__        = '0.7.3'
+__version_short__       = '0.8.0'
+__version_long__        = '0.8.0'
 __version__             = __version_long__
 
-__copyright__           = '2012-2018 '+ __author__ + ' <' + __author_email__ + '>'
+__copyright__           = '2012-2019 '+ __author__ + ' <' + __author_email__ + '>'
 __license__             = 'GPL-3'
 __url__                 = 'https://massimolauria.net/cnfgen'
 __repo_url__            = 'https://github.com/MassimoLauria/cnfgen'
