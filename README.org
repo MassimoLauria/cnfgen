@@ -47,16 +47,17 @@
    You can install CNFgen from  [[http://pypi.python.org][Python Package Index]], together with all
    its dependencies, typing either
 
-   : easy_install [--user] cnfgen
+   : pip3 install [--user] cnfgen
 
    or
 
-   : pip install  [--user] cnfgen
+   : python3 -m pip install  [--user] cnfgen
 
-   Otherwise  it is  possible  to install  from  source, assuming  the
-   requirements are already installed, using
+   if =pip3= is  not a program on your path.  Otherwise it is possible
+   to  install  from source,  assuming  the  requirements are  already
+   installed, using
    
-   : python setup.py install [--user]
+   : python3 setup.py install [--user]
 
    The =--user= option allows to install  the package in the user home
    directory. If you do that please check that the target location for
@@ -67,4 +68,4 @@
    Please contribute to the code by sending pull requests. 
 
 
-Copyright 2012, 2013, 2014, 2015, 2016, 2017, 2018 © Massimo Lauria ([[mailto:lauria.massimo@gmail.com][lauria.massimo@gmail.com]])
+Copyright 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019 © Massimo Lauria ([[mailto:lauria.massimo@gmail.com][lauria.massimo@gmail.com]])
