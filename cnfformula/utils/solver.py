@@ -69,7 +69,7 @@ def _satsolve_filein_fileout(F, cmd='minisat',verbose=0):
     cnf.close()
     sat.close()
 
-    output = None
+    output = b''
 
     # Run the command, store its output and remove the temporary files.
     try:
@@ -83,7 +83,7 @@ def _satsolve_filein_fileout(F, cmd='minisat',verbose=0):
                          stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE)
         (output,_) = p.communicate()
-        sat     = open(sat.name, "r")
+        sat     = open(sat.name, "r", encoding='ascii')
         foutput = sat.read().split()
         sat.close()
     except OSError:
@@ -100,8 +100,9 @@ def _satsolve_filein_fileout(F, cmd='minisat',verbose=0):
     result = None
     witness = None
 
-    if verbose>=2:
-        print(output,file=sys.stderr)
+    output=output.decode("ascii")
+    if verbose >= 2:
+        print(output, file=sys.stderr)
         
     if len(foutput) == 0:
 
@@ -180,7 +181,7 @@ def _satsolve_stdin_stdout(F, cmd='lingeling',verbose=0):
     import subprocess
 
     # call solver
-    output = ""
+    output = b''
     try:
         
         if verbose >=1:
@@ -204,11 +205,14 @@ def _satsolve_stdin_stdout(F, cmd='lingeling',verbose=0):
     witness = []
     result = None
 
+    # result is given as ASCII encoded text
+    output = output.decode('ascii')
+
+    if verbose >= 2:
+        print(output, file=sys.stderr)
+    
     for line in output.splitlines():
 
-        if verbose >= 2:
-            print(line,file=sys.stderr)
-        
         if len(line) == 0:
             continue
 
@@ -275,7 +279,7 @@ def _satsolve_filein_stdout(F, cmd='sat4j', verbose=0):
     cnf.write(F.dimacs().encode("ascii"))
     cnf.close()
 
-    output = ""
+    output = b''
 
     try:
 
@@ -302,7 +306,8 @@ def _satsolve_filein_stdout(F, cmd='sat4j', verbose=0):
     witness = []
     result = None
 
-
+    # result is given as ASCII encoded text
+    output = output.decode('ascii')
     if verbose>=2:
         print(output,file=sys.stderr)
         
