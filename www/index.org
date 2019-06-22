@@ -51,25 +51,27 @@ problems well known to be challenging for certain SAT solvers.
   - output in DIMACS and LaTeX formats,
   - formula [[file:transformation.org][post-processing]].
 
+
 * Installation
-  
+   
   You can install CNFgen from  [[http://pypi.python.org][Python Package Index]], together with all
   its dependencies, typing either
 
-  : easy_install [--user] cnfgen
+  : pip3 install [--user] cnfgen
 
   or
 
-  : pip install  [--user] cnfgen
+  : python3 -m pip install  [--user] cnfgen
 
-  Otherwise it  is possible to install from source using
+  if =pip3= is  not a program on your path.  Otherwise it is possible
+  to  install  from source,  assuming  the  requirements are  already
+  installed, using
    
-  : python setup.py install [--user]
+  : python3 setup.py install [--user]
 
-  The =--user= option  allows to install the package in  the user home
-  directory. If you  do that please check that the  location where the
-  command   line   utilities   are   installed   is   in   your   PATH
-  environment variable.
+  The =--user= option allows to install  the package in the user home
+  directory. If you do that please check that the target location for
+  the command line utilities are in your $PATH.
    
 * Usage
 
