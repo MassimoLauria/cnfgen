@@ -41,7 +41,7 @@ DEV_DEPENDENCES:=pylint nose flake8
 DOC_DEPENDENCES:=sphinx sphinx-autobuild numpydoc sphinx_rtd_theme
 
 PYENV:= $(shell command -v pyenv 2> /dev/null)
-PYENV_PYVERSION:=$(shell pyenv install -l | grep '[[:space:]]2.7[[:digit:]]*[^-r]' | tail -1)
+PYENV_PYVERSION:=$(shell pyenv install -l | grep '[[:space:]]3.6.[[:digit:]]*' | grep -v 'rc\|dev' | tail -1)
 
 docs-build: docs-install-tools
 	. $(VIRTUALENV)/bin/activate && \
@@ -62,11 +62,12 @@ ifndef PYENV
     $(error "Development is based on pyenv, please install it.")
 endif
 	@echo "Setting up virtualenv $(PROJECT) using python $(PYENV_PYVERSION)"
-	rm -f .python-version
-	pyenv virtualenv-delete -f $(PROJECT)-venv
+	-rm -f .python-version
+	-pyenv virtualenv-delete -f $(PROJECT)-venv
 	pyenv install -s $(PYENV_PYVERSION)
 	pyenv virtualenv $(PYENV_PYVERSION) $(PROJECT)-venv
 	pyenv local $(PROJECT)-venv
+	. $@ && pip install -U pip
 	. $@ && pip install -Ur requirements.txt
 	. $@ && pip install $(DEV_DEPENDENCES)
 	touch $@
