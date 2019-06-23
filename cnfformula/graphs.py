@@ -46,29 +46,12 @@ import networkx.algorithms
 
 
 def has_dot_library():
-    """Test the presence of a library that supports dot format
-
-    Old versions of NetworkX need `pydot', while new versions need
-    `pydotplus`.
+    """Test the presence of pydot
     """
     try:
         # newer version of networkx
         from networkx import nx_pydot
-        import pydotplus
-        del pydotplus
-        return True
-    except ImportError:
-        pass
-
-    try:
-        # older version of networkx but we still require pydot > 10.28
-        from networkx import read_dot,write_dot
         import pydot
-        from distutils.version import StrictVersion
-        pydot_current_version     = StrictVersion(pydot.__version__)
-        pydot_good_enough_version = StrictVersion("1.0.29")
-        if pydot_current_version < pydot_good_enough_version:
-            raise ImportError
         del pydot
         return True
     except ImportError:
@@ -84,52 +67,7 @@ if not has_dot_library():
         except ValueError:
             pass
 
-
-def find_read_dot():
-    """Look for the implementation of 'read_dot' in NetworkX
-
-    Functions `read_dot` and `write_dot` were exposed in the main
-    package. The exact position depends on the installed version of
-    NetworkX.
-    """
-
-    try:
-        from networkx import nx_pydot
-        return networkx.nx_pydot.read_dot
-    except ImportError:
-        pass
-
-    try:
-        from networkx import read_dot
-        return read_dot
-    except ImportError:
-        pass
-
-    raise RuntimeError("We can't find an implementation of 'read_dot' in NetworkX")
-
-
-
-def find_write_dot():
-    """Look for the implementation of 'write_dot' in NetworkX
-
-    Functions `read_dot` and `write_dot` were exposed in the main
-    package. The exact position depends on the installed version of
-    NetworkX.
-    """
-    try:
-        from networkx import nx_pydot
-        return networkx.nx_pydot.write_dot
-    except ImportError:
-        pass
-
-    try:
-        from networkx import write_dot
-        return write_dot
-    except ImportError:
-        pass
-
-    raise RuntimeError("We can't find an implementation of 'write_dot' in NetworkX")
-
+        
 
 #################################################################
 #          Graph reader/writer
@@ -258,7 +196,7 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
 
     if file_format=='dot':
 
-        G=grtype(find_read_dot()(input_file))
+        G=grtype(networkx.nx_pydot.read_dot(input_file))
 
     elif file_format=='gml':
 
@@ -345,7 +283,7 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
 
     if file_format=='dot':
 
-        find_write_dot()(G,output_file)
+        networkx.nx_pydot.write_dot(G,output_file)
 
     elif file_format=='gml':
 

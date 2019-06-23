@@ -4,8 +4,7 @@ import unittest
 
 import cnfformula
 from cnfformula.graphs import readGraph,writeGraph,supported_formats
-from cnfformula.graphs import find_read_dot,has_dot_library
-from cnfformula.graphs import bipartite_sets
+from cnfformula.graphs import bipartite_sets,has_dot_library
 
 from io import StringIO as sio
 from io import BytesIO
@@ -69,7 +68,7 @@ class TestGraphIO(unittest.TestCase) :
         if not has_dot_library():
             self.skipTest("DOT library not installed. Can't test DOT I/O")
 
-        G = nx.Graph(find_read_dot()(sio(dot_path2)))
+        G = nx.Graph(nx.nx_pydot.read_dot(sio(dot_path2)))
 
 
     def test_low_level_gml_read_path2(self) :
