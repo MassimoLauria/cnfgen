@@ -362,7 +362,11 @@ problems well known to be challenging for certain SAT solvers.
   The CNFgen project is  by Massimo Lauria ([[mailto:lauria.massimo@gmail.com][lauria.massimo@gmail.com]]),
   with helps  and contributions by  Marc Vinyals, Jan  Elffers, Mladen
   Mikša and [[http://www.csc.kth.se/~jakobn/][Jakob Nordström]] from  KTH Royal Institute of Technology in
-  Stockholm, Sweden. The work on this software has been funded
+  Stockholm, Sweden.  Special thanks to  [[https://github.com/alugowski][Adam Lugowski]] who updated the
+  codebase to work on Python 3 and NetworkX 2.
+
+
+  The work on this software has been funded
   
   - [2016-2017] The European Research Council (ERC) under the European
     Union's Horizon 2020 research and innovation programme (grant
