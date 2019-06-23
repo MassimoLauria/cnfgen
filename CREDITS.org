@@ -8,9 +8,8 @@
   Mikša and [[http://www.csc.kth.se/~jakobn/][Jakob Nordström]], while we  all were at KTH Royal Institute
   of Technology in Stockholm, Sweden.  Special thanks to [[https://github.com/alugowski][Adam Lugowski]]
   who updated the codebase to work on Python 3 and NetworkX 2.
-
-
-  The work on this software has been funded
+   
+  A large part  of this work has been funded by
   
   - [2016-2017] The European Research Council (ERC) under the European
     Union's Horizon 2020 research and innovation programme (grant
@@ -18,12 +17,4 @@
 
   - [2012-2015] The  European Research Council under  the European Union's
     Seventh  Framework Programme  (FP7/2007--2013)  ERC grant  agreement
-    no. 279611.
-
-** Grants
-   
-   A large part  of this work was  done at the KTH  Royal Institute of
-   Technology, with funds from the European Research Council under the
-   European Union's  Seventh Framework Programme  (FP7/2007--2013) ERC
-   grant agreement no.~279611.
-   
+    no. 279611.  
