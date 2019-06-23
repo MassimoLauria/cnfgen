@@ -11,6 +11,13 @@ env:
   - NETWORKX_VERSION=2.1
   - NETWORKX_VERSION=2.2
   - NETWORKX_VERSION=2.3
+
+# Networkx 2.3 does not support Python 3.4
+matrix:
+  exclude:
+  - python: "3.4"
+  - env: NETWORKX_VERSION=2.3
+
 install:
   - pip install -q networkx==$NETWORKX_VERSION
   - pip install -r requirements.txt
