@@ -16,7 +16,7 @@ env:
 matrix:
   exclude:
   - python: "3.4"
-  - env: NETWORKX_VERSION=2.3
+    env: NETWORKX_VERSION=2.3
 
 install:
   - pip install -q networkx==$NETWORKX_VERSION
