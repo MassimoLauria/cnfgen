@@ -37,7 +37,8 @@ upload: package
 #
 # $ pyenv install -l
 #
-DEV_DEPENDENCES:=pylint nose flake8 wheel
+DEV_DEPENDENCES:=pylint nose flake8
+PKG_DEPENDENCES:=wheel twine keyring
 DOC_DEPENDENCES:=sphinx sphinx-autobuild numpydoc sphinx_rtd_theme
 
 PYENV:= $(shell command -v pyenv 2> /dev/null)
@@ -70,5 +71,6 @@ endif
 	. $@ && pip install -U pip
 	. $@ && pip install -Ur requirements.txt
 	. $@ && pip install $(DEV_DEPENDENCES)
+	. $@ && pip install $(PKG_DEPENDENCES)
 	touch $@
 
