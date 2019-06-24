@@ -32,12 +32,12 @@ interface with several  SAT solvers but when the  command line invokes
 an  unknown solver  the  parameter ``sameas``  can  suggest the  right
 interface to use.
 
-   >>> F.is_satisfiable(cmd='minisat -no-pre')
-   >>> F.is_satisfiable(cmd='glucose -pre')
-   >>> F.is_satisfiable(cmd='lingeling --plain')
-   >>> F.is_satisfiable(cmd='sat4j')
-   >>> F.is_satisfiable(cmd='my-hacked-minisat -pre',sameas='minisat')
-   >>> F.is_satisfiable(cmd='patched-lingeling',sameas='lingeling')
+   >>> F.is_satisfiable(cmd='minisat -no-pre') # doctest: +SKIP
+   >>> F.is_satisfiable(cmd='glucose -pre') # doctest: +SKIP
+   >>> F.is_satisfiable(cmd='lingeling --plain') # doctest: +SKIP
+   >>> F.is_satisfiable(cmd='sat4j') # doctest: +SKIP
+   >>> F.is_satisfiable(cmd='my-hacked-minisat -pre',sameas='minisat') # doctest: +SKIP
+   >>> F.is_satisfiable(cmd='patched-lingeling',sameas='lingeling') # doctest: +SKIP
 
 
 .. [1] NP-hardness is a fundamental  concept coming from computational

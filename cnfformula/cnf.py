@@ -672,7 +672,10 @@ class CNF(object):
             else:
                 name = self._index2name[-l]
                 split_point=name.find("_")
-                return "{\\overline{"+name[:split_point]+"}"+name[split_point:]+"}"
+                if split_point<1:
+                    return "  \\overline{"+name+"}"
+                else:
+                    return "{\\overline{"+name[:split_point]+"}"+name[split_point:]+"}"
 
         def write_clause(cls, first,full_document):
             """Write the clause in LaTeX."""

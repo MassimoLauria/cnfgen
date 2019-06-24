@@ -37,31 +37,34 @@ that come from research in Proof Complexity [3]_.
 The  main  entry point  for  the  library is  the  :py:class:`cnfformula.CNF`
 object. Let's see a simple example of its usage.
 
+   >>> from pprint import pprint
    >>> import cnfformula
    >>> F = cnfformula.CNF()
    >>> F.add_clause([(True,"X"),(False,"Y")])
    >>> F.add_clause([(False,"X")])
-   >>> F.is_satisfiable()
-   (True, {'Y':False, 'X':False})
+   >>> pprint( F.is_satisfiable() )
+   (True, {'X': False, 'Y': False})
    >>> F.add_clause([(True,"Y")])
    >>> F.is_satisfiable()
    (False, None)
-   >>> print F.dimacs()
-   c Generated with `cnfgen` (C) 2012-2016 Massimo Lauria <lauria.massimo@gmail.com>
-   c https://github.com/MassimoLauria/cnfgen.git
+   >>> print(F.dimacs())
+   c Generated with `cnfgen`
+   c (C) 2012-2019 Massimo Lauria <lauria.massimo@gmail.com>
+   c https://massimolauria.net/cnfgen
    c
    p cnf 2 3
    1 -2 0
    -1 0
    2 0
-   >>> print F.latex()
-   % Generated with `cnfgen` (C) 2012-2016 Massimo Lauria <lauria.massimo@gmail.com>
-   % https://github.com/MassimoLauria/cnfgen.git
+   >>> print(F.latex())
+   % Generated with `cnfgen`
+   % (C) 2012-2019 Massimo Lauria <lauria.massimo@gmail.com>
+   % https://massimolauria.net/cnfgen
    %
    \begin{align}
-   &       \left(     {X} \lor \neg{Y} \right) \\
-   & \land \left( \neg{X} \right) \\
-   & \land \left(     {Y} \right)
+   &       \left(            {X} \lor   \overline{Y} \right) \\
+   & \land \left(   \overline{X} \right) \\
+   & \land \left(            {Y} \right)
    \end{align}
 
 A typical  unsatisfiable formula  studied in  Proof Complexity  is the
@@ -69,10 +72,11 @@ pigeonhole principle formula.
 
    >>> from cnfformula import PigeonholePrinciple
    >>> F = PigeonholePrinciple(5,4)
-   >>> print F.dimacs()
+   >>> print(F.dimacs())
    c Pigeonhole principle formula for 5 pigeons and 4 holes
-   c Generated with `cnfgen` (C) 2012-2016 Massimo Lauria <lauria.massimo@gmail.com>
-   c https://github.com/MassimoLauria/cnfgen.git
+   c Generated with `cnfgen`
+   c (C) 2012-2019 Massimo Lauria <lauria.massimo@gmail.com>
+   c https://massimolauria.net/cnfgen
    c
    p cnf 20 45
    1 2 3 4 0

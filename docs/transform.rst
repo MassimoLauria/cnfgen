@@ -43,17 +43,14 @@ original variables.
 Using CNF transformations
 -------------------------
 
-To get a list of the available transformations you can run
-
-   >>> import cnfformula
-   >>> cnfformula.available_transformations()
-
-The following processing methods  are implemented. The ``none`` method
+We implement the following transformation methods. The ``none`` method
 just leaves  the formula  alone. It  is a  null transformation  in the
 sense that,  contrary to the  other methods, this one  returns exactly
 the  same :py:class:`cnfformula.CNF`  object  that it  gets in  input.
-All  the  other methods  would  produce  a  new  CNF object  with  the
-new formula. The old one is left untouched.
+All the  other methods  would produce  a new CNF  object with  the new
+formula. The old one is left untouched.
+
+*Some method implemented as still missing from the list*
 
 
 +----------+----------------------------+--------------+----------------------------------------------------+
@@ -61,21 +58,21 @@ new formula. The old one is left untouched.
 +----------+----------------------------+--------------+----------------------------------------------------+
 | ``none`` | leaves the formula alone   |      ignored |                                                    |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``eq``   | all variables equal        |            3 | :py:class:`cnfformula.transformation.Equality`     |
+| ``eq``   | all variables equal        |            3 | :py:class:`cnfformula.AllEqualSubstitution`        |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``ite``  | if x then y else z         |      ignored | :py:class:`cnfformula.transformation.IfThenElse`   |
+| ``ite``  | if x then y else z         |      ignored | :py:class:`cnfformula.IfThenElseSubstitution`      |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``lift`` | lifting                    |            3 | :py:class:`cnfformula.transformation.Lifting`      |
+| ``lift`` | lifting                    |            3 | :py:class:`cnfformula.FormulaLifting`              |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``maj``  | Loose majority             |            3 | :py:class:`cnfformula.transformation.Majority`     |
+| ``maj``  | Loose majority             |            3 | :py:class:`cnfformula.MajoritySubstitution`        |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``neq``  | not all vars  equal        |            3 | :py:class:`cnfformula.transformation.NotEquality`  |
+| ``neq``  | not all vars  equal        |            3 | :py:class:`cnfformula.NotAllEqualSubstitution`     |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``one``  | Exactly one                |            3 | :py:class:`cnfformula.transformation.One`          |
+| ``one``  | Exactly one                |            3 | :py:class:`cnfformula.ExactlyOneSubstitution`      |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``or``   | OR substitution            |            2 | :py:class:`cnfformula.transformation.InnerOr`      |
+| ``or``   | OR substitution            |            2 | :py:class:`cnfformula.OrSubstitution`              |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``xor``  | XOR substitution           |            2 | :py:class:`cnfformula.transformation.InnerXor`     |
+| ``xor``  | XOR substitution           |            2 | :py:class:`cnfformula.XorSubstitution`             |
 +----------+----------------------------+--------------+----------------------------------------------------+
                                                                                                             
 
@@ -83,20 +80,20 @@ Any  :py:class:`cnfformula.CNF`   can  be  post-processed   using  the
 function   :py:func:`cnfformula.TransformFormula`.   For  example   to
 substitute each variable with a 2-XOR we can do
 
-   >>> from cnfformula import CNF, TransformFormula
+   >>> from cnfformula import CNF, XorSubstitution
    >>> F = CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], [(False,"x2"),(True,"x4")] ])
-   >>> G = TransformFormula(F,'xor',2)
+   >>> G = XorSubstitution(F,2)
 
 Here is the original formula.
 
-   >>> print F.dimacs(export_header=False)
+   >>> print( F.dimacs(export_header=False) )
    p cnf 4 2
    1 2 -3 0
    -2 4 0
 
 Here it is after the transformation.
    
-   >>> print G.variables(export_header=False)
+   >>> print( G.dimacs(export_header=False) )
    p cnf 8 12
    1 2 3 4 5 -6 0
    1 2 3 4 -5 6 0

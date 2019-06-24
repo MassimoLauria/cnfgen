@@ -291,7 +291,10 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
 
     elif file_format=='gml':
 
-        networkx.write_gml(G,output_file)
+        tempbuffer=io.BytesIO()
+        networkx.write_gml(G,tempbuffer)
+        print(tempbuffer.getvalue().decode('ascii'),
+              file=output_file)
 
     elif file_format=='kthlist':
 

@@ -21,6 +21,7 @@ matrix:
 install:
   - pip install -q networkx==$NETWORKX_VERSION
   - pip install -r requirements.txt
+  - pip install pytest
   - python setup.py -q install
 # command to run tests
-script: nosetests --with-doctest
+script: pytest

@@ -40,7 +40,7 @@ the formula (obviously without description).
    []
    >>> G.add_clause([(False,"X"),(True,"Y")])
    >>> list(G.variables())
-   ['X','Y']
+   ['X', 'Y']
    
 .. note::
 
@@ -105,7 +105,7 @@ use variable names that would look good in Latex.
    \begin{align}
    &       \left( {\overline{x}_1} \lor            {x_2} \lor {\overline{x}_3} \right) \\
    & \land \left( {\overline{x}_2} \lor {\overline{x}_4} \right) \\
-   & \land \left( {x_2} \lor {x_3} \lor {\overline{x}_4} \right)
+   & \land \left(            {x_2} \lor            {x_3} \lor {\overline{x}_4} \right)
    \end{align}
 
 which renders as

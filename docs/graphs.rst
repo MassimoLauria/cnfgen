@@ -10,16 +10,11 @@ is realized over a star graph with five arms.
    >>> import cnfformula
    >>> import networkx as nx
    >>> G = nx.star_graph(5)
-   >>> G.edges()
-   >>> [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
+   >>> list(G.edges())
+   [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
    >>> F = cnfformula.TseitinFormula(G,charges=[0,1,1,0,1,1])
    >>> F.is_satisfiable()
-   (True,
-    {'E_{0,1}': True,
-     'E_{0,2}': True,
-     'E_{0,3}': False,
-     'E_{0,4}': True,
-     'E_{0,5}': True})
+   (True, {'E_{0,1}': True, 'E_{0,2}': True, 'E_{0,3}': False, 'E_{0,4}': True, 'E_{0,5}': True})
 
 Tseitin formulas can  be really hard for if the  graph has large `edge
 expansion <https://en.wikipedia.org/wiki/Expander_graph>`_. Indeed the
@@ -49,14 +44,15 @@ file formats. The function
 available for each graph type.
 
    >>> from cnfformula.graphs import supported_formats
-   >>> supported_formats()
-   {'bipartite': ['matrix', 'gml', 'dot'],
+   >>> from pprint import pprint
+   >>> pprint(supported_formats())
+   {'bipartite': ['kthlist', 'matrix', 'gml', 'dot'],
     'dag': ['kthlist', 'gml', 'dot'],
     'digraph': ['kthlist', 'gml', 'dot', 'dimacs'],
     'simple': ['kthlist', 'gml', 'dot', 'dimacs']}
 
 The ``dot`` format  is from Graphviz_ and it is  available only if the
-optional  ``pydot2``  python  package  is  installed  in  the  system.
+optional  ``pydot``  python  package  is  installed  in  the  system.
 The Graph Modelling Language (GML_) ``gml`` is the current standard in
 graph  representation. The  DIMACS_ (``dimacs``)  format [2]_  is used
 sometimes for programming competitions  or in the theoretical computer
@@ -82,11 +78,11 @@ passes the test :py:func:`cnfformula.graphs.is_dag`.
 
    >>> import networkx as nx
    >>> G = nx.DiGraph()
-   >>> G.add_cycle([1,2,3])
+   >>> nx.add_cycle(G,[1,2,3])
    >>> cnfformula.graphs.is_dag(G)
    False
    >>> H = nx.DiGraph()
-   >>> H.add_path([1,2,3])
+   >>> nx.add_path(H,[1,2,3])
    >>> cnfformula.graphs.is_dag(H)
    True
    
@@ -102,20 +98,21 @@ tests whether this bipartition exists in a graph.
 
 
    >>> import networkx as nx
-   >>> G=nx.bipartite.random_graph(3,2,0.5)
-   >>> cnfformula.graphs.has_biparition(G)
+   >>> G=nx.bipartite.random_graph(3,2,1.0)
+   >>> cnfformula.graphs.has_bipartition(G)
    True
-   >>> G.node
+   >>> from pprint import pprint
+   >>> pprint(dict(G.nodes()))
    {0: {'bipartite': 0},
     1: {'bipartite': 0},
     2: {'bipartite': 0},
     3: {'bipartite': 1},
     4: {'bipartite': 1}}
-   >>> G.edges()
-   [(0, 4), (1, 3), (1, 4), (2, 3)]
+   >>> sorted(G.edges())
+   [(0, 3), (0, 4), (1, 3), (1, 4), (2, 3), (2, 4)]
    >>> F = cnfformula.GraphPigeonholePrinciple(G)
    >>> list(F.variables())
-   ['p_{0,4}', 'p_{1,3}', 'p_{1,4}', 'p_{2,3}']
+   ['p_{0,3}', 'p_{0,4}', 'p_{1,3}', 'p_{1,4}', 'p_{2,3}', 'p_{2,4}']
 
    
 Graph I/O
@@ -134,6 +131,7 @@ file-like objects such as
    + in-memory text streams that inherit from :py:class:`io.TextIOBase`.
      
    >>> import sys
+   >>> from io import BytesIO
    >>> import networkx as nx
    >>> from cnfformula.graphs import readGraph, writeGraph
 
@@ -172,17 +170,20 @@ When the  file object has an  associated file name, it  is possible to
 omit the ``file_format`` argument. In this latter case the appropriate
 choice of format  will be guessed by the file  extension.
 
-   >>> with open("example.dot","w") as f: print >> f , "digraph A {1->2->3}"
+   >>> with open("example.dot","w") as f:
+   ...     print("digraph A {1->2->3}",file=f)
    >>> G = readGraph("example.dot",graph_type='dag')
    >>> G.edges()
    [('1', '2'), ('2', '3')]
 
-   >>> with open("example.gml","w") as f: print >> f , "digraph A {1->2->3}"
+   >>> with open("example.gml","w") as f:
+   ...     print("digraph A {1->2->3}",file=f)
    >>> G = readGraph("example.gml",graph_type='dag',file_format='dot')
    >>> G.edges()
    [('1', '2'), ('2', '3')]
 
-   >>> with open("example.gml","w") as f: print >> f , "digraph A {1->2->3}"
+   >>> with open("example.gml","w") as f:
+   ...     print("digraph A {1->2->3}",file=f)
    >>> G = readGraph("example.gml",graph_type='dag')
    ValueError: [Parse error in GML input] expected ...
  

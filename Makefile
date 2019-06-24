@@ -8,7 +8,7 @@ all : test
 
 test: venv
 	. $(VIRTUALENV)/bin/activate && \
-	python setup.py nosetests --with-doctest
+	pytest
 
 install:
 	$(PYTHON) setup.py install --user --prefix=
@@ -37,7 +37,7 @@ upload: package
 #
 # $ pyenv install -l
 #
-DEV_DEPENDENCES:=pylint nose flake8
+DEV_DEPENDENCES:=pylint pytest flake8
 PKG_DEPENDENCES:=wheel twine keyring
 DOC_DEPENDENCES:=sphinx sphinx-autobuild numpydoc sphinx_rtd_theme
 

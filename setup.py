@@ -23,9 +23,5 @@ setup(
             'cnftransform=cnfformula.utils.dimacstransform:command_line_utility'],
     },
     install_requires=['networkx>=2.0', 'pydot>=1.2.3'],
-    # make some tests
-    test_suite='nose.collector',
-    tests_require=['nose'],
-    # only for python 3
     python_requires='>=3.4'
 )
