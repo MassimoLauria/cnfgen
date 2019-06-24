@@ -11,7 +11,7 @@ to the `cnfformula` library.
 
 
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016  Massimo Lauria <lauria.massimo@gmail.com>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -467,7 +467,6 @@ class CNF(object):
     #
     # High level API: read the CNF
     #
-
     def variables(self):
         """Returns (a copy of) the list of variable names.
         """
@@ -488,6 +487,9 @@ class CNF(object):
 
         The formula is rendered in the DIMACS format for CNF formulas,
         which is a particularly popular input format for SAT solvers [1]_.
+
+        .. note:: By default the DIMACS output is *ascii* encoded,
+                  with non-ascii characters replaced.
 
         Parameters
         ----------
@@ -530,6 +532,7 @@ class CNF(object):
         self._dimacs_dump_clauses(output, export_header, extra_text)
         return output.getvalue()
 
+    
     def _dimacs_dump_clauses(self, output=None, export_header=True, extra_text=None):
         """Dump the dimacs encoding of the formula to the file-like output
 
@@ -543,13 +546,19 @@ class CNF(object):
         n = len(self._index2name)-1
         m = len(self)
 
-        # A nice header
+        # Produce header in ascii compatible format
         if export_header:
-            for line in self.header.split("\n")[:-1]:
+            # remove non ascii text
+            ascii_header =  self.header.encode('ascii', errors='replace')
+            ascii_header = ascii_header.decode('ascii')
+            for line in ascii_header.split("\n")[:-1]:
                 output.write(("c "+line).rstrip()+"\n")
 
+            # remove non ascii text
             if extra_text is not None:
-                for line in extra_text.split("\n"):
+                ascii_extra =  extra_text.encode('ascii', errors='replace')
+                ascii_extra = ascii_extra.decode('ascii')
+                for line in ascii_extra.split("\n"):
                     output.write(("c "+line).rstrip()+"\n")
 
 
@@ -575,6 +584,8 @@ class CNF(object):
         The output string is ready to be included in a document, but
         it does not include neither a preamble nor is nested inside
         ``\\begin{document}`` ... ``\\end{document}``.
+
+        .. note::  By default the LaTeX document in output is *UTF-8* encoded.
 
         Parameters
         ----------
@@ -624,6 +635,7 @@ class CNF(object):
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath}
 \usepackage{listings}
+\usepackage[utf8]{inputenc}
 """
         
         from io import StringIO

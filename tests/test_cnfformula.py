@@ -47,3 +47,13 @@ class TestCNF(TestCNFBase) :
         self.assertTrue(len(list(F.variables())),3)
         self.assertRaises(ValueError, F.add_clause,
                           [(True,"T"),(False,"V")],strict=True)
+
+
+    def test_dimacs_ascii(self):
+        cnf = cnfformula.CNF(header='Unicöde sttring not ascii')
+        cnf.add_variable('x')
+        cnf.add_variable('ζ')
+        cnf.add_clause([(True,"x"),(False,"ζ")])
+        text=cnf.dimacs(extra_text='áéíóúàèìòù')
+        byte=text.encode('ascii')
+       

@@ -144,11 +144,13 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
 
     Parameters
     -----------
-    input_file: str, unicode or file-like object
+    input_file: str or file-like object
         the input file from which the graph is read. If it is a string
         then the graph is read from a file with that string as
         filename. Otherwise if the input_file is a file object (or
         a text stream), the graph is read from there.
+
+        Input files are assumed to be UTF-8 by default.
 
     graph_type: string in {"simple","digraph","dag","bipartite"}
         see also :py:func:`cnfformula.graph.supported_formats`
@@ -185,7 +187,7 @@ def readGraph(input_file,graph_type,file_format='autodetect',multi_edges=False):
 
     # file name instead of file object
     if isinstance(input_file,str):
-        with open(input_file,'r') as file_handle:
+        with open(input_file,'r',encoding='utf-8') as file_handle:
             return readGraph(file_handle,graph_type,file_format,multi_edges)
 
 
@@ -242,6 +244,8 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
         filename. Otherwise if ``output_file`` is a file object (or
         a text stream), the graph is written there.
 
+        The file is written in UTF-8 by default.
+
     graph_type: string in {"simple","digraph","dag","bipartite"}
         see also :py:func:`cnfformula.graph.supported_formats`
 
@@ -272,7 +276,7 @@ def writeGraph(G,output_file,graph_type,file_format='autodetect'):
 
     # file name instead of file object
     if isinstance(output_file,str):
-        with open(output_file,'w') as file_handle:
+        with open(output_file,'w',encoding='utf-8') as file_handle:
             return writeGraph(G,file_handle,graph_type,file_format)
 
 

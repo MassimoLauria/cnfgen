@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 """Utilities to build CNF formulas interesting for proof complexity.
 
@@ -28,49 +28,45 @@ p cnf 5 3
 
 """
 
-
-
 import os
 import sys
 import random
+import argparse
+import signal
+import io
 
-# Python 2.6 does not have argparse library
-try:
-    import argparse
-except ImportError:
-    print("Sorry: %s requires `argparse` library, which is missing.\n"%sys.argv[0],file=sys.stderr)
-    print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
-    print(" * http://pypi.python.org/pypi/argparse",file=sys.stderr)
-    print(" * http://code.google.com/p/argparse",file=sys.stderr)
-    print("",file=sys.stderr)
-    exit(-1)
-
+from .prjdata import __version__
 
 #################################################################
 #          Command line tool follows
 #################################################################
 
 
-###
-### Command line helpers
-###
 def setup_command_line_args(parser):
     """Setup general command line options
+
+    Setup options
+    - query version
+    - verbosity/silence
+    - outputfile
+    - outputformat
+    - random seed
 
     Arguments:
     - `parser`: parser to fill with options
     """
-    from cnfformula.prjdata import __version__
-    parser.add_argument('-V', '--version', action='version', version="%(prog)s ("+__version__+")")
-    parser.add_argument('--output','-o',
-                        type=argparse.FileType('wb',0),
+    parser.add_argument('-V', '--version',
+                        action='version',
+                        version="%(prog)s ("+__version__+")")
+    parser.add_argument('--output', '-o',
+                        type=argparse.FileType('w', encoding='utf-8'),
                         metavar="<output>",
                         default='-',
                         help="""Save the formula to <output>. Setting '<output>' to '-' sends the
                         formula to standard output. (default: -)
                         """)
-    parser.add_argument('--output-format','-of',
-                        choices=['latex','dimacs'],
+    parser.add_argument('--output-format', '-of',
+                        choices=['latex', 'dimacs'],
                         default='dimacs',
                         help="""
                         Output format of the formulas. 'latex' is
@@ -79,7 +75,7 @@ def setup_command_line_args(parser):
                         (default: dimacs)
                         """)
 
-    parser.add_argument('--seed','-S',
+    parser.add_argument('--seed', '-S',
                         metavar="<seed>",
                         default=None,
                         type=str,
@@ -87,24 +83,23 @@ def setup_command_line_args(parser):
                         help="""Seed for any random process in the
                         program. (default: current time)
                         """)
-    g=parser.add_mutually_exclusive_group()
-    g.add_argument('--verbose', '-v',action='store_true',default=True,
+    g = parser.add_mutually_exclusive_group()
+    g.add_argument('--verbose', '-v', action='store_true', default=True,
                    help="""Output formula header and comments.""")
-    g.add_argument('--quiet', '-q',action='store_false',dest='verbose',
+    g.add_argument('--quiet', '-q', action='store_false', dest='verbose',
                    help="""Output just the formula with no header.""")
 
 
-
-
-###
-### Register signals
-###
-import signal
 def signal_handler(insignal, frame):
-    print('Program interrupted',file=sys.stderr)
+    """Manage program interruptions
+
+    It has to be registered as signal handler.
+    """
+    print('Program interrupted', file=sys.stderr)
     sys.exit(-1)
 
-signal.signal(signal.SIGINT,signal_handler)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 def search_cmdline_input_file(list_args):
@@ -116,21 +111,20 @@ def search_cmdline_input_file(list_args):
     """
     for l in list_args:
         data = iter(vars(l).items())
-        data = [ v for k,v in data if not k.startswith("_")]
-        data = [ f for f in data if isinstance(f,file)]
-        data = [ f for f in data if (f != sys.stdin) and f.mode=='r']
+        data = [v for k, v in data if not k.startswith("_")]
+        data = [f for f in data if isinstance(f, io.IOBase)]
+        data = [f for f in data if (f != sys.stdin) and f.mode == 'r']
     return data
 
-###
-### Main program
-###
+
+# Main program
 def command_line_utility(argv=sys.argv):
     """CNFgen main command line interface
 
     This function provide the main interface to CNFgen. It sets up the
     command line, parses the command line arguments, builds the
     appropriate formula and outputs its representation.
-    
+
     It **must not** raise exceptions, but fail with error messages for
     the user.
 
@@ -140,62 +134,59 @@ def command_line_utility(argv=sys.argv):
         The list of token with the command line arguments/options.
     """
 
-
-    # Formula generators cmdline setup 
+    # Formula generators cmdline setup
     from . import families
     from . import transformations
     from .cmdline import is_cnfgen_subcommand
     from .cmdline import is_cnf_transformation_subcommand
     from .cmdline import find_methods_in_package
 
-    
     # Cmdline parser for formula transformations
-    t_parser = argparse.ArgumentParser(usage=os.path.basename(argv[0]) + " ..."
-                                       +" [-T <transformation> <params> -T <transformation> <params> ...]",
-                                       epilog="""Each <transformation> has its own command line arguments and options.
-                                       For more information type 'cnfgen ... -T <transformation> [--help | -h]'
+    t_parser = argparse.ArgumentParser(
 
-                                       """)
-    
+        usage=os.path.basename(argv[0]) +
+        " ..."
+        + " [-T <transformation> <params> -T <transformation> <params> ...]",
+
+        epilog="""
+        Each <transformation> has its own command line arguments and options.
+        For more info type 'cnfgen ... -T <transformation> [--help | -h]'
+        """)
+
     t_subparsers = t_parser.add_subparsers(title="Available formula transformation",
                                            metavar="<transformation>")
     for sc in find_methods_in_package(transformations,
                                       is_cnf_transformation_subcommand,
-                                      sortkey=lambda x:x.name):
-        p=t_subparsers.add_parser(sc.name,help=sc.description)
+                                      sortkey=lambda x: x.name):
+        p = t_subparsers.add_parser(sc.name,help=sc.description)
         sc.setup_command_line(p)
         p.set_defaults(transformation=sc)
-    
+
     # Main cmdline setup
-    parser=argparse.ArgumentParser(prog=os.path.basename(argv[0]),
-                                   formatter_class=argparse.RawDescriptionHelpFormatter,
-                                   epilog=
-"""Each <formula type> has its own command line arguments and options.
+    parser = argparse.ArgumentParser(prog=os.path.basename(argv[0]),
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     epilog="""
+Each <formula type> has its own command line arguments and options.
 For more information type 'cnfgen <formula type> [--help | -h ]'.
 Furthermore it is possible to postprocess the formula by applying
 a sequence of transformations.
 
 """+t_parser.format_help())
-    
 
     setup_command_line_args(parser)
-    
-        
-    
-    subparsers=parser.add_subparsers(title="Available formula types",metavar='<formula type>')
+
+    subparsers = parser.add_subparsers(title="Available formula types",metavar='<formula type>')
     for sc in find_methods_in_package(families,
                                       is_cnfgen_subcommand,
-                                      sortkey=lambda x:x.name):
-        p=subparsers.add_parser(sc.name,help=sc.description)
+                                      sortkey=lambda x: x.name):
+        p = subparsers.add_parser(sc.name,help=sc.description)
         sc.setup_command_line(p)
         p.set_defaults(generator=sc)
 
-   
-        
     # Split the command line into formula generation and transformation
     # applications
-    def splitlist(L,key):
-        argbuffer=[]
+    def splitlist(L, key):
+        argbuffer = []
         for e in L:
             if e == key:
                 yield argbuffer
@@ -204,39 +195,53 @@ a sequence of transformations.
                 argbuffer.append(e)
         yield argbuffer
 
-    cmd_chunks = list(splitlist(argv,"-T"))
+    cmd_chunks = list(splitlist(argv, "-T"))
     generator_cmd = cmd_chunks[0][1:]
     transformation_cmds = cmd_chunks[1:]
-    
+
     # Parse the various component of the command line
-    args=parser.parse_args(generator_cmd)
-    t_args=[]
+    args = parser.parse_args(generator_cmd)
+    t_args = []
     for cmd in transformation_cmds:
         t_args.append(t_parser.parse_args(cmd))
 
     # If necessary, init the random generator
-    if hasattr(args,'seed') and args.seed:
+    if hasattr(args, 'seed') and args.seed:
         random.seed(args.seed)
 
-    # Generate the formula
+    # Check arguments
+    if not hasattr(args, 'generator'):
+        print("ERROR: The formula name to generate is missing\n", file=sys.stderr)
+        print(parser.format_help(), file=sys.stderr)
+        sys.exit(os.EX_DATAERR)
+
+    for argdict in t_args:
+        if not hasattr(argdict, 'transformation'):
+            print("ERROR: The specification of some transformations are missing\n", file=sys.stderr)
+            print(t_parser.format_help(), file=sys.stderr)
+            sys.exit(os.EX_DATAERR)
+
+    # Generate the formula and apply transformations
     try:
+
         cnf = args.generator.build_cnf(args)
-    except (ValueError, AttributeError) as e:
+
+        for argdict in t_args:
+            cnf = argdict.transformation.transform_cnf(cnf, argdict)
+
+    except (ValueError) as e:
         print(e, file=sys.stderr)
         sys.exit(os.EX_DATAERR)
 
 
-    # Apply the sequence of transformations
-    for argdict in t_args:
-        cnf = argdict.transformation.transform_cnf(cnf,argdict)
-        
     # Output
     if args.output_format == 'latex':
         cmdline_descr=["\\noindent\\textbf{Command line:}",
                        "\\begin{lstlisting}[breaklines]",
                        "$ cnfgen " + " ".join(argv[1:]),
                        "\\end{lstlisting}"]
-        if hasattr(args.generator,"docstring"):
+        
+        if hasattr(args.generator, "docstring"):
             cmdline_descr += ["\\noindent\\textbf{Docstring:}",
                               "\\begin{lstlisting}[breaklines,basicstyle=\\small]",
                               args.generator.docstring,
@@ -244,8 +249,8 @@ a sequence of transformations.
 
 
         for f in search_cmdline_input_file([args]+t_args):
-            f.seek(0,0)
-            cmdline_descr += ["\\noindent\\textbf{Input file} \\verb|%s|"%f.name,
+            f.seek(0, 0)
+            cmdline_descr += ["\\noindent\\textbf{Input file} \\verb|%s|" % f.name,
                               "\\begin{lstlisting}[breaklines,basicstyle=\\small]" ] + \
                               f.readlines() + \
                               ["\\end{lstlisting}"]
@@ -253,21 +258,23 @@ a sequence of transformations.
         output = cnf.latex(export_header=args.verbose,
                            extra_text="\n".join(cmdline_descr+["\n"]),
                            full_document=True)
-        
+
     elif args.output_format == 'dimacs':
-        output = cnf.dimacs(export_header=args.verbose,
-                            extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
+        output = cnf.dimacs(
+            export_header=args.verbose,
+            extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
 
     else:
-        output = cnf.dimacs(export_header=args.verbose,
-                            extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
+        output = cnf.dimacs(
+            export_header=args.verbose,
+            extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
 
-    print(output,file=args.output)
+    print(output, file=args.output)
 
-    if args.output!=sys.stdout:
+    if args.output != sys.stdout:
         args.output.close()
 
 
-### Launcher
+# command line entry point
 if __name__ == '__main__':
     command_line_utility(sys.argv)

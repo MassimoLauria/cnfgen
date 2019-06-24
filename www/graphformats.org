@@ -70,6 +70,12 @@
   standard  output, or  when the  file  extension does  not match  its
   file format.
 
+** Encoding
+
+  =cnfgen=  assumes   that  given   graph  files  encoded   as  UTF-8.
+  Likewise it saves  graph files in UTF-8 by default.  In practice the
+  output is  ASCII unless some  explicit non-ASCII commentary  text or
+  vertex/edge properties has been attached to the graph.
 
 ** GML and DOT format — bipartite graphs representation
 
