@@ -11,7 +11,7 @@ is realized over a star graph with five arms.
    >>> import networkx as nx
    >>> from pprint import pprint
    >>> G = nx.star_graph(5)
-   >>> list(G.edges())
+   >>> sorted(G.edges())
    [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
    >>> F = cnfformula.TseitinFormula(G,charges=[0,1,1,0,1,1])
    >>> pprint(F.is_satisfiable())
@@ -191,11 +191,12 @@ file-like objects such as
    >>> from io import StringIO
    >>> textbuffer = StringIO("graph X { 1 -- 2 -- 3 }")
    >>> G = readGraph(textbuffer, graph_type='simple', file_format='dot')
-   >>> ('1','2') in G.edges()
+   >>> E = G.edges()
+   >>> ('1','2') in E
    True
-   >>> ('2','3') in G.edges()
+   >>> ('2','3') in E
    True
-   >>> ('1','3') in G.edges()
+   >>> ('1','3') in E
    False
    
 There are  several advantages with  using those functions,  instead of
@@ -215,26 +216,26 @@ When the  file object has an  associated file name, it  is possible to
 omit the ``file_format`` argument. In this latter case the appropriate
 choice of format  will be guessed by the file  extension.
 
-   >>> with open("example.dot","w") as f:
+   >>> with open(tmp_path+"example_dag1.dot","w") as f:
    ...     print("digraph A {1->2->3}",file=f)
-   >>> G = readGraph("example.dot",graph_type='dag')
+   >>> G = readGraph(tmp_path+"example_dag1.dot",graph_type='dag')
    >>> sorted(G.edges())
    [('1', '2'), ('2', '3')]
 
 is equivalent to
    
-   >>> with open("example.gml","w") as f:
+   >>> with open(tmp_path+"example_dag2.gml","w") as f:
    ...     print("digraph A {1->2->3}",file=f)
-   >>> G = readGraph("example.gml",graph_type='dag',file_format='dot')
+   >>> G = readGraph(tmp_path+"example_dag2.gml",graph_type='dag',file_format='dot')
    >>> sorted(G.edges())
    [('1', '2'), ('2', '3')]
 
 Instead, if we omit the format and the file extension is misleading we
 would get and error.
    
-   >>> with open("example.gml","w") as f:
+   >>> with open(tmp_path+"example_dag3.gml","w") as f:
    ...     print("digraph A {1->2->3}",file=f)
-   >>> G = readGraph("example.gml",graph_type='dag')
+   >>> G = readGraph(tmp_path+"example_dag3.gml",graph_type='dag')
    Traceback (most recent call last):
    ...
    ValueError: [Parse error in GML input] ...
@@ -255,9 +256,9 @@ This is an example of GML file.
    ...                 target 1
    ...               ]
    ...             ]"""
-   >>> with open("example.gml","w",encoding='ascii') as f:
+   >>> with open(tmp_path+"example_ascii.gml","w",encoding='ascii') as f:
    ...     print(gml_text,file=f)
-   >>> G = readGraph("example.gml",graph_type='simple')
+   >>> G = readGraph(tmp_path+"example_ascii.gml",graph_type='simple')
    >>> ('b','a') in G.edges()
    True
 
@@ -278,9 +279,9 @@ Recall that GML files are supposed to be ASCII encoded.
    ...               ]
    ...             ]"""
 
-   >>> with open("example.gml","w",encoding='utf-8') as f:
+   >>> with open(tmp_path+"example_utf8.gml","w",encoding='utf-8') as f:
    ...     print(gml_text2,file=f)
-   >>> G = readGraph("example.gml",graph_type='dag')
+   >>> G = readGraph(tmp_path+"example_utf8.gml",graph_type='dag')
    Traceback (most recent call last):
    ...
    ValueError: [Non-ascii chars in GML file] ...

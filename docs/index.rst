@@ -42,10 +42,13 @@ object. Let's see a simple example of its usage.
    >>> F = cnfformula.CNF()
    >>> F.add_clause([(True,"X"),(False,"Y")])
    >>> F.add_clause([(False,"X")])
-   >>> pprint( F.is_satisfiable() )
-   (True, {'X': False, 'Y': False})
+   >>> outcome,assignment = F.is_satisfiable() # outputs a pair
+   >>> outcome                                 # is the formula SAT?
+   True
+   >>> pprint(assignment)                      # a solution
+   {'X': False, 'Y': False}
    >>> F.add_clause([(True,"Y")])
-   >>> F.is_satisfiable()
+   >>> F.is_satisfiable()                      # no solution
    (False, None)
    >>> print(F.dimacs())
    c Generated with `cnfgen`
