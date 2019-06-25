@@ -98,21 +98,21 @@ tests whether this bipartition exists in a graph.
 
 
    >>> import networkx as nx
-   >>> G=nx.bipartite.random_graph(3,2,1.0)
+   >>> G = nx.bipartite.havel_hakimi_graph([2,1],[1,1,1])
    >>> cnfformula.graphs.has_bipartition(G)
    True
    >>> from pprint import pprint
    >>> pprint(dict(G.nodes()))
    {0: {'bipartite': 0},
     1: {'bipartite': 0},
-    2: {'bipartite': 0},
+    2: {'bipartite': 1},
     3: {'bipartite': 1},
     4: {'bipartite': 1}}
    >>> sorted(G.edges())
-   [(0, 3), (0, 4), (1, 3), (1, 4), (2, 3), (2, 4)]
+   [(0, 3), (0, 4), (1, 2)]
    >>> F = cnfformula.GraphPigeonholePrinciple(G)
    >>> list(F.variables())
-   ['p_{0,3}', 'p_{0,4}', 'p_{1,3}', 'p_{1,4}', 'p_{2,3}', 'p_{2,4}']
+   ['p_{0,3}', 'p_{0,4}', 'p_{1,2}']
 
    
 Graph I/O
@@ -135,24 +135,58 @@ file-like objects such as
    >>> import networkx as nx
    >>> from cnfformula.graphs import readGraph, writeGraph
 
-   >>> G = nx.bipartite.random_graph(3,2,0.5)
+   >>> G = nx.bipartite.havel_hakimi_graph([2,1],[1,1,1])
    >>> writeGraph(G,sys.stdout,graph_type='bipartite',file_format='gml')
-   strict graph "fast_gnp_random_graph(3,2,0.5)" {
-    0	 [bipartite=0];
-	4	 [bipartite=1];
-	0 -- 4;
-	1	 [bipartite=0];
-	3	 [bipartite=1];
-	1 -- 3;
-	2	 [bipartite=0];
-	2 -- 4;
-   }
-
-   >>> from StringIO import StringIO
-   >>> buffer = StringIO("graph X { 1 -- 2 -- 3 }")
-   >>> G = readGraph(buffer, graph_type='simple', file_format='dot')
-   >>> G.edges()
-   [('1', '2'), ('3', '2')]
+   graph [
+     multigraph 1
+     name "bipartite_havel_hakimi_graph"
+     node [
+       id 0
+       label "0"
+       bipartite 0
+     ]
+     node [
+       id 1
+       label "1"
+       bipartite 0
+     ]
+     node [
+       id 2
+       label "2"
+       bipartite 1
+     ]
+     node [
+       id 3
+       label "3"
+       bipartite 1
+     ]
+     node [
+       id 4
+       label "4"
+       bipartite 1
+     ]
+     edge [
+       source 0
+       target 3
+       key 0
+     ]
+     edge [
+       source 0
+       target 4
+       key 0
+     ]
+     edge [
+       source 1
+       target 2
+       key 0
+     ]
+   ]
+   <BLANKLINE>
+   >>> from io import StringIO
+   >>> textbuffer = StringIO("graph X { 1 -- 2 -- 3 }")
+   >>> G = readGraph(textbuffer, graph_type='simple', file_format='dot')
+   >>> sorted(G.edges())
+   [('1', '2'), ('2', '3')]
    
 There are  several advantages with  using those functions,  instead of
 the reader/writer  implemented ``NextowrkX``. First of  all the reader
@@ -163,30 +197,86 @@ would check that.
 
    >>> buffer = StringIO('digraph A { 1 -- 2 -- 3 -- 1}')
    >>> readGraph(buffer,graph_type='dag',file_format='dot')
-   [...]
-   ValueError: Input graph must be acyclic
+   Traceback (most recent call last):
+   ...
+   ValueError: [Input error] Graph must be acyclic
 
 When the  file object has an  associated file name, it  is possible to
 omit the ``file_format`` argument. In this latter case the appropriate
 choice of format  will be guessed by the file  extension.
 
+
+
    >>> with open("example.dot","w") as f:
    ...     print("digraph A {1->2->3}",file=f)
    >>> G = readGraph("example.dot",graph_type='dag')
-   >>> G.edges()
+   >>> sorted(G.edges())
    [('1', '2'), ('2', '3')]
 
+is equivalent to
+   
    >>> with open("example.gml","w") as f:
    ...     print("digraph A {1->2->3}",file=f)
    >>> G = readGraph("example.gml",graph_type='dag',file_format='dot')
-   >>> G.edges()
+   >>> sorted(G.edges())
    [('1', '2'), ('2', '3')]
 
+Instead, if we omit the format and the file extension is misleading we
+would get and error.
+   
    >>> with open("example.gml","w") as f:
    ...     print("digraph A {1->2->3}",file=f)
    >>> G = readGraph("example.gml",graph_type='dag')
-   ValueError: [Parse error in GML input] expected ...
- 
+   Traceback (most recent call last):
+   ...
+   ValueError: [Parse error in GML input] ...
+
+This is an example of GML file.
+   
+   >>> gml_text ="""graph [
+   ...               node [
+   ...                 id 0
+   ...                 label "a"
+   ...               ]
+   ...               node [
+   ...                 id 1
+   ...                 label "b"
+   ...               ]
+   ...               edge [
+   ...                 source 0
+   ...                 target 1
+   ...               ]
+   ...             ]"""
+   >>> with open("example.gml","w",encoding='ascii') as f:
+   ...     print(gml_text,file=f)
+   >>> G = readGraph("example.gml",graph_type='simple')
+   >>> sorted(G.edges())
+   [('a', 'b')]
+
+Recall that GML files are supposed to be ASCII encoded. 
+
+   >>> gml_text2="""graph [
+   ...               node [
+   ...                 id 0
+   ...                 label "à"
+   ...               ]
+   ...               node [
+   ...                 id 1
+   ...                 label "è"
+   ...               ]
+   ...               edge [
+   ...                 source 0
+   ...                 target 1
+   ...               ]
+   ...             ]"""
+
+   >>> with open("example.gml","w",encoding='utf-8') as f:
+   ...     print(gml_text2,file=f)
+   >>> G = readGraph("example.gml",graph_type='dag')
+   Traceback (most recent call last):
+   ...
+   ValueError: [Non-ascii chars in GML file] ...
+
 Graph generators
 ----------------
 

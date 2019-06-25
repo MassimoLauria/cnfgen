@@ -104,8 +104,8 @@ class TestGraphIO(unittest.TestCase) :
 
     def test_readGraph_gml_path2(self) :
 
-        self.assertRaises(ValueError, readGraph, BytesIO(gml_path2.encode("ascii")), graph_type='simple')
-        G = readGraph(BytesIO(gml_path2.encode("ascii")), graph_type='simple', file_format = 'gml')
+        self.assertRaises(ValueError, readGraph, sio(gml_path2), graph_type='simple')
+        G = readGraph(sio(gml_path2), graph_type='simple', file_format = 'gml')
         self.assertEqual(G.order(), 3)
         self.assertEqual(len(G.edges()), 2)
 
@@ -146,13 +146,12 @@ class TestGraphIO(unittest.TestCase) :
         if 'dot' not in supported_formats()['simple']:
             self.skipTest("No support for Dot file I/O.")
         
-        with open(example_filename('path2.dot'), 'rb') as ifile:
+        with open(example_filename('path2.dot'), 'r') as ifile:
             # Parsing should fail here
             self.assertRaises(ValueError, readGraph, ifile, graph_type='simple', file_format='gml')
 
         with open(example_filename('path2.dot'), 'r') as ifile:
             # Parser should guess that it is a dot file
-            # read_dot() expects a file opened in text mode
             G = readGraph(ifile, graph_type='simple')
             self.assertEqual(G.order(), 3)
             self.assertEqual(len(G.edges()), 2)
