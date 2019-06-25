@@ -9,12 +9,18 @@ is realized over a star graph with five arms.
 
    >>> import cnfformula
    >>> import networkx as nx
+   >>> from pprint import pprint
    >>> G = nx.star_graph(5)
    >>> list(G.edges())
    [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
    >>> F = cnfformula.TseitinFormula(G,charges=[0,1,1,0,1,1])
-   >>> F.is_satisfiable()
-   (True, {'E_{0,1}': True, 'E_{0,2}': True, 'E_{0,3}': False, 'E_{0,4}': True, 'E_{0,5}': True})
+   >>> pprint(F.is_satisfiable())
+   (True,
+    {'E_{0,1}': True,
+     'E_{0,2}': True,
+     'E_{0,3}': False,
+     'E_{0,4}': True,
+     'E_{0,5}': True})
 
 Tseitin formulas can  be really hard for if the  graph has large `edge
 expansion <https://en.wikipedia.org/wiki/Expander_graph>`_. Indeed the
