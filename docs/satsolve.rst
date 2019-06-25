@@ -17,9 +17,10 @@ not  implement a  SAT  solver, but  uses behind  the  scenes the  ones
 installed in  the running environment.  If the formula  is satisfiable
 the value returned includes a satisfying assignment.
 
+   >>> from pprint import pprint
    >>> from cnfformula import CNF
    >>> F = CNF([ [(True,'X'),(False,'Y')], [(False,'X')] ])
-   >>> F.is_satisfiable()
+   >>> pprint(F.is_satisfiable())
    (True, {'X': False, 'Y': False})
    >>> F.add_clause([(True,'Y')])
    >>> F.is_satisfiable()

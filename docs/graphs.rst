@@ -117,7 +117,7 @@ tests whether this bipartition exists in a graph.
    >>> sorted(G.edges())
    [(0, 3), (0, 4), (1, 2)]
    >>> F = cnfformula.GraphPigeonholePrinciple(G)
-   >>> list(F.variables())
+   >>> sorted(F.variables())
    ['p_{0,3}', 'p_{0,4}', 'p_{1,2}']
 
    
@@ -191,8 +191,12 @@ file-like objects such as
    >>> from io import StringIO
    >>> textbuffer = StringIO("graph X { 1 -- 2 -- 3 }")
    >>> G = readGraph(textbuffer, graph_type='simple', file_format='dot')
-   >>> sorted(G.edges())
-   [('1', '2'), ('2', '3')]
+   >>> ('1','2') in G.edges()
+   True
+   >>> ('2','3') in G.edges()
+   True
+   >>> ('1','3') in G.edges()
+   False
    
 There are  several advantages with  using those functions,  instead of
 the reader/writer  implemented ``NextowrkX``. First of  all the reader
@@ -210,8 +214,6 @@ would check that.
 When the  file object has an  associated file name, it  is possible to
 omit the ``file_format`` argument. In this latter case the appropriate
 choice of format  will be guessed by the file  extension.
-
-
 
    >>> with open("example.dot","w") as f:
    ...     print("digraph A {1->2->3}",file=f)
@@ -256,8 +258,8 @@ This is an example of GML file.
    >>> with open("example.gml","w",encoding='ascii') as f:
    ...     print(gml_text,file=f)
    >>> G = readGraph("example.gml",graph_type='simple')
-   >>> sorted(G.edges())
-   [('a', 'b')]
+   >>> ('b','a') in G.edges()
+   True
 
 Recall that GML files are supposed to be ASCII encoded. 
 
