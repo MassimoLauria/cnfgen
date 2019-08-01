@@ -39,22 +39,23 @@ to study their proof complexity or how SAT solvers perform on them.
 * Usage
 
   CNFgen  include two  tools with  formula transformation  capability:
-  =cnfgen= can  apply the transformation  after it generates  the CNF,
-  and directly outputs the DIMACS of the final formula,
+  the  first  is  =cnfgen=  itself,   which  can  apply  one  or  more
+  transformations after it generates the CNF, and directly outputs the
+  DIMACS of the final formula,
 
-  : cnfgen --Transform <type> --Tarity <N> <formula_type> <formula_param>
+  : cnfgen <family> <params> -T <tr1> <args1> -T <tr2> <args2> ...
 
-  while =cnftransform=  applies transformations to any  DIMACS formula
-  in input, using the command line
+  while =cnftransform=  applies a  single transformations to  a DIMACS
+  formula in input, using the command line
 
-  : cnftransform --Transform <type> --Tarity <N> [-i <inputfile>] [-o <outputfile>]
+  : cnftransform  [-i <inputfile>] [-o <outputfile>] <transform> <params>
   
   For example,  if we want  to substitute each  variables of a  CNF in
   DIMACS  format,  given in  standard  input,  with  a  XOR of  3  new
   variables and output the formula on standard output it is sufficient
   to type
 
-  : cnftransform --Transform xor --Tarity 2
+  : cnftransform xor 3
    
   For a list of all implemented transformations you can type either 
    
@@ -62,7 +63,7 @@ to study their proof complexity or how SAT solvers perform on them.
 
   or
    
-  : cnftransform --help-transform
+  : cnftransform --help
 
 * Available transformations
 
