@@ -41,7 +41,7 @@ def command_line_utility(argv=sys.argv):
     """ % (progname))
 
     parser.add_argument('--output','-o',
-                        type=argparse.FileType('wb',0),
+                        type=argparse.FileType('w'),
                         metavar="<output>",
                         default='-',
                         help="""Output file. The formula is saved
@@ -60,7 +60,7 @@ def command_line_utility(argv=sys.argv):
                         be fine.  (default: current time)
                         """)
     parser.add_argument('--input','-i',
-                        type=argparse.FileType('r',0),
+                        type=argparse.FileType('r'),
                         metavar="<input>",
                         default='-',
                         help="""Input file. A formula in dimacs format. Setting '<input>' to '-' is
