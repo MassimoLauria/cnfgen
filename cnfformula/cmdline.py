@@ -267,7 +267,7 @@ class DirectedAcyclicGraphHelper(GraphHelper):
         gr=gr.add_mutually_exclusive_group(required=required)
        
         gr.add_argument('--input'+suffix,'-i'+suffix,
-                        type=argparse.FileType('r',0),
+                        type=argparse.FileType('r'),
                         metavar="<input>",
                         default='-',
                         help="""Read the DAG from <input>. Setting '<input>' to '-' is another way
@@ -282,7 +282,7 @@ class DirectedAcyclicGraphHelper(GraphHelper):
         gr=parser.add_argument_group("I/O options")
 
         gr.add_argument('--savegraph'+suffix,'-sg'+suffix,
-                            type=argparse.FileType('wb',0),
+                            type=argparse.FileType('w'),
                             metavar="<graph_file>",
                             default=None,
                             help="""Save the DAG to <graph_file>.
@@ -372,7 +372,7 @@ class SimpleGraphHelper(GraphHelper):
         gr=gr.add_mutually_exclusive_group(required=required)
 
         gr.add_argument('--input'+suffix,'-i'+suffix,
-                        type=argparse.FileType('r',0),
+                        type=argparse.FileType('r'),
                         metavar="<input>",
                         default='-',
                         help="""Read the graph from <input>. 
@@ -413,7 +413,7 @@ class SimpleGraphHelper(GraphHelper):
 
         gr=parser.add_argument_group("I/O options for graph "+suffix)
         gr.add_argument('--savegraph'+suffix,'-sg'+suffix,
-                            type=argparse.FileType('wb',0),
+                            type=argparse.FileType('w'),
                             metavar="<graph_file>",
                             default=None,
                             help="""Save the graph to <graph_file>.
@@ -609,7 +609,7 @@ class BipartiteGraphHelper(GraphHelper):
 
 
         gr.add_argument('--input'+suffix,'-i'+suffix,
-                        type=argparse.FileType('r',0),
+                        type=argparse.FileType('r'),
                         metavar="<input>",
                         default='-',
                         help="""Read the graph from file. Setting '<input>' to '-' is
@@ -650,7 +650,7 @@ class BipartiteGraphHelper(GraphHelper):
                                      containing the graph structure.
                                      """)
         gr.add_argument('--savegraph'+suffix,'-sg'+suffix,
-                        type=argparse.FileType('wb',0),
+                        type=argparse.FileType('w'),
                         metavar="<graph_file>",
                         default=None,
                         help="""Save the graph to <graph_file>. Setting '<graph_file>' to '-'sends
