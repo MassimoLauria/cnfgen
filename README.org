@@ -15,7 +15,17 @@
        <img
        src='http://readthedocs.org/projects/cnfgen/badge/?version=latest'
        alt='Documentation Status' />
-   </a>   
+   </a>
+   <a href='http://cnfgen.readthedocs.org/en/latest/?badge=latest'>
+       <img
+       src='http://readthedocs.org/projects/cnfgen/badge/?version=latest'
+       alt='Documentation Status' />
+   </a>
+   <a href="https://zenodo.org/badge/latestdoi/6294497">
+       <img 
+       src="https://zenodo.org/badge/6294497.svg" 
+       alt="DOI" />
+   </a>
 #+end_html
 
   This repository provides the command
