@@ -86,8 +86,8 @@ problems well known to be challenging for certain SAT solvers.
   + [[tseitin][Tseitin formulas]] 
   + [[op][Ordering principle]]
   + [[gop][Graph ordering principle]]
+  + [[parity][Parity principle]]
   + [[matching][Matching principle]]
-  + [[gmatching][Graph matching principle]]
   + [[count][Counting principle]] 
   + [[peb][Pebbling formula]]
   + [[stone][Stones formula]]
@@ -166,22 +166,22 @@ problems well known to be challenging for certain SAT solvers.
 
     : cnfgen gop --complete 30
    
-*** Matching principle<<matching>>
+*** Parity principle<<parity>>
 
     The formula claims that =<N>= elements can be matched in pairs.
 
-    : cnfgen matching <N>
+    : cnfgen parity <N>
     
-*** Graph matching principle<<gmatching>>
+*** Matching principle<<matching>>
 
     The formula claims a graph =<G>= in input has a perfect matching
 
-    : cnfgen gmatching -i <G>
+    : cnfgen matching -i <G>
 
-    The matching formula  is equivalent to the  graph matching formula
+    The parity principle is equivalent to the matching formula
     over a complete graph
 
-    : cnfgen gmatching --complete 10
+    : cnfgen matching --complete 10
 
 *** Counting principle<<count>> 
 

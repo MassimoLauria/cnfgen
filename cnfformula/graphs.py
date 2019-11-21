@@ -682,8 +682,8 @@ def _read_graph_matrix_format(inputfile):
     scanner = scan_integer(inputfile)
 
     try:
-        n = scanner.next()[0]
-        m = scanner.next()[0]
+        n = next(scanner)[0]
+        m = next(scanner)[0]
 
         # bipartition of vertices
         for i in range(1,n+1):
