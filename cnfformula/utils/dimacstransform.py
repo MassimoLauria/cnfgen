@@ -28,7 +28,7 @@ def setup_command_line(parser):
     - `parser`: parser to fill with options
     """
     parser.add_argument('--input','-i',
-                        type=argparse.FileType('r',0),
+                        type=argparse.FileType('r'),
                         metavar="<input>",
                         default='-',
                         help="""Input file. The input formula is read as a dimacs CNF file file
@@ -37,7 +37,7 @@ def setup_command_line(parser):
                         input. (default: -) """)
 
     parser.add_argument('--output','-o',
-                        type=argparse.FileType('wb',0),
+                        type=argparse.FileType('w'),
                         metavar="<output>",
                         default='-',
                         help="""Output file. The formula is saved
