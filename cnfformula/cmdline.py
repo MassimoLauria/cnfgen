@@ -6,7 +6,7 @@ CNFgen has many command line entry points to its functionality, and
 some of them expose the same functionality over and over. This module
 contains useful common components.
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -366,7 +366,7 @@ class SimpleGraphHelper(GraphHelper):
                     n, p = positive_int(values[0]),float(values[1])
                     if p>1.0 or p<0: raise ValueError('p must be a float between 0 and 1')
                 except ValueError as e:
-                    raise argparse.ArgumentError(self,e.message)
+                    raise argparse.ArgumentError(self,str(e))
                 setattr(args, self.dest, (n,p))
 
         gr=gr.add_mutually_exclusive_group(required=required)
@@ -540,7 +540,7 @@ class BipartiteGraphHelper(GraphHelper):
                     if not 0.0 <= p <= 1.0:
                         raise ValueError('p must be a float between 0 and 1')
                 except ValueError as e:
-                    raise argparse.ArgumentError(self,e.message)
+                    raise argparse.ArgumentError(self,str(e))
                 setattr(args, self.dest, (l,r,p))
 
         class BipartiteRegular(argparse.Action):
@@ -552,7 +552,7 @@ class BipartiteGraphHelper(GraphHelper):
                     if (d*l % r) != 0 :
                         raise ValueError('In a regular bipartite graph, r must divide d*l.')
                 except ValueError as e:
-                    raise argparse.ArgumentError(self,e.message)
+                    raise argparse.ArgumentError(self,str(e))
                 setattr(args, self.dest, (l,r,d))
 
         class BipartiteEdge(argparse.Action):
@@ -562,7 +562,7 @@ class BipartiteGraphHelper(GraphHelper):
                     if m > r*l :
                         raise ValueError('In a bipartite graph, #edges is at most l*r.')
                 except ValueError as e:
-                    raise argparse.ArgumentError(self,e.message)
+                    raise argparse.ArgumentError(self,str(e))
                 setattr(args, self.dest, (l,r,m))
 
         class BipartiteShift(argparse.Action):
@@ -586,7 +586,7 @@ class BipartiteGraphHelper(GraphHelper):
                         raise ValueError("in v(1),v(2)... we need 1 <= v(i) <= M.")
                     
                 except ValueError as e:
-                    raise argparse.ArgumentError(self,e.message)
+                    raise argparse.ArgumentError(self,str(e))
                 setattr(args, self.dest, (N,M,pattern))
 
         class BipartiteLeft(argparse.Action):
@@ -596,7 +596,7 @@ class BipartiteGraphHelper(GraphHelper):
                     if d > r :
                         raise ValueError('In a bipartite graph, left degree d is at most r.')
                 except ValueError as e:
-                    raise argparse.ArgumentError(self,e.message)
+                    raise argparse.ArgumentError(self,str(e))
                 setattr(args, self.dest, (l,r,d))
 
         gr=parser.add_argument_group("Bipartite graph structure "+suffix,
