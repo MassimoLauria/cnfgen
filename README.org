@@ -45,7 +45,14 @@
 
   : cnfgen <formula_type> --help
 
-  See the webpage of the project at http://massimolauria.net/cnfgen/
+
+** Resources
+
+   - Webpage of the project at http://massimolauria.net/cnfgen/
+   - Technical documentation https://cnfgen.readthedocs.io/en/latest/
+   - Python Package at https://pypi.org/project/CNFgen/
+   - Github repository https://github.com/MassimoLauria/cnfgen
+   - Zenodo link (DOI) https://zenodo.org/record/3548843
 
 ** Installation
    
