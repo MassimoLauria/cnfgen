@@ -46,14 +46,6 @@
   : cnfgen <formula_type> --help
 
 
-** Resources
-
-   - Webpage of the project at http://massimolauria.net/cnfgen/
-   - Technical documentation https://cnfgen.readthedocs.io/en/latest/
-   - Python Package at https://pypi.org/project/CNFgen/
-   - Github repository https://github.com/MassimoLauria/cnfgen
-   - Zenodo link (DOI) https://zenodo.org/record/3548843
-
 ** Installation
    
    You can install CNFgen from  [[http://pypi.python.org][Python Package Index]], together with all
@@ -75,9 +67,17 @@
    directory. If you do that please check that the target location for
    the command line utilities are in your $PATH.
 
+** Resources
+
+   - Webpage of the project at http://massimolauria.net/cnfgen/
+   - Technical documentation https://cnfgen.readthedocs.io/en/latest/
+   - Python Package at https://pypi.org/project/CNFgen/
+   - Github repository https://github.com/MassimoLauria/cnfgen
+   - Zenodo link (DOI) https://zenodo.org/record/3548843
+
 ** Contribution 
 
    Please contribute to the code by sending pull requests. 
 
 
-Copyright 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019 © Massimo Lauria ([[mailto:lauria.massimo@gmail.com][lauria.massimo@gmail.com]])
+Copyright 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019 © Massimo Lauria ([[mailto:massimo.lauria@uniroma1.it][massimo.lauria@uniroma1.it]])
