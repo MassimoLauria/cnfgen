@@ -22,6 +22,6 @@ setup(
             'cnfshuffle=cnfformula.utils.cnfshuffle:command_line_utility',
             'cnftransform=cnfformula.utils.dimacstransform:command_line_utility'],
     },
-    install_requires=['networkx>=2.0,<2.4', 'pydot>=1.2.3'],
+    install_requires=['networkx>=2.0', 'pydot>=1.2.3'],
     python_requires='>=3.4'
 )

@@ -12,12 +12,14 @@ env:
   - NETWORKX_VERSION=2.1
   - NETWORKX_VERSION=2.2
   - NETWORKX_VERSION=2.3
+  - NETWORKX_VERSION=2.4
 
 # Networkx 2.3 does not support Python 3.4
 matrix:
   exclude:
   - python: "3.4"
     env: NETWORKX_VERSION=2.3
+    env: NETWORKX_VERSION=2.4
 
 before_install:
   - sudo apt-get install minisat

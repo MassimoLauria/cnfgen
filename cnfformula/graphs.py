@@ -367,7 +367,7 @@ def has_bipartition(G):
     try:
         for n in G.nodes():
             # Accept both string and int representation
-            if not G.node[n]['bipartite'] in [0,1,'0','1']:
+            if not G.nodes[n]['bipartite'] in [0,1,'0','1']:
                 return False
     except KeyError:
         return False
@@ -516,7 +516,7 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
                              "Vertex ID out of range [1,{}] at line {}.".format(nvertex,i))
 
         sources.pop()
-        if len([x for x in sources if x < 1 or x > nvertex]):
+        if len([x for x in sources if x < 1 or x > nvertex])>0:
             raise ValueError("[Input error] "+
                              "Vertex ID out of range [1,{}] at line {}.".format(nvertex,i))
 
@@ -527,19 +527,19 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
 
         # Check the bi-coloring on both side
         if bipartition:
-            colors = [ G.node[s]['bipartite'] for s in sources if 'bipartite' in G.node[s] ]
+            colors = [ G.nodes[s]['bipartite'] for s in sources if 'bipartite' in G.nodes[s] ]
 
-            if 'bipartite' in G.node[target]:
-                colors += [ 1 - G.node[target]['bipartite'] ]
+            if 'bipartite' in G.nodes[target]:
+                colors += [ 1 - G.nodes[target]['bipartite'] ]
 
             if len(set(colors))>1:
                 raise ValueError("[Input error] "+
                                  "Greedy bicoloring incompatible with edges in line {}.".format(i))
 
             default_color = 0 if len(colors)==0 else 1-colors[0]
-            G.node[target]['bipartite'] = default_color
+            G.nodes[target]['bipartite'] = default_color
             for s in sources:
-                G.node[s]['bipartite'] = 1-default_color
+                G.nodes[s]['bipartite'] = 1-default_color
 
 
         # after vertices, add the edges
@@ -549,8 +549,8 @@ def _read_graph_kthlist_format(inputfile,graph_class=networkx.DiGraph, bipartiti
     # label the bipartition on residual vertices
     if bipartition:
         for v in G.ordered_vertices:
-            if 'bipartite' not in G.node[v]:
-                G.node[v]['bipartite']=1
+            if 'bipartite' not in G.nodes[v]:
+                G.nodes[v]['bipartite']=1
 
 
     # cache the information that the graph is topologically sorted.
