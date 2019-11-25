@@ -7,8 +7,8 @@ __author__              = 'Massimo Lauria'
 __author_email__        = 'massimo.lauria@uniroma1.it'
 __aurhor_string__       = __author__ + ' <' + __author_email__ + '>'
 
-__version_short__       = '0.8.3'
-__version_long__        = '0.8.3'
+__version_short__       = '0.8.4.1'
+__version_long__        = '0.8.4.1'
 __version__             = __version_long__
 
 __copyright__           = '2012-2019 '+ __author__ + ' <' + __author_email__ + '>'

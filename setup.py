@@ -7,6 +7,12 @@ from setuptools import setup, find_packages
 
 import cnfformula.prjdata as p
 
+from os import path
+
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'PyPI.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
 setup(
     name         = p.__project_name__,
     version      = p.__version__,
@@ -23,5 +29,9 @@ setup(
             'cnftransform=cnfformula.utils.dimacstransform:command_line_utility'],
     },
     install_requires=['networkx>=2.0', 'pydot>=1.2.3'],
-    python_requires='>=3.4'
+    python_requires='>=3.4',
+
+    # Package long description in Markdown
+    long_description=long_description,
+    long_description_content_type='text/markdown'
 )
