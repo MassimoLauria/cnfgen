@@ -3,7 +3,7 @@
 import unittest
 import textwrap
 
-from cnfformula.utils.solver import is_satisfiable, have_satsolver
+from cnfformula.utils import is_satisfiable, have_satsolver
 
 
 def example_filename(filename):

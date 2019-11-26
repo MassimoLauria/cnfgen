@@ -3,30 +3,17 @@
 """Cnf formulas shuffling."""
 
 
-
 import os
-
-
 import sys
 import random
-from .. import CNF
-from .  import dimacs2cnf
+import argparse
+
+from .parsedimacs import dimacs2cnf
 
 from ..transformations.shuffle import Shuffle
 
 
 def command_line_utility(argv=sys.argv):
-
-    # Python 2.6 does not have argparse library
-    try:
-        import argparse
-    except ImportError:
-        print("Sorry: %s requires `argparse` library, which is missing.\n"%argv[0],file=sys.stderr)
-        print("Either use Python 2.7 or install it from one of the following URLs:",file=sys.stderr)
-        print(" * http://pypi.python.org/pypi/argparse",file=sys.stderr)
-        print(" * http://code.google.com/p/argparse",file=sys.stderr)
-        print("",file=sys.stderr)
-        exit(-1)
 
     # Parse the command line arguments
     progname=os.path.basename(argv[0])

@@ -14,7 +14,7 @@ Accept a cnf in dimacs format in input
 
 import os
 
-from . import dimacs2cnf
+from .parsedimacs import dimacs2cnf
 
 
 import sys

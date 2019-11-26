@@ -12,8 +12,6 @@ solvers, see
 
 import sys
 
-__all__ = ["supported_satsolvers", "is_satisfiable", "have_satsolver"]
-
 
 def _satsolve_filein_fileout(F, cmd='minisat',verbose=0):
     """Test CNF satisfiability using a minisat-style solver.
