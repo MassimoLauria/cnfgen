@@ -1,5 +1,4 @@
 from cnfformula import RandomKCNF
-from cnfformula.families.randomformulas import all_clauses
 
 from . import TestCNFBase
 
