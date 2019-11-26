@@ -38,7 +38,6 @@ class TestGraphOrderingPrinciple(TestCNFBase):
                 for smart in (True,False):
                     for plant in (True,False):
                         for knuth in (0,2,3):
-                            print((elements,total,smart,plant,knuth))
                             graph = nx.complete_graph(elements)
                             F = GraphOrderingPrinciple(graph,total,smart,plant,knuth)
                             G = OrderingPrinciple(elements,total,smart,plant,knuth)
