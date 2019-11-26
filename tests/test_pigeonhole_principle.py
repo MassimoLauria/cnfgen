@@ -1,6 +1,9 @@
-import networkx as nx
 
 import sys
+
+import networkx as nx
+from networkx.algorithms.bipartite import complete_bipartite_graph
+
 from cnfformula import CNF
 from cnfformula.families.pigeonhole import PigeonholePrinciple
 from cnfformula.families.pigeonhole import GraphPigeonholePrinciple
@@ -8,7 +11,6 @@ from cnfformula.families.pigeonhole import BinaryPigeonholePrinciple
 
 from . import TestCNFBase
 from .test_commandline_helper import TestCommandline
-from .test_graph_helper import complete_bipartite_graph_proper
 
 class TestPigeonholePrinciple(TestCNFBase):
     def test_empty(self):
@@ -126,7 +128,7 @@ class TestGraphPigeonholePrinciple(TestCNFBase):
             for holes in range(2,5):
                 for functional in (True,False):
                     for onto in (True,False):
-                        graph = complete_bipartite_graph_proper(pigeons,holes)
+                        graph = complete_bipartite_graph(pigeons,holes)
                         F = GraphPigeonholePrinciple(graph,functional,onto)
                         G = PigeonholePrinciple(pigeons,holes,functional,onto)
                         self.assertCnfEquivalentModuloVariables(F,G)
@@ -168,7 +170,7 @@ class TestGraphPigeonholePrincipleCommandline(TestCommandline):
                         parameters = ["cnfgen","-q","gphp", "--bcomplete", pigeons, holes]
                         if functional : parameters.append("--functional")
                         if onto : parameters.append("--onto")
-                        graph = complete_bipartite_graph_proper(pigeons,holes)
+                        graph = complete_bipartite_graph(pigeons,holes)
                         F = GraphPigeonholePrinciple(graph,functional,onto)
                         self.checkFormula(sys.stdin,F, parameters)
 

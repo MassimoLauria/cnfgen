@@ -22,28 +22,17 @@ import random
 
 from itertools import combinations, product
 
+from networkx.algorithms.bipartite import complete_bipartite_graph
+from networkx.algorithms.bipartite import random_graph as bipartite_random_graph
+from networkx.algorithms.bipartite import gnmk_random_graph as bipartite_gnmk_random_graph
+
+
 from .graphs import supported_formats as graph_formats
 from .graphs import readGraph,writeGraph
 from .graphs import bipartite_random_left_regular,bipartite_random_regular,bipartite_shift
 from .graphs import bipartite_sets
 from .graphs import dag_complete_binary_tree,dag_pyramid
 from .graphs import sample_missing_edges
-
-
-
-try: # NetworkX >= 1.10
-
-    complete_bipartite_graph    = networkx.bipartite.complete_bipartite_graph
-    bipartite_random_graph      = networkx.bipartite.random_graph
-    bipartite_gnmk_random_graph = networkx.bipartite.gnmk_random_graph
-
-except AttributeError: # Networkx < 1.10
-    
-    from networkx import complete_bipartite_graph
-    from networkx import bipartite_random_graph
-    from networkx import bipartite_gnmk_random_graph
-
-
 
 __all__ = [ "register_cnfgen_subcommand","is_cnfgen_subcommand",
             "DirectedAcyclicGraphHelper", "SimpleGraphHelper", "BipartiteGraphHelper"]
@@ -698,11 +687,6 @@ class BipartiteGraphHelper(GraphHelper):
             
             l,r = getattr(args,"bcomplete"+suffix)
             G=complete_bipartite_graph(l,r)
-            # Workaround: the bipartite labels are missing in old version of networkx
-            for i in range(0,l):
-                G.add_node(i,bipartite=0)
-            for i in range(l,l+r):
-                G.add_node(i,bipartite=1)
             
         elif getattr(args,"graphformat"+suffix) is not None:
 

@@ -1,12 +1,14 @@
-import networkx as nx
 
 import sys
+
+import networkx as nx
+from networkx.algorithms.bipartite import complete_bipartite_graph
+
 from cnfformula import CNF
 from cnfformula import SubsetCardinalityFormula
 
 from . import TestCNFBase
 from .test_commandline_helper import TestCommandline
-from .test_graph_helper import complete_bipartite_graph_proper
 
 
 class TestSubsetCardinality(TestCNFBase):
@@ -22,7 +24,7 @@ class TestSubsetCardinality(TestCNFBase):
             SubsetCardinalityFormula(graph)
 
     def test_complete_even(self):
-        graph = complete_bipartite_graph_proper(2,2)
+        graph = complete_bipartite_graph(2,2)
         F = SubsetCardinalityFormula(graph)
         dimacs = """\
         p cnf 4 4
@@ -34,7 +36,7 @@ class TestSubsetCardinality(TestCNFBase):
         self.assertCnfEqualsDimacs(F,dimacs)
 
     def test_complete_even_odd(self):
-        graph = complete_bipartite_graph_proper(2,3)
+        graph = complete_bipartite_graph(2,3)
         F = SubsetCardinalityFormula(graph)
         dimacs = """\
         p cnf 6 9
@@ -51,7 +53,7 @@ class TestSubsetCardinality(TestCNFBase):
         self.assertCnfEqualsDimacs(F,dimacs)
 
     def test_complete_odd(self):
-        graph = complete_bipartite_graph_proper(3,3)
+        graph = complete_bipartite_graph(3,3)
         F = SubsetCardinalityFormula(graph)
         dimacs = """\
         p cnf 9 18
@@ -81,7 +83,7 @@ class TestSubsetCardinalityCommandline(TestCommandline):
         for rows in range(2,5):
             for columns in range(2,5):
                 parameters = ["cnfgen","-q","subsetcard", "--bcomplete", rows, columns]
-                graph = complete_bipartite_graph_proper(rows, columns)
+                graph = complete_bipartite_graph(rows, columns)
                 F = SubsetCardinalityFormula(graph)
                 self.checkFormula(sys.stdin,F, parameters)
 

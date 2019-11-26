@@ -2,12 +2,15 @@ import networkx as nx
 import sys
 
 from cnfformula import CNF
-from cnfformula import PerfectMatchingPrinciple, GraphPigeonholePrinciple, TseitinFormula
-from cnfformula.cmdline import bipartite_random_graph
+from cnfformula import PerfectMatchingPrinciple
+from cnfformula import GraphPigeonholePrinciple
+from cnfformula import TseitinFormula
+
+from networkx.algorithms.bipartite import random_graph as bipartite_random_graph
+from networkx.algorithms.bipartite import complete_bipartite_graph
 
 from . import TestCNFBase
 from .test_commandline_helper import TestCommandline
-from .test_graph_helper import complete_bipartite_graph_proper
 
 
 class TestPerfectMatching(TestCNFBase):
@@ -18,7 +21,7 @@ class TestPerfectMatching(TestCNFBase):
         self.assertCnfEqual(F,G)
 
     def test_complete_bipartite(self):
-        graph = complete_bipartite_graph_proper(5,7)
+        graph = complete_bipartite_graph(5,7)
         G = GraphPigeonholePrinciple(graph, functional=True, onto=True)
         F = PerfectMatchingPrinciple(graph)
         self.assertCnfEquivalentModuloVariables(F,G)
