@@ -25,19 +25,35 @@ class TestCNFBase(unittest.TestCase):
     that two CNFs are actually the same.
     """
     def assertCnfEqual(self,cnf1,cnf2):
-        self.assertSetEqual(set(cnf1.variables()),set(cnf2.variables()))
-        self.assertSetSetEqual(cnf1.clauses(),cnf2.clauses())
+        # test whether variable sets are the same
+        vars1 = set(cnf1.variables())
+        vars2 = set(cnf2.variables())
 
-    def assertSetSetEqual(self,list1,list2):
-        set1=set(frozenset(x) for x in list1)
-        set2=set(frozenset(x) for x in list2)
-        self.assertSetEqual(set1,set2)
+        Delta1 = list(str(x) for x in vars1 - vars2)
+        Delta2 = list(str(x) for x in vars2 - vars1)
+        if len(Delta1) + len(Delta2) > 0:
+            raise AssertionError("The two CNFs have different variable sets.\n"
+                                 " - In first and not in second: {}\n"
+                                 " - In second but not in first: {}"
+                                 .format(" ".join(Delta1), " ".join(Delta2)))
+
+        # test whether clause sets are the same
+        clauses1 = set(frozenset(x) for x in cnf1.clauses())
+        clauses2 = set(frozenset(x) for x in cnf2.clauses())
+
+        Delta1 = list(str(list(x)) for x in clauses1 - clauses2)
+        Delta2 = list(str(list(x)) for x in clauses2 - clauses1)
+        if len(Delta1) + len(Delta2) > 0:
+            raise AssertionError("The two CNFs have different clause sets.\n"
+                                 " - In first and not in second: {}\n"
+                                 " - In second but not in first: {}"
+                                 .format(" ".join(Delta1), " ".join(Delta2)))
 
     def assertCnfEqualsDimacs(self, cnf, dimacs):
         dimacs = textwrap.dedent(dimacs)
-        dimacs = dimacs.rstrip('\n')
+        dimacs = dimacs.strip()
         output = cnf.dimacs(export_header=False)
-        output = output.rstrip('\n')
+        output = output.strip()
         self.assertEqual(output,dimacs)
 
     def assertCnfEquivalentModuloVariables(self, cnf1, cnf2):
@@ -46,13 +62,13 @@ class TestCNFBase(unittest.TestCase):
     def assertSAT(self, formula):
         if have_satsolver():
             result, _ = is_satisfiable(formula)
-            assert result
+            self.assertTrue(result,msg = "Formula {} is unexpectedly UNSAT".format(formula))
         else:
             self.skipTest("No usable solver found.")
 
     def assertUNSAT(self, formula):
         if have_satsolver():
             result, _ = is_satisfiable(formula)
-            assert not result
+            self.assertFalse(result,msg = "Formula {} is unespectedly SAT".format(formula))
         else:
             self.skipTest("No usable solver found.")
