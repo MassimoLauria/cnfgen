@@ -6,9 +6,7 @@ import cnfformula
 import cnfformula.families as families
 import cnfformula.cmdline as cmdline
 
-
-
-from .test_commandline_helper import TestCommandline, stderr_redirector
+from .test_commandline_helper import TestCommandline
 
 class TestCnfgen(TestCommandline):
     def test_empty(self):

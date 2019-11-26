@@ -1,25 +1,16 @@
-import unittest
-from contextlib import contextmanager
-from io import StringIO
 import sys
+import unittest
+
+from io import StringIO
+from contextlib import contextmanager
+from contextlib import redirect_stdout
 
 from cnfformula import cnfgen
 
 @contextmanager
-def stdout_redirector(stream):
-    """Captures stdout during a test
-    TODO: move to contextlib.redirect_stdout once we can use Python 3
-    http://eli.thegreenplace.net/2015/redirecting-all-kinds-of-stdout-in-python/
-    """
-    old_stdout = sys.stdout
-    sys.stdout = stream
-    yield
-    sys.stdout = old_stdout
-
-@contextmanager
-def stderr_redirector(stream):
+def redirect_stderr(stream):
     """Captures stderr during a test
-    TODO: move to contextlib.redirect_stderr once we can use Python 3
+    TODO: move to contextlib.redirect_stderr once it is implemented
     """
     old_stderr = sys.stderr
     sys.stderr = stream
@@ -27,9 +18,9 @@ def stderr_redirector(stream):
     sys.stderr = old_stderr
 
 @contextmanager
-def stdin_redirector(stream):
+def redirect_stdin(stream):
     """Redirect stdin during a test
-    TODO: move to contextlib.redirect_stderr once we can use Python 3
+    TODO: move to contextlib.redirect_stdin once it is implemented
     """
     old_stdin = sys.stdin
     sys.stdin = stream
@@ -74,19 +65,19 @@ class TestCommandline(unittest.TestCase):
         AssertionError
 
         """
-        
         parameters = [str(x) for x in args]
         f = StringIO()
 
-        with stdout_redirector(f),stdin_redirector(indata):
-                cmdline(parameters)
-                
-        self.assertEqual(f.getvalue(),expected_cnf.dimacs(export_header=False)+'\n')
+        with redirect_stdout(f), redirect_stdin(indata):
+            cmdline(parameters)
+            
+        self.assertEqual(f.getvalue(),
+                         expected_cnf.dimacs(export_header=False)+'\n')
 
     def checkCrash(self, indata, args, cmdline=cnfgen):
         parameters = [str(x) for x in args]
         f = StringIO()
-        with stdin_redirector(indata),stderr_redirector(f), self.assertRaises(SystemExit) as cm:
-                cmdline(parameters)
+        with redirect_stdin(indata),redirect_stderr(f), self.assertRaises(SystemExit) as cm:
+            cmdline(parameters)
         self.assertNotEqual(cm.exception.code, 0)
-        self.assertNotEqual(f.getvalue(),'')
+        self.assertNotEqual(f.getvalue(), '')
