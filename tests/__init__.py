@@ -57,6 +57,7 @@ class TestCNFBase(unittest.TestCase):
         self.assertEqual(output,dimacs)
 
     def assertCnfEquivalentModuloVariables(self, cnf1, cnf2):
+        self.assertEqual(len(list(cnf1.variables() )) , len(list(cnf2.variables() )) )
         self.assertSetEqual(set(cnf1._clauses), set(cnf2._clauses))
 
     def assertSAT(self, formula):

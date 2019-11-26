@@ -3,7 +3,7 @@ import sys
 
 import cnfformula
 
-from cnfformula.utils.kthlist2pebbling import command_line_utility as kthlist2pebbling
+from cnfformula.utils import kthlist2pebbling
 from .test_commandline_helper import TestCommandline
 
 from cnfformula.graphs import readGraph

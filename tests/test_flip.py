@@ -1,18 +1,17 @@
-import cnfformula.utils.cnfshuffle as cnfshuffle
-
-from . import TestCNFBase
-from .test_cnfformula import TestCNF
-from cnfformula import FlipPolarity,Shuffle,cnfgen,CNF
-
-from cnfformula.utils.dimacstransform import command_line_utility as dimacstransform
-
-import random
 import io
 
-class TestFlip(TestCNF) :
+from cnfformula.utils import dimacstransform
+from cnfformula import FlipPolarity, Shuffle, CNF
+from cnfformula import RandomKCNF
+
+from . import TestCNFBase
+from .test_commandline_helper import TestCommandline
+
+
+class TestFlip(TestCNFBase) :
     def test_double_flip(self) :
         for _ in range(10):
-            cnf   = self.random_cnf(4,10,100)
+            cnf   = RandomKCNF(4,10,100)
             ddcnf = FlipPolarity(FlipPolarity(cnf))
             self.assertCnfEqual(cnf,ddcnf)
 
@@ -34,27 +33,17 @@ class TestFlip(TestCNF) :
 
 
 
-class TestDimacsFlip(TestCNF) :
+class TestDimacsFlip(TestCommandline) :
 
     def test_cmdline_flip(self) :
 
-        cnf = self.random_cnf(4,10,3)
-        shuffle = FlipPolarity(cnf)
+        source   = RandomKCNF(4,10,3)
+        expected = FlipPolarity(source)
         
-        reference_output = shuffle.dimacs(export_header=False) + '\n'
+        input_stream  = io.StringIO(source.dimacs())
 
-        input_stream = io.StringIO(cnf.dimacs())
-        dimacs_flip = io.StringIO()
-
-        argv=['dimacstransform', '-q','--input', '-', '--output', '-', 'flip']
-        try:
-            import sys
-            sys.stdin = input_stream
-            sys.stdout = dimacs_flip
-            dimacstransform(argv)
-        except Exception as e:
-            self.fail(e)
-        finally:
-            sys.stdin = sys.__stdin__
-            sys.stdout = sys.__stdout__
-        self.assertMultiLineEqual(dimacs_flip.getvalue(), reference_output)
+        self.checkFormula(input_stream,
+                          expected,
+                          ['dimacstransform', '-q','--input', '-', '--output', '-', 'flip'],
+                          cmdline = dimacstransform)
+        
