@@ -37,7 +37,7 @@ class TestCNF(TestCNFBase) :
         self.assertListEqual(list(F.variables()),[])
         self.assertListEqual(list(F.clauses()),[])
 
-    def test_safe_clause_insetion(self):
+    def test_safe_clause_insertion(self):
         F=cnfformula.CNF()
         F.add_variable("S")
         F.add_variable("U")
