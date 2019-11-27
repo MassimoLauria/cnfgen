@@ -17,6 +17,9 @@ import sys
 import argparse
 
 from ..cmdline import paginate_or_redirect_stdout
+from ..cmdline import redirect_stdin
+
+from ..cmdline import interactive_msg, error_msg
 from ..cmdline import setup_SIGINT
 
 #################################################################
@@ -79,7 +82,18 @@ def command_line_utility(argv=sys.argv):
     setup_command_line(parser)
     args = parser.parse_args(argv[1:])
 
-    G = graphs.readGraph(args.input, "dag", file_format="kthlist")
+    with redirect_stdin(args.input):
+
+        interactive_msg("Waiting for a directed acyclic graph"
+                        " in 'kthlist' format, send through <stdin>",
+                        'c GRAPH INPUT: ')
+
+        try:
+            G = graphs.readGraph(sys.stdin, "dag", file_format="kthlist")
+        except ValueError as parsefail:
+            error_msg(str(parsefail), 'c KTHLIST PARSE ERROR: ')
+            sys.exit(-1)
+
     F = cnfformula.PebblingFormula(G)
 
     if hasattr(args, "transformation"):

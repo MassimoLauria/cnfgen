@@ -3,7 +3,7 @@
 """Various utilities for the manipulation of the CNFs.
 """
 
-
+import sys
 from ..cnf import CNF
 
 
@@ -63,7 +63,7 @@ def dimacs2compressed_clauses(file_handle):
                 m = int(mstr)
                 l.split()
             except ValueError:
-                raise ValueError("Spec at line {} should have"
+                raise ValueError("Spec at line {} should have "
                                  "format 'p cnf <n> <m>'".format(line_counter))
             continue
             
@@ -96,15 +96,17 @@ def dimacs2compressed_clauses(file_handle):
 
 
 
-def dimacs2cnf(file_handle):
+def dimacs2cnf(file_handle=sys.stdin):
     """Load dimacs file into a CNF object
+
+    By default it reads the file from standard input.
     """
 
     header, nvariables, clauses = dimacs2compressed_clauses(file_handle)
 
     cnf = CNF(header=header)
 
-    for i in range(1,nvariables+1):
+    for i in range(1, nvariables+1):
         cnf.add_variable(i)
 
     cnf._add_compressed_clauses(clauses)

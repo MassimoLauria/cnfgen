@@ -10,7 +10,9 @@ import argparse
 
 from .parsedimacs import dimacs2cnf
 from ..cmdline import paginate_or_redirect_stdout
+from ..cmdline import redirect_stdin
 from ..cmdline import setup_SIGINT
+from ..cmdline import interactive_msg, error_msg
 
 from ..transformations.shuffle import Shuffle
 
@@ -81,7 +83,19 @@ def command_line_utility(argv=sys.argv):
     if hasattr(args, 'seed') and args.seed:
         random.seed(args.seed)
 
-    input_cnf = dimacs2cnf(args.input)
+    msg = """Waiting for a DIMACS formula on <stdin>.
+             Alternatively you can feed a formula to <stdin>
+             with piping or using '-i' command line argument."""
+
+    try:
+
+        with redirect_stdin(args.input):
+            interactive_msg(msg, 'c INPUT: ')
+            input_cnf = dimacs2cnf()
+
+    except ValueError as parsefail:
+        error_msg(str(parsefail), 'c DIMACS PARSE ERROR: ')
+        sys.exit(-1)
 
     # Default permutation
     if not args.no_variable_permutations:

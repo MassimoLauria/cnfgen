@@ -19,6 +19,8 @@ import argparse
 import subprocess
 import tempfile
 import signal
+import textwrap
+
 from contextlib import redirect_stdout
 from contextlib import contextmanager
 
@@ -74,7 +76,18 @@ def paginate_or_redirect_stdout(outputstream):
             p = subprocess.Popen([pager, path], stdin=subprocess.PIPE)
             p.communicate()
 
-def msg_to_stdin(msg, istream=sys.stdin, ostream=sys.stderr):
+@contextmanager
+def redirect_stdin(stream):
+    """Redirect stdin during a test
+    TODO: move to contextlib.redirect_stdin once it is implemented
+    """
+    old_stdin = sys.stdin
+    sys.stdin = stream
+    yield
+    sys.stdin = old_stdin
+
+            
+def interactive_msg(msg, prefix=''):
     """Writes a message to the interactive user (if present).
 
     When the input comes from an interactive user on the terminal, it
@@ -83,9 +96,21 @@ def msg_to_stdin(msg, istream=sys.stdin, ostream=sys.stderr):
     but it is not sent out if input comes from a non interactive
     terminal.
     """
-    if istream.isatty():
-        print(msg, file=ostream)
+    msg = textwrap.dedent(msg)
+    msg = textwrap.fill(msg, width=50)
+    msg = textwrap.indent(msg, prefix)
 
+    if sys.stdin.isatty():
+        print(msg, file = sys.stderr)
+
+def error_msg(msg, prefix=''):
+    """Writes an error message.
+
+    """
+    msg = textwrap.dedent(msg)
+    msg = textwrap.fill(msg, width=50)
+    msg = textwrap.indent(msg, prefix)
+    print(msg, file=sys.stderr)
 
 
 def setup_SIGINT():
