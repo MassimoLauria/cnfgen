@@ -16,7 +16,7 @@ import os
 import sys
 import argparse
 
-from .parsedimacs import dimacs2cnf
+from .parsedimacs import readCNF
 from ..cmdline import interactive_msg, error_msg
 from ..cmdline import paginate_or_redirect_stdout
 from ..cmdline import redirect_stdin
@@ -84,7 +84,7 @@ def command_line_utility(argv=sys.argv):
     try:
         with redirect_stdin(args.input):
             interactive_msg(msg, 'c INPUT: ')
-            F = dimacs2cnf(sys.stdin)
+            F = readCNF()
 
     except ValueError as parsefail:
         error_msg(str(parsefail), 'c DIMACS PARSE ERROR: ')

@@ -3,7 +3,7 @@
 """Various utilities for the manipulation of the CNFs.
 """
 
-from .parsedimacs import dimacs2cnf
+from .parsedimacs import readCNF
 
 from .solver import supported_satsolvers
 from .solver import have_satsolver

@@ -11,8 +11,9 @@ CNF formulas interesting for proof complexity.
 """
 
 import os
-import cnfformula
-import cnfformula.graphs as graphs
+from cnfformula import PebblingFormula
+from cnfformula.graphs import readGraph
+
 import sys
 import argparse
 
@@ -89,12 +90,12 @@ def command_line_utility(argv=sys.argv):
                         'c GRAPH INPUT: ')
 
         try:
-            G = graphs.readGraph(sys.stdin, "dag", file_format="kthlist")
+            G = readGraph(sys.stdin, "dag", file_format="kthlist")
         except ValueError as parsefail:
             error_msg(str(parsefail), 'c KTHLIST PARSE ERROR: ')
             sys.exit(-1)
 
-    F = cnfformula.PebblingFormula(G)
+    F = PebblingFormula(G)
 
     if hasattr(args, "transformation"):
         F2 = args.transformation.transform_cnf(F, args)
