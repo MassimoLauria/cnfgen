@@ -32,10 +32,12 @@ import os
 import sys
 import random
 import argparse
-import signal
 import io
 
 from .prjdata import __version__
+from .cmdline import paginate_or_redirect_stdout
+from .cmdline import setup_SIGINT
+
 
 #################################################################
 #          Command line tool follows
@@ -88,19 +90,6 @@ def setup_command_line_args(parser):
                    help="""Output formula header and comments.""")
     g.add_argument('--quiet', '-q', action='store_false', dest='verbose',
                    help="""Output just the formula with no header.""")
-
-
-def signal_handler(insignal, frame):
-    """Manage program interruptions
-
-    It has to be registered as signal handler.
-    """
-    print('Program interrupted', file=sys.stderr)
-    sys.exit(-1)
-
-
-signal.signal(signal.SIGINT, signal_handler)
-
 
 def search_cmdline_input_file(list_args):
     """Look for input file arguments in the command line
@@ -269,12 +258,11 @@ a sequence of transformations.
             export_header=args.verbose,
             extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
 
-    print(output, file=args.output)
-
-    if args.output != sys.stdout:
-        args.output.close()
+    with paginate_or_redirect_stdout(args.output):
+        print(output)
 
 
 # command line entry point
 if __name__ == '__main__':
+    setup_SIGINT()
     command_line_utility(sys.argv)

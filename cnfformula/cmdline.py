@@ -13,9 +13,14 @@ https://github.com/MassimoLauria/cnfgen.git
 
 
 
-    
+import os
 import sys
 import argparse
+import subprocess
+import tempfile
+import signal
+from contextlib import redirect_stdout
+from contextlib import contextmanager
 
 import networkx
 import random
@@ -38,6 +43,70 @@ __all__ = [ "register_cnfgen_subcommand","is_cnfgen_subcommand",
             "DirectedAcyclicGraphHelper", "SimpleGraphHelper", "BipartiteGraphHelper"]
 
 
+@contextmanager
+def paginate_or_redirect_stdout(outputstream):
+    """Output to a file or, when interactive, to the PAGER
+    
+    Redirect standard output to ``outputstream``. Furthermore when the
+    standard output is supposed to go to an interactive terminal (i.e.
+    it has not been piped to a file or to another process) then
+    instead of flashing it on the screen this context manager
+    redirects it to a temporary file which is shown by `$PAGER`, or by
+    `less` if PAGER environment variable is not defined.
+    """
+
+    with redirect_stdout(outputstream):
+        use_pager = sys.stdout.isatty()
+        pager = os.getenv('PAGER', 'less')
+
+        if use_pager:
+            path = tempfile.mkstemp()[1]
+            tmp_file = open(path, 'a')
+        else:
+            tmp_file = sys.stdout
+
+        with redirect_stdout(tmp_file):
+            yield
+
+        if use_pager:
+            tmp_file.flush()
+            tmp_file.close()
+            p = subprocess.Popen([pager, path], stdin=subprocess.PIPE)
+            p.communicate()
+
+def message_to_interactive_user(msg, istream=sys.stdin, ostream=sys.stderr):
+    """Writes a message to the interactive user (if present).
+
+    When the input comes from an interactive user on the terminal, it
+    is useful to give them feedback regarding the expected output.
+    This message is sent to stderr in order to help interactive usage,
+    but it is not sent out if input comes from a non interactive
+    terminal.
+    """
+    if istream.isatty():
+        print(msg, file=ostream)
+
+
+
+def setup_SIGINT():
+    """Register a handler for SIGINT signal
+
+    Register a handler that manages keyboard interruptions 
+    via SIGINT.
+    """
+    def sigint_handler(insignal, frame):
+        
+        progname = os.path.basename(sys.argv[0])
+        signame = signal.Signals(insignal).name
+        print('Signal {} received: \'{}\' stops.'.format(signame, progname),
+              file=sys.stderr)
+        sys.exit(-1)
+
+    signal.signal(signal.SIGINT, sigint_handler)
+
+
+    
+        
 __cnfgen_subcommand_mark = "_is_cnfgen_subcommand"
 
 def register_cnfgen_subcommand(cls):

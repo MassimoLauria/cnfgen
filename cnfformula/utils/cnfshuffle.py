@@ -9,6 +9,8 @@ import random
 import argparse
 
 from .parsedimacs import dimacs2cnf
+from ..cmdline import paginate_or_redirect_stdout
+from ..cmdline import setup_SIGINT
 
 from ..transformations.shuffle import Shuffle
 
@@ -16,7 +18,7 @@ from ..transformations.shuffle import Shuffle
 def command_line_utility(argv=sys.argv):
 
     # Parse the command line arguments
-    progname=os.path.basename(argv[0])
+    progname = os.path.basename(argv[0])
     parser = argparse.ArgumentParser(prog=progname,
                                      description="""
     Reshuffle the input CNF. Returns a formula logically
@@ -27,7 +29,7 @@ def command_line_utility(argv=sys.argv):
     For more information type '%s [--help | -h ]'
     """ % (progname))
 
-    parser.add_argument('--output','-o',
+    parser.add_argument('--output', '-o',
                         type=argparse.FileType('w'),
                         metavar="<output>",
                         default='-',
@@ -37,7 +39,7 @@ def command_line_utility(argv=sys.argv):
                         way to send the formula to standard output.
                         (default: -)
                         """)
-    parser.add_argument('--seed','-S',
+    parser.add_argument('--seed', '-S',
                         metavar="<seed>",
                         default=None,
                         type=str,
@@ -46,7 +48,7 @@ def command_line_utility(argv=sys.argv):
                         program. Any python hashable object will
                         be fine.  (default: current time)
                         """)
-    parser.add_argument('--input','-i',
+    parser.add_argument('--input', '-i',
                         type=argparse.FileType('r'),
                         metavar="<input>",
                         default='-',
@@ -54,34 +56,60 @@ def command_line_utility(argv=sys.argv):
                         another way to read from standard input.
                         (default: -)
                         """)
-    parser.add_argument('--no-polarity-flips','-p',action='store_true',dest='no_polarity_flips',help="No polarity flips")
-    parser.add_argument('--no-variables-permutation','-v',action='store_true',dest='no_variable_permutations',help="No permutation of variables")
-    parser.add_argument('--no-clauses-permutation','-c',action='store_true',dest='no_clause_permutations',help="No permutation of clauses")
-
-    parser.add_argument('--quiet', '-q',action='store_false',default=True,dest='verbose',
+    parser.add_argument('--no-polarity-flips', '-p',
+                        action='store_true',
+                        dest='no_polarity_flips',
+                        help="No polarity flips")
+    parser.add_argument('--no-variables-permutation', '-v',
+                        action='store_true',
+                        dest='no_variable_permutations',
+                        help="No permutation of variables")
+    parser.add_argument('--no-clauses-permutation', '-c',
+                        action='store_true',
+                        dest='no_clause_permutations',
+                        help="No permutation of clauses")
+    parser.add_argument('--quiet', '-q',
+                        action='store_false',
+                        default=True,
+                        dest='verbose',
                         help="""Output just the formula with no header.""")
 
-
     # Process the options
-    args=parser.parse_args(argv[1:])
+    args = parser.parse_args(argv[1:])
 
     # If necessary, init the random generator
-    if hasattr(args,'seed') and args.seed:
+    if hasattr(args, 'seed') and args.seed:
         random.seed(args.seed)
 
     input_cnf = dimacs2cnf(args.input)
+
+    # Default permutation
+    if not args.no_variable_permutations:
+        variable_permutation = None
+    else:
+        variable_permutation = list(input_cnf.variables())
+
+    if not args.no_clause_permutations:
+        clause_permutation = None
+    else:
+        clause_permutation = list(range(len(input_cnf)))
+
+    if not args.no_polarity_flips:
+        polarity_flip = None
+    else:
+        polarity_flip = [1]*len(list(input_cnf.variables()))
+
     output_cnf = Shuffle(input_cnf,
-                         variable_permutation=None if not args.no_variable_permutations else list(input_cnf.variables()),
-                         clause_permutation=None if not args.no_clause_permutations else list(range(len(input_cnf))),
-                         polarity_flip=None if not args.no_polarity_flips else [1]*len(list(input_cnf.variables())))
-    output_cnf._dimacs_dump_clauses(output=args.output,
-                                    export_header=args.verbose)
+                         variable_permutation,
+                         clause_permutation,
+                         polarity_flip)
 
-    if args.output != sys.stdout:
-        args.output.close()
+    with paginate_or_redirect_stdout(args.output):
+        output_cnf._dimacs_dump_clauses(output=sys.stdout,
+                                        export_header=args.verbose)
 
 
-### Launcher
+# Launcher
 if __name__ == '__main__':
+    setup_SIGINT()
     command_line_utility(sys.argv)
-
