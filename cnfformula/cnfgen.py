@@ -35,7 +35,11 @@ import argparse
 import io
 
 from .prjdata import __version__
+
 from .cmdline import paginate_or_redirect_stdout
+from .cmdline import redirect_stdin
+from .cmdline import error_msg
+
 from .cmdline import setup_SIGINT
 
 
@@ -198,16 +202,33 @@ a sequence of transformations.
     if hasattr(args, 'seed') and args.seed:
         random.seed(args.seed)
 
+    # Comment character useful for error reporting
+    if args.output_format == 'latex':
+        cprefix = '% '
+    elif args.output_format == 'dimacs':
+        cprefix = 'c '
+    else:
+        raise RuntimeError("INTERNAL ERROR: output format must always be defined.")
+        
+        
     # Check arguments
     if not hasattr(args, 'generator'):
-        print("ERROR: The formula name to generate is missing\n", file=sys.stderr)
-        print(parser.format_help(), file=sys.stderr)
+        error_msg("The choice of formula family "
+                  "to produce has not been specified.",
+                  prefix=cprefix+"CMDLINE ERROR: ")
+        error_msg("\n\n\n"+parser.format_help(),
+                  prefix=cprefix,
+                  filltext=None)
         sys.exit(os.EX_DATAERR)
 
     for argdict in t_args:
         if not hasattr(argdict, 'transformation'):
-            print("ERROR: The specification of some transformations are missing\n", file=sys.stderr)
-            print(t_parser.format_help(), file=sys.stderr)
+            error_msg("There is a formula transformation to apply but"
+                      " the type has not been chosen. See the '-T' arguments.",
+                      prefix=cprefix+"CMDLINE ERROR: ")
+            error_msg("\n\n"+t_parser.format_help(),
+                      prefix=cprefix,
+                      filltext=None)
             sys.exit(os.EX_DATAERR)
 
     # Generate the formula and apply transformations
@@ -219,7 +240,10 @@ a sequence of transformations.
             cnf = argdict.transformation.transform_cnf(cnf, argdict)
 
     except (ValueError) as e:
-        print(e, file=sys.stderr)
+        error_msg("Some error occurred while building the formula.",
+                  prefix=cprefix+"BUILD ERROR: ")
+        error_msg(str(e),
+                  prefix=cprefix+"BUILD ERROR: ")
         sys.exit(os.EX_DATAERR)
 
 
@@ -254,9 +278,7 @@ a sequence of transformations.
             extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
 
     else:
-        output = cnf.dimacs(
-            export_header=args.verbose,
-            extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
+        raise RuntimeError("INTERNAL ERROR: output format must always be defined.")
 
     with paginate_or_redirect_stdout(args.output):
         print(output)
