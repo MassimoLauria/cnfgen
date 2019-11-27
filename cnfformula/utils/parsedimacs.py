@@ -96,7 +96,7 @@ def dimacs2compressed_clauses(file_handle):
 
 
 
-def dimacs2cnf(file_handle=sys.stdin):
+def dimacs2cnf(file_handle):
     """Load dimacs file into a CNF object
 
     By default it reads the file from standard input.

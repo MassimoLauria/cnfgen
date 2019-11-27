@@ -84,7 +84,7 @@ def command_line_utility(argv=sys.argv):
     try:
         with redirect_stdin(args.input):
             interactive_msg(msg, 'c INPUT: ')
-            F = dimacs2cnf()
+            F = dimacs2cnf(sys.stdin)
 
     except ValueError as parsefail:
         error_msg(str(parsefail), 'c DIMACS PARSE ERROR: ')
