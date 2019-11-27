@@ -25,8 +25,8 @@ setup(
     entry_points={
         'console_scripts': [
             'cnfgen=cnfformula.cnfgen:command_line_utility',
-            'cnfshuffle=cnfformula.utils.cnfshuffle:command_line_utility',
-            'cnftransform=cnfformula.utils.dimacstransform:command_line_utility'],
+            'cnfshuffle=cnfgen.cnfshuffle:command_line_utility',
+            'cnftransform=cnfgen.cnftransform:command_line_utility'],
     },
     install_requires=['networkx>=2.0', 'pydot>=1.2.3'],
     python_requires='>=3.4',
