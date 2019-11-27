@@ -56,35 +56,42 @@ def dimacs2compressed_clauses(file_handle):
         # parse spec line
         if l[0]=='p':
             if n>=0:
-                raise ValueError("Syntax error: "+
-                                 "line {} contains a second spec line.".format(line_counter))
-            _,_,nstr,mstr = l.split()
-            n = int(nstr)
-            m = int(mstr)
+                raise ValueError("There is a another spec at line {}".format(line_counter))
+            try:
+                _, _, nstr, mstr = l.split()
+                n = int(nstr)
+                m = int(mstr)
+                l.split()
+            except ValueError:
+                raise ValueError("Spec at line {} should have"
+                                 "format 'p cnf <n> <m>'".format(line_counter))
             continue
             
 
         # parse literals
-        for lv in [int(lit) for lit in l.split()]:
-            if lv==0:
-                my_clauses.append(tuple(literal_buffer))
-                literal_buffer=[]
-            else:
-                literal_buffer.append(lv)
+        try:
+            for lv in [int(lit) for lit in l.split()]:
+                if lv==0:
+                    my_clauses.append(tuple(literal_buffer))
+                    literal_buffer=[]
+                else:
+                    literal_buffer.append(lv)
+        except ValueError:
+            raise ValueError("Invalid literal at line {}".format(line_counter))
 
     # Checks at the end of parsing
     if len(literal_buffer)>0:
-        raise ValueError("Syntax error: last clause was incomplete")
+        raise ValueError("Last clause was incomplete")
 
-    if m=='-1':
-        raise ValueError("Warning: empty input formula ")
+    if m == '-1':
+        raise ValueError("Missing spec line 'p cnf <n> <m>")
 
-    if m!=len(my_clauses):
-        raise ValueError("Warning: input formula "+
-                         "contains {} instead of expected {}.".format(len(my_clauses),m))
+    if m != len(my_clauses):
+        raise ValueError("Formula contains {} clauses "
+                         "but {} were expected.".format(len(my_clauses), m))
 
     # return the formula
-    return (my_header,n,my_clauses)
+    return (my_header, n, my_clauses)
 
 
 

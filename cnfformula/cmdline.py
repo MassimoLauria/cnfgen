@@ -74,7 +74,7 @@ def paginate_or_redirect_stdout(outputstream):
             p = subprocess.Popen([pager, path], stdin=subprocess.PIPE)
             p.communicate()
 
-def message_to_interactive_user(msg, istream=sys.stdin, ostream=sys.stderr):
+def msg_to_stdin(msg, istream=sys.stdin, ostream=sys.stderr):
     """Writes a message to the interactive user (if present).
 
     When the input comes from an interactive user on the terminal, it

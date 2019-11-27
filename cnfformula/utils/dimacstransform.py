@@ -15,8 +15,10 @@ Accept a cnf in dimacs format in input
 import os
 import sys
 import argparse
+import textwrap
 
 from .parsedimacs import dimacs2cnf
+from ..cmdline import msg_to_stdin
 from ..cmdline import paginate_or_redirect_stdout
 from ..cmdline import setup_SIGINT
 
@@ -75,7 +77,23 @@ def command_line_utility(argv=sys.argv):
     setup_command_line(parser)
     args = parser.parse_args(argv[1:])
 
-    F = dimacs2cnf(args.input)
+    msg = """Waiting for a DIMACS formula on <stdin>.
+             Alternatively you can feed a formula to <stdin>
+             with piping or using '-i' command line argument."""
+    msg = textwrap.dedent(msg)
+    msg = textwrap.fill(msg, width=50)
+    msg = textwrap.indent(msg, 'c INPUT: ')
+    msg_to_stdin(msg)
+
+    try:
+        F = dimacs2cnf(args.input)
+    except ValueError as parsefail:
+        errormsg = str(parsefail)
+        errormsg = textwrap.fill(errormsg, width=50)
+        errormsg = textwrap.indent(errormsg, 'c DIMACS PARSE ERROR: ')
+        print(errormsg, file=sys.stderr)
+        sys.exit(-1)
+
     if hasattr(args, "transformation"):
         G = args.transformation.transform_cnf(F, args)
     else:
