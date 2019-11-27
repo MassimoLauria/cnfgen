@@ -5,32 +5,32 @@ from .graphs import readGraph,writeGraph
 from .cnfgen import command_line_utility as cnfgen
 
 
-__all__ = ["CNF","readGraph","writeGraph"]
-
-
-def _load_formula_generators():
-    """Load CNF generators from `cnfformula.families`.
-
-    This code explores the submodules of `cnfformula.families` and
-    load the formula generators, or at least the objects marked as
-    such with the `cnfformula.families.register_cnf_generator`
-    function decorator.
-    """
-    
-    import sys
-    from . import families
-    from .cmdline import find_methods_in_package
-    from .families import is_cnf_generator
-
-    loot = dict( (g.__name__, g)
-                 for g in find_methods_in_package(families,is_cnf_generator))
-    
-
-    # Load the formula generators in the `cnfformula` namespace
-    self_ref = sys.modules[__name__]
-    self_ref.__dict__.update(loot)
-    __all__.extend(name for name in loot.keys() if name not in __all__)
-
+# Formula families implemented
+from .families.cliquecoloring       import CliqueColoring
+from .families.coloring             import GraphColoringFormula
+from .families.coloring             import EvenColoringFormula
+from .families.counting             import CountingPrinciple
+from .families.counting             import PerfectMatchingPrinciple
+from .families.dominatingset        import DominatingSet
+from .families.graphisomorphism     import GraphIsomorphism
+from .families.graphisomorphism     import GraphAutomorphism
+from .families.ordering             import OrderingPrinciple
+from .families.ordering             import GraphOrderingPrinciple
+from .families.pebbling             import PebblingFormula
+from .families.pebbling             import StoneFormula
+from .families.pebbling             import SparseStoneFormula
+from .families.pigeonhole           import PigeonholePrinciple
+from .families.pigeonhole           import GraphPigeonholePrinciple
+from .families.pigeonhole           import BinaryPigeonholePrinciple
+from .families.ramsey               import PythagoreanTriples
+from .families.ramsey               import RamseyLowerBoundFormula
+from .families.randomformulas       import RandomKCNF
+from .families.subgraph             import SubgraphFormula
+from .families.subgraph             import CliqueFormula
+from .families.subgraph             import BinaryCliqueFormula
+from .families.subgraph             import RamseyWitnessFormula
+from .families.subsetcardinality    import SubsetCardinalityFormula
+from .families.tseitin              import TseitinFormula
 
 
 
@@ -58,5 +58,3 @@ def _load_formula_transformations():
     __all__.extend(name for name in loot.keys() if name not in __all__)
 
 
-_load_formula_generators()
-_load_formula_transformations()

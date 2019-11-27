@@ -184,7 +184,7 @@ def CliqueFormula(G,k):
 
 @cnfformula.families.register_cnf_generator
 def BinaryCliqueFormula(G,k):
-    """Test whether a graph has a k-clique.
+    """Test whether a graph has a k-clique (binary encoding)
 
     Given a graph :math:`G` and a non negative value :math:`k`, the
     CNF formula claims that :math:`G` contains a :math:`k`-clique.
@@ -227,7 +227,7 @@ def BinaryCliqueFormula(G,k):
 
 @cnfformula.families.register_cnf_generator
 def RamseyWitnessFormula(G,k,s):
-    """Test whether a graph contains one of the templates.
+    """True if graph contains either k-clique or and s independent set
 
     Given a graph :math:`G` and a non negative values :math:`k` and
     :math:`s`, the CNF formula claims that :math:`G` contains
