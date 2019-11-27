@@ -9,10 +9,8 @@ from cnfformula.cmdline import BipartiteGraphHelper
 
 from cnfformula.graphs import bipartite_sets,enumerate_edges,neighbors
 
-import cnfformula.families
 import cnfformula.cmdline
 
-@cnfformula.families.register_cnf_generator
 def SubsetCardinalityFormula(B, equalities = False):
     r"""SubsetCardinalityFormula
 

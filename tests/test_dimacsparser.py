@@ -1,8 +1,7 @@
 
 from cnfformula import CNF
 from cnfformula import RandomKCNF
-
-from cnfformula.utils import readCNF
+from cnfformula import readCNF
 
 from .test_cnfformula import TestCNF
 

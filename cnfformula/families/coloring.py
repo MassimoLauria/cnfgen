@@ -8,7 +8,6 @@ from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
 
 from cnfformula.cmdline  import register_cnfgen_subcommand
-from cnfformula.families import register_cnf_generator
 
 from cnfformula.graphs import enumerate_vertices,enumerate_edges,neighbors
 
@@ -16,7 +15,6 @@ from itertools import combinations
 import collections
 
 
-@register_cnf_generator
 def GraphColoringFormula(G,colors,functional=True):
     """Generates the clauses for colorability formula
 
@@ -82,7 +80,6 @@ def GraphColoringFormula(G,colors,functional=True):
 
 
 
-@register_cnf_generator
 def EvenColoringFormula(G):
     """Even coloring formula
 

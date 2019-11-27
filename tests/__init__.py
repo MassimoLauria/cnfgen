@@ -3,7 +3,7 @@
 import unittest
 import textwrap
 
-from cnfformula.utils import is_satisfiable, have_satsolver
+from cnfformula import some_solver_installed
 
 
 def example_filename(filename):
@@ -61,15 +61,15 @@ class TestCNFBase(unittest.TestCase):
         self.assertSetEqual(set(cnf1._clauses), set(cnf2._clauses))
 
     def assertSAT(self, formula):
-        if have_satsolver():
-            result, _ = is_satisfiable(formula)
+        if some_solver_installed():
+            result, _ = formula.is_satisfiable()
             self.assertTrue(result,msg = "Formula {} is unexpectedly UNSAT".format(formula))
         else:
             self.skipTest("No usable solver found.")
 
     def assertUNSAT(self, formula):
-        if have_satsolver():
-            result, _ = is_satisfiable(formula)
+        if some_solver_installed():
+            result, _ = formula.is_satisfiable()
             self.assertFalse(result,msg = "Formula {} is unespectedly SAT".format(formula))
         else:
             self.skipTest("No usable solver found.")

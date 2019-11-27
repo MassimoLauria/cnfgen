@@ -11,17 +11,17 @@ CNF formulas interesting for proof complexity.
 """
 
 import os
-from cnfformula import PebblingFormula
-from cnfformula.graphs import readGraph
-
 import sys
 import argparse
 
-from ..cmdline import paginate_or_redirect_stdout
-from ..cmdline import redirect_stdin
+from cnfformula import PebblingFormula
+from cnfformula import readGraph
 
-from ..cmdline import interactive_msg, error_msg
-from ..cmdline import setup_SIGINT
+from .cmdline import paginate_or_redirect_stdout
+from .cmdline import redirect_stdin
+from .cmdline import interactive_msg
+from .cmdline import error_msg
+from .cmdline import setup_SIGINT
 
 #################################################################
 #          Command line tool follows

@@ -6,15 +6,13 @@
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
 
-import cnfformula.cmdline  
-import cnfformula.families
+import cnfformula.cmdline 
 
 from cnfformula.graphs import enumerate_vertices,neighbors
 from itertools import combinations,permutations
 
 import networkx
 
-@cnfformula.families.register_cnf_generator
 def OrderingPrinciple(size,total=False,smart=False,plant=False,knuth=0):
     """Generates the clauses for ordering principle
 
@@ -32,7 +30,6 @@ def OrderingPrinciple(size,total=False,smart=False,plant=False,knuth=0):
 def varname(v1, v2):
     return 'x_{{{0},{1}}}'.format(v1,v2)
 
-@cnfformula.families.register_cnf_generator
 def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
     """Generates the clauses for graph ordering principle
 

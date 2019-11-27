@@ -8,13 +8,14 @@ import sys
 import random
 import argparse
 
-from .parsedimacs import readCNF
-from ..cmdline import paginate_or_redirect_stdout
-from ..cmdline import redirect_stdin
-from ..cmdline import setup_SIGINT
-from ..cmdline import interactive_msg, error_msg
+from cnfformula import readCNF
+from cnfformula import Shuffle
 
-from ..transformations.shuffle import Shuffle
+from .cmdline import paginate_or_redirect_stdout
+from .cmdline import redirect_stdin
+from .cmdline import interactive_msg
+from .cmdline import error_msg
+from .cmdline import setup_SIGINT
 
 
 def command_line_utility(argv=sys.argv):

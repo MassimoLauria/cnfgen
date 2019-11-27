@@ -1,15 +1,13 @@
-from cnfformula.utils import cnfshuffle
-from cnfformula.transformations.shuffle import Shuffle
-
-from . import TestCNFBase
-from .test_cnfformula import TestCNF
-
-from . import shufflereference
-
-import cnfformula
 
 import random
 import io
+
+from cnfgen     import cnfshuffle
+from cnfformula import Shuffle
+
+from . import TestCNFBase
+from . import shufflereference
+from .test_cnfformula import TestCNF
 
 class TestDimacsReshuffler(TestCNF) :
     def test_backwards_compatible(self) :

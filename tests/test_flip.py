@@ -1,8 +1,11 @@
 import io
 
-from cnfformula.utils import dimacstransform
-from cnfformula import FlipPolarity, Shuffle, CNF
+from cnfformula import CNF
 from cnfformula import RandomKCNF
+from cnfformula import Shuffle
+from cnfformula import FlipPolarity
+
+from cnfgen import cnftransform
 
 from . import TestCNFBase
 from .test_commandline_helper import TestCommandline
@@ -44,6 +47,6 @@ class TestDimacsFlip(TestCommandline) :
 
         self.checkFormula(input_stream,
                           expected,
-                          ['dimacstransform', '-q','--input', '-', '--output', '-', 'flip'],
-                          cmdline = dimacstransform)
+                          ['cnftransform', '-q','--input', '-', '--output', '-', 'flip'],
+                          cmdline = cnftransform)
         

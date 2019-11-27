@@ -6,13 +6,11 @@
 from cnfformula.cnf import CNF
 
 import cnfformula.cmdline
-import cnfformula.families
 
 from textwrap import dedent
 from itertools import combinations
 from math import sqrt
 
-@cnfformula.families.register_cnf_generator
 def PythagoreanTriples(N):
     """There is a Pythagorean triples free coloring on N 
     
@@ -68,7 +66,6 @@ It is possible to bicolor the numbers from
 
 
 
-@cnfformula.families.register_cnf_generator
 def RamseyLowerBoundFormula(s,k,N):
     """Formula claiming that Ramsey number r(s,k) > N
 

@@ -9,7 +9,6 @@ import random
 from cnfformula.cnf import CNF
 
 import cnfformula.cmdline
-import cnfformula.families
 
 
 
@@ -58,7 +57,6 @@ def all_clauses(k, indices, planted_assignments):
 def sample_clauses_dense(k, indices, m, planted_assignments):
     return random.sample(list(all_clauses(k, indices, planted_assignments)), m)
 
-@cnfformula.families.register_cnf_generator
 def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
     """Build a random k-CNF
 

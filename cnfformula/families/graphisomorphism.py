@@ -7,7 +7,6 @@ from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
 
 from cnfformula.cmdline  import register_cnfgen_subcommand
-from cnfformula.families import register_cnf_generator
 
 from cnfformula.graphs import enumerate_vertices
 from itertools import combinations,product
@@ -19,7 +18,6 @@ def _graph_isomorphism_var(u, v):
     """Standard variable name"""
     return "x_{{{0},{1}}}".format(u, v)
 
-@register_cnf_generator
 def GraphIsomorphism(G1, G2):
     """Graph Isomorphism formula
 
@@ -78,7 +76,6 @@ def GraphIsomorphism(G1, G2):
 
     return F
 
-@register_cnf_generator
 def GraphAutomorphism(G):
     """Graph Automorphism formula
 

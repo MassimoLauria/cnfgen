@@ -8,12 +8,10 @@ from cnfformula.cmdline import BipartiteGraphHelper
 from cnfformula.graphs import bipartite_sets
 
 import cnfformula.cmdline
-import cnfformula.families
 
 from cnfformula.graphs import neighbors
 from itertools import combinations,product
 
-@cnfformula.families.register_cnf_generator
 def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     """Pigeonhole Principle CNF formula
 
@@ -96,7 +94,6 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
 
     return php
 
-@cnfformula.families.register_cnf_generator
 def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     """Graph Pigeonhole Principle CNF formula
 
@@ -162,7 +159,6 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
 
     return gphp
 
-@cnfformula.families.register_cnf_generator
 def BinaryPigeonholePrinciple(pigeons,holes):
     """Binary Pigeonhole Principle CNF formula
 

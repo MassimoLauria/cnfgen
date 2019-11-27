@@ -1,9 +1,22 @@
 #!/usr/bin/env python
+# -*- coding:utf-8 -*-
+"""Init code of the cnfformula pacakge
 
+Essentially it makes visible the names of the formulas and
+transformations implemented, plus some IO functions.
+
+"""
+
+# Basic CNF object
 from .cnf import CNF
-from .graphs import readGraph,writeGraph
-from .cnfgen import command_line_utility as cnfgen
 
+# IO functions
+from .utils.parsedimacs import readCNF
+from .graphs import readGraph,writeGraph
+
+# SAT solvers
+from .utils.solver import supported_satsolvers
+from .utils.solver import some_solver_installed
 
 # Formula families implemented
 from .families.cliquecoloring       import CliqueColoring
@@ -33,28 +46,18 @@ from .families.subsetcardinality    import SubsetCardinalityFormula
 from .families.tseitin              import TseitinFormula
 
 
+# Formula transformation implemented
+from .transformations.substitutions import AllEqualSubstitution
+from .transformations.substitutions import ExactlyOneSubstitution
+from .transformations.substitutions import FlipPolarity
+from .transformations.substitutions import FormulaLifting
+from .transformations.substitutions import IfThenElseSubstitution
+from .transformations.substitutions import MajoritySubstitution
+from .transformations.substitutions import NotAllEqualSubstitution
+from .transformations.substitutions import OrSubstitution
+from .transformations.substitutions import VariableCompression
+from .transformations.substitutions import XorSubstitution
+from .transformations.shuffle import Shuffle
 
-def _load_formula_transformations():
-    """Load CNF transformations from `cnfformula.transformations`.
-
-    This code explores the submodules of `cnfformula.transformations` and
-    load the formula transformations, or at least the objects marked as
-    such with the `cnfformula.transformations.register_cnf_transformation`
-    function decorator.
-    """
-    
-    import sys
-    from . import transformations
-    from .cmdline import find_methods_in_package
-    from .transformations import is_cnf_transformation
-
-    loot = dict( (g.__name__, g)
-                 for g in find_methods_in_package(transformations,is_cnf_transformation))
-    
-
-    # Load the formula object into the namespace
-    self_ref = sys.modules[__name__]
-    self_ref.__dict__.update(loot)
-    __all__.extend(name for name in loot.keys() if name not in __all__)
-
-
+# Main tool
+from .cnfgen import command_line_utility as cnfgen

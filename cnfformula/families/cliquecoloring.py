@@ -6,11 +6,9 @@
 from cnfformula.cnf import CNF
 
 import cnfformula.cmdline
-import cnfformula.families
 
 from itertools import combinations, permutations
 
-@cnfformula.families.register_cnf_generator
 def CliqueColoring(n,k,c):
     r"""Clique-coloring CNF formula 
 

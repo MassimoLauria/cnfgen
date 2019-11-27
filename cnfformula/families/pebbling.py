@@ -36,7 +36,6 @@ def _uniqify_list(seq):
 
 
 
-@cnfformula.families.register_cnf_generator
 def PebblingFormula(digraph):
     """Pebbling formula
 
@@ -149,7 +148,6 @@ def stone_formula_helper(F,D,mapping):
     return F
 
 
-@cnfformula.families.register_cnf_generator
 def StoneFormula(D,nstones):
     """Stone formulas
 
@@ -260,7 +258,6 @@ def StoneFormula(D,nstones):
 
     return cnf
 
-@cnfformula.families.register_cnf_generator
 def SparseStoneFormula(D,B):
     """Sparse Stone formulas
 

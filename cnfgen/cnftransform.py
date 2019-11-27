@@ -10,17 +10,17 @@ increase the hardness of the formula
 
 Accept a cnf in dimacs format in input
 """
-
-
 import os
 import sys
 import argparse
 
-from .parsedimacs import readCNF
-from ..cmdline import interactive_msg, error_msg
-from ..cmdline import paginate_or_redirect_stdout
-from ..cmdline import redirect_stdin
-from ..cmdline import setup_SIGINT
+from cnfformula import readCNF
+
+from .cmdline import paginate_or_redirect_stdout
+from .cmdline import redirect_stdin
+from .cmdline import interactive_msg
+from .cmdline import error_msg
+from .cmdline import setup_SIGINT
 
 
 def setup_command_line(parser):

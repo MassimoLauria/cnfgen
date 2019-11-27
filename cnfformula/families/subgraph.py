@@ -6,7 +6,6 @@
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
 
-import cnfformula.families
 import cnfformula.cmdline
 
 from itertools import combinations
@@ -21,7 +20,6 @@ from networkx  import empty_graph
 
 from textwrap import dedent
 
-@cnfformula.families.register_cnf_generator
 def SubgraphFormula(graph,templates, symmetric=False):
     """Test whether a graph contains one of the templates.
 
@@ -160,7 +158,6 @@ def SubgraphFormula(graph,templates, symmetric=False):
 
 
 
-@cnfformula.families.register_cnf_generator
 def CliqueFormula(G,k):
     """Test whether a graph has a k-clique.
 
@@ -182,7 +179,6 @@ def CliqueFormula(G,k):
     return SubgraphFormula(G,[complete_graph(k)],symmetric=True)
 
 
-@cnfformula.families.register_cnf_generator
 def BinaryCliqueFormula(G,k):
     """Test whether a graph has a k-clique (binary encoding)
 
@@ -225,7 +221,6 @@ def BinaryCliqueFormula(G,k):
     return F
 
 
-@cnfformula.families.register_cnf_generator
 def RamseyWitnessFormula(G,k,s):
     """True if graph contains either k-clique or and s independent set
 

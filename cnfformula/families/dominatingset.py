@@ -8,13 +8,11 @@ from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
 
 from cnfformula.cmdline  import register_cnfgen_subcommand
-from cnfformula.families import register_cnf_generator
 
 from cnfformula.graphs import enumerate_vertices,enumerate_edges,neighbors
 from itertools import combinations,combinations_with_replacement,product
 
 
-@register_cnf_generator
 def DominatingSet(G,d, alternative = False):
     r"""Generates the clauses for a dominating set for G of size <= d
 

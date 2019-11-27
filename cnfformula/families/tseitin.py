@@ -10,9 +10,7 @@ from cnfformula.graphs import enumerate_vertices,neighbors
 
 import random
 import cnfformula.cmdline
-import cnfformula.families
 
-@cnfformula.families.register_cnf_generator
 def TseitinFormula(graph,charges=None):
     """Build a Tseitin formula based on the input graph.
 

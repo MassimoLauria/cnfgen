@@ -7,13 +7,11 @@ from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
 
 from cnfformula.cmdline  import register_cnfgen_subcommand
-from cnfformula.families import register_cnf_generator
 
 from cnfformula.graphs import enumerate_vertices,neighbors
 from itertools import combinations
 
 
-@register_cnf_generator
 def CountingPrinciple(M,p):
     """Generates the clauses for the counting matching principle.
     
@@ -51,7 +49,6 @@ def CountingPrinciple(M,p):
     return cnf
 
 
-@register_cnf_generator
 def PerfectMatchingPrinciple(G):
     """Generates the clauses for the graph perfect matching principle.
     
