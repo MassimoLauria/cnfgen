@@ -6,8 +6,7 @@
 
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
-
-from cnfformula.cmdline  import register_cnfgen_subcommand
+from cnfformula.cmdline import CmdLineFamilyHelper
 
 from cnfformula.graphs import enumerate_vertices,enumerate_edges,neighbors
 from itertools import combinations,combinations_with_replacement,product
@@ -107,8 +106,7 @@ def DominatingSet(G,d, alternative = False):
     return F
 
 
-@register_cnfgen_subcommand
-class DominatingSetCmdHelper(object):
+class DominatingSetCmdHelper(CmdLineFamilyHelper):
     """Command line helper for k-dominating set
     """
     name='domset'

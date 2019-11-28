@@ -17,7 +17,7 @@ from cnfformula.cmdline import DirectedAcyclicGraphHelper
 from cnfformula.cmdline import BipartiteGraphHelper
 
 import cnfformula.families
-import cnfformula.cmdline
+from cnfformula.cmdline import CmdLineFamilyHelper
 
 import sys
 
@@ -339,8 +339,7 @@ def SparseStoneFormula(D,B):
     return cnf
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class PebblingCmdHelper:
+class PebblingCmdHelper(CmdLineFamilyHelper):
     """Command line helper for pebbling formulas
     """
     name='peb'
@@ -369,8 +368,7 @@ class PebblingCmdHelper:
             print("\nError: {}".format(e),file=sys.stderr)
             sys.exit(-1)
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class StoneCmdHelper:
+class StoneCmdHelper(CmdLineFamilyHelper):
     """Command line helper for stone formulas
     """
     name='stone'
@@ -401,8 +399,7 @@ class StoneCmdHelper:
             print("\nError: {}".format(e),file=sys.stderr)
             sys.exit(-1)
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class SparseStoneCmdHelper:
+class SparseStoneCmdHelper(CmdLineFamilyHelper):
     """Command line helper for stone formulas
     """
     name='stonesparse'

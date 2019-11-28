@@ -8,7 +8,7 @@ import random
 
 from cnfformula.cnf import CNF
 
-import cnfformula.cmdline
+from cnfformula.cmdline import CmdLineFamilyHelper
 
 
 
@@ -119,8 +119,7 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
     return F
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class RandCmdHelper(object):
+class RandCmdHelper(CmdLineFamilyHelper):
     """Command line helper for random formulas
     """
     name='randkcnf'

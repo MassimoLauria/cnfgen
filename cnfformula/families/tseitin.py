@@ -6,10 +6,10 @@
 from cnfformula.cnf import CNF
 
 from cnfformula.cmdline import SimpleGraphHelper
+from cnfformula.cmdline import CmdLineFamilyHelper
 from cnfformula.graphs import enumerate_vertices,neighbors
 
 import random
-import cnfformula.cmdline
 
 def TseitinFormula(graph,charges=None):
     """Build a Tseitin formula based on the input graph.
@@ -51,8 +51,7 @@ def TseitinFormula(graph,charges=None):
     return tse
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class TseitinCmdHelper(object):
+class TseitinCmdHelper(CmdLineFamilyHelper):
     """Command line helper for Tseitin  formulas
     """
     name='tseitin'

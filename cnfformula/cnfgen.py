@@ -130,7 +130,7 @@ def command_line_utility(argv=sys.argv):
     # Formula generators cmdline setup
     from . import families
     from . import transformations
-    from .cmdline import is_cnfgen_subcommand
+    from .cmdline import is_family_helper
     from .cmdline import is_cnf_transformation_subcommand
     from .cmdline import find_methods_in_package
 
@@ -170,7 +170,7 @@ a sequence of transformations.
 
     subparsers = parser.add_subparsers(title="Available formula types",metavar='<formula type>')
     for sc in find_methods_in_package(families,
-                                      is_cnfgen_subcommand,
+                                      is_family_helper,
                                       sortkey=lambda x: x.name):
         p = subparsers.add_parser(sc.name,help=sc.description)
         sc.setup_command_line(p)

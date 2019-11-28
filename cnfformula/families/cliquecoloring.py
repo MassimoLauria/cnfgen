@@ -103,8 +103,7 @@ def CliqueColoring(n,k,c):
                                strict=True)
     return formula
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class CliqueColoringCmdHelper(object):
+class CliqueColoringCmdHelper(cnfformula.cmdline.CmdLineFamilyHelper):
     """Command line helper for the Clique-coclique CNF"""
     
     name='cliquecoloring'

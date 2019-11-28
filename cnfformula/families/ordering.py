@@ -5,8 +5,7 @@
 
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
-
-import cnfformula.cmdline 
+from cnfformula.cmdline import CmdLineFamilyHelper
 
 from cnfformula.graphs import enumerate_vertices,neighbors
 from itertools import combinations,permutations
@@ -152,8 +151,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
     return gop
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class OPCmdHelper(object):
+class OPCmdHelper(CmdLineFamilyHelper):
     """Command line helper for Ordering principle formulas
     """
     name='op'
@@ -186,8 +184,7 @@ class OPCmdHelper(object):
         return OrderingPrinciple(args.N,args.total,args.smart,args.plant,args.knuth)
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class GOPCmdHelper(object):
+class GOPCmdHelper(CmdLineFamilyHelper):
     """Command line helper for Graph Ordering principle formulas
     """
     name='gop'

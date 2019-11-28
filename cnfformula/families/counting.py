@@ -5,8 +5,7 @@
 
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
-
-from cnfformula.cmdline  import register_cnfgen_subcommand
+from cnfformula.cmdline import CmdLineFamilyHelper
 
 from cnfformula.graphs import enumerate_vertices,neighbors
 from itertools import combinations
@@ -90,8 +89,7 @@ def PerfectMatchingPrinciple(G):
 
 
 
-@register_cnfgen_subcommand
-class ParityCmdHelper(object):
+class ParityCmdHelper(CmdLineFamilyHelper):
     """Command line helper for Parity Principle formulas
     """
     name='parity'
@@ -111,8 +109,7 @@ class ParityCmdHelper(object):
         return CountingPrinciple(args.N,2)
 
 
-@register_cnfgen_subcommand
-class PMatchingCmdHelper(object):
+class PMatchingCmdHelper(CmdLineFamilyHelper):
     """Command line helper for Perfect Matching Principle formulas
     """
     name='matching'
@@ -134,8 +131,7 @@ class PMatchingCmdHelper(object):
         return PerfectMatchingPrinciple(G)
 
 
-@register_cnfgen_subcommand
-class CountingCmdHelper:
+class CountingCmdHelper(CmdLineFamilyHelper):
     """Command line helper for Counting Principle formulas
     """
     name='count'

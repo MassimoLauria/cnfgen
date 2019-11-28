@@ -7,7 +7,7 @@ from cnfformula.cnf import CNF
 from cnfformula.cmdline import BipartiteGraphHelper
 from cnfformula.graphs import bipartite_sets
 
-import cnfformula.cmdline
+from cnfformula.cmdline import CmdLineFamilyHelper
 
 from cnfformula.graphs import neighbors
 from itertools import combinations,product
@@ -188,8 +188,7 @@ def BinaryPigeonholePrinciple(pigeons,holes):
 
     return bphp
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class PHPCmdHelper(object):
+class PHPCmdHelper(CmdLineFamilyHelper):
     """Command line helper for the Pigeonhole principle CNF"""
     
     name='php'
@@ -222,8 +221,7 @@ class PHPCmdHelper(object):
                                    onto=args.onto)
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class GPHPCmdHelper:
+class GPHPCmdHelper(CmdLineFamilyHelper):
     """Command line helper for the Pigeonhole principle on graphs"""
 
     name='gphp'
@@ -257,8 +255,7 @@ class GPHPCmdHelper:
 
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class BPHPCmdHelper(object):
+class BPHPCmdHelper(CmdLineFamilyHelper):
     """Command line helper for the Pigeonhole principle CNF"""
     
     name='bphp'

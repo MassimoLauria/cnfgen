@@ -41,8 +41,7 @@ from .graphs import bipartite_sets
 from .graphs import dag_complete_binary_tree,dag_pyramid
 from .graphs import sample_missing_edges
 
-__all__ = [ "register_cnfgen_subcommand","is_cnfgen_subcommand",
-            "DirectedAcyclicGraphHelper", "SimpleGraphHelper", "BipartiteGraphHelper"]
+__all__ = [ "DirectedAcyclicGraphHelper", "SimpleGraphHelper", "BipartiteGraphHelper"]
 
 
 @contextmanager
@@ -132,74 +131,23 @@ def setup_SIGINT():
     signal.signal(signal.SIGINT, sigint_handler)
 
 
+class CmdLineFamilyHelper:
+    """Command line helper for a formula family"""
+
+    @staticmethod
+    def setup_command_line(parser):
+        raise NotImplementedError
+
+    @staticmethod
+    def build_cnf(args):
+        raise NotImplementedError
+
+def is_family_helper(x):
+    return isinstance(x,type) and \
+           issubclass(x,CmdLineFamilyHelper) and \
+           x != CmdLineFamilyHelper
+ 
     
-        
-__cnfgen_subcommand_mark = "_is_cnfgen_subcommand"
-
-def register_cnfgen_subcommand(cls):
-    """Register the class as a formula subcommand
-
-    CNFgen command line tool invokes subcommands to generate formula
-    families. This class decorator is used to declare that a class is
-    indeed the implementation of a formula generator subcommand.
-    In this way CNFgen setup code will automatically find it and
-    integrate it into the CNFgen command line interface.
-
-    The class argument is tested to check whether it is a suitable
-    implementation of a CNFgen subcommand.
-
-    In particular the class must have four attributes
-    
-    + ``name`` the name of the CNF formula 
-    + ``description`` a short description of the formulas
-    + ``setup_command_line`` a method that takes a command line parser 
-      object and populates it with appropriate options.
-    + ``build_cnf`` a method that takes the arguments and produce the CNF.
-
-    The parser expected by ``setup_command_line(parser)`` in such as the one produced by
-    ``argparse.ArgumentParser``.
-
-    The argument for ``build_cnf(args)`` is the dictionary of flags and
-    options parsed from the command line as produced by ``args=parser.parse_args``
-
-    Parameters
-    ----------
-    class : any
-        the class to test
-
-    
-    Returns
-    -------
-    None
-
-    Raises
-    ------
-    AssertionError 
-        when the class is not formula subcommand
-    """
-    assert \
-        hasattr(cls,'build_cnf') and \
-        hasattr(cls,'setup_command_line') and \
-        hasattr(cls,'name') and \
-        hasattr(cls,'description')
-
-    setattr(cls,__cnfgen_subcommand_mark,True)
-    return cls
-
-def is_cnfgen_subcommand(cls):
-    """Test whether the object is a registered CNFgen subcommand
-
-    Parameters
-    ----------
-    class : any
-        the class to test
-
-    Returns
-    -------
-    bool
-    """
-    return hasattr(cls,__cnfgen_subcommand_mark)
-
 
 __cnf_transformation_subcommand_mark = "_is_cnf_transformation_subcommand"
 

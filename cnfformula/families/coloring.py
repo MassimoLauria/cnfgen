@@ -5,9 +5,7 @@
 
 
 from cnfformula.cnf import CNF
-from cnfformula.cmdline import SimpleGraphHelper
-
-from cnfformula.cmdline  import register_cnfgen_subcommand
+from cnfformula.cmdline import SimpleGraphHelper, CmdLineFamilyHelper
 
 from cnfformula.graphs import enumerate_vertices,enumerate_edges,neighbors
 
@@ -138,8 +136,7 @@ def EvenColoringFormula(G):
     return F
 
 
-@register_cnfgen_subcommand
-class KColorCmdHelper(object):
+class KColorCmdHelper(CmdLineFamilyHelper):
     """Command line helper for k-color formula
     """
     name='kcolor'
@@ -168,8 +165,7 @@ class KColorCmdHelper(object):
 
 
 
-@register_cnfgen_subcommand
-class ECCmdHelper(object):
+class ECCmdHelper(CmdLineFamilyHelper):
     name='ec'
     description='even coloring formulas'
     

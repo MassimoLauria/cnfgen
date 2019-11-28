@@ -4,8 +4,7 @@
 """
 
 from cnfformula.cnf import CNF
-
-import cnfformula.cmdline
+from cnfformula.cmdline import CmdLineFamilyHelper
 
 from textwrap import dedent
 from itertools import combinations
@@ -112,8 +111,7 @@ def RamseyLowerBoundFormula(s,k,N):
 
 ### Formula families
     
-@cnfformula.cmdline.register_cnfgen_subcommand
-class RamseyCmdHelper(object):
+class RamseyCmdHelper(CmdLineFamilyHelper):
     """Command line helper for RamseyNumber formulas
     """
     name='ram'
@@ -140,8 +138,7 @@ class RamseyCmdHelper(object):
         return RamseyLowerBoundFormula(args.s, args.k, args.N)
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class PTNCmdHelper(object):
+class PTNCmdHelper(CmdLineFamilyHelper):
     """Command line helper for PTN formulas
     """
     name='ptn'

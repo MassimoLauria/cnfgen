@@ -5,10 +5,9 @@
 
 from cnfformula.cnf import CNF
 
-import cnfformula.cmdline
+from cnfformula.cmdline import CmdLineFamilyHelper
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class OR(object):
+class OR(CmdLineFamilyHelper):
     """Command line helper for a single clause formula
     """
 
@@ -41,8 +40,7 @@ class OR(object):
         return orcnf
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class AND(object):
+class AND(CmdLineFamilyHelper):
     """Command line helper for a 1-CNF (i.e. conjunction)
     """
     name='and'
@@ -74,8 +72,7 @@ class AND(object):
         return andcnf
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class EMPTY(object):
+class EMPTY(CmdLineFamilyHelper):
     """Command line helper for the empty CNF (no clauses)
     """
 
@@ -97,9 +94,8 @@ class EMPTY(object):
         """
         return CNF()
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class EMPTY_CLAUSE(object):
-    """Command line helper for the contradiction (one empty clauses)  
+class EMPTY_CLAUSE(CmdLineFamilyHelper):
+    """Command line helper for the contradiction (one empty clause)  
     """
 
     name='emptyclause'

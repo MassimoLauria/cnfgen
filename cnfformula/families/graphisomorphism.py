@@ -5,8 +5,7 @@
 
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
-
-from cnfformula.cmdline  import register_cnfgen_subcommand
+from cnfformula.cmdline import CmdLineFamilyHelper
 
 from cnfformula.graphs import enumerate_vertices
 from itertools import combinations,product
@@ -105,8 +104,7 @@ def GraphAutomorphism(G):
 
 
 
-@register_cnfgen_subcommand
-class GAutoCmdHelper(object):
+class GAutoCmdHelper(CmdLineFamilyHelper):
     """Command line helper for Graph Automorphism formula
     """
     name='gauto'
@@ -133,9 +131,7 @@ class GAutoCmdHelper(object):
         return GraphAutomorphism(G)
 
 
-
-@register_cnfgen_subcommand
-class GIsoCmdHelper(object):
+class GIsoCmdHelper(CmdLineFamilyHelper):
     """Command line helper for Graph Isomorphism formula
     """
     name='giso'

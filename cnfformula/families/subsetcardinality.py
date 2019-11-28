@@ -6,10 +6,10 @@
 from cnfformula.cnf import CNF
 
 from cnfformula.cmdline import BipartiteGraphHelper
+from cnfformula.cmdline import CmdLineFamilyHelper
 
 from cnfformula.graphs import bipartite_sets,enumerate_edges,neighbors
 
-import cnfformula.cmdline
 
 def SubsetCardinalityFormula(B, equalities = False):
     r"""SubsetCardinalityFormula
@@ -119,8 +119,7 @@ def SubsetCardinalityFormula(B, equalities = False):
 
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class SCCmdHelper(object):
+class SCCmdHelper(CmdLineFamilyHelper):
     name='subsetcard'
     description='subset cardinality formulas'
 

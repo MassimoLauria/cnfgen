@@ -5,8 +5,7 @@
 
 from cnfformula.cnf import CNF
 from cnfformula.cmdline import SimpleGraphHelper
-
-import cnfformula.cmdline
+from cnfformula.cmdline import CmdLineFamilyHelper
 
 from itertools import combinations
 from itertools import product
@@ -246,8 +245,7 @@ def RamseyWitnessFormula(G,k,s):
     return SubgraphFormula(G,[complete_graph(k),empty_graph(s)],symmetric=True)
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class KCliqueCmdHelper(object):
+class KCliqueCmdHelper(CmdLineFamilyHelper):
     """Command line helper for k-clique formula
     """
     name='kclique'
@@ -275,8 +273,7 @@ class KCliqueCmdHelper(object):
         return CliqueFormula(G,args.k)
 
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class BinaryKCliqueCmdHelper(object):
+class BinaryKCliqueCmdHelper(CmdLineFamilyHelper):
     """Command line helper for k-clique formula
     """
     name='kcliquebin'
@@ -303,8 +300,7 @@ class BinaryKCliqueCmdHelper(object):
         G = SimpleGraphHelper.obtain_graph(args)
         return BinaryCliqueFormula(G,args.k)
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class RWCmdHelper(object):
+class RWCmdHelper(CmdLineFamilyHelper):
     """Command line helper for ramsey graph formula
     """
     name='ramlb'
@@ -334,8 +330,7 @@ class RWCmdHelper(object):
         G = SimpleGraphHelper.obtain_graph(args)
         return RamseyWitnessFormula(G,args.k,args.s)
 
-@cnfformula.cmdline.register_cnfgen_subcommand
-class SubGraphCmdHelper(object):
+class SubGraphCmdHelper(CmdLineFamilyHelper):
     """Command line helper for Graph Isomorphism formula
     """
     name='subgraph'
