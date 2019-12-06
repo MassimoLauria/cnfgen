@@ -4,7 +4,9 @@
 """
 
 from cnfformula.cnf import CNF
-from cnfformula.graphs import enumerate_vertices,neighbors
+from cnfformula.graphs import enumerate_vertices
+from cnfformula.graphs import neighbors
+
 from itertools import combinations
 
 

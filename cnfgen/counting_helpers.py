@@ -11,8 +11,8 @@ from cnfformula import PerfectMatchingPrinciple
 from cnfformula import TseitinFormula
 from cnfformula import SubsetCardinalityFormula
 
-from cnfformula.cmdline import SimpleGraphHelper
-from cnfformula.cmdline import BipartiteGraphHelper
+from .graph_cmdline import SimpleGraphHelper
+from .graph_cmdline import BipartiteGraphHelper
 
 from .formula_helpers import FormulaHelper
 

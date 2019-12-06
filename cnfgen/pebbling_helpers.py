@@ -12,8 +12,8 @@ from cnfformula import PebblingFormula
 from cnfformula import StoneFormula
 from cnfformula import SparseStoneFormula
 
-from cnfformula.cmdline import DirectedAcyclicGraphHelper
-from cnfformula.cmdline import BipartiteGraphHelper
+from .graph_cmdline import DirectedAcyclicGraphHelper
+from .graph_cmdline import BipartiteGraphHelper
 
 from .formula_helpers import FormulaHelper
 

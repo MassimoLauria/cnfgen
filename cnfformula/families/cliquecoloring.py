@@ -4,9 +4,6 @@
 """
 
 from cnfformula.cnf import CNF
-
-import cnfformula.cmdline
-
 from itertools import combinations, permutations
 
 def CliqueColoring(n,k,c):

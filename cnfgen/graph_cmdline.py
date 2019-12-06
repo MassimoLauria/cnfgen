@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-"""Components for command line interface
+"""Components for command line interface for reading graphs
 
 CNFgen has many command line entry points to its functionality, and
 some of them expose the same functionality over and over. This module
@@ -11,59 +11,26 @@ https://github.com/MassimoLauria/cnfgen.git
 
 """
 
-
-
-import os
 import sys
 import argparse
-import subprocess
-import tempfile
-import signal
-import textwrap
-
-from contextlib import redirect_stdout
-from contextlib import contextmanager
-
-import networkx
-import random
 
 from itertools import combinations, product
+
+import random
+import networkx
 
 from networkx.algorithms.bipartite import complete_bipartite_graph
 from networkx.algorithms.bipartite import random_graph as bipartite_random_graph
 from networkx.algorithms.bipartite import gnmk_random_graph as bipartite_gnmk_random_graph
 
-
-from .graphs import supported_formats as graph_formats
-from .graphs import readGraph,writeGraph
-from .graphs import bipartite_random_left_regular,bipartite_random_regular,bipartite_shift
-from .graphs import bipartite_sets
-from .graphs import dag_complete_binary_tree,dag_pyramid
-from .graphs import sample_missing_edges
-
-__all__ = [ "DirectedAcyclicGraphHelper", "SimpleGraphHelper", "BipartiteGraphHelper"]
-
-
-
-def setup_SIGINT():
-    """Register a handler for SIGINT signal
-
-    Register a handler that manages keyboard interruptions 
-    via SIGINT.
-    """
-    def sigint_handler(insignal, frame):
-        
-        progname = os.path.basename(sys.argv[0])
-        signame = signal.Signals(insignal).name
-        print('Signal {} received: \'{}\' stops.'.format(signame, progname),
-              file=sys.stderr)
-        sys.exit(-1)
-
-    signal.signal(signal.SIGINT, sigint_handler)
-
+from cnfformula.graphs import supported_formats as graph_formats
+from cnfformula.graphs import readGraph,writeGraph
+from cnfformula.graphs import bipartite_random_left_regular,bipartite_random_regular,bipartite_shift
+from cnfformula.graphs import bipartite_sets
+from cnfformula.graphs import dag_complete_binary_tree,dag_pyramid
+from cnfformula.graphs import sample_missing_edges
 
 ### Graph readers/generators
-
 def positive_int(string):
     """Type checker for positive integers
     """

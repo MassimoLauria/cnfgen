@@ -9,8 +9,8 @@ https://massimolauria.net/cnfgen/
 from cnfformula import OrderingPrinciple
 from cnfformula import GraphOrderingPrinciple
 
+from .graph_cmdline import SimpleGraphHelper
 from .formula_helpers import FormulaHelper
-from cnfformula.cmdline import SimpleGraphHelper
 
 
 class OPCmdHelper(FormulaHelper):

@@ -14,8 +14,8 @@ from cnfformula import PigeonholePrinciple
 from cnfformula import GraphPigeonholePrinciple
 from cnfformula import BinaryPigeonholePrinciple
 
+from .graph_cmdline import BipartiteGraphHelper
 from .formula_helpers import FormulaHelper
-from cnfformula.cmdline import BipartiteGraphHelper
 
 
 class PHPCmdHelper(FormulaHelper):

@@ -2,8 +2,9 @@ import argparse
 
 import unittest
 
-import cnfformula.cmdline
 from cnfformula.graphs import bipartite_sets
+from cnfgen.graph_cmdline import SimpleGraphHelper
+from cnfgen.graph_cmdline import BipartiteGraphHelper
 
 class TestArgparse(unittest.TestCase) :
     def parse(self, args):
@@ -14,7 +15,7 @@ class TestArgparse(unittest.TestCase) :
 
 class TestBipartite(TestArgparse) :
     def setUp(self):
-        self.graph_helper = cnfformula.cmdline.BipartiteGraphHelper()
+        self.graph_helper = BipartiteGraphHelper()
 
     def test_bp(self):
         G = self.parse(["--bp", "10", "9", "0.5"])
@@ -85,7 +86,7 @@ class TestBipartite(TestArgparse) :
 
 class TestAddBiEdges(TestArgparse) :
     def setUp(self):
-        self.graph_helper = cnfformula.cmdline.BipartiteGraphHelper()
+        self.graph_helper = BipartiteGraphHelper()
 
     def test_already_complete(self):
         with self.assertRaises(ValueError):
@@ -103,7 +104,7 @@ class TestAddBiEdges(TestArgparse) :
 
 class TestPlantBiClique(TestArgparse) :
     def setUp(self):
-        self.graph_helper = cnfformula.cmdline.BipartiteGraphHelper()
+        self.graph_helper = BipartiteGraphHelper()
 
     def test_too_large_left(self):
         with self.assertRaises(ValueError):
@@ -131,7 +132,7 @@ class TestPlantBiClique(TestArgparse) :
 
 class TestSimple(TestArgparse) :
     def setUp(self):
-        self.graph_helper = cnfformula.cmdline.SimpleGraphHelper()
+        self.graph_helper = SimpleGraphHelper()
 
     def test_gnp(self):
         G = self.parse(["--gnp", "10", "0.5"])
@@ -166,7 +167,7 @@ class TestSimple(TestArgparse) :
 
 class TestAddEdges(TestArgparse) :
     def setUp(self):
-        self.graph_helper = cnfformula.cmdline.SimpleGraphHelper()
+        self.graph_helper = SimpleGraphHelper()
 
     def test_already_complete(self):
         with self.assertRaises(ValueError):
@@ -184,7 +185,7 @@ class TestAddEdges(TestArgparse) :
 
 class TestPlantClique(TestArgparse) :
     def setUp(self):
-        self.graph_helper = cnfformula.cmdline.SimpleGraphHelper()
+        self.graph_helper = SimpleGraphHelper()
 
     def test_too_large(self):
         with self.assertRaises(ValueError):

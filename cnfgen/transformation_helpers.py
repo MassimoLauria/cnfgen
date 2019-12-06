@@ -19,7 +19,7 @@ from cnfformula import OrSubstitution
 from cnfformula import VariableCompression
 from cnfformula import XorSubstitution
 
-from cnfformula.cmdline import BipartiteGraphHelper
+from .graph_cmdline import BipartiteGraphHelper
 
 
 class TransformationHelper:

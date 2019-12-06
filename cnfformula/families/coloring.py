@@ -5,7 +5,9 @@
 
 
 from cnfformula.cnf import CNF
-from cnfformula.graphs import enumerate_vertices,enumerate_edges,neighbors
+from cnfformula.graphs import enumerate_vertices
+from cnfformula.graphs import enumerate_edges
+from cnfformula.graphs import neighbors
 
 from itertools import combinations
 import collections
