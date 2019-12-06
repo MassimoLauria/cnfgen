@@ -5,7 +5,7 @@
 import random
 
 
-from ..cmdline  import register_cnf_transformation_subcommand
+from ..cmdline  import TransformationHelper
 
 from ..cnf import CNF
 
@@ -85,8 +85,7 @@ def Shuffle(cnf,
     return out
 
 
-@register_cnf_transformation_subcommand
-class ShuffleCmd:
+class ShuffleCmd(TransformationHelper):
     """Shuffle 
     """
     name='shuffle'

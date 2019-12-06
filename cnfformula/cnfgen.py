@@ -291,7 +291,7 @@ def command_line_utility(argv=sys.argv):
     from . import families
     from . import transformations
     from .cmdline import is_family_helper
-    from .cmdline import is_cnf_transformation_subcommand
+    from .cmdline import is_transformation_helper
     from .cmdline import find_methods_in_package
 
     formula_helpers = find_methods_in_package(
@@ -301,7 +301,7 @@ def command_line_utility(argv=sys.argv):
 
     transformation_helpers = find_methods_in_package(
         transformations,
-        is_cnf_transformation_subcommand,
+        is_transformation_helper,
         sortkey=lambda x: x.name)
 
     parser, t_parser = setup_command_line_parsers(

@@ -19,12 +19,12 @@ class TestCnfgen(TestCommandline):
 
     def test_find_formula_transformations(self):
         subcommands = cmdline.find_methods_in_package(transformations,
-                                                      cmdline.is_cnf_transformation_subcommand)
+                                                      cmdline.is_transformation_helper)
         self.assertNotEqual(subcommands[:],[])
         
     def test_transformations_help(self):
         subcommands = cmdline.find_methods_in_package(transformations,
-                                                      cmdline.is_cnf_transformation_subcommand)
+                                                      cmdline.is_transformation_helper)
         for sc in subcommands:
             with self.assertRaises(SystemExit) as cm:
                 cnfformula.cnfgen(["cnfgen", "and", "0", "0" ,"-T", sc.name, "-h"])

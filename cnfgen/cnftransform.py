@@ -59,15 +59,19 @@ def setup_command_line(parser):
 
     # Cmdline parser for formula transformations
     from cnfformula import transformations
-    from cnfformula.cmdline import is_cnf_transformation_subcommand
+    from cnfformula.cmdline import is_transformation_helper
     from cnfformula.cmdline import find_methods_in_package
+
+    transformation_helpers = find_methods_in_package(
+        transformations,
+        is_transformation_helper,
+        sortkey=lambda x: x.name)
 
     subparsers = parser.add_subparsers(title="Available transformation",
                                        metavar="<transformation>")
-    for sc in find_methods_in_package(transformations,
-                                      is_cnf_transformation_subcommand,
-                                      sortkey=lambda x: x.name):
-        p = subparsers.add_parser(sc.name, help=sc.description)
+    for sc in transformation_helpers:
+        p = subparsers.add_parser(sc.name,
+                                  help=sc.description)
         sc.setup_command_line(p)
         p.set_defaults(transformation=sc)
 

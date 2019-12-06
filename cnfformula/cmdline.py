@@ -44,75 +44,6 @@ from .graphs import sample_missing_edges
 __all__ = [ "DirectedAcyclicGraphHelper", "SimpleGraphHelper", "BipartiteGraphHelper"]
 
 
-@contextmanager
-def paginate_or_redirect_stdout(outputstream):
-    """Output to a file or, when interactive, to the PAGER
-    
-    Redirect standard output to ``outputstream``. Furthermore when the
-    standard output is supposed to go to an interactive terminal (i.e.
-    it has not been piped to a file or to another process) then
-    instead of flashing it on the screen this context manager
-    redirects it to a temporary file which is shown by `$PAGER`, or by
-    `less` if PAGER environment variable is not defined.
-    """
-
-    with redirect_stdout(outputstream):
-        use_pager = sys.stdout.isatty()
-        pager = os.getenv('PAGER', 'less')
-
-        if use_pager:
-            path = tempfile.mkstemp()[1]
-            tmp_file = open(path, 'a')
-        else:
-            tmp_file = sys.stdout
-
-        with redirect_stdout(tmp_file):
-            yield
-
-        if use_pager:
-            tmp_file.flush()
-            tmp_file.close()
-            p = subprocess.Popen([pager, path], stdin=subprocess.PIPE)
-            p.communicate()
-
-@contextmanager
-def redirect_stdin(stream):
-    """Redirect stdin during a test
-    TODO: move to contextlib.redirect_stdin once it is implemented
-    """
-    old_stdin = sys.stdin
-    sys.stdin = stream
-    yield
-    sys.stdin = old_stdin
-
-            
-def interactive_msg(msg, prefix='', filltext=70):
-    """Writes a message to the interactive user (if present).
-
-    When the input comes from an interactive user on the terminal, it
-    is useful to give them feedback regarding the expected output.
-    This message is sent to stderr in order to help interactive usage,
-    but it is not sent out if input comes from a non interactive
-    terminal.
-    """
-    msg = textwrap.dedent(msg)
-    if filltext is not None and filltext>0:
-        msg = textwrap.fill(msg, width=filltext-len(prefix))
-    msg = textwrap.indent(msg, prefix, lambda line: True)
-
-    if sys.stdin.isatty():
-        print(msg, file = sys.stderr)
-
-def error_msg(msg, prefix='', filltext=70):
-    """Writes an error message.
-
-    """
-    msg = textwrap.dedent(msg)
-    if filltext is not None and filltext>0:
-        msg = textwrap.fill(msg, width=filltext-len(prefix))
-    msg = textwrap.indent(msg, prefix, lambda line: True)
-    print(msg, file=sys.stderr)
-
 
 def setup_SIGINT():
     """Register a handler for SIGINT signal
@@ -136,17 +67,42 @@ class CmdLineFamilyHelper:
 
     @staticmethod
     def setup_command_line(parser):
-        raise NotImplementedError
+        """Setup the command line parser for this formula subcommand"""
+        raise NotImplementedError("Formula family helper must be subclassed")
 
     @staticmethod
     def build_cnf(args):
-        raise NotImplementedError
+        """Buil the CNF according to the parameters on the command line"""
+        raise NotImplementedError("Formula family helper must be subclassed")
 
+
+class TransformationHelper:
+    """Command line helper for a formula family"""
+    name=None
+    description=None
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line parser for this transformation subcommand"""
+        raise NotImplementedError("Transformation family helper must be subclassed")
+
+    @staticmethod
+    def transform_cnf(F,args):
+        """Build the new CNF by applying the transformation"""
+        raise NotImplementedError("Transformation family helper must be subclassed")
+
+
+
+    
 def is_family_helper(x):
     return isinstance(x,type) and \
            issubclass(x,CmdLineFamilyHelper) and \
            x != CmdLineFamilyHelper
- 
+     
+def is_transformation_helper(x):
+    return isinstance(x,type) and \
+           issubclass(x,TransformationHelper) and \
+           x != TransformationHelper
     
 
 __cnf_transformation_subcommand_mark = "_is_cnf_transformation_subcommand"

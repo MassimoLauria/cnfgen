@@ -5,7 +5,8 @@
 
 from ..cnf import CNF
 
-from ..cmdline  import register_cnf_transformation_subcommand,BipartiteGraphHelper
+from ..cmdline  import BipartiteGraphHelper
+from ..cmdline  import TransformationHelper
 
 from itertools import combinations,product,permutations
 from cnfformula.graphs import bipartite_sets,neighbors
@@ -525,8 +526,8 @@ class VariableCompression(BaseSubstitution):
 #
 # Command line helpers for these substitutions
 #
-@register_cnf_transformation_subcommand
-class NoSubstitutionCmd:
+
+class NoSubstitutionCmd(TransformationHelper):
     name='none'
     description='no transformation'
 
@@ -538,8 +539,7 @@ class NoSubstitutionCmd:
     def transform_cnf(F,args):
         return F
 
-@register_cnf_transformation_subcommand
-class OrSubstitutionCmd:
+class OrSubstitutionCmd(TransformationHelper):
     name='or'
     description='substitute variable x with OR(x1,x2,...,xN)'
 
@@ -551,8 +551,8 @@ class OrSubstitutionCmd:
     def transform_cnf(F,args):
         return  OrSubstitution(F,args.N)
 
-@register_cnf_transformation_subcommand
-class XorSubstitutionCmd:
+
+class XorSubstitutionCmd(TransformationHelper):
     name='xor'
     description='substitute variable x with XOR(x1,x2,...,xN)'
 
@@ -564,8 +564,8 @@ class XorSubstitutionCmd:
     def transform_cnf(F,args):
         return  XorSubstitution(F,args.N)
 
-@register_cnf_transformation_subcommand
-class AllEqualsSubstitutionCmd:
+
+class AllEqualsSubstitutionCmd(TransformationHelper):
     name='eq'
     description='substitute variable x with predicate x1==x2==...==xN (i.e. all equals)'
 
@@ -577,8 +577,8 @@ class AllEqualsSubstitutionCmd:
     def transform_cnf(F,args):
         return  AllEqualSubstitution(F,args.N)
 
-@register_cnf_transformation_subcommand
-class NeqSubstitutionCmd:
+
+class NeqSubstitutionCmd(TransformationHelper):
     name='neq'
     description='substitute variable x with predicate |{x1,x2,...,xN}|>1 (i.e. not all equals)'
 
@@ -590,8 +590,8 @@ class NeqSubstitutionCmd:
     def transform_cnf(F,args):
         return  NotAllEqualSubstitution(F,args.N)
 
-@register_cnf_transformation_subcommand
-class MajSubstitution:
+
+class MajSubstitution(TransformationHelper):
     name='maj'
     description='substitute variable x with predicate Majority(x1,x2,...,xN)'
 
@@ -603,8 +603,8 @@ class MajSubstitution:
     def transform_cnf(F,args):
         return  MajoritySubstitution(F,args.N)
 
-@register_cnf_transformation_subcommand
-class IfThenElseSubstitutionCmd:
+
+class IfThenElseSubstitutionCmd(TransformationHelper):
     name='ite'
     description='substitute variable x with predicate "if X then Y else Z"'
 
@@ -616,8 +616,8 @@ class IfThenElseSubstitutionCmd:
     def transform_cnf(F,args):
         return  IfThenElseSubstitution(F)
 
-@register_cnf_transformation_subcommand
-class ExactlyOneSubstitutionCmd:
+
+class ExactlyOneSubstitutionCmd(TransformationHelper):
     name='one'
     description='substitute variable x with predicate x1+x2+...+xN = 1'
 
@@ -634,8 +634,8 @@ class ExactlyOneSubstitutionCmd:
 # Technically lifting is not a substitution, therefore it should be in
 # another file. Unfortunately there is a lot of dependency from
 # this one.
-@register_cnf_transformation_subcommand
-class FormulaLiftingCmd:
+
+class FormulaLiftingCmd(TransformationHelper):
     """Lifting 
     """
     name='lift'
@@ -650,8 +650,8 @@ class FormulaLiftingCmd:
         return FormulaLifting(F,args.N)
 
 
-@register_cnf_transformation_subcommand
-class FlipCmd:
+
+class FlipCmd(TransformationHelper):
     name='flip'
     description='negate all variables in the formula'
 
@@ -664,8 +664,8 @@ class FlipCmd:
        
         return  FlipPolarity(F)
 
-@register_cnf_transformation_subcommand
-class XorCompressionCmd:
+
+class XorCompressionCmd(TransformationHelper):
     name='xorcomp'
     description='variable compression using XOR'
 
@@ -684,8 +684,8 @@ class XorCompressionCmd:
             exit(-1)
 
         
-@register_cnf_transformation_subcommand
-class MajCompressionCmd:
+
+class MajCompressionCmd(TransformationHelper):
     name='majcomp'
     description='variable compression using Majority'
 
