@@ -66,33 +66,6 @@ def redirect_stdin(stream):
     sys.stdin = old_stdin
 
             
-def interactive_msg(msg, prefix='', filltext=70):
-    """Writes a message to the interactive user (if present).
-
-    When the input comes from an interactive user on the terminal, it
-    is useful to give them feedback regarding the expected output.
-    This message is sent to stderr in order to help interactive usage,
-    but it is not sent out if input comes from a non interactive
-    terminal.
-    """
-    msg = textwrap.dedent(msg)
-    if filltext is not None and filltext>0:
-        msg = textwrap.fill(msg, width=filltext-len(prefix))
-    msg = textwrap.indent(msg, prefix, lambda line: True)
-
-    if sys.stdin.isatty():
-        print(msg, file = sys.stderr)
-
-def error_msg(msg, prefix='', filltext=70):
-    """Writes an error message.
-
-    """
-    msg = textwrap.dedent(msg)
-    if filltext is not None and filltext>0:
-        msg = textwrap.fill(msg, width=filltext-len(prefix))
-    msg = textwrap.indent(msg, prefix, lambda line: True)
-    print(msg, file=sys.stderr)
-
 
 def setup_SIGINT():
     """Register a handler for SIGINT signal

@@ -18,9 +18,11 @@ from cnfformula import readCNF
 
 from .cmdline import paginate_or_redirect_stdout
 from .cmdline import redirect_stdin
-from .cmdline import interactive_msg
-from .cmdline import error_msg
 from .cmdline import setup_SIGINT
+
+from .msg import interactive_msg
+from .msg import error_msg
+from .msg import msg_prefix
 
 
 def setup_command_line(parser):
@@ -81,14 +83,16 @@ def command_line_utility(argv=sys.argv):
              Alternatively you can feed a formula to <stdin>
              with piping or using '-i' command line argument."""
 
-    try:
-        with redirect_stdin(args.input):
-            interactive_msg(msg, 'c INPUT: ')
-            F = readCNF()
+    with redirect_stdin(args.input), msg_prefix('c '):
+        with msg_prefix("INPUT: "):
+            interactive_msg(msg, filltext=70)
 
-    except ValueError as parsefail:
-        error_msg(str(parsefail), 'c DIMACS PARSE ERROR: ')
-        sys.exit(-1)
+        try:
+            F = readCNF()
+        except ValueError as parsefail:
+            with msg_prefix('DIMACS ERROR: '):
+                error_msg(str(parsefail))
+            sys.exit(-1)
 
     if hasattr(args, "transformation"):
         G = args.transformation.transform_cnf(F, args)

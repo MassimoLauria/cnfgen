@@ -19,9 +19,13 @@ from cnfformula import readGraph
 
 from .cmdline import paginate_or_redirect_stdout
 from .cmdline import redirect_stdin
-from .cmdline import interactive_msg
-from .cmdline import error_msg
+from .msg import interactive_msg
+from .msg import error_msg
 from .cmdline import setup_SIGINT
+
+from .msg import interactive_msg
+from .msg import error_msg
+from .msg import msg_prefix
 
 #################################################################
 #          Command line tool follows
@@ -83,16 +87,22 @@ def command_line_utility(argv=sys.argv):
     setup_command_line(parser)
     args = parser.parse_args(argv[1:])
 
-    with redirect_stdin(args.input):
+    ask_kthlist_graph = """
+       Waiting for a directed acyclic graph on <stdin>,
+       in 'kthlist' format.
 
-        interactive_msg("Waiting for a directed acyclic graph"
-                        " in 'kthlist' format, send through <stdin>",
-                        'c GRAPH INPUT: ')
+       See: https://massimolauria.net/cnfgen/graphformats.html"""
+
+    with redirect_stdin(args.input), msg_prefix('c '):
+
+        with msg_prefix('GRAPH INPUT: '):
+            interactive_msg(ask_kthlist_graph)
 
         try:
             G = readGraph(sys.stdin, "dag", file_format="kthlist")
         except ValueError as parsefail:
-            error_msg(str(parsefail), 'c KTHLIST PARSE ERROR: ')
+            with msg_prefix('KTHLIST ERROR: '):
+                error_msg(str(parsefail))
             sys.exit(-1)
 
     F = PebblingFormula(G)

@@ -13,9 +13,11 @@ from cnfformula import Shuffle
 
 from .cmdline import paginate_or_redirect_stdout
 from .cmdline import redirect_stdin
-from .cmdline import interactive_msg
-from .cmdline import error_msg
 from .cmdline import setup_SIGINT
+
+from .msg import interactive_msg
+from .msg import error_msg
+from .msg import msg_prefix
 
 
 def command_line_utility(argv=sys.argv):
@@ -88,40 +90,41 @@ def command_line_utility(argv=sys.argv):
              Alternatively you can feed a formula to <stdin>
              with piping or using '-i' command line argument."""
 
-    try:
+    with redirect_stdin(args.input), msg_prefix('c '):
+        with msg_prefix("INPUT: "):
+            interactive_msg(msg, filltext=70)
 
-        with redirect_stdin(args.input):
-            interactive_msg(msg, 'c INPUT: ')
-            input_cnf = readCNF()
-
-    except ValueError as parsefail:
-        error_msg(str(parsefail), 'c DIMACS PARSE ERROR: ')
-        sys.exit(-1)
+        try:
+            F = readCNF()
+        except ValueError as parsefail:
+            with msg_prefix('DIMACS ERROR: '):
+                error_msg(str(parsefail))
+            sys.exit(-1)
 
     # Default permutation
     if not args.no_variable_permutations:
         variable_permutation = None
     else:
-        variable_permutation = list(input_cnf.variables())
+        variable_permutation = list(F.variables())
 
     if not args.no_clause_permutations:
         clause_permutation = None
     else:
-        clause_permutation = list(range(len(input_cnf)))
+        clause_permutation = list(range(len(F)))
 
     if not args.no_polarity_flips:
         polarity_flip = None
     else:
-        polarity_flip = [1]*len(list(input_cnf.variables()))
+        polarity_flip = [1]*len(list(F.variables()))
 
-    output_cnf = Shuffle(input_cnf,
-                         variable_permutation,
-                         clause_permutation,
-                         polarity_flip)
+    G = Shuffle(F,
+                variable_permutation,
+                clause_permutation,
+                polarity_flip)
 
     with paginate_or_redirect_stdout(args.output):
-        output_cnf._dimacs_dump_clauses(output=sys.stdout,
-                                        export_header=args.verbose)
+        G._dimacs_dump_clauses(output=sys.stdout,
+                               export_header=args.verbose)
 
 
 # Launcher
