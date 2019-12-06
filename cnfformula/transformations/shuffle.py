@@ -6,12 +6,10 @@ import random
 
 
 from ..cmdline  import register_cnf_transformation_subcommand
-from ..transformations import register_cnf_transformation
 
 from ..cnf import CNF
 
 
-@register_cnf_transformation
 def Shuffle(cnf,
                variable_permutation=None,
                clause_permutation=None,

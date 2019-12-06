@@ -6,7 +6,6 @@
 from ..cnf import CNF
 
 from ..cmdline  import register_cnf_transformation_subcommand,BipartiteGraphHelper
-from ..transformations import register_cnf_transformation
 
 from itertools import combinations,product,permutations
 from cnfformula.graphs import bipartite_sets,neighbors
@@ -112,7 +111,7 @@ class BaseSubstitution(CNF):
         return [ [ (polarity,name) ] ]
 
 
-@register_cnf_transformation
+
 class IfThenElseSubstitution(BaseSubstitution):
     """Transformed formula: substitutes variable with a three variables
     if-then-else
@@ -144,7 +143,7 @@ class IfThenElseSubstitution(BaseSubstitution):
         return [ [ (False,X) , (polarity,Y) ] , [ (True, X) , (polarity,Z) ] ]
 
 
-@register_cnf_transformation
+
 class MajoritySubstitution(BaseSubstitution):
     """Transformed formula: substitutes variable with a Majority
     """
@@ -187,7 +186,7 @@ class MajoritySubstitution(BaseSubstitution):
         
         
 
-@register_cnf_transformation
+
 class OrSubstitution(BaseSubstitution):
     """Transformed formula: substitutes variable with a OR
     """
@@ -225,7 +224,7 @@ class OrSubstitution(BaseSubstitution):
             return [ [(False,name)] for name in names ]
 
 
-@register_cnf_transformation
+
 class AllEqualSubstitution(BaseSubstitution):
     """Transformed formula: substitutes variable with 'all equals'
     """
@@ -261,7 +260,7 @@ class AllEqualSubstitution(BaseSubstitution):
         else:
             return [[ (False,a) for a in names ] , [ (True,a) for a in names ] ] # at least a true and a false variable.
 
-@register_cnf_transformation
+
 class NotAllEqualSubstitution(AllEqualSubstitution):
     """Transformed formula: substitutes variable with 'not all equals'
     """
@@ -288,7 +287,7 @@ class NotAllEqualSubstitution(AllEqualSubstitution):
         """
         return AllEqualSubstitution.transform_a_literal(self,not polarity,varname)
 
-@register_cnf_transformation
+
 class XorSubstitution(BaseSubstitution):
     """Transformed formula: substitutes variable with a XOR
     """
@@ -319,7 +318,7 @@ class XorSubstitution(BaseSubstitution):
         names = [ "{{{}}}^{}".format(varname,i) for i in range(self._rank) ]
         return list(self.parity_constraint(names,polarity))
 
-@register_cnf_transformation
+
 class FormulaLifting(BaseSubstitution):
     """Formula lifting: Y variable select X values
     """
@@ -371,7 +370,7 @@ class FormulaLifting(BaseSubstitution):
         return clauses
 
 
-@register_cnf_transformation
+
 class ExactlyOneSubstitution(BaseSubstitution):
     """Transformed formula: exactly one variable is true
     """
@@ -418,7 +417,7 @@ class ExactlyOneSubstitution(BaseSubstitution):
 
 
 
-@register_cnf_transformation
+
 class FlipPolarity(BaseSubstitution):
     """Flip the polarity of variables
     """
@@ -447,7 +446,7 @@ class FlipPolarity(BaseSubstitution):
         """
         return [[(not polarity,varname)]]
 
-@register_cnf_transformation
+
 class VariableCompression(BaseSubstitution):
     """Vabiable compression transformation 
     
