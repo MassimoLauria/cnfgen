@@ -9,7 +9,7 @@ both a library of CNF generators and a command line utility.
 
 Create the CNFs:
 
->>> from . import CNF
+>>> from cnfformula import CNF
 >>> c=CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], \
           [(False,"x2"),(True,"x4")] ])
 >>> print( c.dimacs(export_header=False) )
@@ -34,17 +34,17 @@ import random
 import argparse
 import io
 
-from .prjdata import __version__
+from cnfformula.prjdata import __version__
 
-from cnfgen.cmdline import paginate_or_redirect_stdout
-from cnfgen.cmdline import setup_SIGINT
+from .cmdline import paginate_or_redirect_stdout
+from .cmdline import setup_SIGINT
 
-from cnfgen.cmdline import get_formula_helpers
-from cnfgen.cmdline import get_transformation_helpers
+from .cmdline import get_formula_helpers
+from .cmdline import get_transformation_helpers
 
-from cnfgen.msg import interactive_msg
-from cnfgen.msg import error_msg
-from cnfgen.msg import msg_prefix
+from .msg import interactive_msg
+from .msg import error_msg
+from .msg import msg_prefix
 
 #################################################################
 #          Command line tool follows

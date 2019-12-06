@@ -24,7 +24,7 @@ setup(
     packages     = find_packages(".", exclude=["tests"]),
     entry_points={
         'console_scripts': [
-            'cnfgen=cnfformula.cnfgen:command_line_utility',
+            'cnfgen=cnfgen.main:command_line_utility',
             'cnfshuffle=cnfgen.cnfshuffle:command_line_utility',
             'cnftransform=cnfgen.cnftransform:command_line_utility'],
     },

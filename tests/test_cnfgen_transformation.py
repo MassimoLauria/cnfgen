@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import sys
-import cnfformula
 
+from cnfgen import cnfgen
 from cnfgen.cmdline import get_transformation_helpers
 
 from .test_commandline_helper import TestCommandline
@@ -13,7 +13,7 @@ class TestCnfgen(TestCommandline):
 
     def test_help(self):
         with self.assertRaises(SystemExit) as cm:
-            cnfformula.cnfgen(["cnfgen", "-h"])
+            cnfgen(["cnfgen", "-h"])
         self.assertEqual(cm.exception.code, 0)
 
     def test_find_formula_transformations(self):
@@ -24,7 +24,7 @@ class TestCnfgen(TestCommandline):
         subcommands = get_transformation_helpers()
         for sc in subcommands:
             with self.assertRaises(SystemExit) as cm:
-                cnfformula.cnfgen(["cnfgen", "and", "0", "0", "-T", sc.name, "-h"])
+                cnfgen(["cnfgen", "and", "0", "0", "-T", sc.name, "-h"])
             self.assertEqual(cm.exception.code, 0)
 
     def test_nonformula_empty(self):

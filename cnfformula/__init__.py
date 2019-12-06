@@ -58,6 +58,3 @@ from .transformations.substitutions import OrSubstitution
 from .transformations.substitutions import VariableCompression
 from .transformations.substitutions import XorSubstitution
 from .transformations.shuffle import Shuffle
-
-# Main tool
-from .cnfgen import command_line_utility as cnfgen

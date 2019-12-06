@@ -5,7 +5,7 @@ from io import StringIO
 from contextlib import contextmanager
 from contextlib import redirect_stdout
 
-from cnfformula import cnfgen
+from cnfgen import cnfgen
 
 @contextmanager
 def redirect_stderr(stream):
