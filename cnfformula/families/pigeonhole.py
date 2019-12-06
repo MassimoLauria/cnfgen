@@ -4,10 +4,7 @@
 """
 
 from cnfformula.cnf import CNF
-from cnfformula.cmdline import BipartiteGraphHelper
 from cnfformula.graphs import bipartite_sets
-
-from cnfformula.cmdline import CmdLineFamilyHelper
 
 from cnfformula.graphs import neighbors
 from itertools import combinations,product
@@ -188,95 +185,3 @@ def BinaryPigeonholePrinciple(pigeons,holes):
 
     return bphp
 
-class PHPCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for the Pigeonhole principle CNF"""
-    
-    name='php'
-    description='pigeonhole principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for pigeonhole principle formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('pigeons',metavar='<pigeons>',type=int,help="Number of pigeons")
-        parser.add_argument('holes',metavar='<holes>',type=int,help="Number of holes")
-        parser.add_argument('--functional',action='store_true',
-                            help="pigeons sit in at most one hole")
-        parser.add_argument('--onto',action='store_true',
-                            help="every hole has a sitting pigeon")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a PHP formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        return PigeonholePrinciple(args.pigeons,
-                                   args.holes,
-                                   functional=args.functional,
-                                   onto=args.onto)
-
-
-class GPHPCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for the Pigeonhole principle on graphs"""
-
-    name='gphp'
-    description='graph pigeonhole principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for pigeonhole principle formula over graphs
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('--functional',action='store_true',
-                            help="pigeons sit in at most one hole")
-        parser.add_argument('--onto',action='store_true',
-                            help="every hole has a sitting pigeon")
-        BipartiteGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a Graph PHP formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = BipartiteGraphHelper.obtain_graph(args) 
-        return GraphPigeonholePrinciple(G,
-                                        functional=args.functional,
-                                        onto=args.onto)
-
-
-
-class BPHPCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for the Pigeonhole principle CNF"""
-    
-    name='bphp'
-    description='binary pigeonhole principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for pigeonhole principle formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('pigeons',metavar='<pigeons>',type=int,help="Number of pigeons")
-        parser.add_argument('holes',metavar='<holes>',type=int,help="Number of holes")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a PHP formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        return BinaryPigeonholePrinciple(args.pigeons,
-                                         args.holes)

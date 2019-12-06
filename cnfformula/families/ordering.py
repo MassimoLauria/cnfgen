@@ -4,8 +4,6 @@
 """
 
 from cnfformula.cnf import CNF
-from cnfformula.cmdline import SimpleGraphHelper
-from cnfformula.cmdline import CmdLineFamilyHelper
 
 from cnfformula.graphs import enumerate_vertices,neighbors
 from itertools import combinations,permutations
@@ -149,73 +147,3 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
                                strict=True)
 
     return gop
-
-
-class OPCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for Ordering principle formulas
-    """
-    name='op'
-    description='ordering principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for Ordering principle formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('N',metavar='<N>',type=int,help="domain size")
-        g=parser.add_mutually_exclusive_group()
-        g.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
-        g.add_argument('--smart','-s',default=False,action='store_true',help="encode 'x<y' and 'x>y' in a single variable (implies totality)")
-        g.add_argument('--knuth2', action='store_const', dest='knuth',const=2,
-                       help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for j>i,k")
-        g.add_argument('--knuth3', action='store_const', dest='knuth',const=3,
-                       help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for k>i,j")
-        parser.add_argument('--plant','-p',default=False,action='store_true',help="allow a minimum element")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build an Ordering principle formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        return OrderingPrinciple(args.N,args.total,args.smart,args.plant,args.knuth)
-
-
-class GOPCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for Graph Ordering principle formulas
-    """
-    name='gop'
-    description='graph ordering principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for Graph ordering principle formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        g=parser.add_mutually_exclusive_group()
-        g.add_argument('--total','-t',default=False,action='store_true',help="assume a total order")
-        g.add_argument('--smart','-s',default=False,action='store_true',help="encode 'x<y' and 'x>y' in a single variable (implies totality)")
-        g.add_argument('--knuth2', action='store_const', dest='knuth',const=2,
-                       help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for j>i,k")
-        g.add_argument('--knuth3', action='store_const', dest='knuth',const=3,
-                       help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for k>i,j")
-        parser.add_argument('--plant','-p',default=False,action='store_true',help="allow a minimum element")
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a Graph ordering principle formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G= SimpleGraphHelper.obtain_graph(args)
-        return GraphOrderingPrinciple(G,args.total,args.smart,args.plant,args.knuth)
-
-

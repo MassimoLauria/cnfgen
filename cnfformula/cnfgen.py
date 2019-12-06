@@ -38,6 +38,10 @@ from .prjdata import __version__
 
 from cnfgen.cmdline import paginate_or_redirect_stdout
 from cnfgen.cmdline import setup_SIGINT
+
+from cnfgen.cmdline import get_formula_helpers
+from cnfgen.cmdline import get_transformation_helpers
+
 from cnfgen.msg import interactive_msg
 from cnfgen.msg import error_msg
 from cnfgen.msg import msg_prefix
@@ -50,7 +54,7 @@ from cnfgen.msg import msg_prefix
 # Help strings
 usage_string = """{} [-h] [-V] [--output <output>]
                  [--output-format {{latex,dimacs}}] [--seed <seed>]
-                 [--verbose | --quiet]
+                 [--verbose | --quiet] [--tutorial]
                  <formula> <args> ...
                  [-T <transformation> <args>]
                  [-T <transformation> <args>]
@@ -287,22 +291,8 @@ def command_line_utility(argv=sys.argv):
         The list of token with the command line arguments/options.
     """
 
-    # Load all formula generators and transformations available
-    from . import families
-    from . import transformations
-    from .cmdline import is_family_helper
-    from .cmdline import is_transformation_helper
-    from .cmdline import find_methods_in_package
-
-    formula_helpers = find_methods_in_package(
-        families,
-        is_family_helper,
-        sortkey=lambda x: x.name)
-
-    transformation_helpers = find_methods_in_package(
-        transformations,
-        is_transformation_helper,
-        sortkey=lambda x: x.name)
+    formula_helpers = get_formula_helpers()
+    transformation_helpers = get_transformation_helpers()
 
     parser, t_parser = setup_command_line_parsers(
         os.path.basename(argv[0]),

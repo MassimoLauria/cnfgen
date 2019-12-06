@@ -8,9 +8,6 @@ import random
 
 from cnfformula.cnf import CNF
 
-from cnfformula.cmdline import CmdLineFamilyHelper
-
-
 
 def clause_satisfied(cls,assignments):
     """Test whether a clause is satisfied by all assignments
@@ -117,30 +114,3 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
         raise ValueError("There are fewer clauses available than the number requested")
 
     return F
-
-
-class RandCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for random formulas
-    """
-    name='randkcnf'
-    description='random k-CNF'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for an and of literals
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('k',metavar='<k>',type=int,help="clause width")
-        parser.add_argument('n',metavar='<n>',type=int,help="number of variables")
-        parser.add_argument('m',metavar='<m>',type=int,help="number of clauses")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a conjunction
-
-        Arguments:
-        - `args`: command line options
-        """
-        return RandomKCNF(args.k, args.n, args.m)

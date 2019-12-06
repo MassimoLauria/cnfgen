@@ -5,8 +5,6 @@
 
 
 from cnfformula.cnf import CNF
-from cnfformula.cmdline import SimpleGraphHelper
-from cnfformula.cmdline import CmdLineFamilyHelper
 
 from cnfformula.graphs import enumerate_vertices,enumerate_edges,neighbors
 from itertools import combinations,combinations_with_replacement,product
@@ -104,35 +102,4 @@ def DominatingSet(G,d, alternative = False):
         F.add_clause([ (True,D(v)) for v in N])
         
     return F
-
-
-class DominatingSetCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for k-dominating set
-    """
-    name='domset'
-    description='k-Dominating set'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for dominating set formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('d',metavar='<d>',type=int,action='store',help="size of the dominating set")
-        parser.add_argument('--alternative','-a',action='store_true',default=False,help="produce the provably hard version")
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build the k-dominating set formula
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return DominatingSet(G, args.d, alternative = args.alternative )
-
-
 

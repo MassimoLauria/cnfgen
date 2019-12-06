@@ -4,7 +4,6 @@
 """
 
 from cnfformula.cnf import CNF
-from cnfformula.cmdline import CmdLineFamilyHelper
 
 from textwrap import dedent
 from itertools import combinations
@@ -106,60 +105,3 @@ def RamseyLowerBoundFormula(s,k,N):
         ram.add_clause(clause,strict=True)
 
     return ram
-
-
-
-### Formula families
-    
-class RamseyCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for RamseyNumber formulas
-    """
-    name='ram'
-    description='ramsey number principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for Ramsey formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('s',metavar='<s>',type=int,help="Forbidden independent set size")
-        parser.add_argument('k',metavar='<k>',type=int,help="Forbidden independent clique")
-        parser.add_argument('N',metavar='<N>',type=int,help="Graph size")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a Ramsey formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        return RamseyLowerBoundFormula(args.s, args.k, args.N)
-
-
-class PTNCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for PTN formulas
-    """
-    name='ptn'
-    description='Bicoloring of N with no monochromatic Pythagorean Triples'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for PTN formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('N',metavar='<N>',type=int,help="Size of the domain")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a Ramsey formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        return PythagoreanTriples(args.N)
-
-

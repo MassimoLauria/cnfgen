@@ -24,6 +24,7 @@ import textwrap
 from contextlib import redirect_stdout
 from contextlib import contextmanager
 
+
 @contextmanager
 def paginate_or_redirect_stdout(outputstream):
     """Output to a file or, when interactive, to the PAGER
@@ -84,5 +85,54 @@ def setup_SIGINT():
     signal.signal(signal.SIGINT, sigint_handler)
 
 
+def find_in_package(package, test, sortkey=None):
+    """Explore a package for items that satisfy a speficic test"""
+    import pkgutil
+
+    result = []
+
+    if sortkey is None:
+        sortkey = str
+
+    for loader, module_name, _ in pkgutil.walk_packages(package.__path__):
+        module_name = package.__name__+"."+module_name
+        if module_name in sys.modules:
+            module = sys.modules[module_name]
+        else:
+            module = loader.find_module(module_name).load_module(module_name)
+        for objname in dir(module):
+            obj = getattr(module, objname)
+            if test(obj):
+                result.append(obj)
+    result.sort(key=sortkey)
+    return result
+
+
+def get_transformation_helpers():
+
+    import cnfgen
+    from .transformation_helpers import TransformationHelper
+
+    def test(x):
+        return isinstance(x, type) and \
+            issubclass(x, TransformationHelper) and \
+            x != TransformationHelper
     
-        
+    return find_in_package(cnfgen,
+                           test,
+                           sortkey=lambda x: x.name)
+
+
+def get_formula_helpers():
+
+    import cnfgen
+    from .formula_helpers import FormulaHelper
+
+    def test(x):
+        return isinstance(x, type) and \
+            issubclass(x, FormulaHelper) and \
+            x != FormulaHelper
+    
+    return find_in_package(cnfgen,
+                           test,
+                           sortkey=lambda x: x.name)

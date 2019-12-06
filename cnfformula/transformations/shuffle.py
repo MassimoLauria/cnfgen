@@ -5,8 +5,6 @@
 import random
 
 
-from ..cmdline  import TransformationHelper
-
 from ..cnf import CNF
 
 
@@ -85,21 +83,3 @@ def Shuffle(cnf,
     return out
 
 
-class ShuffleCmd(TransformationHelper):
-    """Shuffle 
-    """
-    name='shuffle'
-    description='Permute variables, clauses and polarity of literals at random'
-
-    @staticmethod
-    def setup_command_line(parser):
-        parser.add_argument('--no-polarity-flips','-p',action='store_true',dest='no_polarity_flips',help="No polarity flips")
-        parser.add_argument('--no-variables-permutation','-v',action='store_true',dest='no_variable_permutations',help="No permutation of variables")
-        parser.add_argument('--no-clauses-permutation','-c',action='store_true',dest='no_clause_permutations',help="No permutation of clauses")
-    
-    @staticmethod
-    def transform_cnf(F,args):
-        return Shuffle(F,
-                       variable_permutation=None if not args.no_variable_permutations else list(F.variables()),
-                       clause_permutation=None if not args.no_clause_permutations else list(range(len(F))),
-                       polarity_flip=None if not args.no_polarity_flips else [1]*len(list(F.variables())))

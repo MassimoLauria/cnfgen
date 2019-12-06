@@ -19,9 +19,9 @@ from cnfformula import readGraph
 
 from .cmdline import paginate_or_redirect_stdout
 from .cmdline import redirect_stdin
-from .msg import interactive_msg
-from .msg import error_msg
 from .cmdline import setup_SIGINT
+
+from .cmdline import get_transformation_helpers
 
 from .msg import interactive_msg
 from .msg import error_msg
@@ -63,20 +63,11 @@ def setup_command_line(parser):
                         dest='verbose',
                         help="""Output just the formula with no header.""")
 
-    # Cmdline parser for formula transformations
-    from cnfformula import transformations
-    from cnfformula.cmdline import is_transformation_helper
-    from cnfformula.cmdline import find_methods_in_package
 
-    transformation_helpers = find_methods_in_package(
-        transformations,
-        is_transformation_helper,
-        sortkey=lambda x: x.name)
-
-    
     subparsers = parser.add_subparsers(title="Available transformation",
                                        metavar="<transformation>")
-    for sc in transformation_helpers:
+    
+    for sc in get_transformation_helpers():
         p = subparsers.add_parser(sc.name,
                                   help=sc.description)
         sc.setup_command_line(p)

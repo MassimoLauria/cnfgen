@@ -4,8 +4,6 @@
 """
 
 from cnfformula.cnf import CNF
-from cnfformula.cmdline import SimpleGraphHelper
-from cnfformula.cmdline import CmdLineFamilyHelper
 
 from itertools import combinations
 from itertools import product
@@ -243,119 +241,5 @@ def RamseyWitnessFormula(G,k,s):
 
     """
     return SubgraphFormula(G,[complete_graph(k),empty_graph(s)],symmetric=True)
-
-
-class KCliqueCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for k-clique formula
-    """
-    name='kclique'
-    description='k clique formula'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for k-clique formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('k',metavar='<k>',type=int,action='store',help="size of the clique to be found")
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a k-clique formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return CliqueFormula(G,args.k)
-
-
-class BinaryKCliqueCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for k-clique formula
-    """
-    name='kcliquebin'
-    description='Binary k clique formula'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for k-clique formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('k',metavar='<k>',type=int,action='store',help="size of the clique to be found")
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a k-clique formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return BinaryCliqueFormula(G,args.k)
-
-class RWCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for ramsey graph formula
-    """
-    name='ramlb'
-    description='unsat if G witnesses that r(k,s)>|V(G)| (i.e. G has not k-clique nor s-stable)'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for ramsey witness formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('k',metavar='<k>',type=int,
-                            action='store',help="size of the clique to be found")
-        parser.add_argument('s',metavar='<s>',type=int,
-                            action='store',help="size of the stable to be found")
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a formula to check that a graph is a ramsey number lower bound
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return RamseyWitnessFormula(G,args.k,args.s)
-
-class SubGraphCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for Graph Isomorphism formula
-    """
-    name='subgraph'
-    description='subgraph formula'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for graph isomorphism formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        SimpleGraphHelper.setup_command_line(parser,suffix="",required=True)
-        SimpleGraphHelper.setup_command_line(parser,suffix="T",required=True)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a graph automorphism formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = SimpleGraphHelper.obtain_graph(args,suffix="")
-        T = SimpleGraphHelper.obtain_graph(args,suffix="T")
-        return SubgraphFormula(G,[T],symmetric=False)
 
 

@@ -1,13 +1,19 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-"""Implementation of simple formulas
+"""Formula Helpers for simple and random formulas
+
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019 Massimo Lauria <massimo.lauria@uniroma1.it>
+https://massimolauria.net/cnfgen/
 """
 
-from cnfformula.cnf import CNF
 
-from cnfformula.cmdline import CmdLineFamilyHelper
+from cnfformula import CNF
+from cnfformula import RandomKCNF
 
-class OR(CmdLineFamilyHelper):
+from .formula_helpers import FormulaHelper
+
+
+class OR(FormulaHelper):
     """Command line helper for a single clause formula
     """
 
@@ -40,7 +46,7 @@ class OR(CmdLineFamilyHelper):
         return orcnf
 
 
-class AND(CmdLineFamilyHelper):
+class AND(FormulaHelper):
     """Command line helper for a 1-CNF (i.e. conjunction)
     """
     name='and'
@@ -72,7 +78,7 @@ class AND(CmdLineFamilyHelper):
         return andcnf
 
 
-class EMPTY(CmdLineFamilyHelper):
+class EMPTY(FormulaHelper):
     """Command line helper for the empty CNF (no clauses)
     """
 
@@ -94,7 +100,7 @@ class EMPTY(CmdLineFamilyHelper):
         """
         return CNF()
 
-class EMPTY_CLAUSE(CmdLineFamilyHelper):
+class EMPTY_CLAUSE(FormulaHelper):
     """Command line helper for the contradiction (one empty clause)  
     """
 
@@ -116,3 +122,29 @@ class EMPTY_CLAUSE(CmdLineFamilyHelper):
         """
         return CNF([[]])
 
+
+class RandCmdHelper(FormulaHelper):
+    """Command line helper for random formulas
+    """
+    name='randkcnf'
+    description='random k-CNF'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for an and of literals
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('k',metavar='<k>',type=int,help="clause width")
+        parser.add_argument('n',metavar='<n>',type=int,help="number of variables")
+        parser.add_argument('m',metavar='<m>',type=int,help="number of clauses")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a conjunction
+
+        Arguments:
+        - `args`: command line options
+        """
+        return RandomKCNF(args.k, args.n, args.m)

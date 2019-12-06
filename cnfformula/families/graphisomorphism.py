@@ -4,8 +4,6 @@
 """
 
 from cnfformula.cnf import CNF
-from cnfformula.cmdline import SimpleGraphHelper
-from cnfformula.cmdline import CmdLineFamilyHelper
 
 from cnfformula.graphs import enumerate_vertices
 from itertools import combinations,product
@@ -101,62 +99,3 @@ def GraphAutomorphism(G):
     F.add_clause([(False, var(u, u)) for u in enumerate_vertices(G)], strict=True)
 
     return F
-
-
-
-class GAutoCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for Graph Automorphism formula
-    """
-    name='gauto'
-    description='graph automorphism formula'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for graph automorphism formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        SimpleGraphHelper.setup_command_line(parser)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a graph automorphism formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return GraphAutomorphism(G)
-
-
-class GIsoCmdHelper(CmdLineFamilyHelper):
-    """Command line helper for Graph Isomorphism formula
-    """
-    name='giso'
-    description='graph isomorphism formula'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for graph isomorphism formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        SimpleGraphHelper.setup_command_line(parser,suffix="1",required=True)
-        SimpleGraphHelper.setup_command_line(parser,suffix="2",required=True)
-
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a graph automorphism formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        G1 = SimpleGraphHelper.obtain_graph(args,suffix="1")
-        G2 = SimpleGraphHelper.obtain_graph(args,suffix="2")
-        return GraphIsomorphism(G1,G2)
-
-

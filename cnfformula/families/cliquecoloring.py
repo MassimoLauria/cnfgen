@@ -102,29 +102,3 @@ def CliqueColoring(n,k,c):
             formula.add_clause([(False, E(u,v)), (False, R(u,ell)), (False, R(v,ell))],
                                strict=True)
     return formula
-
-class CliqueColoringCmdHelper(cnfformula.cmdline.CmdLineFamilyHelper):
-    """Command line helper for the Clique-coclique CNF"""
-    
-    name='cliquecoloring'
-    description='There is a graph G with a k-clique and a c-coloring'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for clique-coloring formula
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('n',metavar='<n>',type=int,help="Number of vertices")
-        parser.add_argument('k',metavar='<k>',type=int,help="Clique size")
-        parser.add_argument('c',metavar='<c>',type=int,help="Coloring size")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a Clique-coclique formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        return CliqueColoring(args.n,args.k,args.c)
