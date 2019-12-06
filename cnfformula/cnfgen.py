@@ -36,34 +36,138 @@ import io
 
 from .prjdata import __version__
 
-from .cmdline import paginate_or_redirect_stdout
-from .cmdline import redirect_stdin
-from .cmdline import error_msg
-
-from .cmdline import setup_SIGINT
-
+from cnfgen.cmdline import paginate_or_redirect_stdout
+from cnfgen.cmdline import setup_SIGINT
+from cnfgen.msg import interactive_msg
+from cnfgen.msg import error_msg
+from cnfgen.msg import msg_prefix
 
 #################################################################
 #          Command line tool follows
 #################################################################
 
 
-def setup_command_line_args(parser):
-    """Setup general command line options
+# Help strings
+usage_string = """{} [-h] [-V] [--output <output>]
+                 [--output-format {{latex,dimacs}}] [--seed <seed>]
+                 [--verbose | --quiet]
+                 <formula> <args> ...
+                 [-T <transformation> <args>]
+                 [-T <transformation> <args>]
+                 ..."""
 
-    Setup options
+tutorial_string = """
+-------------------------- TUTORIAL --------------------------------- 
+{0} builds CNF formulas mostly coming from proof complexity
+literature, to use as benchmark against SAT solvers. Basic usage is
+
+    {0} <formula> <arg1> <arg2> ...
+
+which builds a CNF from family <formula> with various parameters.
+For example a Pigeonhole principle formula from 5 to 4 pigeons can be
+build with command line
+
+    {0} php 5 4
+
+Various transformations can be applied to the generated formula, one
+after the other. For example.
+
+    {0} php 5 4 -T shuffle -T xor 3
+
+Create a pigeonhole principle formula first, then applies the
+'shuffle' transformation and finally the 'xor' transformation with
+parameter 3.
+
+Some formulas are built on top of graph structures, passed as input
+files or randomly generated. The command lines
+
+    {0} tseitin -i graph.dot
+    {0} tseitin --gnd 10 4
+
+build Tseitin formulas, respectively, over a graph passed as a DOT
+file, and over a random 4-regular graph of 10 vertices.
+
+For the full list of formulas and formula transformations type one of
+
+    {0} -h
+    {0} --help
+
+For the help of a specific CNF family named <formula> type one of
+
+    {0} <formula> -h
+    {0} <formula> --help 
+
+For the help of a specific formula transformation pick any CNF family
+<formula> and type one of 
+
+    {0} <formula> <args> -T <transformation> -h
+    {0} <formula> <args> -T <transformation> --help
+
+where <transformation> is the name of the formula transformation to
+get the help for.
+----------------------------  END ----------------------------------
+"""
+
+
+def setup_command_line_parsers(progname, fhelpers, thelpers):
+    """Create the parser for formula and transformation arguments.
+
+    General options
     - query version
     - verbosity/silence
     - outputfile
     - outputformat
     - random seed
 
-    Arguments:
-    - `parser`: parser to fill with options
+    Formula options via subcommands
+    - one for each formula helper
+
+    Parameters:
+    -----------
+    progname:
+        the name of the program
+    fhelpers:
+        the cmdline helpers for the formulas
+    thelpers:
+        the cmdline helpers for the transformations
+
+    Return:
+    -------
+    two parsers, one for formula commands and one for transformation commands.
     """
+
+    # First we setup the parser for transformation command lines
+    t_parser = argparse.ArgumentParser(
+        add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    t_subparsers = t_parser.add_subparsers(
+        prog=progname + " <formula> <args> -T",
+        title="Available formula transformation",
+        metavar="<transformation>")
+    for sc in thelpers:
+        p = t_subparsers.add_parser(sc.name,help=sc.description)
+        sc.setup_command_line(p)
+        p.set_defaults(transformation=sc)
+
+    # now we setup the main parser for the formula generation command
+    parser = argparse.ArgumentParser(
+        prog=progname,
+        usage=usage_string.format(progname),
+        description=tutorial_string.format(progname),
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    class PrintTutorial(argparse.Action):
+        def __call__(self, parser, args, values, option_string = None):
+            print(tutorial_string.format(progname))
+            sys.exit(os.EX_OK)
+
     parser.add_argument('-V', '--version',
                         action='version',
                         version="%(prog)s ("+__version__+")")
+    parser.add_argument('--tutorial',
+                        nargs=0,
+                        action=PrintTutorial)
     parser.add_argument('--output', '-o',
                         type=argparse.FileType('w', encoding='utf-8'),
                         metavar="<output>",
@@ -95,19 +199,74 @@ def setup_command_line_args(parser):
     g.add_argument('--quiet', '-q', action='store_false', dest='verbose',
                    help="""Output just the formula with no header.""")
 
-def search_cmdline_input_file(list_args):
-    """Look for input file arguments in the command line
+    # setup each formula command parser
+    subparsers = parser.add_subparsers(prog=progname,
+                                       title="Available formula types",
+                                       metavar='<formula>')
+    for sc in fhelpers:
+        p = subparsers.add_parser(sc.name,
+                                  help=sc.description)
+        sc.setup_command_line(p)
+        p.set_defaults(generator=sc)
+
+    # Attach the list of available transformations
+    # but without usage string
+    extension = t_parser.format_help().splitlines()
+    extension = "\n".join(extension[2:])
+    parser.epilog = extension
+
+    return parser, t_parser
+
+
+def build_latex_cmdline_description(argv, args, t_args):
+    """Build the latex documentation of the components of the formula.
+
+    Insert additonal latex documentation of the formula. For example
+    it includes the input files used to build it.
 
     Parameters
     ----------
-    list_args : list of parsed command lines
+    argv : list(str) 
+        arguments on command line
+    args:
+        parsed arguments for the formula
+    t_args: list
+        group of parsed arguments for the transformations
+
     """
-    for l in list_args:
+    # The full command line 
+    cmdline_descr=["\\noindent\\textbf{Command line:}",
+                   "\\begin{lstlisting}[breaklines]",
+                   "$ cnfgen " + " ".join(argv[1:]),
+                   "\\end{lstlisting}"]
+
+    # The docstring of the formula family generator
+    if hasattr(args.generator, "docstring"):
+        cmdline_descr += ["\\noindent\\textbf{Docstring:}",
+                          "\\begin{lstlisting}[breaklines,basicstyle=\\small]",
+                          args.generator.docstring,
+                          "\\end{lstlisting}"]
+
+    # Find input files specified in the command line
+    input_files = []
+    for l in [args] + t_args:
         data = iter(vars(l).items())
         data = [v for k, v in data if not k.startswith("_")]
         data = [f for f in data if isinstance(f, io.IOBase)]
         data = [f for f in data if (f != sys.stdin) and f.mode == 'r']
-    return data
+        input_files.extend(data)
+
+    # Add them all to the latex document
+    for f in input_files:
+        f.seek(0, 0)
+        cmdline_descr += ["\\noindent\\textbf{Input file} \\verb|%s|" % f.name,
+                          "\\begin{lstlisting}[breaklines,basicstyle=\\small]",
+                          f.read(),
+                          "\\end{lstlisting}"]
+
+    # Return all as a single string
+    cmdline_descr += ['\n']
+    return "\n".join(cmdline_descr)
 
 
 # Main program
@@ -127,54 +286,27 @@ def command_line_utility(argv=sys.argv):
         The list of token with the command line arguments/options.
     """
 
-    # Formula generators cmdline setup
+    # Load all formula generators and transformations available
     from . import families
     from . import transformations
     from .cmdline import is_family_helper
     from .cmdline import is_cnf_transformation_subcommand
     from .cmdline import find_methods_in_package
 
-    # Cmdline parser for formula transformations
-    t_parser = argparse.ArgumentParser(
+    formula_helpers = find_methods_in_package(
+        families,
+        is_family_helper,
+        sortkey=lambda x: x.name)
 
-        usage=os.path.basename(argv[0]) +
-        " ..."
-        + " [-T <transformation> <params> -T <transformation> <params> ...]",
+    transformation_helpers = find_methods_in_package(
+        transformations,
+        is_cnf_transformation_subcommand,
+        sortkey=lambda x: x.name)
 
-        epilog="""
-        Each <transformation> has its own command line arguments and options.
-        For more info type 'cnfgen ... -T <transformation> [--help | -h]'
-        """)
-
-    t_subparsers = t_parser.add_subparsers(title="Available formula transformation",
-                                           metavar="<transformation>")
-    for sc in find_methods_in_package(transformations,
-                                      is_cnf_transformation_subcommand,
-                                      sortkey=lambda x: x.name):
-        p = t_subparsers.add_parser(sc.name,help=sc.description)
-        sc.setup_command_line(p)
-        p.set_defaults(transformation=sc)
-
-    # Main cmdline setup
-    parser = argparse.ArgumentParser(prog=os.path.basename(argv[0]),
-                                     formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     epilog="""
-Each <formula type> has its own command line arguments and options.
-For more information type 'cnfgen <formula type> [--help | -h ]'.
-Furthermore it is possible to postprocess the formula by applying
-a sequence of transformations.
-
-"""+t_parser.format_help())
-
-    setup_command_line_args(parser)
-
-    subparsers = parser.add_subparsers(title="Available formula types",metavar='<formula type>')
-    for sc in find_methods_in_package(families,
-                                      is_family_helper,
-                                      sortkey=lambda x: x.name):
-        p = subparsers.add_parser(sc.name,help=sc.description)
-        sc.setup_command_line(p)
-        p.set_defaults(generator=sc)
+    parser, t_parser = setup_command_line_parsers(
+        os.path.basename(argv[0]),
+        formula_helpers,
+        transformation_helpers)
 
     # Split the command line into formula generation and transformation
     # applications
@@ -213,66 +345,51 @@ a sequence of transformations.
         
     # Check arguments
     if not hasattr(args, 'generator'):
-        error_msg("The choice of formula family "
-                  "to produce has not been specified.",
-                  prefix=cprefix+"CMDLINE ERROR: ")
-        error_msg("\n\n\n"+parser.format_help(),
-                  prefix=cprefix,
-                  filltext=None)
-        sys.exit(os.EX_DATAERR)
+        with msg_prefix(cprefix+"ERROR: "):
+            error_msg("You did not tell which formula you wanted to generate.",
+                      filltext=70)
+            error_msg(parser.format_usage().rstrip())
+            error_msg("See '{0} -h' or '{0} --help' for more info.".format(os.path.basename(argv[0])),
+                      filltext=70)
+            sys.exit(os.EX_DATAERR)
 
     for argdict in t_args:
         if not hasattr(argdict, 'transformation'):
-            error_msg("There is a formula transformation to apply but"
-                      " the type has not been chosen. See the '-T' arguments.",
-                      prefix=cprefix+"CMDLINE ERROR: ")
-            error_msg("\n\n"+t_parser.format_help(),
-                      prefix=cprefix,
-                      filltext=None)
+            with msg_prefix(cprefix+"ERROR: "):
+                error_msg("You used option '-T' but did not pick a transformation.",
+                          filltext=70)
+                error_msg(parser.format_usage().rstrip())
+                error_msg("See '{0} -h' or '{0} --help' for more info.".format(os.path.basename(argv[0])),
+                          filltext=70)
             sys.exit(os.EX_DATAERR)
 
     # Generate the formula and apply transformations
-    try:
+    with msg_prefix(cprefix):
+        try:
 
-        cnf = args.generator.build_cnf(args)
+            cnf = args.generator.build_cnf(args)
 
-        for argdict in t_args:
-            cnf = argdict.transformation.transform_cnf(cnf, argdict)
+            for argdict in t_args:
+                cnf = argdict.transformation.transform_cnf(cnf, argdict)
 
-    except (ValueError) as e:
-        error_msg("Some error occurred while building the formula.",
-                  prefix=cprefix+"BUILD ERROR: ")
-        error_msg(str(e),
-                  prefix=cprefix+"BUILD ERROR: ")
-        sys.exit(os.EX_DATAERR)
-
+        except (ValueError) as e:
+            with msg_prefix("BUILD ERROR: "):
+                error_msg("Some error occurred while building the formula.")
+                error_msg(str(e))
+            sys.exit(os.EX_DATAERR)
 
     # Output
     if args.output_format == 'latex':
-        cmdline_descr=["\\noindent\\textbf{Command line:}",
-                       "\\begin{lstlisting}[breaklines]",
-                       "$ cnfgen " + " ".join(argv[1:]),
-                       "\\end{lstlisting}"]
-        
-        if hasattr(args.generator, "docstring"):
-            cmdline_descr += ["\\noindent\\textbf{Docstring:}",
-                              "\\begin{lstlisting}[breaklines,basicstyle=\\small]",
-                              args.generator.docstring,
-                              "\\end{lstlisting}"]
 
+        extra_text = build_latex_cmdline_description(argv, args, t_args)
 
-        for f in search_cmdline_input_file([args]+t_args):
-            f.seek(0, 0)
-            cmdline_descr += ["\\noindent\\textbf{Input file} \\verb|%s|" % f.name,
-                              "\\begin{lstlisting}[breaklines,basicstyle=\\small]" ] + \
-                              f.readlines() + \
-                              ["\\end{lstlisting}"]
-
-        output = cnf.latex(export_header=args.verbose,
-                           extra_text="\n".join(cmdline_descr+["\n"]),
-                           full_document=True)
+        output = cnf.latex(
+            export_header=args.verbose,
+            extra_text=extra_text,
+            full_document=True)
 
     elif args.output_format == 'dimacs':
+
         output = cnf.dimacs(
             export_header=args.verbose,
             extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
