@@ -159,7 +159,8 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
 
     class PrintTutorial(argparse.Action):
         def __call__(self, parser, args, values, option_string = None):
-            print(tutorial_string.format(progname))
+            with paginate_or_redirect_stdout(sys.stdout):
+                print(tutorial_string.format(progname))
             sys.exit(os.EX_OK)
 
     parser.add_argument('-V', '--version',
