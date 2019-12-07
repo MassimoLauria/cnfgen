@@ -142,37 +142,31 @@ class TestGraphPigeonholePrinciple(TestCNFBase):
 
 class TestPigeonholePrincipleCommandline(TestCommandline):
     def test_parameters(self):
-        for pigeons in range(2,5):
-            for holes in range(2,5):
-                for functional in (True,False):
-                    for onto in (True,False):
-                        parameters = ["cnfgen","-q","php", pigeons, holes]
-                        if functional : parameters.append("--functional")
-                        if onto : parameters.append("--onto")
-                        F = PigeonholePrinciple(pigeons,holes,functional,onto)
-                        self.checkFormula(sys.stdin,F, parameters)
+        for functional in (True, False):
+            for onto in (True, False):
+                parameters = ["cnfgen", "-q", "php", 5, 4]
+                if functional: parameters.append("--functional")
+                if onto: parameters.append("--onto")
+                F = PigeonholePrinciple(5, 4, functional, onto)
+                self.checkFormula(sys.stdin, F, parameters)
 
 class TestBinaryPigeonholePrincipleCommandline(TestCommandline):
     def test_parameters(self):
-        for pigeons in range(2,5):
-            for holes in range(2,8):
-                parameters = ["cnfgen","-q","bphp", pigeons, holes]
-                F = BinaryPigeonholePrinciple(pigeons,holes)
-                self.checkFormula(sys.stdin,F, parameters)
+        parameters = ["cnfgen", "-q", "bphp", 5, 8]
+        F = BinaryPigeonholePrinciple(5, 8)
+        self.checkFormula(sys.stdin, F, parameters)
 
 
 class TestGraphPigeonholePrincipleCommandline(TestCommandline):
     def test_complete(self):
-        for pigeons in range(2,5):
-            for holes in range(2,5):
-                for functional in (True,False):
-                    for onto in (True,False):
-                        parameters = ["cnfgen","-q","gphp", "--bcomplete", pigeons, holes]
-                        if functional : parameters.append("--functional")
-                        if onto : parameters.append("--onto")
-                        graph = complete_bipartite_graph(pigeons,holes)
-                        F = GraphPigeonholePrinciple(graph,functional,onto)
-                        self.checkFormula(sys.stdin,F, parameters)
+        for functional in (True, False):
+            for onto in (True, False):
+                parameters = ["cnfgen", "-q", "gphp", "--bcomplete", 5, 4]
+                if functional: parameters.append("--functional")
+                if onto: parameters.append("--onto")
+                graph = complete_bipartite_graph(5, 4)
+                F = GraphPigeonholePrinciple(graph, functional, onto)
+                self.checkFormula(sys.stdin,F, parameters)
 
     def test_not_bipartite(self):
         parameters = ["cnfgen","gphp", "--complete", "3"]
