@@ -223,6 +223,47 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     return parser, t_parser
 
 
+def parse_command_line(argv, fparser, tparser):
+    """Parser command line arguments
+
+    Split command line around '-T' options in parts. Extract the
+    formula generator setup from the first part, and extract a chain
+    of formula transformation commands
+
+    Parameters:
+    -----------
+    argv:
+        command line arguments
+    parser:
+        parser for the formulas commands
+    t_parser:
+        parser for the transformations commands
+
+    Return:
+    -------
+    fargs, list(targs) 
+        setup for the various commands
+    """
+    # Split the command line
+    cmd_chunks = [[]]
+    for arg in argv:
+        if arg == '-T':
+            cmd_chunks.append([])
+        else:
+            cmd_chunks[-1].append(arg)
+
+    generator_cmd = cmd_chunks[0][1:]
+    transformation_cmds = cmd_chunks[1:]
+
+    # Parse the various component of the command line
+    fargs = fparser.parse_args(generator_cmd)
+    targs = []
+    for cmd in transformation_cmds:
+        targs.append(tparser.parse_args(cmd))
+
+    return fargs, targs
+
+
 def build_latex_cmdline_description(argv, args, t_args):
     """Build the latex documentation of the components of the formula.
 
@@ -274,6 +315,26 @@ def build_latex_cmdline_description(argv, args, t_args):
     return "\n".join(cmdline_descr)
 
 
+
+def test_subcommand_presence(fargs, targs, progname, usage):
+    if not hasattr(fargs, 'generator'):
+        error_msg("You did not tell which formula you wanted to generate.",
+                  filltext=70)
+        error_msg(usage)
+        error_msg("See '{0} -h' or '{0} --help' for more info.".format(progname),
+                  filltext=70)
+        sys.exit(os.EX_DATAERR)
+
+    for argdict in targs:
+        if not hasattr(argdict, 'transformation'):
+            error_msg("You used option '-T' but did not pick a transformation.",
+                      filltext=70)
+            error_msg(usage)
+            error_msg("See '{0} -h' or '{0} --help' for more info.".format(progname),
+                      filltext=70)
+        sys.exit(os.EX_DATAERR)
+
+
 # Main program
 def command_line_utility(argv=sys.argv):
     """CNFgen main command line interface
@@ -291,72 +352,40 @@ def command_line_utility(argv=sys.argv):
         The list of token with the command line arguments/options.
     """
 
+    progname = os.path.basename(argv[0])
+    output=''
+    
     formula_helpers = get_formula_helpers()
     transformation_helpers = get_transformation_helpers()
 
-    parser, t_parser = setup_command_line_parsers(
-        os.path.basename(argv[0]),
-        formula_helpers,
-        transformation_helpers)
+    parser, t_parser = setup_command_line_parsers(progname,
+                                                  formula_helpers,
+                                                  transformation_helpers)
 
-    # Split the command line into formula generation and transformation
-    # applications
-    def splitlist(L, key):
-        argbuffer = []
-        for e in L:
-            if e == key:
-                yield argbuffer
-                argbuffer = []
-            else:
-                argbuffer.append(e)
-        yield argbuffer
+    args, t_args = parse_command_line(argv, parser, t_parser)
 
-    cmd_chunks = list(splitlist(argv, "-T"))
-    generator_cmd = cmd_chunks[0][1:]
-    transformation_cmds = cmd_chunks[1:]
-
-    # Parse the various component of the command line
-    args = parser.parse_args(generator_cmd)
-    t_args = []
-    for cmd in transformation_cmds:
-        t_args.append(t_parser.parse_args(cmd))
-
-    # If necessary, init the random generator
-    if hasattr(args, 'seed') and args.seed:
-        random.seed(args.seed)
-
-    # Comment character useful for error reporting
-    if args.output_format == 'latex':
-        cprefix = '% '
-    elif args.output_format == 'dimacs':
-        cprefix = 'c '
-    else:
-        raise RuntimeError("INTERNAL ERROR: output format must always be defined.")
+    # Correctly infer the comment character, useful to shield
+    # the output.
+    comment_char = {'dimacs': 'c ', 'latex': '% '}
+    try:
+        cprefix = comment_char[args.output_format]
+    except KeyError:
+        error_msg("c INTERNAL ERROR: unknown output format '{}'!".format(args.output_format))
+        sys.exit(1)
         
-        
-    # Check arguments
-    if not hasattr(args, 'generator'):
-        with msg_prefix(cprefix+"ERROR: "):
-            error_msg("You did not tell which formula you wanted to generate.",
-                      filltext=70)
-            error_msg(parser.format_usage().rstrip())
-            error_msg("See '{0} -h' or '{0} --help' for more info.".format(os.path.basename(argv[0])),
-                      filltext=70)
-            sys.exit(os.EX_DATAERR)
-
-    for argdict in t_args:
-        if not hasattr(argdict, 'transformation'):
-            with msg_prefix(cprefix+"ERROR: "):
-                error_msg("You used option '-T' but did not pick a transformation.",
-                          filltext=70)
-                error_msg(parser.format_usage().rstrip())
-                error_msg("See '{0} -h' or '{0} --help' for more info.".format(os.path.basename(argv[0])),
-                          filltext=70)
-            sys.exit(os.EX_DATAERR)
-
-    # Generate the formula and apply transformations
     with msg_prefix(cprefix):
+        # Check arguments
+        with msg_prefix("ERROR: "):
+            test_subcommand_presence(args,
+                                     t_args,
+                                     progname,
+                                     parser.format_usage().rstrip())
+
+        # Generate the formula and apply transformations
         try:
+
+            if hasattr(args, 'seed') and args.seed:
+                random.seed(args.seed)
 
             cnf = args.generator.build_cnf(args)
 
@@ -369,24 +398,25 @@ def command_line_utility(argv=sys.argv):
                 error_msg(str(e))
             sys.exit(os.EX_DATAERR)
 
-    # Output
-    if args.output_format == 'latex':
+        # Output
+        if args.output_format == 'latex':
 
-        extra_text = build_latex_cmdline_description(argv, args, t_args)
+            extra_text = build_latex_cmdline_description(argv, args, t_args)
 
-        output = cnf.latex(
-            export_header=args.verbose,
-            extra_text=extra_text,
-            full_document=True)
+            output = cnf.latex(
+                export_header=args.verbose,
+                extra_text=extra_text,
+                full_document=True)
 
-    elif args.output_format == 'dimacs':
+        elif args.output_format == 'dimacs':
 
-        output = cnf.dimacs(
-            export_header=args.verbose,
-            extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
+            output = cnf.dimacs(
+                export_header=args.verbose,
+                extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
 
-    else:
-        raise RuntimeError("INTERNAL ERROR: output format must always be defined.")
+        else:
+            error_msg("INTERNAL ERROR: unknown output format '{}'!".format(args.output_format))
+            sys.exit(1)
 
     with paginate_or_redirect_stdout(args.output):
         print(output)
