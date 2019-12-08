@@ -110,12 +110,12 @@ class GraphHelper(object):
     """
 
     @staticmethod
-    def setup_command_line(parser):
+    def setup_command_line(parser, suffix="", required=False):
         """Setup command line options for getting graphs"""
         raise NotImplementedError("Graph Input helper must be subclassed")
 
     @staticmethod
-    def obtain_graph(args):
+    def obtain_graph(args,suffix=""):
         """Read/Generate the graph according to the command line options"""
         raise NotImplementedError("Graph Input helper must be subclassed")
 
@@ -348,7 +348,7 @@ class SimpleGraphHelper(GraphHelper):
         # Graph modifications
         if getattr(args,'plantclique'+suffix) is not None and getattr(args,'plantclique'+suffix)>1:
             cliquesize = getattr(args,'plantclique'+suffix)
-            if cliquesize > G.order() :
+            if cliquesize > G.order():
                 raise ValueError("Clique cannot be larger than graph")
 
             clique=random.sample(G.nodes(),cliquesize)
