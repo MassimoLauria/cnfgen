@@ -12,6 +12,7 @@ https://github.com/MassimoLauria/cnfgen.git
 """
 
 import sys
+import os
 import argparse
 
 from itertools import combinations, product
@@ -23,12 +24,77 @@ from networkx.algorithms.bipartite import complete_bipartite_graph
 from networkx.algorithms.bipartite import random_graph as bipartite_random_graph
 from networkx.algorithms.bipartite import gnmk_random_graph as bipartite_gnmk_random_graph
 
-from cnfformula.graphs import supported_formats as graph_formats
+from cnfformula import supported_graph_formats
 from cnfformula.graphs import readGraph,writeGraph
 from cnfformula.graphs import bipartite_random_left_regular,bipartite_random_regular,bipartite_shift
 from cnfformula.graphs import bipartite_sets
 from cnfformula.graphs import dag_complete_binary_tree,dag_pyramid
 from cnfformula.graphs import sample_missing_edges
+
+from .msg import interactive_msg, error_msg, msg_prefix
+from .cmdline import redirect_stdin
+
+def read_graph_from_input(args,suffix,grtype):
+    """Read a graph from input according to command line arguments
+
+    Parameters:
+    -----------
+    args:
+         result of argparse
+    gytype:
+         one of {dag,bipartite, simple}
+    """
+    # read graphs from input
+    fsource = getattr(args,"input"+suffix)
+    fformat = getattr(args,'graphformat'+suffix)
+    fext    = os.path.splitext(fsource.name)[-1][1:]
+    allowed = supported_graph_formats()[grtype]
+
+    no_ext="""The formula generation process you asked for needs a {} graph in
+    input. Graph format was not specified on the command line and there no
+    file name extension to guess that from, thus it is impossible
+    to proceed.""".format(grtype)
+
+    bad_ext="""The formula generation process you asked for needs a {} graph in
+    input. Graph format was not specified on the command line and the file
+    name extension do not corresponds to any of the allowed format, thus
+    it is impossible to proceed.""".format(grtype)
+    
+    ask_opt="""Please add the option '-gf <format>' to the graph specification,
+    where <format> in one of {}""".format(allowed)
+
+    ask_gr="Please insert on <stdin> a simple undirected graph in {} format.".format(fformat)
+    
+    with redirect_stdin(fsource):
+        
+        with msg_prefix("ERROR: "):
+
+            # detect graph format
+            if fformat == 'autodetect':
+                if len(fext) == 0:
+                    error_msg(no_ext,filltext=70)
+                    error_msg(ask_opt,filltext=70)
+                    sys.exit(-1)
+
+                elif fext not in allowed:
+                    error_msg(bad_ext,filltext=70)
+                    error_msg(ask_opt,filltext=70)
+                    sys.exit(-1)
+                                                        
+        with msg_prefix("INPUT: "):
+            interactive_msg(ask_gr,filltext=70);
+                
+        try:
+            G=readGraph(sys.stdin,"simple",fformat)
+        except ValueError as e:
+            with msg_prefix('ERROR: '):
+                error_msg(str(e),filltext=70)
+                sys.exit(-1)
+                
+    return G
+
+
+
 
 ### Graph readers/generators
 def positive_int(string):
@@ -107,7 +173,7 @@ class DirectedAcyclicGraphHelper(GraphHelper):
                             standard output.  (default:  -)
                             """)
         gr.add_argument('--graphformat'+suffix,'-gf'+suffix,
-                        choices=graph_formats()['dag'],
+                        choices=supported_graph_formats()['dag'],
                         default='autodetect',
                         help="Format of the DAG file. (default: autodetect)")
 
@@ -119,35 +185,25 @@ class DirectedAcyclicGraphHelper(GraphHelper):
         if getattr(args,'tree'+suffix) is not None:
             assert getattr(args,'tree'+suffix) > 0
 
-            D = dag_complete_binary_tree( getattr(args,'tree'+suffix) )
+            G = dag_complete_binary_tree( getattr(args,'tree'+suffix) )
 
         elif getattr(args,'pyramid'+suffix) is not None:
             assert getattr(args,'pyramid'+suffix) > 0
 
-            D = dag_pyramid( getattr(args,'pyramid'+suffix))
+            G = dag_pyramid( getattr(args,'pyramid'+suffix))
 
-        elif getattr(args,'graphformat'+suffix) is not None:
-
-            try:
-                print("INFO: reading directed acyclic graph {} from '{}'".format(suffix,getattr(args,"input"+suffix).name),
-                      file=sys.stderr)
-                D=readGraph(getattr(args,'input'+suffix),
-                            "dag",
-                            getattr(args,'graphformat'+suffix))
-            except ValueError as e:
-                print("ERROR ON '{}'. {}".format(getattr(args,'input'+suffix).name,e),file=sys.stderr)
-                exit(-1)
         else:
-            raise RuntimeError("Command line does not specify a directed acyclic graph")
+            G=read_graph_from_input(args,suffix,"dag")
+
 
         # Output the graph is requested
         if getattr(args,'savegraph'+suffix) is not None:
-            writeGraph(D,
+            writeGraph(G,
                        getattr(args,'savegraph'+suffix),
                        "dag",
                        getattr(args,'graphformat'+suffix))
 
-        return D
+        return G
 
 
 class SimpleGraphHelper(GraphHelper):
@@ -238,7 +294,7 @@ class SimpleGraphHelper(GraphHelper):
                             standard output.  (default:  -)
                             """)
         gr.add_argument('--graphformat'+suffix,'-gf'+suffix,
-                        choices=graph_formats()['simple'],
+                        choices=supported_graph_formats()['simple'],
                         default='autodetect',
                         help="Format of the graph file. (default: autodetect)")
 
@@ -285,21 +341,9 @@ class SimpleGraphHelper(GraphHelper):
 
             G=networkx.empty_graph(getattr(args,'empty'+suffix))
 
-        elif getattr(args,'graphformat'+suffix) is not None:
-
-            try:
-                print("INFO: reading simple graph {} from '{}'".format(suffix,getattr(args,"input"+suffix).name),
-                      file=sys.stderr)
-                G=readGraph(getattr(args,'input'+suffix),
-                            "simple",
-                            getattr(args,'graphformat'+suffix))
-            except ValueError as e:
-                print("ERROR ON '{}'. {}".format(
-                    getattr(args,'input'+suffix).name,e),
-                      file=sys.stderr)
-                exit(-1)
         else:
-            raise RuntimeError("Command line does not specify a graph")
+
+            G=read_graph_from_input(args,suffix,"simple")
 
         # Graph modifications
         if getattr(args,'plantclique'+suffix) is not None and getattr(args,'plantclique'+suffix)>1:
@@ -472,7 +516,7 @@ class BipartiteGraphHelper(GraphHelper):
                         help="""Save the graph to <graph_file>. Setting '<graph_file>' to '-'sends
                         the graph to standard output. (default: -) """)
         gr.add_argument('--graphformat'+suffix,'-gf'+suffix,
-                        choices=graph_formats()['bipartite'],
+                        choices=supported_graph_formats()['bipartite'],
                         default='autodetect',
                         help="Format of the graph file. (default: autodetect)")
 
@@ -514,22 +558,9 @@ class BipartiteGraphHelper(GraphHelper):
             
             l,r = getattr(args,"bcomplete"+suffix)
             G=complete_bipartite_graph(l,r)
-            
-        elif getattr(args,"graphformat"+suffix) is not None:
 
-            try:
-                print("INFO: reading bipartite graph {} from '{}'".format(suffix,getattr(args,"input"+suffix).name),
-                      file=sys.stderr)
-                G=readGraph(getattr(args,"input"+suffix),
-                            "bipartite",
-                            getattr(args,"graphformat"+suffix))
-            except ValueError as e:
-                print("ERROR ON '{}'. {}".format(getattr(args,"input"+suffix).name,e),file=sys.stderr)
-                exit(-1)
-                            
         else:
-            raise RuntimeError("Command line does not specify a bipartite graph")
-            
+            G=read_graph_from_input(args,suffix,"bipartite")
         
 
         # Graph modifications

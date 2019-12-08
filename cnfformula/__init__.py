@@ -13,6 +13,7 @@ from .cnf import CNF
 # IO functions
 from .utils.parsedimacs import readCNF
 from .graphs import readGraph,writeGraph
+from .graphs import supported_formats as supported_graph_formats
 
 # SAT solvers
 from .utils.solver import supported_satsolvers

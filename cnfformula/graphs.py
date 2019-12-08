@@ -5,7 +5,7 @@ formulas that are graph based.
 """
 
 
-
+import copy
 
 __all__ = ["supported_formats",
            "readGraph","writeGraph",
@@ -28,7 +28,7 @@ _graphformats = {
 
 def supported_formats():
     """The graph file formats supported by the library."""
-    return _graphformats
+    return copy.deepcopy(_graphformats)
 
 
 
