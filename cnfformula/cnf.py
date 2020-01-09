@@ -11,7 +11,7 @@ to the `cnfformula` library.
 
 
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019  Massimo Lauria <lauria.massimo@gmail.com>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -651,7 +651,7 @@ class CNF(object):
             output.write(latex_preamble)
             output.write("\\begin{document}\n")
             title=self.header.split('\n')[0]
-            title=title.replace("_","\_")
+            title=title.replace("_", "\\_")
             output.write("\\title{{{}}}\n".format(title))
             output.write("\\author{CNFgen formula generator}\n")
             output.write("\\maketitle\n")
