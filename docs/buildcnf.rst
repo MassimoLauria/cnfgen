@@ -126,5 +126,5 @@ argument   ``full_document``    to   ``True``    in   the    call   to
    
 Reference
 ---------
-.. [1] http://www.satlib.org/Benchmarks/SAT/satformat.ps
+.. [1] http://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps
 .. [2] http://www.latex-project.org/ 
