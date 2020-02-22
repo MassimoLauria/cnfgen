@@ -7,6 +7,7 @@ from contextlib import redirect_stdout
 
 from cnfgen import cnfgen
 
+
 @contextmanager
 def redirect_stderr(stream):
     """Captures stderr during a test
@@ -16,6 +17,7 @@ def redirect_stderr(stream):
     sys.stderr = stream
     yield
     sys.stderr = old_stderr
+
 
 @contextmanager
 def redirect_stdin(stream):
@@ -27,9 +29,8 @@ def redirect_stdin(stream):
     yield
     sys.stdin = old_stdin
 
-    
+
 class TestCommandline(unittest.TestCase):
-    
     def checkFormula(self, indata, expected_cnf, args, cmdline=cnfgen):
         """Test that a formula generation process produces the expected formula.
 
@@ -70,14 +71,22 @@ class TestCommandline(unittest.TestCase):
 
         with redirect_stdout(f), redirect_stdin(indata):
             cmdline(parameters)
-            
+
         self.assertEqual(f.getvalue(),
-                         expected_cnf.dimacs(export_header=False)+'\n')
+                         expected_cnf.dimacs(export_header=False) + '\n')
 
     def checkCrash(self, indata, args, cmdline=cnfgen):
         parameters = [str(x) for x in args]
         f = StringIO()
-        with redirect_stdin(indata),redirect_stderr(f), self.assertRaises(SystemExit) as cm:
+        with redirect_stdin(indata), redirect_stderr(f), self.assertRaises(
+                SystemExit) as cm:
             cmdline(parameters)
         self.assertNotEqual(cm.exception.code, 0)
         self.assertNotEqual(f.getvalue(), '')
+
+    def checkRun(self, indata, args, cmdline=cnfgen):
+        parameters = [str(x) for x in args]
+        f = StringIO()
+        with redirect_stdin(indata), redirect_stderr(f):
+            cmdline(parameters)
+        self.assertEqual(f.getvalue(), '')
