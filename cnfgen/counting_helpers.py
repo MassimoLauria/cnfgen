@@ -16,13 +16,14 @@ from .graph_cmdline import BipartiteGraphHelper
 
 from .formula_helpers import FormulaHelper
 
+import random
 
 
 class ParityCmdHelper(FormulaHelper):
     """Command line helper for Parity Principle formulas
     """
-    name='parity'
-    description='parity principle'
+    name = 'parity'
+    description = 'parity principle'
 
     @staticmethod
     def setup_command_line(parser):
@@ -31,18 +32,18 @@ class ParityCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('N',metavar='<N>',type=int,help="domain size")
+        parser.add_argument('N', metavar='<N>', type=int, help="domain size")
 
     @staticmethod
     def build_cnf(args):
-        return CountingPrinciple(args.N,2)
+        return CountingPrinciple(args.N, 2)
 
 
 class PMatchingCmdHelper(FormulaHelper):
     """Command line helper for Perfect Matching Principle formulas
     """
-    name='matching'
-    description='perfect matching principle'
+    name = 'matching'
+    description = 'perfect matching principle'
 
     @staticmethod
     def setup_command_line(parser):
@@ -53,7 +54,6 @@ class PMatchingCmdHelper(FormulaHelper):
         """
         SimpleGraphHelper.setup_command_line(parser)
 
-
     @staticmethod
     def build_cnf(args):
         G = SimpleGraphHelper.obtain_graph(args)
@@ -63,8 +63,8 @@ class PMatchingCmdHelper(FormulaHelper):
 class CountingCmdHelper(FormulaHelper):
     """Command line helper for Counting Principle formulas
     """
-    name='count'
-    description='counting principle'
+    name = 'count'
+    description = 'counting principle'
 
     @staticmethod
     def setup_command_line(parser):
@@ -73,8 +73,11 @@ class CountingCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('M',metavar='<M>',type=int,help="domain size")
-        parser.add_argument('p',metavar='<p>',type=int,help="size of the parts")
+        parser.add_argument('M', metavar='<M>', type=int, help="domain size")
+        parser.add_argument('p',
+                            metavar='<p>',
+                            type=int,
+                            help="size of the parts")
 
     @staticmethod
     def build_cnf(args):
@@ -83,14 +86,14 @@ class CountingCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        return CountingPrinciple(args.M,args.p)
+        return CountingPrinciple(args.M, args.p)
 
 
 class TseitinCmdHelper(FormulaHelper):
     """Command line helper for Tseitin  formulas
     """
-    name='tseitin'
-    description='tseitin formula'
+    name = 'tseitin'
+    description = 'tseitin formula'
 
     @staticmethod
     def setup_command_line(parser):
@@ -99,9 +102,12 @@ class TseitinCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('--charge',metavar='<charge>',default='first',
-                            choices=['first','random','randomodd','randomeven'],
-                            help="""charge on the vertices.
+        parser.add_argument(
+            '--charge',
+            metavar='<charge>',
+            default='first',
+            choices=['first', 'random', 'randomodd', 'randomeven'],
+            help="""charge on the vertices.
                                     `first'  puts odd charge on first vertex;
                                     `random' puts a random charge on vertices;
                                     `randomodd' puts random odd  charge on vertices;
@@ -118,43 +124,47 @@ class TseitinCmdHelper(FormulaHelper):
         """
         G = SimpleGraphHelper.obtain_graph(args)
 
-        if G.order()<1:
-            charge=None
+        if G.order() < 1:
+            charge = None
 
-        elif args.charge=='first':
+        elif args.charge == 'first':
 
-            charge=[1]+[0]*(G.order()-1)
+            charge = [1] + [0] * (G.order() - 1)
 
-        else: # random vector
-            charge=[random.randint(0,1) for _ in range(G.order()-1)]
+        else:  # random vector
+            charge = [random.randint(0, 1) for _ in range(G.order() - 1)]
 
-            parity=sum(charge) % 2
+            parity = sum(charge) % 2
 
-            if args.charge=='random':
-                charge.append(random.randint(0,1))
-            elif args.charge=='randomodd':
-                charge.append(1-parity)
-            elif args.charge=='randomeven':
+            if args.charge == 'random':
+                charge.append(random.randint(0, 1))
+            elif args.charge == 'randomodd':
+                charge.append(1 - parity)
+            elif args.charge == 'randomeven':
                 charge.append(parity)
             else:
-                raise ValueError('Illegal charge specification on command line')
+                raise ValueError(
+                    'Illegal charge specification on command line')
 
-        return TseitinFormula(G,charge)
+        return TseitinFormula(G, charge)
 
 
 class SCCmdHelper(FormulaHelper):
-    name='subsetcard'
-    description='subset cardinality formulas'
+    name = 'subsetcard'
+    description = 'subset cardinality formulas'
 
     @staticmethod
     def setup_command_line(parser):
 
-        parser.add_argument('--equal','-e',default=False,action='store_true',
+        parser.add_argument('--equal',
+                            '-e',
+                            default=False,
+                            action='store_true',
                             help="encode cardinality constraints as equations")
+
         BipartiteGraphHelper.setup_command_line(parser)
 
     @staticmethod
     def build_cnf(args):
         B = BipartiteGraphHelper.obtain_graph(args)
-        return SubsetCardinalityFormula(B,args.equal)
-
+        return SubsetCardinalityFormula(B, args.equal)
