@@ -304,7 +304,7 @@ problems well known to be challenging for certain SAT solvers.
     *Warning*  the sampling  could  take infinite  time  if the  ratio
     between remaining clauses and clauses to sample is too small.
 
-    : cnfgen kcnf <k> <n> <m>
+    : cnfgen randkcnf <k> <n> <m>
 
 *** Single conjunction<<and>>
 
