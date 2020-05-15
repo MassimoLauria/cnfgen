@@ -23,28 +23,29 @@ import argparse
 
 usage_string = """Pigeonhole Principle
 
-Pigeonhole principle claims that P pigeons can fly to H holes. This is
-unsatisfiable when P > H. It is possible to specify a bipartite graph
-that specifies which pigeons can fly to which holes.
+Pigeonhole principle claims that P pigeons can fly to H holes with no
+two pigeons in the same hole. This is unsatisfiable when P > H. It is
+possible to specify a bipartite graph that specifies which pigeons can
+fly to which holes.
 
 positional arguments:
  {0} N           --- N+1 pigeons fly to N holes
  {0} M N         --- M pigeons fly to N holes
  {0} M N D       --- M pigeons fly to N holes, pigeon left degree D
  {0} <bipartite> --- Left vertices fly to right vertices, respecting edges
-"""
+ """
 
 example_string = """examples:
  {0} 100           --- 101 pigeons and 100 holes (unsat)
  {0} 14 10         --- 14 pigeons and 10 holes (unsat)
  {0} 9  10         --- 9  pigeons and 10 holes (sat)
  {0} 12 10 3       --- 12 pigeons and 10 holes,
-                       pigeon can go to 3 random holes
+ {1}                   pigeon can go to 3 random holes
  {0} gmnd:30:20:5  --- 30 pigeons and 10 holes,
-                       pigeon can go to 5 random holes
+ {1}                   pigeon can go to 5 random holes
  {0} gmnp:30:20:.3 --- 30 pigeons and 10 holes,
-                       0.3 prob. a pigeon can fly into a hole
-"""
+ {1}                   0.3 prob. a pigeon can fly into a hole
+ """
 
 
 class PHPCmdHelper(FormulaHelper):
@@ -61,7 +62,8 @@ class PHPCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
         parser.usage = usage_string.format(parser.prog)
-        parser.description = example_string.format(parser.prog)
+        parser.description = example_string.format(parser.prog,
+                                                   " " * len(parser.prog))
         parser.add_argument('phpargs', nargs='+', help=argparse.SUPPRESS)
         parser.add_argument('--functional',
                             action='store_true',
