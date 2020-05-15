@@ -42,14 +42,12 @@ from .cmdline import setup_SIGINT
 from .cmdline import get_formula_helpers
 from .cmdline import get_transformation_helpers
 
-from .msg import interactive_msg
 from .msg import error_msg
 from .msg import msg_prefix
 
 #################################################################
 #          Command line tool follows
 #################################################################
-
 
 # Help strings
 usage_string = """{} [-h] [-V] [--output <output>]
@@ -61,7 +59,8 @@ usage_string = """{} [-h] [-V] [--output <output>]
                  ..."""
 
 tutorial_string = """
--------------------------- TUTORIAL --------------------------------- 
+                 CNFGEN TUTORIAL
+
 {0} builds CNF formulas mostly coming from proof complexity
 literature, to use as benchmark against SAT solvers. Basic usage is
 
@@ -99,17 +98,16 @@ For the full list of formulas and formula transformations type one of
 For the help of a specific CNF family named <formula> type one of
 
     {0} <formula> -h
-    {0} <formula> --help 
+    {0} <formula> --help
 
 For the help of a specific formula transformation pick any CNF family
-<formula> and type one of 
+<formula> and type one of
 
     {0} <formula> <args> -T <transformation> -h
     {0} <formula> <args> -T <transformation> --help
 
 where <transformation> is the name of the formula transformation to
 get the help for.
-----------------------------  END ----------------------------------
 """
 
 
@@ -142,15 +140,14 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
 
     # First we setup the parser for transformation command lines
     t_parser = argparse.ArgumentParser(
-        add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
 
     t_subparsers = t_parser.add_subparsers(
         prog=progname + " <formula> <args> -T",
         title="Available formula transformation",
         metavar="<transformation>")
     for sc in thelpers:
-        p = t_subparsers.add_parser(sc.name,help=sc.description)
+        p = t_subparsers.add_parser(sc.name, help=sc.description)
         sc.setup_command_line(p)
         p.set_defaults(transformation=sc)
 
@@ -158,29 +155,35 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     parser = argparse.ArgumentParser(
         prog=progname,
         usage=usage_string.format(progname),
-        description=tutorial_string.format(progname),
+        description="tutorial:\n  {0} --tutorial    show a basic tutorial".
+        format(progname),
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     class PrintTutorial(argparse.Action):
-        def __call__(self, parser, args, values, option_string = None):
+        def __call__(self, parser, args, values, option_string=None):
             with paginate_or_redirect_stdout(sys.stdout):
                 print(tutorial_string.format(progname))
             sys.exit(os.EX_OK)
 
-    parser.add_argument('-V', '--version',
+    parser.add_argument('-V',
+                        '--version',
                         action='version',
-                        version="%(prog)s ("+__version__+")")
+                        version="%(prog)s (" + __version__ + ")")
     parser.add_argument('--tutorial',
                         nargs=0,
-                        action=PrintTutorial)
-    parser.add_argument('--output', '-o',
-                        type=argparse.FileType('w', encoding='utf-8'),
-                        metavar="<output>",
-                        default='-',
-                        help="""Save the formula to <output>. Setting '<output>' to '-' sends the
+                        action=PrintTutorial,
+                        help="show a brief tutorial")
+    parser.add_argument(
+        '--output',
+        '-o',
+        type=argparse.FileType('w', encoding='utf-8'),
+        metavar="<output>",
+        default='-',
+        help="""Save the formula to <output>. Setting '<output>' to '-' sends the
                         formula to standard output. (default: -)
                         """)
-    parser.add_argument('--output-format', '-of',
+    parser.add_argument('--output-format',
+                        '-of',
                         choices=['latex', 'dimacs'],
                         default='dimacs',
                         help="""
@@ -190,7 +193,8 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
                         (default: dimacs)
                         """)
 
-    parser.add_argument('--seed', '-S',
+    parser.add_argument('--seed',
+                        '-S',
                         metavar="<seed>",
                         default=None,
                         type=str,
@@ -199,9 +203,15 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
                         program. (default: current time)
                         """)
     g = parser.add_mutually_exclusive_group()
-    g.add_argument('--verbose', '-v', action='store_true', default=True,
+    g.add_argument('--verbose',
+                   '-v',
+                   action='store_true',
+                   default=True,
                    help="""Output formula header and comments.""")
-    g.add_argument('--quiet', '-q', action='store_false', dest='verbose',
+    g.add_argument('--quiet',
+                   '-q',
+                   action='store_false',
+                   dest='verbose',
                    help="""Output just the formula with no header.""")
 
     # setup each formula command parser
@@ -209,8 +219,10 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
                                        title="Available formula types",
                                        metavar='<formula>')
     for sc in fhelpers:
-        p = subparsers.add_parser(sc.name,
-                                  help=sc.description)
+        p = subparsers.add_parser(
+            sc.name,
+            help=sc.description,
+            formatter_class=argparse.RawDescriptionHelpFormatter)
         sc.setup_command_line(p)
         p.set_defaults(generator=sc)
 
@@ -241,7 +253,7 @@ def parse_command_line(argv, fparser, tparser):
 
     Return:
     -------
-    fargs, list(targs) 
+    fargs, list(targs)
         setup for the various commands
     """
     # Split the command line
@@ -272,7 +284,7 @@ def build_latex_cmdline_description(argv, args, t_args):
 
     Parameters
     ----------
-    argv : list(str) 
+    argv : list(str)
         arguments on command line
     args:
         parsed arguments for the formula
@@ -280,18 +292,19 @@ def build_latex_cmdline_description(argv, args, t_args):
         group of parsed arguments for the transformations
 
     """
-    # The full command line 
-    cmdline_descr=["\\noindent\\textbf{Command line:}",
-                   "\\begin{lstlisting}[breaklines]",
-                   "$ cnfgen " + " ".join(argv[1:]),
-                   "\\end{lstlisting}"]
+    # The full command line
+    cmdline_descr = [
+        "\\noindent\\textbf{Command line:}", "\\begin{lstlisting}[breaklines]",
+        "$ cnfgen " + " ".join(argv[1:]), "\\end{lstlisting}"
+    ]
 
     # The docstring of the formula family generator
     if hasattr(args.generator, "docstring"):
-        cmdline_descr += ["\\noindent\\textbf{Docstring:}",
-                          "\\begin{lstlisting}[breaklines,basicstyle=\\small]",
-                          args.generator.docstring,
-                          "\\end{lstlisting}"]
+        cmdline_descr += [
+            "\\noindent\\textbf{Docstring:}",
+            "\\begin{lstlisting}[breaklines,basicstyle=\\small]",
+            args.generator.docstring, "\\end{lstlisting}"
+        ]
 
     # Find input files specified in the command line
     input_files = []
@@ -305,15 +318,15 @@ def build_latex_cmdline_description(argv, args, t_args):
     # Add them all to the latex document
     for f in input_files:
         f.seek(0, 0)
-        cmdline_descr += ["\\noindent\\textbf{Input file} \\verb|%s|" % f.name,
-                          "\\begin{lstlisting}[breaklines,basicstyle=\\small]",
-                          f.read(),
-                          "\\end{lstlisting}"]
+        cmdline_descr += [
+            "\\noindent\\textbf{Input file} \\verb|%s|" % f.name,
+            "\\begin{lstlisting}[breaklines,basicstyle=\\small]",
+            f.read(), "\\end{lstlisting}"
+        ]
 
     # Return all as a single string
     cmdline_descr += ['\n']
     return "\n".join(cmdline_descr)
-
 
 
 def test_subcommand_presence(fargs, targs, progname, usage):
@@ -321,17 +334,20 @@ def test_subcommand_presence(fargs, targs, progname, usage):
         error_msg("You did not tell which formula you wanted to generate.",
                   filltext=70)
         error_msg(usage)
-        error_msg("See '{0} -h' or '{0} --help' for more info.".format(progname),
-                  filltext=70)
+        error_msg(
+            "See '{0} -h' or '{0} --help' for more info.".format(progname),
+            filltext=70)
         sys.exit(os.EX_DATAERR)
 
     for argdict in targs:
         if not hasattr(argdict, 'transformation'):
-            error_msg("You used option '-T' but did not pick a transformation.",
-                      filltext=70)
+            error_msg(
+                "You used option '-T' but did not pick a transformation.",
+                filltext=70)
             error_msg(usage)
-            error_msg("See '{0} -h' or '{0} --help' for more info.".format(progname),
-                      filltext=70)
+            error_msg(
+                "See '{0} -h' or '{0} --help' for more info.".format(progname),
+                filltext=70)
         sys.exit(os.EX_DATAERR)
 
 
@@ -353,13 +369,12 @@ def command_line_utility(argv=sys.argv):
     """
 
     progname = os.path.basename(argv[0])
-    output=''
-    
+    output = ''
+
     formula_helpers = get_formula_helpers()
     transformation_helpers = get_transformation_helpers()
 
-    parser, t_parser = setup_command_line_parsers(progname,
-                                                  formula_helpers,
+    parser, t_parser = setup_command_line_parsers(progname, formula_helpers,
                                                   transformation_helpers)
 
     args, t_args = parse_command_line(argv, parser, t_parser)
@@ -370,15 +385,14 @@ def command_line_utility(argv=sys.argv):
     try:
         cprefix = comment_char[args.output_format]
     except KeyError:
-        error_msg("c INTERNAL ERROR: unknown output format '{}'!".format(args.output_format))
+        error_msg("c INTERNAL ERROR: unknown output format '{}'!".format(
+            args.output_format))
         sys.exit(1)
-        
+
     with msg_prefix(cprefix):
         # Check arguments
         with msg_prefix("ERROR: "):
-            test_subcommand_presence(args,
-                                     t_args,
-                                     progname,
+            test_subcommand_presence(args, t_args, progname,
                                      parser.format_usage().rstrip())
 
         # Generate the formula and apply transformations
@@ -403,19 +417,19 @@ def command_line_utility(argv=sys.argv):
 
             extra_text = build_latex_cmdline_description(argv, args, t_args)
 
-            output = cnf.latex(
-                export_header=args.verbose,
-                extra_text=extra_text,
-                full_document=True)
+            output = cnf.latex(export_header=args.verbose,
+                               extra_text=extra_text,
+                               full_document=True)
 
         elif args.output_format == 'dimacs':
 
-            output = cnf.dimacs(
-                export_header=args.verbose,
-                extra_text="COMMAND LINE: cnfgen " + " ".join(argv[1:]) + "\n")
+            output = cnf.dimacs(export_header=args.verbose,
+                                extra_text="COMMAND LINE: cnfgen " +
+                                " ".join(argv[1:]) + "\n")
 
         else:
-            error_msg("INTERNAL ERROR: unknown output format '{}'!".format(args.output_format))
+            error_msg("INTERNAL ERROR: unknown output format '{}'!".format(
+                args.output_format))
             sys.exit(1)
 
     with paginate_or_redirect_stdout(args.output):
