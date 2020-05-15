@@ -38,7 +38,7 @@ upload: package
 #
 # $ pyenv install -l
 #
-DEV_DEPENDENCES:=pylint pytest flake8
+DEV_DEPENDENCES:=yapf pytest flake8
 PKG_DEPENDENCES:=wheel twine keyring
 DOC_DEPENDENCES:=sphinx sphinx-autobuild numpydoc sphinx_rtd_theme
 
