@@ -19,6 +19,33 @@ from cnfformula.graphs import bipartite_random_left_regular
 from .graph_cmdline import BipartiteGraphHelper
 from .formula_helpers import FormulaHelper
 
+import argparse
+
+usage_string = """Pigeonhole Principle
+
+Pigeonhole principle claims that P pigeons can fly to H holes. This is
+unsatisfiable when P > H. It is possible to specify a bipartite graph
+that specifies which pigeons can fly to which holes.
+
+positional arguments:
+ {0} N           --- N+1 pigeons fly to N holes
+ {0} M N         --- M pigeons fly to N holes
+ {0} M N D       --- M pigeons fly to N holes, pigeon left degree D
+ {0} <bipartite> --- Left vertices fly to right vertices, respecting edges
+"""
+
+example_string = """examples:
+ {0} 100           --- 101 pigeons and 100 holes (unsat)
+ {0} 14 10         --- 14 pigeons and 10 holes (unsat)
+ {0} 9  10         --- 9  pigeons and 10 holes (sat)
+ {0} 12 10 3       --- 12 pigeons and 10 holes,
+                       pigeon can go to 3 random holes
+ {0} gmnd:30:20:5  --- 30 pigeons and 10 holes,
+                       pigeon can go to 5 random holes
+ {0} gmnp:30:20:.3 --- 30 pigeons and 10 holes,
+                       0.3 prob. a pigeon can fly into a hole
+"""
+
 
 class PHPCmdHelper(FormulaHelper):
     """Command line helper for the Pigeonhole principle CNF"""
@@ -33,22 +60,9 @@ class PHPCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('pigeons',
-                            metavar='<pigeons>',
-                            type=int,
-                            help="Number of pigeons")
-        parser.add_argument('holes',
-                            metavar='<holes>',
-                            type=int,
-                            default=None,
-                            nargs='?',
-                            help="Number of holes (default: pigeons-1 )")
-        parser.add_argument('degree',
-                            metavar='<degree>',
-                            type=int,
-                            default=None,
-                            nargs='?',
-                            help="Left degree of pigeons (default: holes)")
+        parser.usage = usage_string.format(parser.prog)
+        parser.description = example_string.format(parser.prog)
+        parser.add_argument('phpargs', nargs='+', help=argparse.SUPPRESS)
         parser.add_argument('--functional',
                             action='store_true',
                             help="pigeons sit in at most one hole")
@@ -63,16 +77,26 @@ class PHPCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        if args.holes is None:
-            args.holes = args.pigeons - 1
-        if args.degree is None:
-            return PigeonholePrinciple(args.pigeons,
-                                       args.holes,
+        if len(args.phpargs) == 1:
+            pigeons = int(args.phpargs[0]) + 1
+            holes = pigeons - 1
+            degree = holes
+        elif len(args.phpargs) == 2:
+            pigeons = int(args.phpargs[0])
+            holes = int(args.phpargs[1])
+            degree = holes
+        elif len(args.phpargs) == 3:
+            pigeons = int(args.phpargs[0])
+            holes = int(args.phpargs[1])
+            degree = int(args.phpargs[2])
+
+        if holes == degree:
+            return PigeonholePrinciple(pigeons,
+                                       holes,
                                        functional=args.functional,
                                        onto=args.onto)
         else:
-            G = bipartite_random_left_regular(args.pigeons, args.holes,
-                                              args.degree)
+            G = bipartite_random_left_regular(pigeons, holes, degree)
             return GraphPigeonholePrinciple(G,
                                             functional=args.functional,
                                             onto=args.onto)
