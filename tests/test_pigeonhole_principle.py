@@ -179,7 +179,7 @@ def test_php_cli_wrong():
 
 def test_php_cli_negative():
     """PHP command line must not accept negative args"""
-    with pytest.raises(ValueError):
+    with pytest.raises(CLIError):
         cnfgen(["cnfgen", "php", "-3", "1"])
 
 

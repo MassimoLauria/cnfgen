@@ -32,7 +32,7 @@ from cnfformula.graphs import dag_complete_binary_tree, dag_pyramid
 from cnfformula.graphs import sample_missing_edges
 
 from .msg import interactive_msg, error_msg, msg_prefix
-from .cmdline import redirect_stdin, CLIError
+from .cmdline import redirect_stdin, CLIError, positive_int
 
 
 def read_graph_from_input(args, suffix, grtype):
@@ -97,15 +97,6 @@ def read_graph_from_input(args, suffix, grtype):
 
 
 ### Graph readers/generators
-def positive_int(string):
-    """Type checker for positive integers
-    """
-    value = int(string)
-    if (value <= 0):
-        raise ValueError('integer is not positive: {}'.format(value))
-    return value
-
-
 class GraphHelper(object):
     """Command Line helper for reading graphs
     """

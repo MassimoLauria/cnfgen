@@ -28,7 +28,7 @@ from .msg import error_msg
 @contextmanager
 def paginate_or_redirect_stdout(outputstream):
     """Output to a file or, when interactive, to the PAGER
-    
+
     Redirect standard output to ``outputstream``. Furthermore when the
     standard output is supposed to go to an interactive terminal (i.e.
     it has not been piped to a file or to another process) then
@@ -189,3 +189,36 @@ exception, instead of calling exit.
             self.prog))
 
         raise CLIError("\n".join(errstr))
+
+
+def positive_int(value):
+    errmsg = "{} was supposed to be a positive integer".format(value)
+    try:
+        ivalue = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(errmsg)
+    if ivalue <= 0:
+        raise argparse.ArgumentTypeError(errmsg)
+    return ivalue
+
+
+def nonnegative_int(value):
+    errmsg = "{} was supposed to be a non negative integer".format(value)
+    try:
+        ivalue = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(errmsg)
+    if ivalue < 0:
+        raise argparse.ArgumentTypeError(errmsg)
+    return ivalue
+
+
+def probability(value):
+    errmsg = "{} was supposed to be a real number in [0,1]".format(value)
+    try:
+        p = float(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(errmsg)
+    if not (0 <= p <= 1.0):
+        raise argparse.ArgumentTypeError(errmsg)
+    return p

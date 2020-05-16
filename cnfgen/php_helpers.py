@@ -18,6 +18,7 @@ from cnfformula.graphs import bipartite_random_left_regular
 
 from .graph_cmdline import BipartiteGraphHelper
 from .formula_helpers import FormulaHelper
+from .cmdline import positive_int, nonnegative_int, probability
 
 import argparse
 
@@ -32,8 +33,8 @@ positional arguments:
  {0} N           --- N+1 pigeons fly to N holes
  {0} M N         --- M pigeons fly to N holes
  {0} M N D       --- M pigeons fly to N holes, pigeon left degree D
- {0} <bipartite> --- Left vertices fly to right vertices, respecting edges
  """
+# {0} <bipartite> --- Left vertices fly to right vertices, respecting edges
 
 example_string = """examples:
  {0} 100           --- 101 pigeons and 100 holes (unsat)
@@ -41,11 +42,43 @@ example_string = """examples:
  {0} 9  10         --- 9  pigeons and 10 holes (sat)
  {0} 12 10 3       --- 12 pigeons and 10 holes,
  {1}                   pigeon can go to 3 random holes
- {0} gmnd:30:20:5  --- 30 pigeons and 10 holes,
- {1}                   pigeon can go to 5 random holes
- {0} gmnp:30:20:.3 --- 30 pigeons and 10 holes,
- {1}                   0.3 prob. a pigeon can fly into a hole
  """
+# {0} gmnd:30:20:5  --- 30 pigeons and 10 holes,
+# {1}                   pigeon can go to 5 random holes
+# {0} gmnp:30:20:.3 --- 30 pigeons and 10 holes,
+# {1}                   0.3 prob. a pigeon can fly into a hole
+
+
+class PHPArgs(argparse.Action):
+    def __call__(self, parser, args, values, option_string=None):
+        if len(values) == 0:
+            parser.error('php formula requires some arguments')
+
+        if len(values) > 3:
+            parser.error('php formula wants at most three arguments')
+
+        try:
+            intvalues = [int(x) for x in values]
+            if not all([x >= 0 for x in intvalues]):
+                raise ValueError
+        except ValueError:
+            parser.error('php arguments must be positive integers')
+
+        if len(intvalues) == 1:
+            setattr(args, "pigeons", intvalues[0] + 1)
+            setattr(args, "holes", intvalues[0])
+            setattr(args, "degree", intvalues[0])
+        elif len(intvalues) == 2:
+            setattr(args, "pigeons", intvalues[0])
+            setattr(args, "holes", intvalues[1])
+            setattr(args, "degree", intvalues[1])
+        else:
+            setattr(args, "pigeons", intvalues[0])
+            setattr(args, "holes", intvalues[1])
+            setattr(args, "degree", intvalues[2])
+
+            if intvalues[1] < intvalues[2]:
+                parser.error("degree must be at most the number of holes")
 
 
 class PHPCmdHelper(FormulaHelper):
@@ -64,7 +97,10 @@ class PHPCmdHelper(FormulaHelper):
         parser.usage = usage_string.format(parser.prog)
         parser.description = example_string.format(parser.prog,
                                                    " " * len(parser.prog))
-        parser.add_argument('phpargs', nargs='+', help=argparse.SUPPRESS)
+        parser.add_argument('pigeonholes',
+                            action=PHPArgs,
+                            nargs='+',
+                            help=argparse.SUPPRESS)
         parser.add_argument('--functional',
                             action='store_true',
                             help="pigeons sit in at most one hole")
@@ -79,26 +115,14 @@ class PHPCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        if len(args.phpargs) == 1:
-            pigeons = int(args.phpargs[0]) + 1
-            holes = pigeons - 1
-            degree = holes
-        elif len(args.phpargs) == 2:
-            pigeons = int(args.phpargs[0])
-            holes = int(args.phpargs[1])
-            degree = holes
-        elif len(args.phpargs) == 3:
-            pigeons = int(args.phpargs[0])
-            holes = int(args.phpargs[1])
-            degree = int(args.phpargs[2])
-
-        if holes == degree:
-            return PigeonholePrinciple(pigeons,
-                                       holes,
+        if args.holes == args.degree:
+            return PigeonholePrinciple(args.pigeons,
+                                       args.holes,
                                        functional=args.functional,
                                        onto=args.onto)
         else:
-            G = bipartite_random_left_regular(pigeons, holes, degree)
+            G = bipartite_random_left_regular(args.pigeons, args.holes,
+                                              args.degree)
             return GraphPigeonholePrinciple(G,
                                             functional=args.functional,
                                             onto=args.onto)
@@ -153,11 +177,11 @@ class BPHPCmdHelper(FormulaHelper):
         """
         parser.add_argument('pigeons',
                             metavar='<pigeons>',
-                            type=int,
+                            type=positive_int,
                             help="Number of pigeons")
         parser.add_argument('holes',
                             metavar='<holes>',
-                            type=int,
+                            type=positive_int,
                             help="Number of holes")
 
     @staticmethod
@@ -185,10 +209,16 @@ class CliqueColoringCmdHelper(FormulaHelper):
         """
         parser.add_argument('n',
                             metavar='<n>',
-                            type=int,
+                            type=nonnegative_int,
                             help="Number of vertices")
-        parser.add_argument('k', metavar='<k>', type=int, help="Clique size")
-        parser.add_argument('c', metavar='<c>', type=int, help="Coloring size")
+        parser.add_argument('k',
+                            metavar='<k>',
+                            type=positive_int,
+                            help="Clique size")
+        parser.add_argument('c',
+                            metavar='<c>',
+                            type=positive_int,
+                            help="Coloring size")
 
     @staticmethod
     def build_cnf(args):
@@ -215,13 +245,16 @@ class RamseyCmdHelper(FormulaHelper):
         """
         parser.add_argument('s',
                             metavar='<s>',
-                            type=int,
+                            type=positive_int,
                             help="Forbidden independent set size")
         parser.add_argument('k',
                             metavar='<k>',
-                            type=int,
+                            type=positive_int,
                             help="Forbidden independent clique")
-        parser.add_argument('N', metavar='<N>', type=int, help="Graph size")
+        parser.add_argument('N',
+                            metavar='<N>',
+                            type=nonnegative_int,
+                            help="Graph size")
 
     @staticmethod
     def build_cnf(args):
@@ -248,7 +281,7 @@ class PTNCmdHelper(FormulaHelper):
         """
         parser.add_argument('N',
                             metavar='<N>',
-                            type=int,
+                            type=nonnegative_int,
                             help="Size of the domain")
 
     @staticmethod
