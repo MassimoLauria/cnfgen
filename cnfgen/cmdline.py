@@ -4,9 +4,10 @@
 
 CNFgen has many command line entry points to its functionality, and
 some of them expose the same functionality over and over. This module
-contains useful common components. 
+contains useful common components.
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020  Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020
+Massimo Lauria <massimo.lauria@uniroma1.it>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -17,12 +18,9 @@ import argparse
 import subprocess
 import tempfile
 import signal
-import textwrap
 
 from contextlib import redirect_stdout
 from contextlib import contextmanager
-
-from .msg import error_msg
 
 
 @contextmanager
@@ -71,7 +69,7 @@ def redirect_stdin(stream):
 def setup_SIGINT():
     """Register a handler for SIGINT signal
 
-    Register a handler that manages keyboard interruptions 
+    Register a handler that manages keyboard interruptions
     via SIGINT.
     """
     def sigint_handler(insignal, frame):
