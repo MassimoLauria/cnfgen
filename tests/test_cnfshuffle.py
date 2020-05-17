@@ -5,7 +5,7 @@ import pytest
 from cnfgen import cnfshuffle
 from cnfformula import Shuffle, RandomKCNF
 
-from . import shufflereference
+from tests.shufflereference import stableshuffle
 from tests.utils import redirect_stdin, redirect_stdout
 
 
@@ -19,7 +19,7 @@ def test_backwards_compatible():
     output = io.StringIO()
     random.seed(44)
     with redirect_stdin(input), redirect_stdout(output):
-        shufflereference.stableshuffle(input, output)
+        stableshuffle(input, output)
         assert lib == output.getvalue()
 
 
@@ -54,8 +54,8 @@ def equivalence_check_helper(cnf, dimacs_permutation, clause_permutation,
     output = io.StringIO()
     random.seed(43)
     with redirect_stdin(input), redirect_stdout(output):
-        shufflereference.stableshuffle(input, output, dimacs_permutation,
-                                       clause_permutation, polarity_flip)
+        stableshuffle(input, output, dimacs_permutation, clause_permutation,
+                      polarity_flip)
     assert lib == output.getvalue()
 
 

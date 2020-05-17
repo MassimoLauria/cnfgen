@@ -1,97 +1,99 @@
-from cnfformula import RandomKCNF
-from cnfformula.transformations.shuffle import Shuffle
+from cnfformula import CNF, RandomKCNF
+from cnfformula import Shuffle
 
-from . import TestCNFBase
-
-import cnfformula
-import unittest
 import random
-import io
+from tests.utils import assertCnfEqual
 
-class TestShuffleTransformation(TestCNFBase) :
 
-    @staticmethod
-    def inverse_permutation(permutation, base=0) :
-        inverse = [0]*len(permutation)
-        for i,p in enumerate(permutation) :
-            inverse[p-base] = i+base
-        return inverse
+def test_identity():
+    cnf = RandomKCNF(4, 10, 100)
 
-    def test_identity(self) :
-        cnf = RandomKCNF(4,10,100)
+    variable_permutation = list(cnf.variables())
+    clause_permutation = list(range(100))
+    polarity_flip = [1] * 10
 
-        variable_permutation = list(cnf.variables())
-        clause_permutation = list(range(100))
-        polarity_flip = [1]*10
-        
-        shuffle = Shuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
-        self.assertCnfEqual(cnf,shuffle)
+    shuffle = Shuffle(cnf, variable_permutation, clause_permutation,
+                      polarity_flip)
+    assertCnfEqual(cnf, shuffle)
 
-    def test_variable_permutation(self) :
-        cnf = cnfformula.CNF([[(True,'x'),(True,'y'),(False,'z')]])
-        variable_permutation = ['y','z','x']
-        clause_permutation = list(range(1))
-        polarity_flip = [1]*3
-        shuffle = Shuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
-        self.assertSequenceEqual(list(shuffle.variables()),variable_permutation)
-        self.assertSequenceEqual(list(shuffle.clauses()),list(cnf.clauses()))
 
-    def test_polarity_flip(self) :
-        cnf = cnfformula.CNF([[(True,'x'),(True,'y'),(False,'z')]])
-        variable_permutation = list(cnf.variables())
-        clause_permutation = list(range(1))
-        polarity_flip = [1,-1,-1]
-        shuffle = Shuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
-        expected = cnfformula.CNF([[(True,'x'),(False,'y'),(True,'z')]])
-        self.assertCnfEqual(expected,shuffle)
+def test_variable_permutation():
+    cnf = CNF([[(True, 'x'), (True, 'y'), (False, 'z')]])
+    variable_permutation = ['y', 'z', 'x']
+    clause_permutation = list(range(1))
+    polarity_flip = [1] * 3
+    shuffle = Shuffle(cnf, variable_permutation, clause_permutation,
+                      polarity_flip)
+    assert list(shuffle.variables()) == variable_permutation
+    assert list(shuffle.clauses()) == list(cnf.clauses())
 
-    def test_variable_and_polarity_flip(self) :
-        cnf = cnfformula.CNF([[(True,'x'),(True,'y'),(False,'z')]])
-        variable_permutation = ['y','z','x']
-        clause_permutation = list(range(1))
-        polarity_flip = [1,-1,-1]
-        shuffle = Shuffle(cnf, variable_permutation, clause_permutation, polarity_flip)
-        expected = cnfformula.CNF([[(False,'y'),(True,'z'),(True,'x')]])
-        self.assertCnfEqual(expected,shuffle)
 
-    @unittest.skip("Broken test to be fixed")
-    def test_inverse(self) :
-        cnf = RandomKCNF(4,10,100)
+def test_polarity_flip():
+    cnf = CNF([[(True, 'x'), (True, 'y'), (False, 'z')]])
+    variable_permutation = list(cnf.variables())
+    clause_permutation = list(range(1))
+    polarity_flip = [1, -1, -1]
+    shuffle = Shuffle(cnf, variable_permutation, clause_permutation,
+                      polarity_flip)
+    expected = CNF([[(True, 'x'), (False, 'y'), (True, 'z')]])
+    assertCnfEqual(expected, shuffle)
 
-        # Generate random variable, clause and polarity permutations.
-        # but keep the indices for the variables, since they are strings.
-        variable_permutation = list(enumerate(cnf.variables()))
-        random.shuffle(variable_permutation)
 
-        clause_permutation = list(range(100))
-        random.shuffle(clause_permutation)
+def test_variable_and_polarity_flip():
+    cnf = CNF([[(True, 'x'), (True, 'y'), (False, 'z')]])
+    variable_permutation = ['y', 'z', 'x']
+    clause_permutation = list(range(1))
+    polarity_flip = [1, -1, -1]
+    shuffle = Shuffle(cnf, variable_permutation, clause_permutation,
+                      polarity_flip)
+    expected = CNF([[(False, 'y'), (True, 'z'), (True, 'x')]])
+    assertCnfEqual(expected, shuffle)
 
-        polarity_flip = [random.choice([-1,1]) for x in range(10)]
 
-        # variable_permutation has the permutation already applied.
-        old_variables = list(cnf.variables())
-        new_variables = [old_variables[sigma_i] for sigma_i,v in variable_permutation]
+def test_inverse():
+    cnf = RandomKCNF(4, 10, 100)
 
-        # Shuffle
-        shuffle = Shuffle(cnf, new_variables, clause_permutation, polarity_flip)
-        
-        # The inverse variable permutation is the original list, do nothing.
-        # The inverse clause permutation is the group inverse permutation.
-        i_clause_permutation = self.inverse_permutation(clause_permutation)
-        # The polarity flip applies to new variables. So if we flipped
-        # the i-th variable now we want to flip the sigma(i)-th
-        # variable.
-        i_polarity_flip = [polarity_flip[i] for i in variable_permutation]
+    # Generate random variable, clause and polarity permutations.
+    # but keep the indices for the variables, since they are strings.
+    indexed_and_shuffled_vars = list(enumerate(cnf.variables()))
+    random.shuffle(indexed_and_shuffled_vars)
 
-        # Inverse shuffle.
-        cnf2 = Shuffle(shuffle, old_variables, i_clause_permutation, i_polarity_flip)
-        self.assertCnfEqual(cnf2,cnf)
+    variables_permutation = [v for i, v in indexed_and_shuffled_vars]
 
-    def test_deterministic(self) :
-        cnf = RandomKCNF(4,10,100)
-        random.seed(42)
-        shuffle = Shuffle(cnf)
-        random.seed(42)
-        shuffle2 = Shuffle(cnf)
-        self.assertCnfEqual(shuffle2,shuffle)
+    clauses_permutation = list(range(100))
+    random.shuffle(clauses_permutation)
 
+    polarity_flips = [random.choice([-1, 1]) for x in range(10)]
+
+    # First shuffle
+    shuffle1 = Shuffle(cnf, variables_permutation, clauses_permutation,
+                       polarity_flips)
+
+    # The inverse variables permutation is the original list of vars
+    i_variables_permutations = list(cnf.variables())
+
+    # The inverse clause permutation is the group inverse permutation.
+    i_clauses_permutation = [0] * len(clauses_permutation)
+    for nidx, oidx in enumerate(clauses_permutation):
+        i_clauses_permutation[oidx] = nidx
+
+    # The polarity flips are applied before variables permutation.
+    # So if we flipped the i-th variable before, now we want to flip the
+    # sigma(i)-th variable.
+    i_polarity_flips = [
+        polarity_flips[i] for i, v in indexed_and_shuffled_vars
+    ]
+
+    # Inverse shuffle.
+    shuffle2 = Shuffle(shuffle1, i_variables_permutations,
+                       i_clauses_permutation, i_polarity_flips)
+    assertCnfEqual(shuffle2, cnf)
+
+
+def test_deterministic():
+    cnf = RandomKCNF(4, 10, 100)
+    random.seed(42)
+    shuffle = Shuffle(cnf)
+    random.seed(42)
+    shuffle2 = Shuffle(cnf)
+    assertCnfEqual(shuffle2, shuffle)
