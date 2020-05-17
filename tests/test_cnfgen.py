@@ -1,34 +1,54 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
+import pytest
 
 from cnfgen import cnfgen
-from cnfgen.cmdline import get_formula_helpers
+from cnfgen.cmdline import get_formula_helpers, CLIError
 
-from .test_commandline_helper import TestCommandline
 
-class TestCnfgen(TestCommandline):
-    def test_empty(self):
-        self.checkCrash(sys.stdin, ["cnfgen"])
+def test_no_formula():
 
-    def test_help(self):
-        with self.assertRaises(SystemExit) as cm:
-            cnfgen(["cnfgen", "-h"])
-        self.assertEqual(cm.exception.code, 0)
+    msg = "ERROR: You did not tell which formula you wanted to generate."
 
-    def test_find_formula_families(self):
-        subcommands = get_formula_helpers()
-        self.assertNotEqual(subcommands[:], [])
-        
-    def test_subformulas_help(self):
-        subcommands = get_formula_helpers()
-        for sc in subcommands:
-            with self.assertRaises(SystemExit) as cm:
-                cnfgen(["cnfgen", sc.name, "-h"])
-            self.assertEqual(cm.exception.code, 0)
+    with pytest.raises(CLIError) as e:
+        cnfgen(['cnfgen'])
 
-    def test_nonformula_empty(self):
-        self.checkCrash(sys.stdin,["cnfgen","spam"])
+    assert msg in str(e.value)
 
-    def test_nonformula_help(self):
-        self.checkCrash(sys.stdin,["cnfgen","spam", "-h"])
+
+def test_invalid_formula():
+
+    msg = "invalid choice"
+
+    with pytest.raises(CLIError) as e:
+        cnfgen(['cnfgen', 'spam'])
+
+    assert msg in str(e.value)
+
+
+def test_invalid_formula_help():
+
+    msg = "invalid choice"
+
+    with pytest.raises(CLIError) as e:
+        cnfgen(['cnfgen', 'spam', '-h'])
+
+    assert msg in str(e.value)
+
+
+def test_cnfgen_help():
+    with pytest.raises(SystemExit) as se:
+        cnfgen(["cnfgen", "-h"])
+
+    assert se.value.code == 0
+
+
+def test_subformulas_help():
+    subcommands = get_formula_helpers()
+    for sc in subcommands:
+
+        with pytest.raises(SystemExit) as se:
+            cnfgen(["cnfgen", sc.name, "-h"])
+
+        assert se.value.code == 0

@@ -51,10 +51,6 @@ def error_msg(msg, filltext=None):
     print(msg, file=sys.stderr)
 
 
-class BuildError(Exception):
-    pass
-
-
 class InternalBug(Exception):
     """Bug related to internal consistency
     """

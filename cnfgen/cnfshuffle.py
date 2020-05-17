@@ -2,7 +2,6 @@
 # -*- coding:utf-8 -*-
 """Cnf formulas shuffling."""
 
-
 import os
 import sys
 import random
@@ -14,27 +13,46 @@ from cnfformula import Shuffle
 from .cmdline import paginate_or_redirect_stdout
 from .cmdline import redirect_stdin
 from .cmdline import setup_SIGINT
+from .cmdline import CLIParser, CLIError
 
 from .msg import interactive_msg
 from .msg import error_msg
 from .msg import msg_prefix
+from .msg import InternalBug
 
 
-def command_line_utility(argv=sys.argv):
+def command_line_utility(argv=sys.argv, mode='output'):
+    """CNFgen shuffler 
+
+    This function provide the main interface to cnfshuffle.
+
+
+    Parameters
+    ----------
+    argv: list, optional
+        The list of token with the command line arguments/options.
+
+    mode: str
+        One among 'formula', 'string', 'output' (latter is the default)
+        - 'formula' return a CNF object
+        - 'string' return the string with the output of CNFgen
+        - 'output' output the formula to the user
+    """
 
     # Parse the command line arguments
     progname = os.path.basename(argv[0])
-    parser = argparse.ArgumentParser(prog=progname,
-                                     description="""
+    parser = CLIParser(prog=progname,
+                       description="""
     Reshuffle the input CNF. Returns a formula logically
     equivalent to the input with random application of
     (1) Polarity flips (2) Variables permutation (3) Clauses permutation.
     """,
-                                     epilog="""
+                       epilog="""
     For more information type '%s [--help | -h ]'
     """ % (progname))
 
-    parser.add_argument('--output', '-o',
+    parser.add_argument('--output',
+                        '-o',
                         type=argparse.FileType('w'),
                         metavar="<output>",
                         default='-',
@@ -44,7 +62,8 @@ def command_line_utility(argv=sys.argv):
                         way to send the formula to standard output.
                         (default: -)
                         """)
-    parser.add_argument('--seed', '-S',
+    parser.add_argument('--seed',
+                        '-S',
                         metavar="<seed>",
                         default=None,
                         type=str,
@@ -53,27 +72,34 @@ def command_line_utility(argv=sys.argv):
                         program. Any python hashable object will
                         be fine.  (default: current time)
                         """)
-    parser.add_argument('--input', '-i',
-                        type=argparse.FileType('r'),
-                        metavar="<input>",
-                        default='-',
-                        help="""Input file. A formula in dimacs format. Setting '<input>' to '-' is
+    parser.add_argument(
+        '--input',
+        '-i',
+        type=argparse.FileType('r'),
+        metavar="<input>",
+        default='-',
+        help=
+        """Input file. A formula in dimacs format. Setting '<input>' to '-' is
                         another way to read from standard input.
                         (default: -)
                         """)
-    parser.add_argument('--no-polarity-flips', '-p',
+    parser.add_argument('--no-polarity-flips',
+                        '-p',
                         action='store_true',
                         dest='no_polarity_flips',
                         help="No polarity flips")
-    parser.add_argument('--no-variables-permutation', '-v',
+    parser.add_argument('--no-variables-permutation',
+                        '-v',
                         action='store_true',
                         dest='no_variable_permutations',
                         help="No permutation of variables")
-    parser.add_argument('--no-clauses-permutation', '-c',
+    parser.add_argument('--no-clauses-permutation',
+                        '-c',
                         action='store_true',
                         dest='no_clause_permutations',
                         help="No permutation of clauses")
-    parser.add_argument('--quiet', '-q',
+    parser.add_argument('--quiet',
+                        '-q',
                         action='store_false',
                         default=True,
                         dest='verbose',
@@ -94,12 +120,7 @@ def command_line_utility(argv=sys.argv):
         with msg_prefix("INPUT: "):
             interactive_msg(msg, filltext=70)
 
-        try:
-            F = readCNF()
-        except ValueError as parsefail:
-            with msg_prefix('DIMACS ERROR: '):
-                error_msg(str(parsefail))
-            sys.exit(-1)
+        F = readCNF()
 
     # Default permutation
     if not args.no_variable_permutations:
@@ -115,19 +136,36 @@ def command_line_utility(argv=sys.argv):
     if not args.no_polarity_flips:
         polarity_flip = None
     else:
-        polarity_flip = [1]*len(list(F.variables()))
+        polarity_flip = [1] * len(list(F.variables()))
 
-    G = Shuffle(F,
-                variable_permutation,
-                clause_permutation,
-                polarity_flip)
+    G = Shuffle(F, variable_permutation, clause_permutation, polarity_flip)
 
-    with paginate_or_redirect_stdout(args.output):
-        G._dimacs_dump_clauses(output=sys.stdout,
-                               export_header=args.verbose)
+    if mode == 'formula':
+        return G
+    elif mode == 'string':
+        return G.dimacs(export_header=args.verbose)
+    else:
+        with paginate_or_redirect_stdout(args.output):
+            G._dimacs_dump_clauses(output=sys.stdout,
+                                   export_header=args.verbose)
 
 
 # Launcher
 if __name__ == '__main__':
     setup_SIGINT()
-    command_line_utility(sys.argv)
+
+    try:
+
+        command_line_utility(sys.argv)
+
+    except ValueError as e:
+        error_msg("DIMACS ERROR: " + str(e))
+        sys.exit(-1)
+
+    except CLIError as e:
+        error_msg(str(e))
+        sys.exit(-1)
+
+    except InternalBug as e:
+        print(str(e), file=sys.stderr)
+        sys.exit(-1)

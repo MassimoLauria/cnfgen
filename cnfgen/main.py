@@ -46,7 +46,6 @@ from .cmdline import get_transformation_helpers
 from .msg import error_msg
 from .msg import msg_prefix
 from .msg import InternalBug
-from .msg import BuildError
 
 #################################################################
 #          Command line tool follows
@@ -357,7 +356,7 @@ def command_line_utility(argv=sys.argv, mode='output'):
     CLIError:
         The command line arguments are wrong
 
-    BuildError:
+    ValueError:
         Errors occur while building the formula
 
     Return
@@ -398,21 +397,16 @@ def command_line_utility(argv=sys.argv, mode='output'):
                 )
 
         # Generate the formula and apply transformations
-        try:
+        if hasattr(args, 'seed') and args.seed:
+            random.seed(args.seed)
 
-            if hasattr(args, 'seed') and args.seed:
-                random.seed(args.seed)
+        cnf = args.generator.build_cnf(args)
 
-            cnf = args.generator.build_cnf(args)
+        for argdict in t_args:
+            cnf = argdict.transformation.transform_cnf(cnf, argdict)
 
-            for argdict in t_args:
-                cnf = argdict.transformation.transform_cnf(cnf, argdict)
-
-            if mode == 'formula':
-                return cnf
-
-        except (ValueError) as e:
-            raise BuildError(e)
+        if mode == 'formula':
+            return cnf
 
         # Output
         if args.output_format == 'latex':
@@ -448,8 +442,8 @@ if __name__ == '__main__':
 
         command_line_utility(sys.argv)
 
-    except BuildError as e:
-        error_msg(str(e))
+    except ValueError as e:
+        error_msg("ERROR: " + str(e))
         sys.exit(-1)
 
     except CLIError as e:

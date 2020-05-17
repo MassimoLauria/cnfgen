@@ -20,10 +20,12 @@ from .cmdline import paginate_or_redirect_stdout
 from .cmdline import redirect_stdin
 from .cmdline import setup_SIGINT
 from .cmdline import get_transformation_helpers
+from .cmdline import CLIParser, CLIError
 
 from .msg import interactive_msg
 from .msg import error_msg
 from .msg import msg_prefix
+from .msg import InternalBug
 
 
 def setup_command_line(parser):
@@ -32,16 +34,19 @@ def setup_command_line(parser):
     Arguments:
     - `parser`: parser to fill with options
     """
-    parser.add_argument('--input', '-i',
-                        type=argparse.FileType('r'),
-                        metavar="<input>",
-                        default='-',
-                        help="""Input file. The input formula is read as a dimacs CNF file file
+    parser.add_argument(
+        '--input',
+        '-i',
+        type=argparse.FileType('r'),
+        metavar="<input>",
+        default='-',
+        help="""Input file. The input formula is read as a dimacs CNF file file
                         instead of standard input. Setting '<input>'
                         to '-' is another way to read from standard
                         input. (default: -) """)
 
-    parser.add_argument('--output', '-o',
+    parser.add_argument('--output',
+                        '-o',
                         type=argparse.FileType('w'),
                         metavar="<output>",
                         default='-',
@@ -52,7 +57,8 @@ def setup_command_line(parser):
                         (default: -)
                         """)
 
-    parser.add_argument('--quiet', '-q',
+    parser.add_argument('--quiet',
+                        '-q',
                         action='store_false',
                         default=True,
                         dest='verbose',
@@ -61,18 +67,32 @@ def setup_command_line(parser):
     # Cmdline parser for formula transformations
     subparsers = parser.add_subparsers(title="Available transformation",
                                        metavar="<transformation>")
-    
+
     for sc in get_transformation_helpers():
-        p = subparsers.add_parser(sc.name,
-                                  help=sc.description)
+        p = subparsers.add_parser(sc.name, help=sc.description)
         sc.setup_command_line(p)
         p.set_defaults(transformation=sc)
 
 
 # Main program
-def command_line_utility(argv=sys.argv):
+def command_line_utility(argv=sys.argv, mode='output'):
+    """CNFgen transformation to a dimacs input
 
-    parser = argparse.ArgumentParser(prog=os.path.basename(argv[0]))
+    This function provide the main interface to cnftransform.
+
+    Parameters
+    ----------
+    argv: list, optional
+        The list of token with the command line arguments/options.
+
+    mode: str
+        One among 'formula', 'string', 'output' (latter is the default)
+        - 'formula' return a CNF object
+        - 'string' return the string with the output of CNFgen
+        - 'output' output the formula to the user
+    """
+
+    parser = CLIParser(prog=os.path.basename(argv[0]))
     setup_command_line(parser)
     args = parser.parse_args(argv[1:])
 
@@ -84,23 +104,38 @@ def command_line_utility(argv=sys.argv):
         with msg_prefix("INPUT: "):
             interactive_msg(msg, filltext=70)
 
-        try:
-            F = readCNF()
-        except ValueError as parsefail:
-            with msg_prefix('DIMACS ERROR: '):
-                error_msg(str(parsefail))
-            sys.exit(-1)
+        F = readCNF()
 
     if hasattr(args, "transformation"):
         G = args.transformation.transform_cnf(F, args)
     else:
         G = F
 
-    with paginate_or_redirect_stdout(args.output):
-        print(G.dimacs(args.verbose))
+    if mode == 'formula':
+        return G
+    elif mode == 'string':
+        return G.dimacs(args.verbose)
+    else:
+        with paginate_or_redirect_stdout(args.output):
+            print(G.dimacs(args.verbose))
 
 
 # Launcher
 if __name__ == '__main__':
     setup_SIGINT()
-    command_line_utility(sys.argv)
+
+    try:
+
+        command_line_utility(sys.argv)
+
+    except ValueError as e:
+        error_msg("DIMACS ERROR: " + str(e))
+        sys.exit(-1)
+
+    except CLIError as e:
+        error_msg(str(e))
+        sys.exit(-1)
+
+    except InternalBug as e:
+        print(str(e), file=sys.stderr)
+        sys.exit(-1)
