@@ -60,6 +60,16 @@ usage_string = """{} [-h] [-V] [--output <output>]
                  [-T <transformation> <args>]
                  ..."""
 
+description_string = """example:
+ {0} php 100 40         --- Pigeonhole principle 100 pigeons 40 holes (unsat)
+ {0} op  14             --- Ordering principle on 14 elements (unsat)
+ {0} randkcnf 3 10 5    --- Random 3-CNF with 10 vars and 5 clauses
+
+tutorial:
+ {0} --tutorial    show a basic tutorial".
+
+"""
+
 tutorial_string = """
                  CNFGEN TUTORIAL
 
@@ -157,8 +167,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     parser = CLIParser(
         prog=progname,
         usage=usage_string.format(progname),
-        description="tutorial:\n  {0} --tutorial    show a basic tutorial".
-        format(progname),
+        description=description_string.format(progname),
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     class PrintTutorial(argparse.Action):

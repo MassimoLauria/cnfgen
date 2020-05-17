@@ -18,7 +18,7 @@ from cnfformula.graphs import bipartite_random_left_regular
 
 from .graph_cmdline import BipartiteGraphHelper
 from .formula_helpers import FormulaHelper
-from .cmdline import positive_int, nonnegative_int, probability
+from .cmdline import positive_int, nonnegative_int
 
 import argparse
 

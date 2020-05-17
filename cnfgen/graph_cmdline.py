@@ -32,6 +32,7 @@ from cnfformula.graphs import dag_complete_binary_tree, dag_pyramid
 from cnfformula.graphs import sample_missing_edges
 
 from .msg import interactive_msg, error_msg, msg_prefix
+
 from .cmdline import redirect_stdin, CLIError, positive_int
 
 
@@ -96,7 +97,7 @@ def read_graph_from_input(args, suffix, grtype):
     return G
 
 
-### Graph readers/generators
+# Graph readers/generators
 class GraphHelper(object):
     """Command Line helper for reading graphs
     """
@@ -122,12 +123,12 @@ class DirectedAcyclicGraphHelper(GraphHelper):
             it is populated with options for input graphs
 
         suffix: string, optional
-            add a suffix to all input options. Useful if you need to input 
+            add a suffix to all input options. Useful if you need to input
             multiple graphs in the same command line (default: empty)
 
         require : bool, optional
-            enforce that at least one input specification is required. 
-            If it is not the case the standard input is the default input. 
+            enforce that at least one input specification is required.
+            If it is not the case the standard input is the default input.
             Not a good idea if we read multiple graphs in input.
         """
 
@@ -216,12 +217,12 @@ class SimpleGraphHelper(GraphHelper):
             it is populated with options for input graphs
 
         suffix: string, optional
-            add a suffix to all input options. Useful if you need to input 
+            add a suffix to all input options. Useful if you need to input
             multiple graphs in the same command line (default: empty)
 
         require : bool, optional
-            enforce that at least one input specification is required. 
-            If it is not the case the standard input is the default input. 
+            enforce that at least one input specification is required.
+            If it is not the case the standard input is the default input.
             Not a good idea if we read multiple graphs in input.
         """
 
@@ -248,7 +249,7 @@ class SimpleGraphHelper(GraphHelper):
                         type=argparse.FileType('r'),
                         metavar="<input>",
                         default='-',
-                        help="""Read the graph from <input>. 
+                        help="""Read the graph from <input>.
                         Setting '<input>' to '-' reads the graph from standard
                         input.  (default: -)
                         """)
@@ -423,12 +424,12 @@ class BipartiteGraphHelper(GraphHelper):
             it is populated with options for input graphs
 
         suffix: string, optional
-            add a suffix to all input options. Useful if you need to input 
+            add a suffix to all input options. Useful if you need to input
             multiple graphs in the same command line (default: empty)
 
         require : bool, optional
-            enforce that at least one input specification is required. 
-            If it is not the case the standard input is the default input. 
+            enforce that at least one input specification is required.
+            If it is not the case the standard input is the default input.
             Not a good idea if we read multiple graphs in input.
         """
         class IntIntFloat(argparse.Action):
@@ -594,7 +595,7 @@ class BipartiteGraphHelper(GraphHelper):
             help="Add k NEW random edges to the graph (applied in the end)")
 
         gr = parser.add_argument_group("File I/O options",
-                                       description=""" 
+                                       description="""
                                      Additional option regarding the input and output of the files
                                      containing the graph structure.
                                      """)
