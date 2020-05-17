@@ -94,6 +94,10 @@ def command_line_utility(argv=sys.argv, mode='output'):
 
     parser = CLIParser(prog=os.path.basename(argv[0]))
     setup_command_line(parser)
+
+    # Be lenient on non string arguments
+    argv = [str(x) for x in argv]
+
     args = parser.parse_args(argv[1:])
 
     msg = """Waiting for a DIMACS formula on <stdin>.

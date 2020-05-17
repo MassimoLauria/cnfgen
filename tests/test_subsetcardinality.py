@@ -84,7 +84,9 @@ def test_cli_complete():
     for rows in range(2, 5):
         for columns in range(2, 5):
             parameters = [
-                "cnfgen", "-q", "subsetcard", "--bcomplete", rows, columns
+                "cnfgen", "-q", "subsetcard", "--bcomplete",
+                str(rows),
+                str(columns)
             ]
             graph = complete_bipartite_graph(rows, columns)
             F = SubsetCardinalityFormula(graph)

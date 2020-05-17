@@ -372,6 +372,8 @@ def command_line_utility(argv=sys.argv, mode='output'):
     parser, t_parser = setup_command_line_parsers(progname, formula_helpers,
                                                   transformation_helpers)
 
+    # Be lenient on non string arguments
+    argv = [str(x) for x in argv]
     with msg_prefix('c '):
         args, t_args = parse_command_line(argv, parser, t_parser)
 

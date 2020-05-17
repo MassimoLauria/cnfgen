@@ -97,6 +97,10 @@ def command_line_utility(argv=sys.argv, mode='output'):
     # Parse the command line arguments
     parser = CLIParser(prog=os.path.basename(argv[0]))
     setup_command_line(parser)
+
+    # Be lenient on non string arguments
+    argv = [str(x) for x in argv]
+
     args = parser.parse_args(argv[1:])
 
     ask_kthlist_graph = """

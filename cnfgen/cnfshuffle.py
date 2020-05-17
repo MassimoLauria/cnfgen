@@ -105,6 +105,9 @@ def command_line_utility(argv=sys.argv, mode='output'):
                         dest='verbose',
                         help="""Output just the formula with no header.""")
 
+    # Be lenient on non string arguments
+    argv = [str(x) for x in argv]
+
     # Process the options
     args = parser.parse_args(argv[1:])
 
