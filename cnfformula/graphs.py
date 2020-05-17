@@ -381,10 +381,17 @@ def has_bipartition(G):
 
 
 def bipartite_sets(G):
-    Left = sorted(
-        [v for v, d in G.nodes(data=True) if d['bipartite'] in [0, '0']])
-    Right = sorted(
-        [v for v, d in G.nodes(data=True) if d['bipartite'] in [1, '1']])
+    """Return the bipartition of the vertices
+
+    Raises 'ValueError' if bipartition labels are missing"""
+    try:
+        Left = sorted(
+            [v for v, d in G.nodes(data=True) if d['bipartite'] in [0, '0']])
+        Right = sorted(
+            [v for v, d in G.nodes(data=True) if d['bipartite'] in [1, '1']])
+    except KeyError:
+        raise ValueError("The encoded bipartition is missing")
+
     return Left, Right
 
 
