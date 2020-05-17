@@ -114,10 +114,10 @@ def command_line_utility(argv=sys.argv, mode='output'):
     if mode == 'formula':
         return G
     elif mode == 'string':
-        return G.dimacs(args.verbose)
+        return G.dimacs(export_header=args.verbose)
     else:
         with paginate_or_redirect_stdout(args.output):
-            print(G.dimacs(args.verbose))
+            print(G.dimacs(export_header=args.verbose))
 
 
 # Launcher

@@ -9,8 +9,7 @@ from cnfformula import PigeonholePrinciple
 from cnfformula import GraphPigeonholePrinciple
 from cnfformula import BinaryPigeonholePrinciple
 
-from cnfgen import cnfgen
-from cnfgen.cmdline import CLIError
+from cnfgen import cnfgen, CLIError
 
 from tests.utils import assertUNSAT, assertCnfEqual, assertCnfEqualsDimacs, assertCnfEqualsIgnoreVariables
 
@@ -149,7 +148,7 @@ def test_gphp_not_bipartite():
     graph = nx.complete_graph(3)
     for functional in (True, False):
         for onto in (True, False):
-            with pytest.raises(KeyError):
+            with pytest.raises(ValueError):
                 GraphPigeonholePrinciple(graph, functional, onto)
 
 
@@ -172,9 +171,27 @@ without the comments.
             assert lib == cli
 
 
-def test_php_cli_params():
+def test_php_cli_wrong():
+    """PHP command line must not accept wrong args"""
     with pytest.raises(CLIError):
         cnfgen(["cnfgen", "php", "aaad", "sdda"])
+
+
+def test_php_cli_negative():
+    """PHP command line must not accept negative args"""
+    with pytest.raises(ValueError):
+        cnfgen(["cnfgen", "php", "-3", "1"])
+
+
+def test_php_lib_params():
+    """ValueError for invalid number of pigeons/holes
+
+"""
+    with pytest.raises(ValueError):
+        PigeonholePrinciple(-3, 3)
+
+    with pytest.raises(ValueError):
+        PigeonholePrinciple(3, -3)
 
 
 # Binary PHP

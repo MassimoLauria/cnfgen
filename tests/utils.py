@@ -4,10 +4,13 @@ import pytest
 import textwrap
 
 from cnfformula import some_solver_installed
+from cnfgen.cmdline import redirect_stdin
+from contextlib import redirect_stdout
 
 __all__ = [
     'assertCnfEqual', "assertCnfEqualsDimacs",
-    "assertCnfEqualsIgnoreVariables", "assertSAT", "assertUNSAT"
+    "assertCnfEqualsIgnoreVariables", "assertSAT", "assertUNSAT",
+    'redirect_stdin', "redirect_stdout"
 ]
 
 

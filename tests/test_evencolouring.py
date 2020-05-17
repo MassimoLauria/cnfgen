@@ -1,40 +1,45 @@
 import networkx as nx
-import sys
-
 from cnfformula import CNF
 from cnfformula import EvenColoringFormula, TseitinFormula
+from cnfgen import cnfgen, CLIError
 
-from . import TestCNFBase
-from .test_commandline_helper import TestCommandline
+import pytest
+from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
 
-class TestEvenColouring(TestCNFBase):
-    def test_empty(self):
-        G = CNF()
-        graph = nx.Graph()
+
+def test_empty():
+    G = CNF()
+    graph = nx.Graph()
+    F = EvenColoringFormula(graph)
+    assertCnfEqual(F, G)
+
+
+def test_odd_degree():
+    graph = nx.path_graph(2)
+    with pytest.raises(ValueError):
+        EvenColoringFormula(graph)
+
+
+def test_cycle():
+    for n in range(3, 8):
+        graph = nx.cycle_graph(n)
         F = EvenColoringFormula(graph)
-        self.assertCnfEqual(F,G)
+        G = TseitinFormula(graph, [1] * n)
+        assertCnfEqualsIgnoreVariables(F, G)
 
-    def test_odd_degree(self):
-        graph = nx.path_graph(2)
-        with self.assertRaises(ValueError):
-            EvenColoringFormula(graph)
 
-    def test_cycle(self):
-        for n in range(3,8):
-            graph = nx.cycle_graph(n)
-            F = EvenColoringFormula(graph)
-            G = TseitinFormula(graph,[1]*n)
-            self.assertCnfEquivalentModuloVariables(F,G)
+def test_even_degree_complete():
+    for n in range(3, 8, 2):
+        parameters = ["cnfgen", "-q", "ec", "--complete", str(n)]
+        graph = nx.complete_graph(n)
+        F = EvenColoringFormula(graph)
+        lib = F.dimacs(export_header=False)
+        cli = cnfgen(parameters, mode='string')
+        assert cli == lib
 
-class TestEvenColouringCommandline(TestCommandline):
-    def test_complete(self):
-        for n in range(3,8,2):
-            parameters = ["cnfgen","-q","ec", "--complete", n]
-            graph = nx.complete_graph(n)
-            F = EvenColoringFormula(graph)
-            self.checkFormula(sys.stdin,F, parameters)
 
-    def test_odd_degree(self):
-        for n in range(4,7,2):
-            parameters = ["cnfgen","-q","ec", "--complete", n]
-            self.checkCrash(sys.stdin,parameters)
+def test_odd_degree_complete():
+    for n in range(4, 7, 2):
+        parameters = ["cnfgen", "-q", "ec", "--complete", str(n)]
+        with pytest.raises(ValueError):
+            cnfgen(parameters)
