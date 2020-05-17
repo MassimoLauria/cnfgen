@@ -1,5 +1,5 @@
-
 import random
+
 
 def stableshuffle(inputfile,
                   outputfile,
@@ -7,43 +7,44 @@ def stableshuffle(inputfile,
                   clause_permutation=None,
                   polarity_flip=None):
 
-    subst= None
+    subst = None
     line_counter = 0
-    header_buffer=["c Reshuffling of:\nc\n"]
+    header_buffer = ["c Reshuffling of:\nc\n"]
     clause_counter = 0
 
     for l in inputfile.readlines():
 
-        line_counter+=1
+        line_counter += 1
 
         # add the comment to the header (discard if it is in the middle)
-        if l[0]=='c':
+        if l[0] == 'c':
             if not subst: header_buffer.append(l)
             continue
-    
+
         # parse spec line
-        if l[0]=='p':
+        if l[0] == 'p':
             if subst:
-                raise ValueError("Syntax error: "+
-                                 "line {} contains a second spec line.".format(line_counter))
-            _,_,nstr,mstr = l.split()
+                raise ValueError("Syntax error: " +
+                                 "line {} contains a second spec line.".format(
+                                     line_counter))
+            _, _, nstr, mstr = l.split()
             n = int(nstr)
             subst = substitution(n, variable_permutation, polarity_flip)
             m = int(mstr)
 
             # Clause permutation
-            if clause_permutation==None:
-                clause_permutation=list(range(m))
+            if clause_permutation == None:
+                clause_permutation = list(range(m))
                 random.shuffle(clause_permutation)
-            
-            clause_buffer=[None]*m
+
+            clause_buffer = [None] * m
 
             # Print header
             for h in header_buffer:
-                print(h,end='',file=outputfile)
-            
-            print(l,end='',file=outputfile)
-            
+                print(h, end='', file=outputfile)
+
+            print(l, end='', file=outputfile)
+
             continue
 
         # parse literals
@@ -60,31 +61,30 @@ def stableshuffle(inputfile,
     # Alternative algorithm that uses less memory:
     #    1. record positions of lines.
     #    2. for each (ordered) line in output, seek input, parse, substitute, write.
-    for clause in clause_buffer :
-        print(clause,file=outputfile)
+    for clause in clause_buffer:
+        print(clause, file=outputfile)
 
 
-def substitution(n, variable_permutation = None,
-                 polarity_flip = None) :
-    if variable_permutation is None :
-        variable_permutation = list(range(1,n+1))
+def substitution(n, variable_permutation=None, polarity_flip=None):
+    if variable_permutation is None:
+        variable_permutation = list(range(1, n + 1))
         random.shuffle(variable_permutation)
     else:
-        assert len(variable_permutation)==n
+        assert len(variable_permutation) == n
 
     vars = [0] + variable_permutation
 
-    if polarity_flip is None :
-        polarity_flip = [random.choice([-1,1]) for x in range(n)]
+    if polarity_flip is None:
+        polarity_flip = [random.choice([-1, 1]) for x in range(n)]
     else:
-        assert len(polarity_flip)==n
+        assert len(polarity_flip) == n
 
     flip = [0] + polarity_flip
 
-    subst=[None]*(2*n+1)
-    for i,p in enumerate(vars):
-        subst[p]=i*flip[p]
-    for i in range(1,n+1):
-        subst[-i]= -subst[i]
+    subst = [None] * (2 * n + 1)
+    for i, p in enumerate(vars):
+        subst[p] = i * flip[p]
+    for i in range(1, n + 1):
+        subst[-i] = -subst[i]
 
     return subst

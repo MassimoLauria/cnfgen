@@ -1,79 +1,90 @@
-
 import random
 import io
+import pytest
 
-from cnfgen     import cnfshuffle
-from cnfformula import Shuffle
+from cnfgen import cnfshuffle
+from cnfformula import Shuffle, RandomKCNF
 
-from . import TestCNFBase
 from . import shufflereference
-from .test_cnfformula import TestCNF
+from tests.utils import redirect_stdin, redirect_stdout
 
-class TestDimacsReshuffler(TestCNF) :
-    def test_backwards_compatible(self) :
-        cnf = self.random_cnf(4,10,100)
-        random.seed(44)
-        shuffle = Shuffle(cnf)
-        reference_output = shuffle.dimacs()+"\n"
-        input = io.StringIO(cnf.dimacs())
-        dimacs_shuffle = io.StringIO()
-        random.seed(44)
-        shufflereference.stableshuffle(input, dimacs_shuffle)
-        self.assertMultiLineEqual(dimacs_shuffle.getvalue(), reference_output)
 
-    def test_cmdline_reshuffler(self) :
-        cnf = self.random_cnf(4,10,3)
-        random.seed('45')
-        shuffle = Shuffle(cnf)
-        reference_output = shuffle.dimacs()
-        input = io.StringIO(cnf.dimacs())
-        dimacs_shuffle = io.StringIO()
-        argv=['cnfshuffle', '--input', '-', '--output', '-', '--seed', '45']
-        try:
-            import sys
-            sys.stdin = input
-            sys.stdout = dimacs_shuffle
-            cnfshuffle(argv)
-        except Exception as e:
-            self.fail(e)
-        finally:
-            sys.stdin = sys.__stdin__
-            sys.stdout = sys.__stdout__
-        self.assertMultiLineEqual(dimacs_shuffle.getvalue(), reference_output)      
+def test_backwards_compatible():
+    cnf = RandomKCNF(4, 10, 100)
+    random.seed(44)
 
-    def equivalence_check_helper(self, cnf, variable_permutation, clause_permutation, polarity_flip) :
-        variables = list(cnf.variables())
-        massimos_fancy_input = [variables[p] for p in variable_permutation]
-        random.seed(43)
-        shuffle = Shuffle(cnf, massimos_fancy_input, clause_permutation, polarity_flip)
-        reference_output = shuffle.dimacs()+"\n"
-        input = io.StringIO(cnf.dimacs())
-        dimacs_shuffle = io.StringIO()
-        random.seed(43)
-        shufflereference.stableshuffle(input, dimacs_shuffle, massimos_fancy_input, clause_permutation, polarity_flip)
-        self.assertMultiLineEqual(dimacs_shuffle.getvalue(), reference_output)
+    lib = Shuffle(cnf).dimacs() + "\n"
 
-    def test_identity_equivalence(self) :
-        cnf = self.random_cnf(2,3,2)
-        variable_permutation = list(range(3))
-        clause_permutation = list(range(2))
-        polarity_flip = [1]*3
-        self.equivalence_check_helper(cnf, variable_permutation, clause_permutation, polarity_flip)
+    input = io.StringIO(cnf.dimacs())
+    output = io.StringIO()
+    random.seed(44)
+    with redirect_stdin(input), redirect_stdout(output):
+        shufflereference.stableshuffle(input, output)
+        assert lib == output.getvalue()
 
-    def test_random_equivalence_small(self) :
-        cnf = self.random_cnf(4,10,10)
-        variable_permutation = list(range(10))
-        random.shuffle(variable_permutation)
-        clause_permutation = list(range(10))
-        random.shuffle(clause_permutation)
-        polarity_flip = [random.choice([-1,1]) for x in range(10)]
-        self.equivalence_check_helper(cnf, variable_permutation, clause_permutation, polarity_flip)
 
-    def test_random_equivalence(self) :
-        cnf = self.random_cnf(4,10,100)
-        variable_permutation = list(range(10))
-        random.shuffle(variable_permutation)
-        clause_permutation = list(range(100))
-        random.shuffle(clause_permutation)
-        polarity_flip = [random.choice([-1,1]) for x in range(10)]
-        self.equivalence_check_helper(cnf, variable_permutation, clause_permutation, polarity_flip)
+def test_cmdline_reshuffler():
+    cnf = RandomKCNF(4, 10, 3)
+    random.seed('45')
+    shuffle = Shuffle(cnf)
+    lib = shuffle.dimacs()
+
+    input = io.StringIO(cnf.dimacs())
+    parameters = ['cnfshuffle', '--input', '-', '--seed', '45']
+    with redirect_stdin(input):
+        cli = cnfshuffle(parameters, mode='string')
+    assert lib == cli
+
+
+def equivalence_check_helper(cnf, dimacs_permutation, clause_permutation,
+                             polarity_flip):
+    """Test if library and reference implementations give the same shuffle.
+
+    dimacs_permutation must be a permutation of [1..n] 
+    """
+    variables = list(cnf.variables())
+    massimos_fancy_input = [variables[p - 1] for p in dimacs_permutation]
+
+    random.seed(43)
+    shuffle = Shuffle(cnf, massimos_fancy_input, clause_permutation,
+                      polarity_flip)
+    lib = shuffle.dimacs() + "\n"
+
+    input = io.StringIO(cnf.dimacs())
+    output = io.StringIO()
+    random.seed(43)
+    with redirect_stdin(input), redirect_stdout(output):
+        shufflereference.stableshuffle(input, output, dimacs_permutation,
+                                       clause_permutation, polarity_flip)
+    assert lib == output.getvalue()
+
+
+def test_identity_equivalence():
+    cnf = RandomKCNF(2, 3, 2)
+    dimacs_permutation = [1, 2, 3]
+    clause_permutation = [0, 1]
+    polarity_flip = [1] * 3
+    equivalence_check_helper(cnf, dimacs_permutation, clause_permutation,
+                             polarity_flip)
+
+
+def test_random_equivalence_small():
+    cnf = RandomKCNF(4, 10, 10)
+    dimacs_permutation = list(range(1, 11))
+    random.shuffle(dimacs_permutation)
+    clause_permutation = list(range(10))
+    random.shuffle(clause_permutation)
+    polarity_flip = [random.choice([-1, 1]) for x in range(10)]
+    equivalence_check_helper(cnf, dimacs_permutation, clause_permutation,
+                             polarity_flip)
+
+
+def test_random_equivalence():
+    cnf = RandomKCNF(4, 10, 100)
+    dimacs_permutation = list(range(1, 11))
+    random.shuffle(dimacs_permutation)
+    clause_permutation = list(range(100))
+    random.shuffle(clause_permutation)
+    polarity_flip = [random.choice([-1, 1]) for x in range(10)]
+    equivalence_check_helper(cnf, dimacs_permutation, clause_permutation,
+                             polarity_flip)

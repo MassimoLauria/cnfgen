@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 
-import unittest
-
-import cnfformula
-from cnfformula.graphs import readGraph,writeGraph,supported_formats
-from cnfformula.graphs import bipartite_sets,has_dot_library
-
 from io import StringIO as sio
 from io import BytesIO
 import networkx as nx
+import pytest
 
-from . import example_filename
+import cnfformula
+from cnfformula.graphs import readGraph, writeGraph, supported_formats
+from cnfformula.graphs import bipartite_sets, has_dot_library
+
+from tests.utils import example_filename
 
 dot_path2 = 'graph G { 0 -- 1 -- 2}'
 gml_path2 = """
@@ -37,9 +36,9 @@ gml_path2 = """
            ]
          ]"""
 
-dimacs_path2 ="p edge 3 2\ne 1 2\ne 2 3\n"
+dimacs_path2 = "p edge 3 2\ne 1 2\ne 2 3\n"
 
-kthlist_non_bipartite="""
+kthlist_non_bipartite = """
 5
 1: 2 3 0
 5: 3 4 0
@@ -47,13 +46,13 @@ kthlist_non_bipartite="""
 2: 3 0
 """
 
-kthlist_non_dag="""
+kthlist_non_dag = """
 3
 1: 2 0
 2: 3 0
 3: 1 0
 """
-kthlist_bipartite="""
+kthlist_bipartite = """
 5
 1: 2 0
 2: 1 0
@@ -61,107 +60,152 @@ kthlist_bipartite="""
 4: 1 0
 """
 
-class TestGraphIO(unittest.TestCase) :
 
-    def test_low_level_dot_read_path2(self) :
+def test_low_level_dot_read_path2():
 
-        if not has_dot_library():
-            self.skipTest("DOT library not installed. Can't test DOT I/O")
+    if not has_dot_library():
+        pytest.skip("DOT library not installed. Can't test DOT I/O")
 
-        G = nx.Graph(nx.nx_pydot.read_dot(sio(dot_path2)))
-
-
-    def test_low_level_gml_read_path2(self) :
-
-        G = nx.read_gml(BytesIO(gml_path2.encode("ascii")))
-
-        self.assertEqual(G.order(), 3)
-        self.assertEqual(len(G.edges()), 2)
-        self.assertTrue(G.has_edge(0, 1))
-        self.assertTrue(G.has_edge(1, 2))
-        self.assertFalse(G.has_edge(0, 2))
-
-    def test_low_level_dimacs_read_path2(self) :
-
-        G = cnfformula.graphs._read_graph_dimacs_format(sio(dimacs_path2))
-
-        self.assertEqual(G.order(), 3)
-        self.assertEqual(len(G.edges()), 2)
-        self.assertTrue(G.has_edge(1, 2))
-        self.assertTrue(G.has_edge(2, 3))
-        self.assertFalse(G.has_edge(1, 3))
+    nx.Graph(nx.nx_pydot.read_dot(sio(dot_path2)))
 
 
-    def test_readGraph_dot_path2(self) :
+def test_low_level_gml_read_path2():
 
-        if 'dot' not in supported_formats()['simple']:
-            self.skipTest("No support for Dot file I/O.")
-                        
-        self.assertRaises(ValueError, readGraph, sio(dot_path2), graph_type='simple')
-        G = readGraph(sio(dot_path2), graph_type='simple', file_format = 'dot')
-        self.assertEqual(G.order(), 3)
-        self.assertEqual(len(G.edges()), 2)
+    G = nx.read_gml(BytesIO(gml_path2.encode("ascii")))
 
-    def test_readGraph_gml_path2(self) :
-
-        self.assertRaises(ValueError, readGraph, sio(gml_path2), graph_type='simple')
-        G = readGraph(sio(gml_path2), graph_type='simple', file_format = 'gml')
-        self.assertEqual(G.order(), 3)
-        self.assertEqual(len(G.edges()), 2)
+    assert G.order() == 3
+    assert len(G.edges()) == 2
+    assert G.has_edge(0, 1)
+    assert G.has_edge(1, 2)
+    assert not G.has_edge(0, 2)
 
 
-    def test_readGraph_dimacs_path2(self) :
+def test_low_level_dimacs_read_path2():
 
-        self.assertRaises(ValueError, readGraph, sio(dimacs_path2), graph_type='simple')
-        G = readGraph(sio(dimacs_path2), graph_type='simple', file_format = 'dimacs')
-        self.assertEqual(G.order(), 3)
-        self.assertEqual(len(G.edges()), 2)
+    G = cnfformula.graphs._read_graph_dimacs_format(sio(dimacs_path2))
 
-    def test_readGraph_kthlist_non_dag(self) :
-
-        self.assertRaises(ValueError, readGraph, sio(kthlist_non_dag), graph_type='digraph')
-        self.assertRaises(ValueError, readGraph, sio(kthlist_non_dag), graph_type='dag',file_format = 'kthlist')
-        G = readGraph(sio(kthlist_non_dag), graph_type='digraph', file_format = 'kthlist')
-        self.assertEqual(G.order(), 3)
-        self.assertEqual(len(G.edges()), 3)
-
-    def test_readGraph_kthlist_non_bipartite(self) :
-
-        self.assertRaises(ValueError, readGraph, sio(kthlist_non_bipartite), graph_type='bipartite')
-        self.assertRaises(ValueError, readGraph, sio(kthlist_non_bipartite), graph_type='bipartite',file_format = 'kthlist')
-        G = readGraph(sio(kthlist_non_bipartite), graph_type='simple', file_format = 'kthlist')
-        self.assertEqual(G.order(), 5)
-        self.assertEqual(len(G.edges()), 5)
-
-    def test_readGraph_kthlist_bipartite(self) :
-
-        G = readGraph(sio(kthlist_bipartite), graph_type='bipartite', file_format = 'kthlist')
-        self.assertEqual(G.order(), 5)
-        L,R=bipartite_sets(G)
-        self.assertEqual(len(L),2)
-        self.assertEqual(len(R),3)
-
-    def test_readGraph_dot_path2_file(self) :
-
-        if 'dot' not in supported_formats()['simple']:
-            self.skipTest("No support for Dot file I/O.")
-        
-        with open(example_filename('path2.dot'), 'r') as ifile:
-            # Parsing should fail here
-            self.assertRaises(ValueError, readGraph, ifile, graph_type='simple', file_format='gml')
-
-        with open(example_filename('path2.dot'), 'r') as ifile:
-            # Parser should guess that it is a dot file
-            G = readGraph(ifile, graph_type='simple')
-            self.assertEqual(G.order(), 3)
-            self.assertEqual(len(G.edges()), 2)
+    assert G.order() == 3
+    assert len(G.edges()) == 2
+    assert G.has_edge(1, 2)
+    assert G.has_edge(2, 3)
+    assert not G.has_edge(1, 3)
 
 
-    def test_undoable_io(self) :
+def test_readGraph_dot_path2():
 
-        # assumes that 'does_not_exist.gml' does not exist in the working directory
-        self.assertRaises(IOError, readGraph, "does_not_exist.gml", graph_type='simple')
+    if 'dot' not in supported_formats()['simple']:
+        pytest.skip("No support for Dot file I/O.")
 
-        # assumes that '/does_not_exist.gml' is not writable
-        self.assertRaises(IOError, writeGraph, nx.Graph(),"/does_not_exist.gml", graph_type='simple')
+    with pytest.raises(ValueError):
+        readGraph(sio(dot_path2), graph_type='simple')
 
+    G = readGraph(sio(dot_path2), graph_type='simple', file_format='dot')
+    assert G.order() == 3
+    assert len(G.edges()) == 2
+
+
+def test_readGraph_gml_path2():
+
+    with pytest.raises(ValueError):
+        readGraph(sio(gml_path2), graph_type='simple')
+
+    G = readGraph(sio(gml_path2), graph_type='simple', file_format='gml')
+    assert G.order() == 3
+    assert len(G.edges()) == 2
+
+
+def test_readGraph_dimacs_path2():
+
+    with pytest.raises(ValueError):
+        readGraph(sio(dimacs_path2), graph_type='simple')
+
+    G = readGraph(sio(dimacs_path2), graph_type='simple', file_format='dimacs')
+    assert G.order() == 3
+    assert len(G.edges()) == 2
+
+
+def test_readGraph_kthlist_non_dag():
+
+    with pytest.raises(ValueError):
+        readGraph(sio(kthlist_non_dag), graph_type='digraph')
+
+    with pytest.raises(ValueError):
+        readGraph(sio(kthlist_non_dag),
+                  graph_type='dag',
+                  file_format='kthlist')
+
+    G = readGraph(sio(kthlist_non_dag),
+                  graph_type='digraph',
+                  file_format='kthlist')
+
+    assert G.order() == 3
+    assert len(G.edges()) == 3
+
+
+def test_readGraph_kthlist_non_bipartite():
+
+    with pytest.raises(ValueError):
+        readGraph(sio(kthlist_non_bipartite), graph_type='bipartite')
+
+    with pytest.raises(ValueError):
+        readGraph(sio(kthlist_non_bipartite),
+                  graph_type='bipartite',
+                  file_format='kthlist')
+
+    G = readGraph(sio(kthlist_non_bipartite),
+                  graph_type='simple',
+                  file_format='kthlist')
+
+    assert G.order() == 5
+    assert len(G.edges()) == 5
+
+    with pytest.raises(ValueError):
+        bipartite_sets(G)
+
+
+def test_readGraph_kthlist_bipartite():
+
+    G = readGraph(sio(kthlist_bipartite),
+                  graph_type='bipartite',
+                  file_format='kthlist')
+
+    assert G.order() == 5
+
+    L, R = bipartite_sets(G)
+    assert len(L) == 2
+    assert len(R) == 3
+
+
+def test_readGraph_dot_file_as_gml():
+
+    if 'dot' not in supported_formats()['simple']:
+        pytest.skip("No support for Dot file I/O.")
+
+    with open(example_filename('path2.dot'), 'r') as ifile:
+        # Parsing should fail here
+        with pytest.raises(ValueError):
+            readGraph(ifile, graph_type='simple', file_format='gml')
+
+
+def test_readGraph_dot_file_remember_name():
+    """Even if we are reading the file from a IO stream, we still remember
+the original file name so we can guess the format."""
+    if 'dot' not in supported_formats()['simple']:
+        pytest.skip("No support for Dot file I/O.")
+
+    with open(example_filename('path2.dot'), 'r') as ifile:
+        # Parser should guess that it is a dot file
+        G = readGraph(ifile, graph_type='simple')
+        assert G.order() == 3
+        assert len(G.edges()) == 2
+
+
+def test_undoable_io():
+
+    # assumes that 'does_not_exist.gml' does not exist in the working directory
+    with pytest.raises(IOError):
+        readGraph("does_not_exist.gml", graph_type='simple')
+
+    # assumes that '/does_not_exist.gml' is not writable
+    with pytest.raises(IOError):
+        writeGraph(nx.Graph(), "/does_not_exist.gml", graph_type='simple')

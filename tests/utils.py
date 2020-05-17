@@ -10,7 +10,7 @@ from contextlib import redirect_stdout
 __all__ = [
     'assertCnfEqual', "assertCnfEqualsDimacs",
     "assertCnfEqualsIgnoreVariables", "assertSAT", "assertUNSAT",
-    'redirect_stdin', "redirect_stdout"
+    'redirect_stdin', "redirect_stdout", 'example_filename'
 ]
 
 

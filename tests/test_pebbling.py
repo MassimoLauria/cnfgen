@@ -76,8 +76,8 @@ def test_tree():
         G.name = 'Complete binary tree of height {}'.format(sz)
 
         F = PebblingFormula(G)
-        lib = F.dimacs(export_header=True)
-        cli = cnfgen(["cnfgen", "-q", "peb", "--tree", str(sz)], mode='string')
+        lib = F.dimacs(export_header=False)
+        cli = cnfgen(["cnfgen", "-q", "peb", "--tree", sz], mode='string')
         assert lib == cli
 
 
@@ -86,6 +86,6 @@ def test_pyramid():
     G.add_edges_from([(1, 4), (2, 4), (2, 5), (3, 5), (4, 6), (5, 6)])
     G.name = 'Pyramid of height 2'
     F = PebblingFormula(G)
-    lib = F.dimacs(export_header=True)
+    lib = F.dimacs(export_header=False)
     cli = cnfgen(["cnfgen", "-q", "peb", "--pyramid", 2], mode='string')
     assert lib == cli

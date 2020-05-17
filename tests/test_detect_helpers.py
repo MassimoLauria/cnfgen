@@ -12,9 +12,9 @@ def test_find_formula_helpers():
 
 def test_find_formula_examples():
     """All formula families are detected."""
-    subcommands = get_formula_helpers()
-    assert 'php' in subcommands
-    assert 'tseitin' in subcommands
+    names = [fh.name for fh in get_formula_helpers()]
+    assert 'php' in names
+    assert 'tseitin' in names
 
 
 def test_find_transformation_helpers():
@@ -25,6 +25,6 @@ def test_find_transformation_helpers():
 
 def test_find_transformation_examples():
     """All formula transformations are detected."""
-    transformations = get_transformation_helpers()
-    assert 'xor' in transformations
-    assert 'maj' in transformations
+    names = [fh.name for fh in get_transformation_helpers()]
+    assert 'xor' in names
+    assert 'maj' in names
