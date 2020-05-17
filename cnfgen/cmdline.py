@@ -6,12 +6,10 @@ CNFgen has many command line entry points to its functionality, and
 some of them expose the same functionality over and over. This module
 contains useful common components. 
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019  Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020  Massimo Lauria <massimo.lauria@uniroma1.it>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
-
-
 
 import os
 import sys
@@ -23,6 +21,8 @@ import textwrap
 
 from contextlib import redirect_stdout
 from contextlib import contextmanager
+
+from .msg import error_msg
 
 
 @contextmanager
@@ -56,6 +56,7 @@ def paginate_or_redirect_stdout(outputstream):
             p = subprocess.Popen([pager, path], stdin=subprocess.PIPE)
             p.communicate()
 
+
 @contextmanager
 def redirect_stdin(stream):
     """Redirect stdin during a test
@@ -67,51 +68,6 @@ def redirect_stdin(stream):
     sys.stdin = old_stdin
 
 
-# Global variable: prefix for interactive messages to screen.
-_prefix = ''
-
-
-@contextmanager
-def msg_prefix(new_prefix=''):
-    """Set prefix for all interactive messages"""
-    global _prefix
-    old_prefix = _prefix
-    _prefix = old_prefix + new_prefix
-    yield
-    _prefix = old_prefix
-
-
-def interactive_msg(msg, filltext=None):
-    """Writes a message to the interactive user (if present).
-
-    When the input comes from an interactive user on the terminal, it
-    is useful to give them feedback regarding the expected output.
-    This message is sent to stderr in order to help interactive usage,
-    but it is not sent out if input comes from a non interactive
-    terminal.
-    """
-    global _prefix
-    msg = textwrap.dedent(msg)
-    if filltext is not None and filltext > 0:
-        msg = textwrap.fill(msg, width=filltext-len(_prefix))
-    msg = textwrap.indent(msg, _prefix, lambda line: True)
-
-    if sys.stdin.isatty():
-        print(msg, file=sys.stderr)
-
-
-def error_msg(msg, filltext=None):
-    """Writes an error message.
-
-    """
-    global _prefix
-    msg = textwrap.dedent(msg)
-    if filltext is not None and filltext > 0:
-        msg = textwrap.fill(msg, width=filltext-len(_prefix))
-    msg = textwrap.indent(msg, _prefix, lambda line: True)
-    print(msg, file=sys.stderr)
-
-
 def setup_SIGINT():
     """Register a handler for SIGINT signal
 
@@ -119,7 +75,7 @@ def setup_SIGINT():
     via SIGINT.
     """
     def sigint_handler(insignal, frame):
-        
+
         progname = os.path.basename(sys.argv[0])
         signame = signal.Signals(insignal).name
         print('{} received: program \'{}\' stops.'.format(signame, progname),
@@ -139,7 +95,7 @@ def find_in_package(package, test, sortkey=None):
         sortkey = str
 
     for loader, module_name, _ in pkgutil.walk_packages(package.__path__):
-        module_name = package.__name__+"."+module_name
+        module_name = package.__name__ + "." + module_name
         if module_name in sys.modules:
             module = sys.modules[module_name]
         else:
@@ -162,9 +118,7 @@ def get_transformation_helpers():
             issubclass(x, TransformationHelper) and \
             x != TransformationHelper
 
-    return find_in_package(cnfgen,
-                           test,
-                           sortkey=lambda x: x.name)
+    return find_in_package(cnfgen, test, sortkey=lambda x: x.name)
 
 
 def get_formula_helpers():
@@ -177,6 +131,61 @@ def get_formula_helpers():
             issubclass(x, FormulaHelper) and \
             x != FormulaHelper
 
-    return find_in_package(cnfgen,
-                           test,
-                           sortkey=lambda x: x.name)
+    return find_in_package(cnfgen, test, sortkey=lambda x: x.name)
+
+
+class CLIError(Exception):
+    """Error related to the command line arguments
+
+This error occurs when the command line contains some errors. """
+    pass
+
+
+class CLIParser(argparse.ArgumentParser):
+    """Argument Parser for CNFGen
+
+Exactly as argparse.ArgumentParser, but the error function raises an
+exception, instead of calling exit.
+"""
+    def __init(self,
+               prog=None,
+               usage=None,
+               description=None,
+               epilog=None,
+               parents=[],
+               prefix_chars='-',
+               fromfile_prefix_chars=None,
+               argument_default=None,
+               formatter_class=argparse.RawDescriptionHelpFormatter,
+               conflict_handler='error',
+               add_help=True,
+               allow_abbrev=True):
+        super(CLIParser,
+              self).__init__(prog=prog,
+                             usage=usage,
+                             description=description,
+                             epilog=epilog,
+                             parents=parents,
+                             formatter_class=formatter_class,
+                             prefix_chars=prefix_chars,
+                             fromfile_prefix_chars=fromfile_prefix_chars,
+                             argument_default=argument_default,
+                             conflict_handler=conflict_handler,
+                             add_help=add_help,
+                             allow_abbrev=allow_abbrev)
+
+    def error(self, message):
+        errstr = ["ERROR: " + message]
+
+        if self.usage is not None:
+            errstr.append(self.usage)
+            errstr.append("")
+
+        if self.description is not None:
+            errstr.append(self.description)
+            errstr.append("")
+
+        errstr.append("See '{0} -h' or '{0} --help' for more info.".format(
+            self.prog))
+
+        raise CLIError("\n".join(errstr))

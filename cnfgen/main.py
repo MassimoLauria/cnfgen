@@ -31,19 +31,22 @@ p cnf 5 3
 import os
 import sys
 import random
-import argparse
 import io
+import argparse
 
 from cnfformula.prjdata import __version__
 
 from .cmdline import paginate_or_redirect_stdout
 from .cmdline import setup_SIGINT
+from .cmdline import CLIParser, CLIError
 
 from .cmdline import get_formula_helpers
 from .cmdline import get_transformation_helpers
 
 from .msg import error_msg
 from .msg import msg_prefix
+from .msg import InternalBug
+from .msg import BuildError
 
 #################################################################
 #          Command line tool follows
@@ -139,8 +142,8 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     """
 
     # First we setup the parser for transformation command lines
-    t_parser = argparse.ArgumentParser(
-        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
+    t_parser = CLIParser(add_help=False,
+                         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     t_subparsers = t_parser.add_subparsers(
         prog=progname + " <formula> <args> -T",
@@ -152,7 +155,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
         p.set_defaults(transformation=sc)
 
     # now we setup the main parser for the formula generation command
-    parser = argparse.ArgumentParser(
+    parser = CLIParser(
         prog=progname,
         usage=usage_string.format(progname),
         description="tutorial:\n  {0} --tutorial    show a basic tutorial".
@@ -222,7 +225,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
         p = subparsers.add_parser(
             sc.name,
             help=sc.description,
-            formatter_class=argparse.RawDescriptionHelpFormatter)
+        )
         sc.setup_command_line(p)
         p.set_defaults(generator=sc)
 
@@ -308,8 +311,8 @@ def build_latex_cmdline_description(argv, args, t_args):
 
     # Find input files specified in the command line
     input_files = []
-    for l in [args] + t_args:
-        data = iter(vars(l).items())
+    for namespace in [args] + t_args:
+        data = iter(vars(namespace).items())
         data = [v for k, v in data if not k.startswith("_")]
         data = [f for f in data if isinstance(f, io.IOBase)]
         data = [f for f in data if (f != sys.stdin) and f.mode == 'r']
@@ -329,47 +332,40 @@ def build_latex_cmdline_description(argv, args, t_args):
     return "\n".join(cmdline_descr)
 
 
-def test_subcommand_presence(fargs, targs, progname, usage):
-    if not hasattr(fargs, 'generator'):
-        error_msg("You did not tell which formula you wanted to generate.",
-                  filltext=70)
-        error_msg(usage)
-        error_msg(
-            "See '{0} -h' or '{0} --help' for more info.".format(progname),
-            filltext=70)
-        sys.exit(os.EX_DATAERR)
-
-    for argdict in targs:
-        if not hasattr(argdict, 'transformation'):
-            error_msg(
-                "You used option '-T' but did not pick a transformation.",
-                filltext=70)
-            error_msg(usage)
-            error_msg(
-                "See '{0} -h' or '{0} --help' for more info.".format(progname),
-                filltext=70)
-        sys.exit(os.EX_DATAERR)
-
-
 # Main program
-def command_line_utility(argv=sys.argv):
+def command_line_utility(argv=sys.argv, mode='output'):
     """CNFgen main command line interface
 
     This function provide the main interface to CNFgen. It sets up the
     command line, parses the command line arguments, builds the
     appropriate formula and outputs its representation.
 
-    It **must not** raise exceptions, but fail with error messages for
-    the user.
 
     Parameters
     ----------
     argv: list, optional
         The list of token with the command line arguments/options.
+
+    mode: str
+        One among 'formula', 'string', 'output' (latter is the default)
+        - 'formula' return a CNF object
+        - 'string' return the string with the output of CNFgen
+        - 'output' output the formula to the user
+
+    Raises
+    ------
+    CLIError:
+        The command line arguments are wrong
+
+    BuildError:
+        Errors occur while building the formula
+
+    Return
+    ------
+    depends on the 'mode' argument
     """
 
     progname = os.path.basename(argv[0])
-    output = ''
 
     formula_helpers = get_formula_helpers()
     transformation_helpers = get_transformation_helpers()
@@ -377,7 +373,8 @@ def command_line_utility(argv=sys.argv):
     parser, t_parser = setup_command_line_parsers(progname, formula_helpers,
                                                   transformation_helpers)
 
-    args, t_args = parse_command_line(argv, parser, t_parser)
+    with msg_prefix('c '):
+        args, t_args = parse_command_line(argv, parser, t_parser)
 
     # Correctly infer the comment character, useful to shield
     # the output.
@@ -385,15 +382,20 @@ def command_line_utility(argv=sys.argv):
     try:
         cprefix = comment_char[args.output_format]
     except KeyError:
-        error_msg("c INTERNAL ERROR: unknown output format '{}'!".format(
-            args.output_format))
-        sys.exit(1)
+        raise InternalBug("Unknown output format")
 
     with msg_prefix(cprefix):
-        # Check arguments
-        with msg_prefix("ERROR: "):
-            test_subcommand_presence(args, t_args, progname,
-                                     parser.format_usage().rstrip())
+
+        # Check basics: formula family and transformation specs
+        if not hasattr(args, 'generator'):
+            parser.error(
+                "You did not tell which formula you wanted to generate.\n")
+
+        for argdict in t_args:
+            if not hasattr(argdict, 'transformation'):
+                t_parser.error(
+                    "You used option '-T' but did not pick a transformation.\n"
+                )
 
         # Generate the formula and apply transformations
         try:
@@ -406,11 +408,11 @@ def command_line_utility(argv=sys.argv):
             for argdict in t_args:
                 cnf = argdict.transformation.transform_cnf(cnf, argdict)
 
+            if mode == 'formula':
+                return cnf
+
         except (ValueError) as e:
-            with msg_prefix("BUILD ERROR: "):
-                error_msg("Some error occurred while building the formula.")
-                error_msg(str(e))
-            sys.exit(os.EX_DATAERR)
+            raise BuildError(e)
 
         # Output
         if args.output_format == 'latex':
@@ -428,9 +430,10 @@ def command_line_utility(argv=sys.argv):
                                 " ".join(argv[1:]) + "\n")
 
         else:
-            error_msg("INTERNAL ERROR: unknown output format '{}'!".format(
-                args.output_format))
-            sys.exit(1)
+            raise InternalBug("Unknown output format")
+
+    if mode == 'string':
+        return output
 
     with paginate_or_redirect_stdout(args.output):
         print(output)
@@ -438,5 +441,21 @@ def command_line_utility(argv=sys.argv):
 
 # command line entry point
 if __name__ == '__main__':
+
     setup_SIGINT()
-    command_line_utility(sys.argv)
+
+    try:
+
+        command_line_utility(sys.argv)
+
+    except BuildError as e:
+        error_msg(str(e))
+        sys.exit(-1)
+
+    except CLIError as e:
+        error_msg(str(e))
+        sys.exit(-1)
+
+    except InternalBug as e:
+        print(str(e), file=sys.stderr)
+        sys.exit(-1)

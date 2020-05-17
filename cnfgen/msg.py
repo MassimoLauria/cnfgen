@@ -32,7 +32,7 @@ def interactive_msg(msg, filltext=None):
     global _prefix
     msg = textwrap.dedent(msg)
     if filltext is not None and filltext > 0:
-        msg = textwrap.fill(msg, width=filltext-len(_prefix))
+        msg = textwrap.fill(msg, width=filltext - len(_prefix))
     msg = textwrap.indent(msg, _prefix, lambda line: True)
 
     if sys.stdin.isatty():
@@ -46,6 +46,26 @@ def error_msg(msg, filltext=None):
     global _prefix
     msg = textwrap.dedent(msg)
     if filltext is not None and filltext > 0:
-        msg = textwrap.fill(msg, width=filltext-len(_prefix))
+        msg = textwrap.fill(msg, width=filltext - len(_prefix))
     msg = textwrap.indent(msg, _prefix, lambda line: True)
     print(msg, file=sys.stderr)
+
+
+class BuildError(Exception):
+    pass
+
+
+class InternalBug(Exception):
+    """Bug related to internal consistency
+    """
+    def __init__(self, msg):
+
+        bug_msg = """INTERNAL ERROR
+
+{}
+
+Ooops! This was never supposed to happen. Please
+take note of your command line and send it to
+<massimo.lauria@uniroma1.it>
+""".format(msg)
+        super(Exception, self).__init__(bug_msg)
