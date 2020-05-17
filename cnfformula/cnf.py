@@ -16,19 +16,18 @@ https://github.com/MassimoLauria/cnfgen.git
 
 """
 
-
-
-from itertools import product,islice
-from itertools import combinations,combinations_with_replacement
+from itertools import product, islice
+from itertools import combinations, combinations_with_replacement
 from collections import Counter
 import re
-from math import ceil,log
+from math import ceil, log
 
 from . import prjdata as pd
-from .graphs import bipartite_sets,neighbors
+from .graphs import bipartite_sets, neighbors
 
-_default_header="Generated with `cnfgen`\n(C) {}\n{}\n\n".format(pd.__copyright__,
-                                                                 pd.__url__)
+_default_header = "Generated with `cnfgen`\n(C) {}\n{}\n\n".format(
+    pd.__copyright__, pd.__url__)
+
 
 class CNF(object):
     """Propositional formulas in conjunctive normal form.
@@ -66,7 +65,6 @@ class CNF(object):
     -2 4 0
     -3 4 -5 0
     """
-
     def __init__(self, clauses=None, header=None):
         """Propositional formulas in conjunctive normal form.
 
@@ -84,25 +82,24 @@ class CNF(object):
             a preamble which documents the formula
         """
 
-        self._header = header if header!=None else _default_header
+        self._header = header if header != None else _default_header
 
         # Initial empty formula
-        self._clauses         = []
+        self._clauses = []
 
         # Variable indexes <--> Variable names correspondence
         # first variable is indexed with 1.
-        self._index2name      = [None]
-        self._name2index      = dict()
-        self._name2descr      = dict()
+        self._index2name = [None]
+        self._name2index = dict()
+        self._name2descr = dict()
 
         # Internal coherence can be disrupted by some methods.  API
         # methods require it to be rechecked.
-        self._coherent        = True
+        self._coherent = True
 
         # Load the initial data into the CNF
         for c in clauses or []:
             self.add_clause(c)
-
 
     # Formula contains an header property
     def _set_header(self, value):
@@ -137,7 +134,6 @@ class CNF(object):
         """
         return len(self._clauses)
 
-
     #
     # Internal implementation methods, use at your own risk!
     #
@@ -153,7 +149,7 @@ class CNF(object):
         >>> print(c._uncompress_clause([-1,-2]))
         [(False, 'x'), (False, 'y')]
         """
-        return [ (l>0, self._index2name[abs(l)]) for l in clause ]
+        return [(l > 0, self._index2name[abs(l)]) for l in clause]
 
     def _compress_clause(self, clause):
         """Convert a clause to its numeric representation.
@@ -183,7 +179,6 @@ class CNF(object):
 
         """
         return tuple((1 if p else -1) * self._name2index[n] for p, n in clause)
-
 
     def _add_compressed_clauses(self, clauses):
         """(INTERNAL USE) Add to the CNF a list of compressed clauses.
@@ -248,7 +243,6 @@ class CNF(object):
         self._coherent = False
         self._clauses.extend(tuple(c) for c in clauses)
 
-
     def _check_coherence(self, force=False):
         """Check if the formula is internally consistent.
 
@@ -279,20 +273,19 @@ class CNF(object):
         if not force and self._coherent:
             return True
 
-        varindex=self._name2index
-        varnames=self._index2name
-        
+        varindex = self._name2index
+        varnames = self._index2name
+
         # number of variables and clauses
-        N=len(varindex.keys())
-        
+        N = len(varindex.keys())
+
         # Consistency in the variable dictionary
-        if N != len(varnames)-1:
+        if N != len(varnames) - 1:
             return False
 
-        for i in range(1,N+1):
-            if varindex[varnames[i]]!=i:
+        for i in range(1, N + 1):
+            if varindex[varnames[i]] != i:
                 return False
-
 
         # Count clauses and check literal representation
         for clause in self._clauses:
@@ -308,7 +301,8 @@ class CNF(object):
     # High level API: build the CNF
     #
 
-    def add_clause(self,clause,
+    def add_clause(self,
+                   clause,
                    literal_repetitions=False,
                    opposite_literals=False,
                    auto_variables=True,
@@ -375,39 +369,42 @@ class CNF(object):
         try:
             hash(tuple(clause))
         except TypeError:
-            raise TypeError("%s is not a well formatted clause" %clause)
+            raise TypeError("%s is not a well formatted clause" % clause)
 
         # Activate the most restrictive setting
-        
+
         literal_repetitions = literal_repetitions and (not strict)
-        opposite_literals   = opposite_literals and (not strict)
-        auto_variables      = auto_variables and (not strict) 
-        
+        opposite_literals = opposite_literals and (not strict)
+        auto_variables = auto_variables and (not strict)
+
         # Check literal repetitions
         if (not literal_repetitions) and len(set(clause)) != len(clause):
-            raise ValueError("Forbidden repeated literals in clause {}".format(clause))
+            raise ValueError(
+                "Forbidden repeated literals in clause {}".format(clause))
 
         # Check opposite literals
         if not opposite_literals:
-            positive     = set([v for (p,v) in clause if p ])
-            negative     = set([v for (p,v) in clause if not p ])
-            if len(positive & negative)>0:
+            positive = set([v for (p, v) in clause if p])
+            negative = set([v for (p, v) in clause if not p])
+            if len(positive & negative) > 0:
                 emsg = "{ " + ", ".join(positive & negative) + " }"
-                raise ValueError("Following variable occur with opposite literals: {}".format(emsg))
+                raise ValueError(
+                    "Following variable occur with opposite literals: {}".
+                    format(emsg))
 
         # Add the compressed clause
         try:
-            self._clauses.append( self._compress_clause(clause) )
+            self._clauses.append(self._compress_clause(clause))
         except KeyError as error:
             if not auto_variables:
-                raise ValueError("The clause contains unknown variable: {}".format(error))
+                raise ValueError(
+                    "The clause contains unknown variable: {}".format(error))
             else:
                 for _, var in clause:
                     self.add_variable(var)
-                self._clauses.append( self._compress_clause(clause) )
+                self._clauses.append(self._compress_clause(clause))
 
-
-    def add_clause_unsafe(self,clause):
+    def add_clause_unsafe(self, clause):
         """Add a clause without checking input
 
         This is logically equivalent to :py:meth:`CNF.add_clause`
@@ -433,10 +430,9 @@ class CNF(object):
         KeyError
             if the clause contains a variable which was not added to the formula before.
         """
-        self._clauses.append( self._compress_clause(clause) )
+        self._clauses.append(self._compress_clause(clause))
 
-        
-    def add_variable(self,var,description=None):
+    def add_variable(self, var, description=None):
         """Add a variable to the formula (if not already resent).
 
         The variable must be `hashable`. I.e. it must be usable as key
@@ -456,9 +452,9 @@ class CNF(object):
             if not var in self._name2index:
                 # name correpsond to the last variable so far
                 self._index2name.append(var)
-                self._name2index[var] = len(self._index2name)-1
+                self._name2index[var] = len(self._index2name) - 1
         except TypeError:
-            raise TypeError("%s is not a legal variable name" %var)
+            raise TypeError("%s is not a legal variable name" % var)
 
         # update description
         if description is not None:
@@ -474,13 +470,12 @@ class CNF(object):
         vars_iterator = iter(self._index2name)
         next(vars_iterator)
         return vars_iterator
-    
+
     def clauses(self):
         """Return the list of clauses
         """
         assert self._coherent
         return self.__iter__()
-
 
     def dimacs(self, export_header=True, extra_text=None):
         """Produce the dimacs encoding of the formula
@@ -532,8 +527,10 @@ class CNF(object):
         self._dimacs_dump_clauses(output, export_header, extra_text)
         return output.getvalue()
 
-    
-    def _dimacs_dump_clauses(self, output=None, export_header=True, extra_text=None):
+    def _dimacs_dump_clauses(self,
+                             output=None,
+                             export_header=True,
+                             extra_text=None):
         """Dump the dimacs encoding of the formula to the file-like output
 
         This is for internal use only. It produces the dimacs output
@@ -543,34 +540,33 @@ class CNF(object):
         assert self._coherent
 
         # Count the number of variables and clauses
-        n = len(self._index2name)-1
+        n = len(self._index2name) - 1
         m = len(self)
 
         # Produce header in ascii compatible format
         if export_header:
             # remove non ascii text
-            ascii_header =  self.header.encode('ascii', errors='replace')
+            ascii_header = self.header.encode('ascii', errors='replace')
             ascii_header = ascii_header.decode('ascii')
             for line in ascii_header.split("\n")[:-1]:
-                output.write(("c "+line).rstrip()+"\n")
+                output.write(("c " + line).rstrip() + "\n")
 
             # remove non ascii text
             if extra_text is not None:
-                ascii_extra =  extra_text.encode('ascii', errors='replace')
+                ascii_extra = extra_text.encode('ascii', errors='replace')
                 ascii_extra = ascii_extra.decode('ascii')
                 for line in ascii_extra.split("\n"):
-                    output.write(("c "+line).rstrip()+"\n")
-
+                    output.write(("c " + line).rstrip() + "\n")
 
         # Formula specification
         output.write("p cnf {0} {1}".format(n, m))
 
         if len(self._clauses) == 0:
-            output.write("\n")   # this newline makes `lingeling` solver happy
+            output.write("\n")  # this newline makes `lingeling` solver happy
 
         # Clauses
         for cls in self._clauses:
-            output.write("\n" + " ".join([str(l) for l in cls + (0,)]))
+            output.write("\n" + " ".join([str(l) for l in cls + (0, )]))
 
     def latex(self, export_header=True, extra_text=None, full_document=False):
         """Output a LaTeX version of the CNF formula
@@ -630,28 +626,28 @@ class CNF(object):
 
         clauses_per_page = 40
 
-        latex_preamble=r"""%
+        latex_preamble = r"""%
 \documentclass[10pt,a4paper]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath}
 \usepackage{listings}
 \usepackage[utf8]{inputenc}
 """
-        
+
         from io import StringIO
         output = StringIO()
-        
+
         # formula header as a LaTeX comment
         if export_header:
             for s in self.header.split("\n")[:-1]:
-                output.write( ("% "+s).rstrip()+"\n" )
+                output.write(("% " + s).rstrip() + "\n")
 
         # document opening
         if full_document:
             output.write(latex_preamble)
             output.write("\\begin{document}\n")
-            title=self.header.split('\n')[0]
-            title=title.replace("_", "\\_")
+            title = self.header.split('\n')[0]
+            title = title.replace("_", "\\_")
             output.write("\\title{{{}}}\n".format(title))
             output.write("\\author{CNFgen formula generator}\n")
             output.write("\\maketitle\n")
@@ -663,23 +659,24 @@ class CNF(object):
 
         if extra_text is not None and full_document:
             output.write(extra_text)
-                
+
         def map_literals(l):
             """Map literals to LaTeX string"""
-            assert l!=0
-            if l>0 :
-                return  "           {"+str(self._index2name[l])+"}"
+            assert l != 0
+            if l > 0:
+                return "           {" + str(self._index2name[l]) + "}"
             else:
                 name = self._index2name[-l]
-                split_point=name.find("_")
-                if split_point<1:
-                    return "  \\overline{"+name+"}"
+                split_point = name.find("_")
+                if split_point < 1:
+                    return "  \\overline{" + name + "}"
                 else:
-                    return "{\\overline{"+name[:split_point]+"}"+name[split_point:]+"}"
+                    return "{\\overline{" + name[:split_point] + "}" + name[
+                        split_point:] + "}"
 
-        def write_clause(cls, first,full_document):
+        def write_clause(cls, first, full_document):
             """Write the clause in LaTeX."""
-            output.write("\n&" if first  else " \\\\\n&")
+            output.write("\n&" if first else " \\\\\n&")
             output.write("       " if full_document or first else " \\land ")
 
             # build the latex clause
@@ -699,26 +696,25 @@ class CNF(object):
                          format(len(self._name2index),clauses_number))
 
         output.write("\\begin{align}")
-        
-        if clauses_number==0:
+
+        if clauses_number == 0:
             output.write("\n   \\top")
         else:
-            for i,clause in enumerate(self._clauses):
-                if i% clauses_per_page ==0 and i!=0 and full_document:
+            for i, clause in enumerate(self._clauses):
+                if i % clauses_per_page == 0 and i != 0 and full_document:
                     output.write("\n\\end{align}\\pagebreak")
                     output.write("\n\\begin{align}")
-                    write_clause(clause, True,full_document)
+                    write_clause(clause, True, full_document)
                 else:
-                    write_clause(clause, i==0,full_document)
+                    write_clause(clause, i == 0, full_document)
 
         output.write("\n\\end{align}")
 
         # document closing
         if full_document:
             output.write("\n\\end{document}")
-  
-        return output.getvalue()
 
+        return output.getvalue()
 
     def is_satisfiable(self, cmd=None, sameas=None, verbose=0):
         """Determines whether a CNF is satisfiable or not.
@@ -793,13 +789,16 @@ class CNF(object):
 
         """
         from .utils import solver
-        return solver.is_satisfiable(self, cmd=cmd, sameas=sameas, verbose=verbose)
+        return solver.is_satisfiable(self,
+                                     cmd=cmd,
+                                     sameas=sameas,
+                                     verbose=verbose)
 
     ###
     ### Various utility function for CNFs
     ###
     @classmethod
-    def parity_constraint(cls,variables, constant):
+    def parity_constraint(cls, variables, constant):
         """Output the CNF encoding of a parity constraint
         
         E.g. X1 + X2 + X3 = 1 (mod 2) is encoded as
@@ -833,13 +832,12 @@ class CNF(object):
         clauses = []
         for c in product(*domains):
             # Save only the clauses with the right polarity
-            parity = sum(1-l[0] for l in c) % 2
+            parity = sum(1 - l[0] for l in c) % 2
             if parity != constant:
                 yield list(c)
 
-
     @classmethod
-    def _inequality_constraint_builder(cls,variables, k, greater=False):
+    def _inequality_constraint_builder(cls, variables, k, greater=False):
         """Builder for inequality constraint
      
         This is a generic builder used to build all the inequality
@@ -849,18 +847,18 @@ class CNF(object):
         polarity = greater
         if greater:
             k = len(variables) - k
-     
+
         if k > len(variables):
             return
         elif k < 0:
             yield []
             return
-        
+
         for tpl in combinations(variables, k):
             yield [(polarity, v) for v in tpl]
-     
-    @classmethod 
-    def less_than_constraint(cls,variables, upperbound):
+
+    @classmethod
+    def less_than_constraint(cls, variables, upperbound):
         """Clauses encoding a \"strictly less than\" constraint
      
         E.g. X1 + X2 + X3 + X4 < 3
@@ -892,10 +890,12 @@ class CNF(object):
         >>> list(CNF.less_than_constraint(['a','b','c'],10))
         []
         """
-        return cls._inequality_constraint_builder(variables, upperbound, greater=False)
+        return cls._inequality_constraint_builder(variables,
+                                                  upperbound,
+                                                  greater=False)
 
     @classmethod
-    def less_or_equal_constraint(cls,variables, upperbound):
+    def less_or_equal_constraint(cls, variables, upperbound):
         """Clauses encoding a \"less than or equal to\" constraint
      
         E.g. X1 + X2 + X3 + X4 <= 2
@@ -929,8 +929,10 @@ class CNF(object):
         >>> list(CNF.less_or_equal_constraint(['a','b','c'],10))
         []
         """
-        return cls._inequality_constraint_builder(variables, upperbound+1, greater=False)
-     
+        return cls._inequality_constraint_builder(variables,
+                                                  upperbound + 1,
+                                                  greater=False)
+
     @classmethod
     def greater_than_constraint(cls, variables, lowerbound):
         """Clauses encoding a \"strictly greater than\" constraint
@@ -964,8 +966,10 @@ class CNF(object):
         >>> list(CNF.greater_than_constraint(['a','b','c'],3))
         [[]]
         """
-        return cls._inequality_constraint_builder(variables, lowerbound, greater=True)
-     
+        return cls._inequality_constraint_builder(variables,
+                                                  lowerbound,
+                                                  greater=True)
+
     @classmethod
     def greater_or_equal_constraint(cls, variables, lowerbound):
         """Clauses encoding a \"greater than or equal to\" constraint
@@ -999,7 +1003,9 @@ class CNF(object):
         >>> list(CNF.greater_or_equal_constraint(['a','b','c'],4))
         [[]]
         """
-        return cls._inequality_constraint_builder(variables, lowerbound - 1, greater=True)
+        return cls._inequality_constraint_builder(variables,
+                                                  lowerbound - 1,
+                                                  greater=True)
 
     @classmethod
     def equal_to_constraint(cls, variables, value):
@@ -1030,7 +1036,7 @@ class CNF(object):
             yield c
         for c in cls.greater_or_equal_constraint(variables, value):
             yield c
-     
+
     @classmethod
     def loose_majority_constraint(cls, variables):
         """Clauses encoding a \"at least half\" constraint
@@ -1044,7 +1050,7 @@ class CNF(object):
         -------
             a list of clauses
         """
-        threshold = int((len(variables)+1)/2)
+        threshold = int((len(variables) + 1) / 2)
         return cls.greater_or_equal_constraint(variables, threshold)
 
     @classmethod
@@ -1060,9 +1066,9 @@ class CNF(object):
         -------
             a list of clauses
         """
-        threshold = int(len(variables)/2)
+        threshold = int(len(variables) / 2)
         return cls.less_or_equal_constraint(variables, threshold)
-     
+
     @classmethod
     def exactly_half_ceil(cls, variables):
         """Clauses encoding a \"exactly half\" constraint (rounded up)
@@ -1076,9 +1082,9 @@ class CNF(object):
         -------
             a list of clauses
         """
-        threshold = int((len(variables)+1)/2)
-        return cls.equal_to_constraint(variables,threshold)
-     
+        threshold = int((len(variables) + 1) / 2)
+        return cls.equal_to_constraint(variables, threshold)
+
     @classmethod
     def exactly_half_floor(cls, variables):
         """Clauses encoding a \"exactly half\" constraint (rounded down)
@@ -1092,29 +1098,29 @@ class CNF(object):
         -------
             a list of clauses
         """
-        threshold = int(len(variables)/2)
-        return cls.equal_to_constraint(variables,threshold)
+        threshold = int(len(variables) / 2)
+        return cls.equal_to_constraint(variables, threshold)
 
     class unary_mapping(object):
         """Unary CNF representation of a mapping between two sets."""
-        
+
         Domain = None
-        Range  = None
+        Range = None
 
         Pattern = None
-        
-        Complete      = False
-        Functional    = False
-        Surjective    = False
-        Injective     = False
+
+        Complete = False
+        Functional = False
+        Surjective = False
+        Injective = False
 
         NonDecreasing = False
 
         @staticmethod
-        def var_name(i,b):
-            return "X_{{{0},{1}}}".format(i,b)
+        def var_name(i, b):
+            return "X_{{{0},{1}}}".format(i, b)
 
-        def __init__(self, D, R,**kwargs):
+        def __init__(self, D, R, **kwargs):
             r"""Generator for the clauses of a mapping between to sets
 
             This generates of the constraints on variables :math:`v(i,j)`
@@ -1159,143 +1165,152 @@ class CNF(object):
                 
             """
             self.Domain = list(D)
-            self.Range  = list(R)
+            self.Range = list(R)
 
             # optional parameters of the mapping
-            self.Complete      = kwargs.pop('complete',  True)
-            self.Functional    = kwargs.pop('functional',False)
-            self.Surjective    = kwargs.pop('surjective',False)
-            self.Injective     = kwargs.pop('injective', False)
+            self.Complete = kwargs.pop('complete', True)
+            self.Functional = kwargs.pop('functional', False)
+            self.Surjective = kwargs.pop('surjective', False)
+            self.Injective = kwargs.pop('injective', False)
 
             self.NonDecreasing = kwargs.pop('nondecreasing', False)
 
-            # variable name scheme 
+            # variable name scheme
             self.var_name = kwargs.pop('var_name', self.var_name)
 
             # use a bipartite graph scheme for the mapping?
-            self.Pattern  = kwargs.pop('sparsity_pattern', None)
+            self.Pattern = kwargs.pop('sparsity_pattern', None)
 
             if kwargs:
                 raise TypeError('Unexpected **kwargs: %r' % kwargs)
-                
-            self.DomainToVertex={}
-            self.VertexToDomain={}
-            self.RangeToVertex={}
-            self.VertexToRange={}
 
-            self.RankRange  = {}
+            self.DomainToVertex = {}
+            self.VertexToDomain = {}
+            self.RangeToVertex = {}
+            self.VertexToRange = {}
+
+            self.RankRange = {}
             self.RankDomain = {}
-            
+
             if self.Pattern is not None:
 
-                gL,gR = bipartite_sets(self.Pattern)
+                gL, gR = bipartite_sets(self.Pattern)
 
                 if len(gL) != len(self.Domain):
-                    raise ValueError("Domain and the left side of the pattern differ in size")
+                    raise ValueError(
+                        "Domain and the left side of the pattern differ in size"
+                    )
 
                 if len(gR) != len(self.Range):
-                    raise ValueError("Range and the right side of the pattern differ in size")
+                    raise ValueError(
+                        "Range and the right side of the pattern differ in size"
+                    )
             else:
                 gL = self.Domain
                 gR = self.Range
-                
-            for (d,v) in zip(self.Domain,gL):
-                self.DomainToVertex[d]=v
-                self.VertexToDomain[v]=d
-                    
-            for (r,v) in zip(self.Range,gR):
-                self.RangeToVertex[r]=v
-                self.VertexToRange[v]=r
 
-            for i,d in enumerate(self.Domain,start=1):
-                self.RankDomain[d]=i
-                
-            for i,r in enumerate(self.Range,start=1):
-                self.RankRange[r]=i
+            for (d, v) in zip(self.Domain, gL):
+                self.DomainToVertex[d] = v
+                self.VertexToDomain[v] = d
 
+            for (r, v) in zip(self.Range, gR):
+                self.RangeToVertex[r] = v
+                self.VertexToRange[v] = r
+
+            for i, d in enumerate(self.Domain, start=1):
+                self.RankDomain[d] = i
+
+            for i, r in enumerate(self.Range, start=1):
+                self.RankRange[r] = i
 
         def domain(self):
             return self.Domain
-        
+
         def range(self):
             return self.Range
-                
-        def images(self,d):
+
+        def images(self, d):
             if self.Pattern is None:
                 return self.Range
             else:
                 v = self.DomainToVertex[d]
-                return [ self.VertexToRange[u] for u in neighbors(self.Pattern,v) ]
+                return [
+                    self.VertexToRange[u] for u in neighbors(self.Pattern, v)
+                ]
 
-        def counterimages(self,r):
+        def counterimages(self, r):
             if self.Pattern is None:
                 return self.Domain
             else:
                 v = self.RangeToVertex[r]
-                return [ self.VertexToDomain[u] for u in neighbors(self.Pattern,v) ]
+                return [
+                    self.VertexToDomain[u] for u in neighbors(self.Pattern, v)
+                ]
 
         def variables(self):
             for d in self.Domain:
                 for r in self.images(d):
-                    yield self.var_name(d,r)
+                    yield self.var_name(d, r)
 
-            
         def clauses(self):
 
             # Completeness axioms
             if self.Complete:
                 for d in self.Domain:
-                    for c in CNF.greater_or_equal_constraint([self.var_name(d,r) for r in self.images(d)], 1):
+                    for c in CNF.greater_or_equal_constraint(
+                        [self.var_name(d, r) for r in self.images(d)], 1):
                         yield c
-                    
+
             # Surjectivity axioms
             if self.Surjective:
                 for r in self.Range:
-                    for c in CNF.greater_or_equal_constraint([self.var_name(d,r) for d in self.counterimages(r)], 1):
+                    for c in CNF.greater_or_equal_constraint(
+                        [self.var_name(d, r) for d in self.counterimages(r)],
+                            1):
                         yield c
 
             # Injectivity axioms
             if self.Injective:
                 for r in self.Range:
-                    for c in CNF.less_or_equal_constraint([self.var_name(d,r)  for d in self.counterimages(r)],1):
+                    for c in CNF.less_or_equal_constraint(
+                        [self.var_name(d, r) for d in self.counterimages(r)],
+                            1):
                         yield c
 
             # Functionality axioms
             if self.Functional:
                 for d in self.Domain:
-                    for c in CNF.less_or_equal_constraint([self.var_name(d,r) for r in self.images(d)],1):
+                    for c in CNF.less_or_equal_constraint(
+                        [self.var_name(d, r) for r in self.images(d)], 1):
                         yield c
 
             # Mapping is monotone non-decreasing
             if self.NonDecreasing:
 
-                for (a,b) in combinations(self.Domain,2):
-                    for (i,j) in product(self.images(a),self.images(b)):
+                for (a, b) in combinations(self.Domain, 2):
+                    for (i, j) in product(self.images(a), self.images(b)):
 
                         if self.RankRange[i] > self.RankRange[j]:
-                            yield [(False,self.var_name(a,i)),(False,self.var_name(b,j))]
-                        
+                            yield [(False, self.var_name(a, i)),
+                                   (False, self.var_name(b, j))]
 
-                            
     class binary_mapping(object):
         """Binary CNF representation of a mapping between two sets."""
 
         Domain = None
-        Range  = None
-        Bits   = None
+        Range = None
+        Bits = None
 
-        Injective     = False
+        Injective = False
         NonDecreasing = False
 
         @staticmethod
-        def var_name(i,b):
-            return "Y_{{{0},{1}}}".format(i,b)
+        def var_name(i, b):
+            return "Y_{{{0},{1}}}".format(i, b)
 
-        
         def variables(self):
-            for v,b in product(self.Domain,range(0,self.Bits)):
-                yield self.var_name(v,b)
-                
+            for v, b in product(self.Domain, range(0, self.Bits)):
+                yield self.var_name(v, b)
 
         def __init__(self, D, R, **kwargs):
             r"""Generator for the clauses of a binary mapping between D and :math:`R`
@@ -1326,59 +1341,62 @@ class CNF(object):
 
             """
             self.Domain = list(D)
-            self.Range  = list(R)
-            self.Bits   = int(ceil(log(len(R),2)))
+            self.Range = list(R)
+            self.Bits = int(ceil(log(len(R), 2)))
 
             # optional parameters of the mapping
-            self.Injective     = kwargs.pop('injective', False)
+            self.Injective = kwargs.pop('injective', False)
             self.NonDecreasing = kwargs.pop('nondecreasing', False)
-            # variable name scheme 
+            # variable name scheme
             self.var_name = kwargs.pop('var_name', self.var_name)
 
             if kwargs:
                 raise TypeError('Unexpected **kwargs: %r' % kwargs)
 
-            self.ImageToBits={}
-            self.BitsToImage={}
-            
-            for i,bs in islice(enumerate(product([0,1],repeat=self.Bits)),
-                               len(self.Range)):
+            self.ImageToBits = {}
+            self.BitsToImage = {}
 
-                self.ImageToBits[ self.Range[i] ] = bs
-                self.BitsToImage[ bs ] = self.Range[i]
+            for i, bs in islice(enumerate(product([0, 1], repeat=self.Bits)),
+                                len(self.Range)):
 
-        def image_to_bitstring(self,im):
+                self.ImageToBits[self.Range[i]] = bs
+                self.BitsToImage[bs] = self.Range[i]
+
+        def image_to_bitstring(self, im):
             return self.ImageToBits[im]
 
-        def bitstring_to_image(self,bs):
+        def bitstring_to_image(self, bs):
             return self.BitsToImage[bs]
 
         def forbid_bitstring(self, i, bs):
             """Generates a clause that exclude 'i -> bs' mapping """
-            return [ ( bs[b]==0, self.var_name(i,self.Bits-1-b))
-                     for b in range(self.Bits) ] 
+            return [(bs[b] == 0, self.var_name(i, self.Bits - 1 - b))
+                    for b in range(self.Bits)]
 
         def forbid_image(self, i, j):
             """Generates a clause that exclude 'i -> j' mapping """
-            return self.forbid_bitstring(i,self.ImageToBits[j])
-            
+            return self.forbid_bitstring(i, self.ImageToBits[j])
+
         def clauses(self):
 
             # Avoid strings that do not correspond to elements from the range
-            for i,bs in product(self.Domain,
-                                islice(product([0,1],repeat=self.Bits),len(self.Range),None)):
-                yield self.forbid_bitstring(i,bs) 
+            for i, bs in product(
+                    self.Domain,
+                    islice(product([0, 1], repeat=self.Bits), len(self.Range),
+                           None)):
+                yield self.forbid_bitstring(i, bs)
 
             # Injectivity
             if self.Injective:
                 for j in self.Range:
-                    for i1,i2 in combinations(self.Domain,2):
-                        yield self.forbid_image(i1,j) + self.forbid_image(i2,j)
+                    for i1, i2 in combinations(self.Domain, 2):
+                        yield self.forbid_image(i1, j) + self.forbid_image(
+                            i2, j)
 
-            # Enforce Non Decreasing Mapping 
+            # Enforce Non Decreasing Mapping
             if self.NonDecreasing:
-                pairs_of_maps = product(combinations(self.Domain,2),
-                                        combinations(self.Range,2))
+                pairs_of_maps = product(combinations(self.Domain, 2),
+                                        combinations(self.Range, 2))
 
-                for (i1,i2),(j1,j2) in pairs_of_maps:
-                    yield self.forbid_image(i1,j2) + self.forbid_image(i2,j1)
+                for (i1, i2), (j1, j2) in pairs_of_maps:
+                    yield self.forbid_image(i1, j2) + self.forbid_image(i2, j1)
