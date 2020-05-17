@@ -7,9 +7,10 @@ from cnfformula.cnf import CNF
 from cnfformula.graphs import bipartite_sets
 
 from cnfformula.graphs import neighbors
-from itertools import combinations,product
+from itertools import combinations, product
 
-def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
+
+def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
     """Pigeonhole Principle CNF formula
 
     The pigeonhole  principle claims  that no M  pigeons can sit  in N
@@ -55,33 +56,34 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
     -6 -12 0
     -9 -12 0
     """
+    def var_name(p, h):
+        return 'p_{{{0},{1}}}'.format(p, h)
 
-    def var_name(p,h):
-        return 'p_{{{0},{1}}}'.format(p,h)
-    
     if functional:
         if onto:
-            formula_name="Matching"
+            formula_name = "Matching"
         else:
-            formula_name="Functional pigeonhole principle"
+            formula_name = "Functional pigeonhole principle"
     else:
         if onto:
-            formula_name="Onto pigeonhole principle"
+            formula_name = "Onto pigeonhole principle"
         else:
-            formula_name="Pigeonhole principle"
-            
-    php=CNF()
-    php.header="{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes)\
+            formula_name = "Pigeonhole principle"
+
+    php = CNF()
+    php.header = "{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes)\
         + php.header
 
-    
-    mapping=php.unary_mapping(
-        range(1,pigeons+1),
-        range(1,holes+1),
-        var_name=var_name,
-        injective = True,
-        functional = functional,
-        surjective = onto)
+    if pigeons < 0 or holes < 0:
+        raise ValueError(
+            "Number of pigeons and holes must both be non negative")
+
+    mapping = php.unary_mapping(range(1, pigeons + 1),
+                                range(1, holes + 1),
+                                var_name=var_name,
+                                injective=True,
+                                functional=functional,
+                                surjective=onto)
 
     for v in mapping.variables():
         php.add_variable(v)
@@ -91,12 +93,13 @@ def PigeonholePrinciple(pigeons,holes,functional=False,onto=False):
 
     return php
 
-def GraphPigeonholePrinciple(graph,functional=False,onto=False):
+
+def GraphPigeonholePrinciple(graph, functional=False, onto=False):
     """Graph Pigeonhole Principle CNF formula
 
     The graph pigeonhole principle CNF formula, defined on a bipartite
-    graph G=(L,R,E), claims that there is a subset E' of the edges such that 
-    every vertex on the left size L has at least one incident edge in E' and 
+    graph G=(L,R,E), claims that there is a subset E' of the edges such that
+    every vertex on the left size L has at least one incident edge in E' and
     every edge on the right side R has at most one incident edge in E'.
 
     This is possible only if the graph has a matching of size |L|.
@@ -120,34 +123,34 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
     1. A KeyException is raised otherwise.
 
     """
-
-    def var_name(p,h):
-        return 'p_{{{0},{1}}}'.format(p,h)
+    def var_name(p, h):
+        return 'p_{{{0},{1}}}'.format(p, h)
 
     if functional:
         if onto:
-            formula_name="Graph matching"
+            formula_name = "Graph matching"
         else:
-            formula_name="Graph functional pigeonhole principle"
+            formula_name = "Graph functional pigeonhole principle"
     else:
         if onto:
-            formula_name="Graph onto pigeonhole principle"
+            formula_name = "Graph onto pigeonhole principle"
         else:
-            formula_name="Graph pigeonhole principle"
+            formula_name = "Graph pigeonhole principle"
 
-
-    gphp=CNF()
-    gphp.header="{0} formula for graph {1}\n".format(formula_name,graph.name)
+    gphp = CNF()
+    gphp.header = "{0} formula for graph {1}\n".format(formula_name,
+                                                       graph.name)
 
     Left, Right = bipartite_sets(graph)
 
-    mapping = gphp.unary_mapping(Left,Right,
+    mapping = gphp.unary_mapping(Left,
+                                 Right,
                                  sparsity_pattern=graph,
                                  var_name=var_name,
-                                 injective = True,
-                                 functional = functional,
-                                 surjective = onto)
-    
+                                 injective=True,
+                                 functional=functional,
+                                 surjective=onto)
+
     for v in mapping.variables():
         gphp.add_variable(v)
 
@@ -156,7 +159,8 @@ def GraphPigeonholePrinciple(graph,functional=False,onto=False):
 
     return gphp
 
-def BinaryPigeonholePrinciple(pigeons,holes):
+
+def BinaryPigeonholePrinciple(pigeons, holes):
     """Binary Pigeonhole Principle CNF formula
 
     The pigeonhole principle claims that no M pigeons can sit in
@@ -165,23 +169,28 @@ def BinaryPigeonholePrinciple(pigeons,holes):
 
     Parameters
     ----------
-    pigeon : int 
+    pigeon : int
        number of pigeons
-    holes : int 
+    holes : int
        number of holes
     """
 
-    bphp=CNF()
-    bphp.header="Binary Pigeonhole Principle for {0} pigeons and {1} holes\n".format(pigeons,holes)\
-                 + bphp.header
-    
-    bphpgen=bphp.binary_mapping(range(1,pigeons+1), range(1,holes+1), injective = True)
+    bphp = CNF()
+    bphp.header = "Binary Pigeonhole Principle for {0} pigeons and {1} holes".format(
+        pigeons, holes) + bphp.header
+
+    if pigeons < 0 or holes < 0:
+        raise ValueError(
+            "Number of pigeons and holes must both be non negative")
+
+    bphpgen = bphp.binary_mapping(range(1, pigeons + 1),
+                                  range(1, holes + 1),
+                                  injective=True)
 
     for v in bphpgen.variables():
         bphp.add_variable(v)
-        
+
     for c in bphpgen.clauses():
         bphp.add_clause_unsafe(c)
 
     return bphp
-
