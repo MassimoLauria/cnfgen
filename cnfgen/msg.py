@@ -31,7 +31,7 @@ def interactive_msg(msg, filltext=None):
     """
     global _prefix
     msg = textwrap.dedent(msg)
-    if filltext is not None and filltext > 0:
+    if filltext is not None and filltext > len(_prefix) + 30:
         msg = textwrap.fill(msg, width=filltext - len(_prefix))
     msg = textwrap.indent(msg, _prefix, lambda line: True)
 

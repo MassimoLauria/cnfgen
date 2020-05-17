@@ -32,7 +32,7 @@ from cnfformula.graphs import dag_complete_binary_tree, dag_pyramid
 from cnfformula.graphs import sample_missing_edges
 
 from .msg import interactive_msg, error_msg, msg_prefix
-from .cmdline import redirect_stdin
+from .cmdline import redirect_stdin, CLIError
 
 
 def read_graph_from_input(args, suffix, grtype):
@@ -247,7 +247,7 @@ class SimpleGraphHelper(GraphHelper):
                     if p > 1.0 or p < 0:
                         raise ValueError('p must be a float between 0 and 1')
                 except ValueError as e:
-                    raise argparse.ArgumentError(self, str(e))
+                    parser.error(str(e))
                 setattr(args, self.dest, (n, p))
 
         gr = gr.add_mutually_exclusive_group(required=required)
@@ -360,7 +360,7 @@ class SimpleGraphHelper(GraphHelper):
 
             n, d = getattr(args, 'gnd' + suffix)
             if (n * d) % 2 == 1:
-                raise ValueError("n * d must be even")
+                raise CLIError("ERROR: n * d must be even")
             G = networkx.random_regular_graph(d, n)
 
         elif getattr(args, 'gnp' + suffix) is not None:

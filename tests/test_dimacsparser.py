@@ -5,6 +5,8 @@ from cnfformula import readCNF
 import io
 import pytest
 
+from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
+
 
 def test_empty_file():
     dimacs = io.StringIO()
@@ -62,4 +64,4 @@ def test_double_conversion_random():
     cnf = RandomKCNF(4, 10, 100)
     dimacs = io.StringIO(cnf.dimacs())
     cnf2 = readCNF(dimacs)
-    assertCnfEquivalentModuloVariables(cnf, cnf2)
+    assertCnfEqualsIgnoreVariables(cnf, cnf2)
