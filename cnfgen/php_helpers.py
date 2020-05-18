@@ -52,10 +52,10 @@ example_string = """examples:
 class PHPArgs(argparse.Action):
     def __call__(self, parser, args, values, option_string=None):
         if len(values) == 0:
-            parser.error('php formula requires some arguments')
+            parser.error('php formula needs <pigeons> <holes> specification')
 
         if len(values) > 3:
-            parser.error('php formula wants at most three arguments')
+            parser.error('too many arguments for php formula')
 
         try:
             intvalues = [int(x) for x in values]
@@ -99,7 +99,7 @@ class PHPCmdHelper(FormulaHelper):
                                                    " " * len(parser.prog))
         parser.add_argument('pigeonholes',
                             action=PHPArgs,
-                            nargs='+',
+                            nargs='*',
                             help=argparse.SUPPRESS)
         parser.add_argument('--functional',
                             action='store_true',

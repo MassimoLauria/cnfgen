@@ -66,7 +66,7 @@ description_string = """example:
  {0} randkcnf 3 10 5    --- Random 3-CNF with 10 vars and 5 clauses
 
 tutorial:
- {0} --tutorial    show a basic tutorial".
+ {0} --tutorial         --- shows a command line tutorial
 
 """
 
@@ -159,16 +159,18 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
         title="Available formula transformation",
         metavar="<transformation>")
     for sc in thelpers:
-        p = t_subparsers.add_parser(sc.name, help=sc.description)
+        p = t_subparsers.add_parser(
+            sc.name,
+            help=sc.description,
+            formatter_class=argparse.RawDescriptionHelpFormatter)
         sc.setup_command_line(p)
         p.set_defaults(transformation=sc)
 
     # now we setup the main parser for the formula generation command
-    parser = CLIParser(
-        prog=progname,
-        usage=usage_string.format(progname),
-        description=description_string.format(progname),
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = CLIParser(prog=progname,
+                       usage=usage_string.format(progname),
+                       description=description_string.format(progname),
+                       formatter_class=argparse.RawDescriptionHelpFormatter)
 
     class PrintTutorial(argparse.Action):
         def __call__(self, parser, args, values, option_string=None):
@@ -233,7 +235,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
         p = subparsers.add_parser(
             sc.name,
             help=sc.description,
-        )
+            formatter_class=argparse.RawDescriptionHelpFormatter)
         sc.setup_command_line(p)
         p.set_defaults(generator=sc)
 
