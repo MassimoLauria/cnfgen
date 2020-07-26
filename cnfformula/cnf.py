@@ -476,9 +476,14 @@ class CNF(object):
         # Count clauses and check literal representation
         est_length = 0
         for cnst in self._constraints:
-            for lit in cnst:
-                if not 0 < abs(lit) <= N:
-                    return False
+            if type(cnst) in (weighted_eq, weighted_geq):
+                for weight,lit in cnst:
+                    if not 0 < abs(lit) <= N:
+                        return False
+            else:
+                for lit in cnst:
+                    if not 0 < abs(lit) <= N:
+                        return False
             est_length += cnst.n_clauses()
 
         if len(self) != est_length:
@@ -824,7 +829,7 @@ class CNF(object):
 
         def _print_lin_ineq(cnst):
 
-            lhs = " ".join( "{} x{}".format(w,v) for w,v in cnst)
+            lhs = " ".join( "{:+} x{}".format(w,v) for w,v in cnst)
             if type(cnst)==weighted_eq:
                 rhs = str(cnst.value)
                 op  = "="
@@ -2240,8 +2245,8 @@ class weighted_eq(tuple):
                                          self.value)
 
     def __str__(self):
-        terms = [ "{}{}".format(w,v) for w,v in self ]
-        return "{} {} {}".format(" + ".join(literals),"==",self.value)
+        terms = [ "{}*{}".format(w,v) for w,v in self ]
+        return "{} {} {}".format(" + ".join(terms),"==",self.value)
     
     def n_clauses(self):
         """Number of clauses to represent the constraints"""
@@ -2312,8 +2317,8 @@ class weighted_geq(tuple):
                                          self.threshold)
 
     def __str__(self):
-        terms = [ "{}{}".format(w,v) for w,v in self ]
-        return "{} {} {}".format(" + ".join(literals),">=",self.threshold)
+        terms = [ "{}*{}".format(w,v) for w,v in self ]
+        return "{} {} {}".format(" + ".join(terms),">=",self.threshold)
 
     def n_clauses(self):
         """Number of clauses to represent the constraints"""

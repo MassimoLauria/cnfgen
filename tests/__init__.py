@@ -35,12 +35,21 @@ class TestCNFBase(unittest.TestCase):
         self.assertSetEqual(set1,set2)
 
     def assertCnfEqualsDimacs(self, cnf, dimacs):
+        cnf._check_coherence()
         dimacs = textwrap.dedent(dimacs)
         dimacs = dimacs.rstrip('\n')
         output = cnf.dimacs(export_header=False)
         output = output.rstrip('\n')
-        self.assertEqual(output,dimacs)
+        self.assertMultiLineEqual(output,dimacs)
 
+    def assertCnfEqualsOPB(self, cnf, opb):
+        cnf._check_coherence()
+        opb = textwrap.dedent(opb)
+        opb = opb.rstrip('\n')
+        output = cnf.opb(export_header=False)
+        output = output.rstrip('\n')
+        self.assertMultiLineEqual(output,opb)
+        
     def assertCnfEquivalentModuloVariables(self, cnf1, cnf2):
         print cnf1._constraints
         print cnf2._constraints
