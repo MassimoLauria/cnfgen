@@ -5,7 +5,6 @@ from cnfformula import RandomKCNF
 from cnfformula import Shuffle
 from cnfformula import FlipPolarity
 
-from cnfgen import cnftransform
 from tests.utils import assertCnfEqual, redirect_stdin, redirect_stdout
 
 
@@ -35,17 +34,17 @@ def test_polarity_shuffle_vs_flip():
     assertCnfEqual(flipped, shuffled)
 
 
-def test_cmdline_flip():
+# def test_cmdline_flip():
 
-    source = RandomKCNF(4, 10, 3)
-    expected = FlipPolarity(source)
+#     source = RandomKCNF(4, 10, 3)
+#     expected = FlipPolarity(source)
 
-    input_stream = io.StringIO(source.dimacs())
+#     input_stream = io.StringIO(source.dimacs())
 
-    with redirect_stdin(input_stream):
-        cli = cnftransform(
-            ['cnftransform', '-q', '--input', '-', '--output', '-', 'flip'],
-            mode='string')
+#     with redirect_stdin(input_stream):
+#         cli = cnftransform(
+#             ['cnftransform', '-q', '--input', '-', '--output', '-', 'flip'],
+#             mode='string')
 
-    lib = expected.dimacs(export_header=False)
-    assert lib == cli
+#     lib = expected.dimacs(export_header=False)
+#     assert lib == cli
