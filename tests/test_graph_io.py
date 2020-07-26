@@ -66,7 +66,22 @@ def test_low_level_dot_read_path2():
     if not has_dot_library():
         pytest.skip("DOT library not installed. Can't test DOT I/O")
 
-    nx.Graph(nx.nx_pydot.read_dot(sio(dot_path2)))
+    G = nx.Graph(nx.nx_pydot.read_dot(sio(dot_path2)))
+
+    assert G.order() == 3
+    assert len(G.edges()) == 2
+    assert G.has_edge('0', '1')
+    assert G.has_edge('1', '2')
+    assert not G.has_edge('0', '2')
+
+
+def test_low_level_dot_broken_TypeError():
+
+    if not has_dot_library():
+        pytest.skip("DOT library not installed. Can't test DOT I/O")
+
+    with pytest.raises(TypeError):
+        nx.Graph(nx.nx_pydot.read_dot(sio("jsjd jfdakh jkad ")))
 
 
 def test_low_level_gml_read_path2():
@@ -78,6 +93,12 @@ def test_low_level_gml_read_path2():
     assert G.has_edge(0, 1)
     assert G.has_edge(1, 2)
     assert not G.has_edge(0, 2)
+
+
+def test_low_level_gml_broken_NetworkXError():
+
+    with pytest.raises(nx.exception.NetworkXError):
+        nx.read_gml(BytesIO(b"jsjd jfdakh jkad "))
 
 
 def test_low_level_dimacs_read_path2():

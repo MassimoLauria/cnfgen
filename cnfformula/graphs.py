@@ -197,7 +197,10 @@ def readGraph(input_file,
 
     if file_format == 'dot':
 
-        G = grtype(networkx.nx_pydot.read_dot(input_file))
+        try:
+            G = grtype(networkx.nx_pydot.read_dot(input_file))
+        except TypeError:
+            raise ValueError('Parse Error in dot file')
 
     elif file_format == 'gml':
 
