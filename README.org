@@ -27,14 +27,10 @@
 
   - =cnfgen= formula generator;
 
-  and  the  following  python  scripts, designed  to  operate  from/to
+  and  the  following  python  script, designed  to  operate  from/to
   dimacs CNFs:
-
+  
   - =cnfshuffle= random shuffler;
-
-  - =cnftransform= apply litfing or substitution; 
-
-#  - =kthgraph2pebformula= make pebbling formula from a DAG.
 
   You  can get  a brief  help on  how to  use these  tools by  running
   =<program_name> --help= from the command line.
