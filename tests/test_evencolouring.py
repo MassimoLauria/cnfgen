@@ -41,5 +41,5 @@ def test_even_degree_complete():
 def test_odd_degree_complete():
     for n in range(4, 7, 2):
         parameters = ["cnfgen", "-q", "ec", "--complete", str(n)]
-        with pytest.raises(ValueError):
+        with pytest.raises(CLIError):
             cnfgen(parameters)
