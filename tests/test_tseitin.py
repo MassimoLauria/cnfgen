@@ -1,9 +1,11 @@
 import sys
 import networkx as nx
 import pytest
+import io
 
 from cnfformula import TseitinFormula
 from cnfgen import cnfgen, CLIError
+from cnfgen.cmdline import redirect_stdin
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs
 
 
@@ -111,3 +113,9 @@ def test_commandline2():
         "randomeven"
     ]
     assert cnfgen(parameters, mode='string') is not None
+
+
+def test_no_graph_format():
+    with pytest.raises(CLIError):
+        with redirect_stdin(io.StringIO('')):
+            cnfgen(['cnfgen', 'tseitin', "--charge", "randomodd"])

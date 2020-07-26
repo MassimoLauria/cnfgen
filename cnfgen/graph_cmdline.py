@@ -14,6 +14,7 @@ https://github.com/MassimoLauria/cnfgen.git
 import sys
 import os
 import argparse
+import textwrap
 
 from itertools import combinations, product
 
@@ -49,50 +50,53 @@ def read_graph_from_input(args, suffix, grtype):
     # read graphs from input
     fsource = getattr(args, "input" + suffix)
     fformat = getattr(args, 'graphformat' + suffix)
-    fext = os.path.splitext(fsource.name)[-1][1:]
+    try:
+        fext = os.path.splitext(fsource.name)[-1][1:]
+    except AttributeError:
+        fext = ''
     allowed = supported_graph_formats()[grtype]
 
-    no_ext = """The formula generation process you asked for needs a {} graph in
+    no_ext = """
+    The formula generation process you asked for needs a {} graph in
     input. Graph format was not specified on the command line and there no
     file name extension to guess that from, thus it is impossible
     to proceed.""".format(grtype)
 
-    bad_ext = """The formula generation process you asked for needs a {} graph in
-    input. Graph format was not specified on the command line and the file
-    name extension do not corresponds to any of the allowed format, thus
-    it is impossible to proceed.""".format(grtype)
+    bad_ext = """
+    The formula generation process you asked for needs a {} graph in
+    input. Graph format was not specified on the command line and the
+    file name extension do not corresponds to any of the allowed
+    format, thus it is impossible to proceed.""".format(grtype)
 
-    ask_opt = """Please add the option '-gf <format>' to the graph specification,
+    ask_opt = """
+    Please add the option '-gf <format>' to the graph specification,
     where <format> in one of {}""".format(allowed)
 
     ask_gr = "Please insert on <stdin> a simple undirected graph in {} format.".format(
         fformat)
 
+    no_ext = textwrap.dedent(no_ext)
+    # no_ext = textwrap.fill(no_ext, width=60)
+    bad_ext = textwrap.dedent(bad_ext)
+    # bad_ext = textwrap.fill(bad_ext, width=60)
+
+    ask_opt = textwrap.dedent(ask_opt)
+    # ask_opt = textwrap.fill(ask_opt, width=60)
+
     with redirect_stdin(fsource):
 
-        with msg_prefix("ERROR: "):
+        # detect graph format
+        if fformat == 'autodetect':
+            if len(fext) == 0:
+                raise CLIError(no_ext + "\n" + ask_opt)
 
-            # detect graph format
-            if fformat == 'autodetect':
-                if len(fext) == 0:
-                    error_msg(no_ext, filltext=70)
-                    error_msg(ask_opt, filltext=70)
-                    sys.exit(-1)
-
-                elif fext not in allowed:
-                    error_msg(bad_ext, filltext=70)
-                    error_msg(ask_opt, filltext=70)
-                    sys.exit(-1)
+            elif fext not in allowed:
+                raise CLIError(bad_ext + "\n" + ask_opt)
 
         with msg_prefix("INPUT: "):
             interactive_msg(ask_gr, filltext=70)
 
-        try:
-            G = readGraph(sys.stdin, "simple", fformat)
-        except ValueError as e:
-            with msg_prefix('ERROR: '):
-                error_msg(str(e), filltext=70)
-                sys.exit(-1)
+        G = readGraph(sys.stdin, "simple", fformat)
 
     return G
 

@@ -414,13 +414,13 @@ def command_line_utility(argv=sys.argv, mode='output'):
 
         try:
             cnf = args.generator.build_cnf(args)
-        except ValueError as e:
+        except (CLIError, ValueError) as e:
             args.generator.subparser.error(str(e))
 
         for argdict in t_args:
             try:
                 cnf = argdict.transformation.transform_cnf(cnf, argdict)
-            except ValueError as e:
+            except (CLIError, ValueError) as e:
                 argdict.transformation.subparser.error(str(e))
 
         if mode == 'formula':

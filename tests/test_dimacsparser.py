@@ -85,3 +85,8 @@ def test_dimacs_subcommand_goodinput():
     with redirect_stdin(io.StringIO(din)):
         dout = cnfgen(['cnfgen', '-q', 'dimacs'], mode='string')
     assert din == dout
+
+
+def test_dimacs_subcommand_nofile():
+    with pytest.raises(CLIError):
+        cnfgen(['cnfgen', 'dimacs', "doesnotexists42342.cnf"])
