@@ -80,4 +80,4 @@
    Please contribute to the code by sending pull requests. 
 
 
-Copyright 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019 © Massimo Lauria ([[mailto:massimo.lauria@uniroma1.it][massimo.lauria@uniroma1.it]])
+Copyright 2012-2020 © Massimo Lauria ([[mailto:massimo.lauria@uniroma1.it][massimo.lauria@uniroma1.it]])
