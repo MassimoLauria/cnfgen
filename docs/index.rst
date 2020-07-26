@@ -117,7 +117,7 @@ formula generator type ``cnfgen <generator_name> --help``.
 
 Reference
 ---------
-.. [1] http://www.satlib.org/Benchmarks/SAT/satformat.ps
+.. [1] http://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps
 .. [2] http://www.latex-project.org/ 
 .. [3] http://en.wikipedia.org/wiki/Proof_complexity
 

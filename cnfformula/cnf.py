@@ -519,7 +519,7 @@ class CNF(object):
 
         References
         ----------
-        .. [1] http://www.satlib.org/Benchmarks/SAT/satformat.ps
+        .. [1] http://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps
 
         """
         from io import StringIO
