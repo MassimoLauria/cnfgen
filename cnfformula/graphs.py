@@ -197,6 +197,10 @@ def readGraph(input_file,
 
     if file_format == 'dot':
 
+        # This is a workaround. In theory a broken dot file should
+        # cause a pyparsing.ParseError but the dot_reader used by
+        # networkx seems to mismanage that and to cause a TypeError
+        #
         try:
             G = grtype(networkx.nx_pydot.read_dot(input_file))
         except TypeError:
