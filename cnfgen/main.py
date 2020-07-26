@@ -164,6 +164,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
             help=sc.description,
             formatter_class=argparse.RawDescriptionHelpFormatter)
         sc.setup_command_line(p)
+        sc.subparser = p
         p.set_defaults(transformation=sc)
 
     # now we setup the main parser for the formula generation command
@@ -237,6 +238,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
             help=sc.description,
             formatter_class=argparse.RawDescriptionHelpFormatter)
         sc.setup_command_line(p)
+        sc.subparser = p
         p.set_defaults(generator=sc)
 
     # Attach the list of available transformations
@@ -365,10 +367,7 @@ def command_line_utility(argv=sys.argv, mode='output'):
     Raises
     ------
     CLIError:
-        The command line arguments are wrong
-
-    ValueError:
-        Errors occur while building the formula
+        The command line arguments are wrong or inconsistent
 
     Return
     ------
@@ -413,10 +412,16 @@ def command_line_utility(argv=sys.argv, mode='output'):
         if hasattr(args, 'seed') and args.seed:
             random.seed(args.seed)
 
-        cnf = args.generator.build_cnf(args)
+        try:
+            cnf = args.generator.build_cnf(args)
+        except ValueError as e:
+            args.generator.subparser.error(str(e))
 
         for argdict in t_args:
-            cnf = argdict.transformation.transform_cnf(cnf, argdict)
+            try:
+                cnf = argdict.transformation.transform_cnf(cnf, argdict)
+            except ValueError as e:
+                argdict.transformation.subparser.error(str(e))
 
         if mode == 'formula':
             return cnf
@@ -454,11 +459,6 @@ if __name__ == '__main__':
     try:
 
         command_line_utility(sys.argv)
-
-    except ValueError as e:
-        with msg_prefix("ERROR: "):
-            error_msg(str(e))
-        sys.exit(-1)
 
     except CLIError as e:
         error_msg(str(e))

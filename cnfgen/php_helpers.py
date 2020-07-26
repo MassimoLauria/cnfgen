@@ -34,7 +34,6 @@ positional arguments:
  {0} M N         --- M pigeons fly to N holes
  {0} M N D       --- M pigeons fly to N holes, pigeon left degree D
  """
-# {0} <bipartite> --- Left vertices fly to right vertices, respecting edges
 
 example_string = """examples:
  {0} 100           --- 101 pigeons and 100 holes (unsat)
@@ -43,10 +42,6 @@ example_string = """examples:
  {0} 12 10 3       --- 12 pigeons and 10 holes,
  {1}                   pigeon can go to 3 random holes
  """
-# {0} gmnd:30:20:5  --- 30 pigeons and 10 holes,
-# {1}                   pigeon can go to 5 random holes
-# {0} gmnp:30:20:.3 --- 30 pigeons and 10 holes,
-# {1}                   0.3 prob. a pigeon can fly into a hole
 
 
 class PHPArgs(argparse.Action):

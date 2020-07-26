@@ -54,8 +54,7 @@ def PitfallFormula(v, d, ny, nz, k):
     except networkx.exception.NetworkXError:
         raise ValueError("""No regular {}-degree graph with {}-vertices exists.
 Degree d must less than the number v of vertices,
-and d*v must be even.
-""".format(d, v))
+and d*v must be even.""".format(d, v))
 
     charge = [1] + [0] * (v - 1)
     ts = TseitinFormula(graph, charge)

@@ -71,6 +71,7 @@ def setup_command_line(parser):
     for sc in get_transformation_helpers():
         p = subparsers.add_parser(sc.name, help=sc.description)
         sc.setup_command_line(p)
+        sc.subparser = p
         p.set_defaults(transformation=sc)
 
 
@@ -97,8 +98,10 @@ def command_line_utility(argv=sys.argv, mode='output'):
 
     # Be lenient on non string arguments
     argv = [str(x) for x in argv]
+    print(argv)
 
-    args = parser.parse_args(argv[1:])
+    args = parser.parse_args(argv)
+    print(args)
 
     msg = """Waiting for a DIMACS formula on <stdin>.
              Alternatively you can feed a formula to <stdin>
@@ -111,7 +114,10 @@ def command_line_utility(argv=sys.argv, mode='output'):
         F = readCNF()
 
     if hasattr(args, "transformation"):
-        G = args.transformation.transform_cnf(F, args)
+        try:
+            G = args.transformation.transform_cnf(F, args)
+        except ValueError as e:
+            args.transformation.subparser.error(str(e))
     else:
         G = F
 

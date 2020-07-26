@@ -266,11 +266,7 @@ class XorCompressionCmd(TransformationHelper):
     def transform_cnf(F, args):
         B = BipartiteGraphHelper.obtain_graph(args)
 
-        try:
-            return VariableCompression(F, B, function='xor')
-        except ValueError as e:
-            print("ERROR: {}".format(e), file=sys.stderr)
-            exit(-1)
+        return VariableCompression(F, B, function='xor')
 
 
 class MajCompressionCmd(TransformationHelper):
@@ -285,8 +281,4 @@ class MajCompressionCmd(TransformationHelper):
     def transform_cnf(F, args):
         B = BipartiteGraphHelper.obtain_graph(args)
 
-        try:
-            return VariableCompression(F, B, function='maj')
-        except ValueError as e:
-            print("ERROR: {}".format(e), file=sys.stderr)
-            exit(-1)
+        return VariableCompression(F, B, function='maj')
