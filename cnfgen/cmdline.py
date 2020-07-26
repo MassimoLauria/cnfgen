@@ -173,6 +173,7 @@ exception, instead of calling exit.
                              allow_abbrev=allow_abbrev)
 
     def error(self, message):
+        message = str(message)
         errstr = ["ERROR: " + x for x in message.splitlines()]
         errstr.append("")
 

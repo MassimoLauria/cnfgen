@@ -415,13 +415,17 @@ def command_line_utility(argv=sys.argv, mode='output'):
         try:
             cnf = args.generator.build_cnf(args)
         except (CLIError, ValueError) as e:
-            args.generator.subparser.error(str(e))
+            args.generator.subparser.error(e)
+        except RuntimeError as e:
+            raise InternalBug(e)
 
         for argdict in t_args:
             try:
                 cnf = argdict.transformation.transform_cnf(cnf, argdict)
             except (CLIError, ValueError) as e:
-                argdict.transformation.subparser.error(str(e))
+                argdict.transformation.subparser.error(e)
+            except RuntimeError as e:
+                raise InternalBug(e)
 
         if mode == 'formula':
             return cnf
@@ -461,9 +465,9 @@ if __name__ == '__main__':
         command_line_utility(sys.argv)
 
     except CLIError as e:
-        error_msg(str(e))
+        error_msg(e)
         sys.exit(-1)
 
     except InternalBug as e:
-        print(str(e), file=sys.stderr)
+        print(e, file=sys.stderr)
         sys.exit(-1)

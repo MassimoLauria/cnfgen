@@ -32,7 +32,7 @@ from cnfformula.graphs import bipartite_sets
 from cnfformula.graphs import dag_complete_binary_tree, dag_pyramid
 from cnfformula.graphs import sample_missing_edges
 
-from .msg import interactive_msg, error_msg, msg_prefix
+from .msg import interactive_msg, msg_prefix
 
 from .cmdline import redirect_stdin, CLIError, positive_int
 

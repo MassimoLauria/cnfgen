@@ -44,7 +44,7 @@ def error_msg(msg, filltext=None):
 
     """
     global _prefix
-    msg = textwrap.dedent(msg)
+    msg = textwrap.dedent(str(msg))
     if filltext is not None and filltext > 0:
         msg = textwrap.fill(msg, width=filltext - len(_prefix))
     msg = textwrap.indent(msg, _prefix, lambda line: True)
@@ -63,5 +63,5 @@ class InternalBug(Exception):
 Ooops! This was never supposed to happen. Please
 take note of your command line and send it to
 <massimo.lauria@uniroma1.it>
-""".format(msg)
+""".format(str(msg))
         super(Exception, self).__init__(bug_msg)
