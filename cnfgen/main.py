@@ -456,7 +456,8 @@ if __name__ == '__main__':
         command_line_utility(sys.argv)
 
     except ValueError as e:
-        error_msg("ERROR: " + str(e))
+        with msg_prefix("ERROR: "):
+            error_msg(str(e))
         sys.exit(-1)
 
     except CLIError as e:
