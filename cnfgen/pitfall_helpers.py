@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-"""Formula Helpers for pigeonhole principle formulas
+"""Formula Helpers for the Pitfall formula
 
 Copyright (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/

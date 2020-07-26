@@ -6,6 +6,8 @@ import io
 import pytest
 
 from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
+from cnfgen import cnfgen
+from cnfgen.cmdline import redirect_stdin, CLIError
 
 
 def test_empty_file():
@@ -65,3 +67,21 @@ def test_double_conversion_random():
     dimacs = io.StringIO(cnf.dimacs())
     cnf2 = readCNF(dimacs)
     assertCnfEqualsIgnoreVariables(cnf, cnf2)
+
+
+def test_dimacs_subcommand_badinput():
+    badformula = io.StringIO("nd jkdh aHej!\n")
+    with redirect_stdin(badformula):
+        with pytest.raises(CLIError):
+            cnfgen(['cnfgen', 'dimacs'], mode='formula')
+
+
+def test_dimacs_subcommand_goodinput():
+    din = """p cnf 5 4
+1 -3 5 0
+-2 3 -4 0
+2 -3 -5 0
+2 3 -5 0"""
+    with redirect_stdin(io.StringIO(din)):
+        dout = cnfgen(['cnfgen', '-q', 'dimacs'], mode='string')
+    assert din == dout
