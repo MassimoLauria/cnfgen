@@ -9,8 +9,6 @@ CNFs:
 
 - `cnfshuffle` random shuffler;
 
-- `cnftransform` apply litfing or substitution; 
-
 You  can get  a  brief help  on  how  to use  these  tools by  running
 `<program_name> --help` from the command line.
 
@@ -29,5 +27,5 @@ command
 - Zenodo link (DOI) <https://zenodo.org/record/3548843>
 
 
-Copyright 2012,  2013, 2014,  2015, 2016, 2017,  2018, 2019  © Massimo
+Copyright 2012-2020  © Massimo
 Lauria ([massimo.lauria@uniroma1.it](mailto:massimo.lauria@uniroma1.it))
