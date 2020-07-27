@@ -52,7 +52,7 @@ object. Let's see a simple example of its usage.
    (False, None)
    >>> print(F.dimacs())
    c Generated with `cnfgen`
-   c (C) 2012-2019 Massimo Lauria <massimo.lauria@uniroma1.it>
+   c (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
    c https://massimolauria.net/cnfgen
    c
    p cnf 2 3
@@ -61,7 +61,7 @@ object. Let's see a simple example of its usage.
    2 0
    >>> print(F.latex())
    % Generated with `cnfgen`
-   % (C) 2012-2019 Massimo Lauria <massimo.lauria@uniroma1.it>
+   % (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
    % https://massimolauria.net/cnfgen
    %
    \begin{align}
@@ -78,7 +78,7 @@ pigeonhole principle formula.
    >>> print(F.dimacs())
    c Pigeonhole principle formula for 5 pigeons and 4 holes
    c Generated with `cnfgen`
-   c (C) 2012-2019 Massimo Lauria <massimo.lauria@uniroma1.it>
+   c (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
    c https://massimolauria.net/cnfgen
    c
    p cnf 20 45
@@ -102,7 +102,8 @@ the command line. To produce a  pigeonhole principle from 5 pigeons to
                 
    $ cnfgen php 5 4
    c Pigeonhole principle formula for 5 pigeons and 4 holes
-   c Generated with `cnfgen` (C) Massimo Lauria <massimo.lauria@uniroma1.it>
+   c Generated with `cnfgen`
+   c (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
    c https://github.com/MassimoLauria/cnfgen.git
    c
    p cnf 20 45
