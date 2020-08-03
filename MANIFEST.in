@@ -1,4 +1,6 @@
 include README.org
 include LICENSE
+include CREDITS.org
 include Makefile
 include requirements.txt
+include PyPI.md
