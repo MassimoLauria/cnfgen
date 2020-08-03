@@ -11,7 +11,7 @@ to the `cnfformula` library.
 
 
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020  Massimo Lauria <lauria.massimo@gmail.com>
+Copyright (C) 2012-2020  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """

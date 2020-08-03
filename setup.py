@@ -23,10 +23,8 @@ setup(
     license=info['license'],
     packages=find_packages(".", exclude=["tests"]),
     entry_points={
-        'console_scripts': [
-            'cnfgen=cnfgen.main:command_line_utility',
-            'cnfshuffle=cnfgen.cnfshuffle:command_line_utility'
-        ],
+        'console_scripts':
+        ['cnfgen=cnfgen.main:main', 'cnfshuffle=cnfgen.cnfshuffle:main'],
     },
     install_requires=['networkx>=2.0', 'pydot>=1.2.3'],
     python_requires='>=3.4',

@@ -21,7 +21,7 @@ from .msg import msg_prefix
 from .msg import InternalBug
 
 
-def command_line_utility(argv=sys.argv, mode='output'):
+def cli(argv=sys.argv, mode='output'):
     """CNFgen shuffler 
 
     This function provide the main interface to cnfshuffle.
@@ -154,7 +154,7 @@ def command_line_utility(argv=sys.argv, mode='output'):
 
 
 # Launcher
-if __name__ == '__main__':
+def main():
     setup_SIGINT()
 
     try:
@@ -172,3 +172,7 @@ if __name__ == '__main__':
     except InternalBug as e:
         print(str(e), file=sys.stderr)
         sys.exit(-1)
+
+
+if __name__ == '__main__':
+    main()

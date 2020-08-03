@@ -79,7 +79,7 @@ def setup_command_line(parser):
 
 
 # Main program
-def command_line_utility(argv=sys.argv, mode='output'):
+def cli(argv=sys.argv, mode='output'):
     """From KTHLists to Pebbling formulas
 
     Parameters
@@ -133,7 +133,7 @@ def command_line_utility(argv=sys.argv, mode='output'):
 
 
 # Launcher
-if __name__ == '__main__':
+def main():
     setup_SIGINT()
     try:
 
@@ -150,3 +150,7 @@ if __name__ == '__main__':
     except InternalBug as e:
         print(str(e), file=sys.stderr)
         sys.exit(-1)
+
+
+if __name__ == '__main__':
+    main()

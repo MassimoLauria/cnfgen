@@ -344,8 +344,8 @@ def build_latex_cmdline_description(argv, args, t_args):
     return "\n".join(cmdline_descr)
 
 
-# Main program
-def command_line_utility(argv=sys.argv, mode='output'):
+# Command line interface
+def cli(argv=sys.argv, mode='output'):
     """CNFgen main command line interface
 
     This function provide the main interface to CNFgen. It sets up the
@@ -456,13 +456,13 @@ def command_line_utility(argv=sys.argv, mode='output'):
 
 
 # command line entry point
-if __name__ == '__main__':
+def main():
 
     setup_SIGINT()
 
     try:
 
-        command_line_utility(sys.argv)
+        cli(sys.argv, mode='output')
 
     except CLIError as e:
         error_msg(e)
@@ -471,3 +471,7 @@ if __name__ == '__main__':
     except InternalBug as e:
         print(e, file=sys.stderr)
         sys.exit(-1)
+
+
+if __name__ == '__main__':
+    main()
