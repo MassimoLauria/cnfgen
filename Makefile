@@ -27,7 +27,7 @@ clean:
 	find . -name '*.pyo' -delete
 	find . -name 'flycheck*.py' -delete
 
-package: clean versionfile
+package: clean $(VERSIONFILE)
 	$(PYTHON) setup.py sdist bdist_egg bdist_wheel
 
 upload: package
