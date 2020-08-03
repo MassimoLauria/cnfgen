@@ -22,11 +22,11 @@ from collections import Counter
 import re
 from math import ceil, log
 
-from . import prjdata as pd
+from cnfformula.info import info
 from .graphs import bipartite_sets, neighbors
 
-_default_header = "Generated with `cnfgen`\n(C) {}\n{}\n\n".format(
-    pd.__copyright__, pd.__url__)
+_default_header = "Generated with `cnfgen`\n{}\n{}\n\n".format(
+    info['copyright'], info['url'])
 
 
 class CNF(object):

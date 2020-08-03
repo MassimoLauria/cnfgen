@@ -8,7 +8,7 @@ all : test
 .PHONY: test install clean package upload docs-build docs-install-tools venv force
 
 $(VERSIONFILE): force
-	@echo "__version__ = '"`git describe --always --tags`"'" > $(VERSIONFILE)
+	@echo "version = '"`git describe --always --tags`"'" > $(VERSIONFILE)
 
 test: venv $(VERSIONFILE)
 	. $(VIRTUALENV)/bin/activate && \

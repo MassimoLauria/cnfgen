@@ -5,7 +5,7 @@ Setup script for the CNFgen package
 
 from setuptools import setup, find_packages
 
-import cnfformula.prjdata as p
+from cnfformula.info import info
 
 from os import path
 
@@ -14,13 +14,13 @@ with open(path.join(this_directory, 'PyPI.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name=p.__project_name__,
-    version=p.__version__,
-    description=p.__project_description__,
-    author=p.__author__,
-    author_email=p.__author_email__,
-    url=p.__url__,
-    license=p.__license__,
+    name=info['project'],
+    version=info['version'],
+    description=info['description'],
+    author=info['author'],
+    author_email=info['author_email'],
+    url=info['url'],
+    license=info['license'],
     packages=find_packages(".", exclude=["tests"]),
     entry_points={
         'console_scripts': [

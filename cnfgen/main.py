@@ -34,7 +34,7 @@ import random
 import io
 import argparse
 
-from cnfformula.prjdata import __version__
+from cnfformula.info import info
 
 from .cmdline import paginate_or_redirect_stdout
 from .cmdline import setup_SIGINT
@@ -182,7 +182,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     parser.add_argument('-V',
                         '--version',
                         action='version',
-                        version="%(prog)s (" + __version__ + ")")
+                        version='{project} ({version})'.format(**info))
     parser.add_argument('--tutorial',
                         nargs=0,
                         action=PrintTutorial,
