@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 
+# Version number is obtained from the GIT repository, either
+# hardcoding that number into version.py file (for release) or
+# directly calling GIT (for development).
 try:
     import cnfformula.version
     __version__ = cnfformula.version.__version__
 except ImportError:
-    pass
+    import subprocess
+    __version__ = subprocess.check_output(
+        ["git", "describe", "--tags", "--always"]).strip().decode('utf-8')
 
 __project_name__ = 'CNFgen'
 __project_description__ = 'CNF formula generator'
