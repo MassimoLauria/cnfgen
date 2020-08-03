@@ -1,19 +1,24 @@
 PROJECT:=cnfgen
 VIRTUALENV:= $(HOME)/.pyenv/versions/$(PROJECT)-venv
 PYTHON=python
+VERSIONFILE=cnfformula/version.py
 
 all : test
 
-.PHONY: test install package upload docbuild editor-tools doc-tools venv
+.PHONY: test install clean package upload docs-build docs-install-tools venv
 
-test: venv
+$(VERSIONFILE):
+	@echo "__version__ = '"`git describe --always --tags`"'" > $(VERSIONFILE)
+
+test: venv $(VERSIONFILE)
 	. $(VIRTUALENV)/bin/activate && \
 	pytest
 
-install:
-	$(PYTHON) setup.py install --user --prefix=
+install: $(VERSIONFILE)
+	$(PYTHON) setup.py install --user
 
 clean:
+	rm -fr version.py
 	rm -fr build
 	rm -fr dist
 	rm -fr *.egg-info
@@ -22,7 +27,7 @@ clean:
 	find . -name '*.pyo' -delete
 	find . -name 'flycheck*.py' -delete
 
-package: clean
+package: clean versionfile
 	$(PYTHON) setup.py sdist bdist_egg bdist_wheel
 
 upload: package
@@ -45,7 +50,7 @@ DOC_DEPENDENCES:=sphinx sphinx-autobuild numpydoc sphinx_rtd_theme
 PYENV:= $(shell command -v pyenv 2> /dev/null)
 PYENV_PYVERSION:=$(shell pyenv install -l | grep '[[:space:]]3.7.[[:digit:]]*' | grep -v 'rc\|dev' | tail -1)
 
-docs-build: docs-install-tools
+docs-build: docs-install-tools $(VERSIONFILE)
 	. $(VIRTUALENV)/bin/activate && \
 	python setup.py install && \
 	sphinx-apidoc -e -o docs cnfformula  && \
@@ -73,5 +78,6 @@ endif
 	. $@ && pip install -Ur requirements.txt
 	. $@ && pip install $(DEV_DEPENDENCES)
 	. $@ && pip install $(PKG_DEPENDENCES)
+	. $@ && pip install -e .
 	touch $@
 
