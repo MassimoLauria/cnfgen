@@ -24,11 +24,13 @@ def PitfallFormula(v, d, ny, nz, k):
 
     Parameters
     ----------
-    v : 
-    d : 
-    nx : 
-    ny :
-    k :
+    v : positive integer
+        number of vertices in the Tseitin formulas
+    d : positive integer
+        graph degree in the Tseitin formulas  
+    ny : positive integer
+    nz : positive integer
+    k : positive integer
 
     Returns
     -------
@@ -45,6 +47,17 @@ def PitfallFormula(v, d, ny, nz, k):
            Hard examples for common variable decision heuristics.
            In, AAAI 2020 (pp. 1652–1659).
     """
+    if v <= 0:
+        raise ValueError("v must be positive.")
+    if d <= 0:
+        raise ValueError("d must be positive.")
+    if ny <= 0:
+        raise ValueError("ny must be positive.")
+    if nz <= 0:
+        raise ValueError("nz must be positive.")
+    if k <= 0:
+        raise ValueError("k must be positive.")
+
     def xname(j, x):
         return "{}_{}".format(x, j)
 
