@@ -7,7 +7,7 @@ from cnfgen.cmdline import get_transformation_helpers
 def test_find_formula_helpers():
     """All formula families are detected."""
     subcommands = get_formula_helpers()
-    assert len(subcommands) == 32
+    assert len(subcommands) == 33
 
 
 def test_find_formula_examples():

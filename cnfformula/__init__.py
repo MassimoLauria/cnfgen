@@ -46,6 +46,7 @@ from .families.subgraph import RamseyWitnessFormula
 from .families.subsetcardinality import SubsetCardinalityFormula
 from .families.tseitin import TseitinFormula
 from .families.pitfall import PitfallFormula
+from .families.cpls import CPLSFormula
 
 # Formula transformation implemented
 from .transformations.substitutions import AllEqualSubstitution
