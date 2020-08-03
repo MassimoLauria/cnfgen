@@ -41,8 +41,12 @@ class PitfallCmdHelper(FormulaHelper):
 
         parser.usage = usage_string.format(parser.prog)
 
-        parser.add_argument('v', type=positive_int)
-        parser.add_argument('d', type=positive_int)
+        parser.add_argument('v',
+                            type=positive_int,
+                            help='vertices in each graph')
+        parser.add_argument('d',
+                            type=positive_int,
+                            help='degree in each graph')
         parser.add_argument('ny', type=positive_int)
         parser.add_argument('nz', type=positive_int)
         parser.add_argument('k', type=positive_int)
