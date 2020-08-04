@@ -212,6 +212,12 @@ def nonnegative_int(value):
         raise argparse.ArgumentTypeError(errmsg)
     return ivalue
 
+def positive_even_int(value):
+    errmsg = "{} was supposed to be an even integer".format(value)
+    ivalue = positive_int(value)
+    if ivalue % 2 != 0:
+        raise argparse.ArgumentTypeError(errmsg)
+    return ivalue
 
 def probability(value):
     errmsg = "{} was supposed to be a real number in [0,1]".format(value)

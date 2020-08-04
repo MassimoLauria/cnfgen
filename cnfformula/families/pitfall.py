@@ -15,22 +15,34 @@ from itertools import combinations
 def PitfallFormula(v, d, ny, nz, k):
     """Pitfall Formula
 
-    The Pitfall formula has been designed by Marc Vinyals [1]_ to be
-    specifically easy for Resolution and hard for common CDCL
-    heuristics. The formula is unsatisfiable and is the union of an
-    easy to refute and several copies of unsatisfiable Tseitin
-    formulas on random regular graphs. For more details on this
-    formula I suggest to read the corresponding paper.
+    The Pitfall formula was designed to be specifically easy for
+    Resolution and hard for common CDCL heuristics. The formula is
+    unsatisfiable and consists of three parts: an easy formula, a hard
+    formula, and a pitfall misleading the solver into working with the
+    hard part.
+
+    The hard part are several copies of an unsatisfiable Tseitin
+    formula on a random regular graph. The pitfall part is made up of
+    a few gadgets over (primarily) two sets of variables: pitfall
+    variables, which point the solver towards the hard part after
+    being assigned, and safety variables, which prevent the gadget
+    from breaking even if a few other variables are assigned.
+
+    For more details, see the corresponding paper [1]_.
 
     Parameters
     ----------
     v : positive integer
-        number of vertices in the Tseitin formulas
+        number of vertices of the Tseitin graph
     d : positive integer
-        graph degree in the Tseitin formulas  
+        degree of the Tseitin graph  
     ny : positive integer
+         number of pitfall variables
     nz : positive integer
-    k : positive integer
+         number of safety variables
+    k : positive, even integer
+        number of copies of the hard and pitfall parts; controls how
+        easy the easy part is
 
     Returns
     -------
@@ -57,6 +69,8 @@ def PitfallFormula(v, d, ny, nz, k):
         raise ValueError("nz must be positive.")
     if k <= 0:
         raise ValueError("k must be positive.")
+    if k % 2 != 0:
+        raise ValueError("k must be even.")
 
     def xname(j, x):
         return "{}_{}".format(x, j)
@@ -75,6 +89,7 @@ and d*v must be even.""".format(d, v))
     X_ = list(ts.variables())
     nx = len(X_)
 
+    ### Variables
     X = [0] * k
     P = [0] * k
     Y = [0] * k
@@ -95,6 +110,7 @@ and d*v must be even.""".format(d, v))
         for x in XX:
             phi.add_variable(x)
 
+    ### Hard part
     # Ts_j
     for j in range(k):
         append = [(True, z) for z in Z[j]]
@@ -102,6 +118,7 @@ and d*v must be even.""".format(d, v))
             CC = [(p, xname(j, x)) for (p, x) in C]
             phi.add_clause(CC + append)
 
+    ### Pitfall part
     # Psi
     def pitfall(y1, y2, PP):
         CY = [(True, y1), (True, y2)]
@@ -141,6 +158,7 @@ and d*v must be even.""".format(d, v))
         for (y, z) in product(Y[j], Z[j]):
             tail(y, z, A[j])
 
+    ### Easy part
     # Gamma
     split_gamma = 2
     for i in range(0, ny, split_gamma):
