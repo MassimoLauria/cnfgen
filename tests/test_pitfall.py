@@ -22,6 +22,8 @@ def test_bad_cmd_line():
         cnfgen(["cnfgen", "-q", "pitfall", 8, 3, 10, -10, 2])
     with pytest.raises(CLIError):
         cnfgen(["cnfgen", "-q", "pitfall", 8, 3, 10, 10, -2])
+    with pytest.raises(CLIError):
+        cnfgen(["cnfgen", "-q", "pitfall", 8, 3, 10, 10, 3])
 
 
 def test_bad_args():
@@ -35,6 +37,8 @@ def test_bad_args():
         PitfallFormula(8, 3, 10, -10, 2)
     with pytest.raises(ValueError):
         PitfallFormula(8, 3, 10, 10, -2)
+    with pytest.raises(ValueError):
+        PitfallFormula(8, 3, 10, 10, 3)
 
 
 def test_good_args():
@@ -42,7 +46,7 @@ def test_good_args():
 
 
 def test_cmd_line():
-    cnfgen(["cnfgen", "-q", "pitfall", 5, 2, 6, 6, 5])
+    cnfgen(["cnfgen", "-q", "pitfall", 5, 2, 6, 6, 4])
 
 
 def test_no_regular_graph():
@@ -60,9 +64,9 @@ def test_lib_vs_cli():
 To avoid mismatches in the header, we compare the dimacs output
 without the comments.
 """
-    args = ["cnfgen", "-q", "pitfall", 5, 2, 4, 4, 3]
+    args = ["cnfgen", "-q", "pitfall", 5, 2, 4, 4, 2]
     random.seed(42)
-    F = PitfallFormula(5, 2, 4, 4, 3)
+    F = PitfallFormula(5, 2, 4, 4, 2)
     lib = F.dimacs(export_header=False)
     random.seed(42)
     cli = cnfgen(args, mode='string')
