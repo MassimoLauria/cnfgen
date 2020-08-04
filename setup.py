@@ -2,12 +2,10 @@
 """
 Setup script for the CNFgen package
 """
-
+from os import path
 from setuptools import setup, find_packages
 
 from cnfformula.info import info
-
-from os import path
 
 this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'PyPI.md'), encoding='utf-8') as f:

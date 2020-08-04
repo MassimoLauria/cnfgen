@@ -5,7 +5,9 @@ VERSIONFILE=cnfformula/version.py
 
 all : test
 
-.PHONY: test install clean package upload docs-build docs-install-tools venv force
+.PHONY: test install clean venv force
+.PHONY: docs-build docs-install-tools
+.PHONY: testpackage package upload
 
 $(VERSIONFILE): force
 	@echo "version = '"`git describe --always --tags`"'" > $(VERSIONFILE)
@@ -27,13 +29,26 @@ clean:
 	find . -name '*.pyo' -delete
 	find . -name 'flycheck*.py' -delete
 
-package: clean $(VERSIONFILE)
+package:
+	$(MAKE) clean
+	$(MAKE) $(VERSIONFILE)
 	$(PYTHON) setup.py sdist bdist_egg bdist_wheel
 
-upload: package
+
+testpackage: test
+	$(MAKE) clean
+	$(MAKE) $(VERSIONFILE)
+	$(eval pkgname=$(shell $(PYTHON) setup.py --name)-$(shell $(PYTHON) setup.py --version))
+	$(PYTHON) setup.py sdist
+	cd dist && \
+	tar xfz $(pkgname).tar.gz && \
+	cd $(pkgname) && \
+	$(PYTHON) setup.py build
+	rm -fr dist/$(pkgname)
+
+upload: testpackage
+	$(MAKE) package
 	twine upload dist/*
-
-
 
 #
 # Development is based on pyenv
