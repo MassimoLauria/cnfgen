@@ -50,20 +50,12 @@ object. Let's see a simple example of its usage.
    >>> F.add_clause([(True,"Y")])
    >>> F.is_satisfiable()                      # no solution
    (False, None)
-   >>> print(F.dimacs())
-   c Generated with `cnfgen`
-   c (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
-   c https://massimolauria.net/cnfgen
-   c
+   >>> print(F.dimacs(export_header=False))
    p cnf 2 3
    1 -2 0
    -1 0
    2 0
-   >>> print(F.latex())
-   % Generated with `cnfgen`
-   % (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
-   % https://massimolauria.net/cnfgen
-   %
+   >>> print(F.latex(export_header=False))
    \begin{align}
    &       \left(            {X} \lor   \overline{Y} \right) \\
    & \land \left(   \overline{X} \right) \\
@@ -75,12 +67,7 @@ pigeonhole principle formula.
 
    >>> from cnfformula import PigeonholePrinciple
    >>> F = PigeonholePrinciple(5,4)
-   >>> print(F.dimacs())
-   c Pigeonhole principle formula for 5 pigeons and 4 holes
-   c Generated with `cnfgen`
-   c (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
-   c https://massimolauria.net/cnfgen
-   c
+   >>> print(F.dimacs(export_header=False))
    p cnf 20 45
    1 2 3 4 0
    5 6 7 8 0
@@ -101,10 +88,11 @@ the command line. To produce a  pigeonhole principle from 5 pigeons to
 .. code-block:: shell
                 
    $ cnfgen php 5 4
-   c Pigeonhole principle formula for 5 pigeons and 4 holes
-   c Generated with `cnfgen`
-   c (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
-   c https://github.com/MassimoLauria/cnfgen.git
+   c description: Pigeonhole principle formula for 5 pigeons and 4 holes
+   c generator: CNFgen (0.8.5.post1-7-g4e234b7)
+   c copyright: (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
+   c url: https://massimolauria.net/cnfgen
+   c command line: cnfgen php 5 4
    c
    p cnf 20 45
    1 2 3 4 0
