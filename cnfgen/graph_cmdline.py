@@ -377,13 +377,13 @@ class SimpleGraphHelper(GraphHelper):
 
             dim = getattr(args, 'grid' + suffix)
             G = networkx.grid_graph(dim)
-            G.name = "Grid graphs of dimension {}".format(dim)
+            G.name = "Grid graph of dimension {}".format(dim)
 
         elif getattr(args, 'torus' + suffix) is not None:
 
             dim = getattr(args, 'torus' + suffix)
             G = networkx.grid_graph(dim, periodic=True)
-            G.name = "Torus graphs of dimension {}".format(dim)
+            G.name = "Torus graph of dimension {}".format(dim)
 
         elif getattr(args, 'complete' + suffix) is not None:
 
