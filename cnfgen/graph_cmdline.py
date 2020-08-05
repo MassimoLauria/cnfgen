@@ -98,6 +98,7 @@ def read_graph_from_input(args, suffix, grtype):
 
         G = readGraph(sys.stdin, "simple", fformat)
 
+    G.name = "graph from file '{}' (format: {})".format(fsource.name, fformat)
     return G
 
 
@@ -358,33 +359,43 @@ class SimpleGraphHelper(GraphHelper):
             if (n * d) % 2 == 1:
                 raise CLIError("ERROR: n * d must be even")
             G = networkx.random_regular_graph(d, n)
+            G.name = 'Random {}-regular graph of {} vertices'.format(d, n)
 
         elif getattr(args, 'gnp' + suffix) is not None:
 
             n, p = getattr(args, 'gnp' + suffix)
             G = networkx.gnp_random_graph(n, p)
+            G.name = 'Random {}-biased graph of {} vertices'.format(p, n)
 
         elif getattr(args, 'gnm' + suffix) is not None:
 
             n, m = getattr(args, 'gnm' + suffix)
             G = networkx.gnm_random_graph(n, m)
+            G.name = 'Random graph of {} vertices with {} edges'.format(n, m)
 
         elif getattr(args, 'grid' + suffix) is not None:
 
-            G = networkx.grid_graph(getattr(args, 'grid' + suffix))
+            dim = getattr(args, 'grid' + suffix)
+            G = networkx.grid_graph(dim)
+            G.name = "Grid graphs of dimension {}".format(dim)
 
         elif getattr(args, 'torus' + suffix) is not None:
 
-            G = networkx.grid_graph(getattr(args, 'torus' + suffix),
-                                    periodic=True)
+            dim = getattr(args, 'torus' + suffix)
+            G = networkx.grid_graph(dim, periodic=True)
+            G.name = "Torus graphs of dimension {}".format(dim)
 
         elif getattr(args, 'complete' + suffix) is not None:
 
-            G = networkx.complete_graph(getattr(args, 'complete' + suffix))
+            n = getattr(args, 'complete' + suffix)
+            G = networkx.complete_graph(n)
+            G.name = "Complete graphs of {} vertices".format(n)
 
         elif getattr(args, 'empty' + suffix) is not None:
 
-            G = networkx.empty_graph(getattr(args, 'empty' + suffix))
+            n = getattr(args, 'empty' + suffix)
+            G = networkx.empty_graph(n)
+            G.name = 'Empty graph of {} vertices'.format(n)
 
         else:
 
@@ -401,19 +412,20 @@ class SimpleGraphHelper(GraphHelper):
 
             for v, w in combinations(clique, 2):
                 G.add_edge(v, w)
+            G.name += " + planted {}-clique".format(cliquesize)
 
         if getattr(args, 'addedges' + suffix) is not None and getattr(
                 args, 'addedges' + suffix) > 0:
             k = getattr(args, 'addedges' + suffix)
             G.add_edges_from(sample_missing_edges(G, k))
-            if hasattr(G, 'name'):
-                G.name = "{} with {} new random edges".format(G.name, k)
+            G.name += " + {} random edges".format(k)
 
         # Output the graph is requested
         if getattr(args, 'savegraph' + suffix) is not None:
             writeGraph(G, getattr(args, 'savegraph' + suffix), 'simple',
                        getattr(args, 'graphformat' + suffix))
 
+        assert hasattr(G, 'name')
         return G
 
 
