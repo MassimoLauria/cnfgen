@@ -96,9 +96,10 @@ def read_graph_from_input(args, suffix, grtype):
         with msg_prefix("INPUT: "):
             interactive_msg(ask_gr, filltext=70)
 
-        G = readGraph(sys.stdin, "simple", fformat)
+        G = readGraph(sys.stdin, grtype, fformat)
 
-    G.name = "graph from file '{}' (format: {})".format(fsource.name, fformat)
+    G.name = "{} graph from file '{}' (format: {})".format(
+        grtype, fsource.name, fformat)
     return G
 
 
@@ -193,12 +194,16 @@ class DirectedAcyclicGraphHelper(GraphHelper):
         if getattr(args, 'tree' + suffix) is not None:
             assert getattr(args, 'tree' + suffix) > 0
 
-            G = dag_complete_binary_tree(getattr(args, 'tree' + suffix))
+            h = getattr(args, 'tree' + suffix)
+            G = dag_complete_binary_tree(h)
+            G.name = "Complete binary tree of height {}".format(h)
 
         elif getattr(args, 'pyramid' + suffix) is not None:
             assert getattr(args, 'pyramid' + suffix) > 0
 
-            G = dag_pyramid(getattr(args, 'pyramid' + suffix))
+            h = getattr(args, 'pyramid' + suffix)
+            G = dag_pyramid(h)
+            G.name = "Pyramid graph of height {}".format(h)
 
         else:
             G = read_graph_from_input(args, suffix, "dag")
@@ -642,31 +647,42 @@ class BipartiteGraphHelper(GraphHelper):
 
             l, r, p = getattr(args, "bp" + suffix)
             G = bipartite_random_graph(l, r, p)
+            G.name = "Random {}-biased bipartite with {},{} vertices".format(
+                p, l, r)
 
         elif getattr(args, "bm" + suffix) is not None:
 
             l, r, m = getattr(args, "bm" + suffix)
             G = bipartite_gnmk_random_graph(l, r, m)
+            G.name = "Random bipartite with {},{} vertices and {} edges".format(
+                l, r, m)
 
         elif getattr(args, "bd" + suffix) is not None:
 
             l, r, d = getattr(args, "bd" + suffix)
             G = bipartite_random_left_regular(l, r, d)
+            G.name = "Random {}-left regular bipartite with {},{} vertices".format(
+                d, l, r)
 
         elif getattr(args, "bregular" + suffix) is not None:
 
             l, r, d = getattr(args, "bregular" + suffix)
             G = bipartite_random_regular(l, r, d)
+            G.name = "Random {}-regular bipartite with {},{} vertices".format(
+                d, l, r)
 
         elif getattr(args, "bshift" + suffix) is not None:
 
             N, M, pattern = getattr(args, "bshift" + suffix)
             G = bipartite_shift(N, M, pattern)
+            G.name = 'Bipartite with {},{} vertices and shifting edge pattern {}'.format(
+                N, M, pattern)
 
         elif getattr(args, "bcomplete" + suffix) is not None:
 
             l, r = getattr(args, "bcomplete" + suffix)
             G = complete_bipartite_graph(l, r)
+            G.name = "Complete bipartite with {},{} vertices".format(l, r)
 
         else:
             G = read_graph_from_input(args, suffix, "bipartite")
@@ -684,18 +700,20 @@ class BipartiteGraphHelper(GraphHelper):
             for v, w in product(left, right):
                 G.add_edge(v, w)
 
+            G.name += " + planted {}x{}-biclique".format(l, r)
+
         if getattr(args, "addedges" + suffix) is not None:
 
             k = getattr(args, "addedges" + suffix)
 
             G.add_edges_from(sample_missing_edges(G, k))
 
-            if hasattr(G, 'name'):
-                G.name = "{} with {} new random edges".format(G.name, k)
+            G.name += " + {} random edges".format(k)
 
         # Output the graph is requested
         if getattr(args, "savegraph" + suffix) is not None:
             writeGraph(G, getattr(args, "savegraph" + suffix), 'bipartite',
                        getattr(args, "graphformat" + suffix))
 
+        assert hasattr(G, 'name')
         return G
