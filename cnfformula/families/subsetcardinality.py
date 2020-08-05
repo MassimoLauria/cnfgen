@@ -5,10 +5,10 @@
 
 from cnfformula.cnf import CNF
 
-from cnfformula.graphs import bipartite_sets,enumerate_edges,neighbors
+from cnfformula.graphs import bipartite_sets, enumerate_edges, neighbors
 
 
-def SubsetCardinalityFormula(B, equalities = False):
+def SubsetCardinalityFormula(B, equalities=False):
     r"""SubsetCardinalityFormula
 
     Consider a bipartite graph :math:`B`. The CNF claims that at least half
@@ -76,39 +76,39 @@ def SubsetCardinalityFormula(B, equalities = False):
 
     """
     Left, Right = bipartite_sets(B)
-            
-    ssc=CNF()
-    ssc.header="Subset cardinality formula for graph {0}\n".format(B.name)
 
-    def var_name(u,v):
+    description = "Subset cardinality formula for {0}".format(B.name)
+    ssc = CNF(description=description)
+
+    def var_name(u, v):
         """Compute the variable names."""
-        if u<=v:
-            return 'x_{{{0},{1}}}'.format(u,v)
+        if u <= v:
+            return 'x_{{{0},{1}}}'.format(u, v)
         else:
-            return 'x_{{{0},{1}}}'.format(v,u)
+            return 'x_{{{0},{1}}}'.format(v, u)
 
     for u in Left:
-        for v in neighbors(B,u):
-            ssc.add_variable(var_name(u,v))
-        
+        for v in neighbors(B, u):
+            ssc.add_variable(var_name(u, v))
+
     for u in Left:
-        edge_vars = [ var_name(u,v) for v in neighbors(B,u) ]
+        edge_vars = [var_name(u, v) for v in neighbors(B, u)]
 
         if equalities:
             for cls in CNF.exactly_half_ceil(edge_vars):
-                ssc.add_clause(cls,strict=True)
+                ssc.add_clause(cls, strict=True)
         else:
             for cls in CNF.loose_majority_constraint(edge_vars):
-                ssc.add_clause(cls,strict=True)
+                ssc.add_clause(cls, strict=True)
 
     for v in Right:
-        edge_vars = [ var_name(u,v) for u in neighbors(B,v) ]
+        edge_vars = [var_name(u, v) for u in neighbors(B, v)]
 
         if equalities:
             for cls in CNF.exactly_half_floor(edge_vars):
-                ssc.add_clause(cls,strict=True)
+                ssc.add_clause(cls, strict=True)
         else:
             for cls in CNF.loose_minority_constraint(edge_vars):
-                ssc.add_clause(cls,strict=True)
-    
+                ssc.add_clause(cls, strict=True)
+
     return ssc

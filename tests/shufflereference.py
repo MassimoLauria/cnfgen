@@ -9,16 +9,14 @@ def stableshuffle(inputfile,
 
     subst = None
     line_counter = 0
-    header_buffer = ["c Reshuffling of:\nc\n"]
     clause_counter = 0
 
     for l in inputfile.readlines():
 
         line_counter += 1
 
-        # add the comment to the header (discard if it is in the middle)
+        # discard header
         if l[0] == 'c':
-            if not subst: header_buffer.append(l)
             continue
 
         # parse spec line
@@ -38,10 +36,6 @@ def stableshuffle(inputfile,
                 random.shuffle(clause_permutation)
 
             clause_buffer = [None] * m
-
-            # Print header
-            for h in header_buffer:
-                print(h, end='', file=outputfile)
 
             print(l, end='', file=outputfile)
 

@@ -1,5 +1,6 @@
-from cnfformula import CNF, RandomKCNF
+from cnfformula import CNF, RandomKCNF, PigeonholePrinciple
 from cnfformula import Shuffle
+from cnfgen import cnfgen
 
 import random
 from tests.utils import assertCnfEqual
@@ -97,3 +98,13 @@ def test_deterministic():
     random.seed(42)
     shuffle2 = Shuffle(cnf)
     assertCnfEqual(shuffle2, shuffle)
+
+
+def test_cli_vs_lib():
+    F = PigeonholePrinciple(7, 6)
+    random.seed(167)
+    Fs = Shuffle(F)
+    lib = Fs.dimacs(export_header=False)
+    random.seed(167)
+    cli = cnfgen(["cnfgen", "-q", "php", 7, 6, '-T', "shuffle"], mode='string')
+    assert lib == cli

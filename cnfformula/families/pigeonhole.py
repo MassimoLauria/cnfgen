@@ -70,9 +70,9 @@ def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
         else:
             formula_name = "Pigeonhole principle"
 
-    php = CNF()
-    php.header = "{0} formula for {1} pigeons and {2} holes\n".format(formula_name,pigeons,holes)\
-        + php.header
+    description = "{0} formula for {1} pigeons and {2} holes".format(
+        formula_name, pigeons, holes)
+    php = CNF(description=description)
 
     if pigeons < 0 or holes < 0:
         raise ValueError(
@@ -137,9 +137,8 @@ def GraphPigeonholePrinciple(graph, functional=False, onto=False):
         else:
             formula_name = "Graph pigeonhole principle"
 
-    gphp = CNF()
-    gphp.header = "{0} formula for graph {1}\n".format(formula_name,
-                                                       graph.name)
+    description = "{0} formula on {1}".format(formula_name, graph.name)
+    gphp = CNF(description=description)
 
     Left, Right = bipartite_sets(graph)
 
@@ -175,9 +174,9 @@ def BinaryPigeonholePrinciple(pigeons, holes):
        number of holes
     """
 
-    bphp = CNF()
-    bphp.header = "Binary Pigeonhole Principle for {0} pigeons and {1} holes".format(
-        pigeons, holes) + bphp.header
+    description = "Binary Pigeonhole Principle for {0} pigeons and {1} holes".format(
+        pigeons, holes)
+    bphp = CNF(description=description)
 
     if pigeons < 0 or holes < 0:
         raise ValueError(

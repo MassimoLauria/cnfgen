@@ -5,12 +5,13 @@
 
 from cnfformula.cnf import CNF
 
-from cnfformula.graphs import enumerate_vertices,neighbors
-from itertools import combinations,permutations
+from cnfformula.graphs import enumerate_vertices, neighbors
+from itertools import combinations, permutations
 
 import networkx
 
-def OrderingPrinciple(size,total=False,smart=False,plant=False,knuth=0):
+
+def OrderingPrinciple(size, total=False, smart=False, plant=False, knuth=0):
     """Generates the clauses for ordering principle
 
     Arguments:
@@ -20,14 +21,32 @@ def OrderingPrinciple(size,total=False,smart=False,plant=False,knuth=0):
     - `plant` : allow a single element to be minimum (could make the formula SAT)
     - `knuth` : Donald Knuth variant of the formula ver. 2 or 3 (anything else suppress it)
     """
+    if total or smart:
+        description = "Total ordering principle"
+    else:
+        description = "Ordering principle"
 
-    return GraphOrderingPrinciple(networkx.complete_graph(size),total,smart,plant,knuth)
+    if smart:
+        description += " (compact representation)"
+
+    if knuth in [2, 3]:
+        description += " (Knuth variant {})".format(knuth)
+
+    F = GraphOrderingPrinciple(networkx.complete_graph(size), total, smart,
+                               plant, knuth)
+    F.header['description'] = description
+    return F
 
 
 def varname(v1, v2):
-    return 'x_{{{0},{1}}}'.format(v1,v2)
+    return 'x_{{{0},{1}}}'.format(v1, v2)
 
-def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
+
+def GraphOrderingPrinciple(graph,
+                           total=False,
+                           smart=False,
+                           plant=False,
+                           knuth=0):
     """Generates the clauses for graph ordering principle
 
     Arguments:
@@ -37,30 +56,30 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
     - `plant` : allow last element to be minimum (and could make the formula SAT)
     - `knuth` : Don Knuth variants 2 or 3 of the formula (anything else suppress it)
     """
-    gop = CNF()
-
     # Describe the formula
     if total or smart:
-        name = "Total graph ordering principle"
+        description = "Total graph ordering principle"
     else:
-        name = "Ordering principle"
+        description = "Graph ordering principle"
 
     if smart:
-        name = name + "(compact representation)"
+        description += " (compact representation)"
+
+    if knuth in [2, 3]:
+        description += " (Knuth variant {})".format(knuth)
 
     if hasattr(graph, 'name'):
-        gop.header = name+"\n on graph "+graph.name+".\n\n"+gop.header
-    else:
-        gop.header = name+".\n\n"+gop.header
+        description += " on " + graph.name
 
+    gop = CNF(description=description)
 
     # Fix the vertex order
     V = enumerate_vertices(graph)
 
     # Add variables
     iterator = combinations if smart else permutations
-    for v1,v2 in iterator(V,2):
-        gop.add_variable(varname(v1,v2))
+    for v1, v2 in iterator(V, 2):
+        gop.add_variable(varname(v1, v2))
 
     #
     # Non minimality axioms
@@ -75,7 +94,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
         for lo in range(med):
             if graph.has_edge(V[med], V[lo]):
                 clause += [(True, varname(V[lo], V[med]))]
-        for hi in range(med+1, len(V)):
+        for hi in range(med + 1, len(V)):
             if not graph.has_edge(V[med], V[hi]):
                 continue
             elif smart:
@@ -93,20 +112,20 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
             # Optimized version if smart representation of totality is used
             for (v1, v2, v3) in combinations(V, 3):
 
-                gop.add_clause([(True,  varname(v1, v2)),
-                                (True,  varname(v2, v3)),
+                gop.add_clause([(True, varname(v1, v2)),
+                                (True, varname(v2, v3)),
                                 (False, varname(v1, v3))],
                                strict=True)
-                
+
                 gop.add_clause([(False, varname(v1, v2)),
                                 (False, varname(v2, v3)),
-                                (True,  varname(v1, v3))],
+                                (True, varname(v1, v3))],
                                strict=True)
 
         elif total:
             # With totality we still need just two axiom per triangle
             for (v1, v2, v3) in combinations(V, 3):
-                
+
                 gop.add_clause([(False, varname(v1, v2)),
                                 (False, varname(v2, v3)),
                                 (False, varname(v3, v1))],
@@ -129,7 +148,7 @@ def GraphOrderingPrinciple(graph,total=False,smart=False,plant=False,knuth=0):
 
                 gop.add_clause([(False, varname(v1, v2)),
                                 (False, varname(v2, v3)),
-                                (True,  varname(v1, v3))],
+                                (True, varname(v1, v3))],
                                strict=True)
 
     if not smart:

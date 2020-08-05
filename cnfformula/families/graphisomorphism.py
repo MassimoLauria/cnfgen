@@ -6,14 +6,13 @@
 from cnfformula.cnf import CNF
 
 from cnfformula.graphs import enumerate_vertices
-from itertools import combinations,product
-
-
+from itertools import combinations, product
 
 
 def _graph_isomorphism_var(u, v):
     """Standard variable name"""
     return "x_{{{0},{1}}}".format(u, v)
+
 
 def GraphIsomorphism(G1, G2):
     """Graph Isomorphism formula
@@ -34,15 +33,16 @@ def GraphIsomorphism(G1, G2):
     are isomorphic.
 
     """
-    F = CNF()
-    F.header = "Graph Isomorphism problem between graphs " +\
-               G1.name + " and " + G2.name + "\n" + F.header
+    description = "Graph isomorphism between (1) '{}' and (2) '{}'"
+    description = description.format(G1.name, G2.name)
 
-    U=enumerate_vertices(G1)
-    V=enumerate_vertices(G2)
+    F = CNF(description=description)
+
+    U = enumerate_vertices(G1)
+    V = enumerate_vertices(G2)
     var = _graph_isomorphism_var
 
-    for (u, v) in product(U,V):
+    for (u, v) in product(U, V):
         F.add_variable(var(u, v))
 
     # Defined on both side
@@ -55,23 +55,24 @@ def GraphIsomorphism(G1, G2):
     # Injective on both sides
     for u in U:
         for v1, v2 in combinations(V, 2):
-            F.add_clause([(False, var(u, v1)),
-                          (False, var(u, v2))], strict=True)
+            F.add_clause([(False, var(u, v1)), (False, var(u, v2))],
+                         strict=True)
     for v in V:
         for u1, u2 in combinations(U, 2):
-            F.add_clause([(False, var(u1, v)),
-                          (False, var(u2, v))], strict=True)
+            F.add_clause([(False, var(u1, v)), (False, var(u2, v))],
+                         strict=True)
 
     # Edge consistency
     for u1, u2 in combinations(U, 2):
         for v1, v2 in combinations(V, 2):
             if G1.has_edge(u1, u2) != G2.has_edge(v1, v2):
-                F.add_clause([(False, var(u1, v1)),
-                              (False, var(u2, v2))], strict=True)
-                F.add_clause([(False, var(u1, v2)),
-                              (False, var(u2, v1))], strict=True)
+                F.add_clause([(False, var(u1, v1)), (False, var(u2, v2))],
+                             strict=True)
+                F.add_clause([(False, var(u1, v2)), (False, var(u2, v1))],
+                             strict=True)
 
     return F
+
 
 def GraphAutomorphism(G):
     """Graph Automorphism formula
@@ -89,13 +90,13 @@ def GraphAutomorphism(G):
     A CNF formula which is satiafiable if and only if graph G has a
     nontrivial automorphism.
     """
-    tmp = CNF()
-    header = "Graph automorphism formula for graph "+ G.name +"\n"+ tmp.header
+    description = "Graph automorphism formula for " + G.name
     F = GraphIsomorphism(G, G)
-    F.header = header
+    F.header['description'] = description
 
     var = _graph_isomorphism_var
 
-    F.add_clause([(False, var(u, u)) for u in enumerate_vertices(G)], strict=True)
+    F.add_clause([(False, var(u, u)) for u in enumerate_vertices(G)],
+                 strict=True)
 
     return F

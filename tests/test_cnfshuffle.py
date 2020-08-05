@@ -13,24 +13,24 @@ def test_backwards_compatible():
     cnf = RandomKCNF(4, 10, 100)
     random.seed(44)
 
-    lib = Shuffle(cnf).dimacs() + "\n"
+    lib = Shuffle(cnf).dimacs(export_header=False)
 
     input = io.StringIO(cnf.dimacs())
     output = io.StringIO()
     random.seed(44)
     with redirect_stdin(input), redirect_stdout(output):
         stableshuffle(input, output)
-        assert lib == output.getvalue()
+        assert lib + '\n' == output.getvalue()
 
 
 def test_cmdline_reshuffler():
     cnf = RandomKCNF(4, 10, 3)
     random.seed('45')
     shuffle = Shuffle(cnf)
-    lib = shuffle.dimacs()
+    lib = shuffle.dimacs(export_header=False)
 
     input = io.StringIO(cnf.dimacs())
-    parameters = ['cnfshuffle', '--input', '-', '--seed', '45']
+    parameters = ['cnfshuffle', '-q', '--input', '-', '--seed', '45']
     with redirect_stdin(input):
         cli = cnfshuffle(parameters, mode='string')
     assert lib == cli
@@ -48,9 +48,9 @@ def equivalence_check_helper(cnf, dimacs_permutation, clause_permutation,
     random.seed(43)
     shuffle = Shuffle(cnf, massimos_fancy_input, clause_permutation,
                       polarity_flip)
-    lib = shuffle.dimacs() + "\n"
+    lib = shuffle.dimacs(export_header=False) + "\n"
 
-    input = io.StringIO(cnf.dimacs())
+    input = io.StringIO(cnf.dimacs(export_header=False))
     output = io.StringIO()
     random.seed(43)
     with redirect_stdin(input), redirect_stdout(output):

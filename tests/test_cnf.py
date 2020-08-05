@@ -6,32 +6,6 @@ import pytest
 
 from cnfformula import CNF
 
-# class TestCNF():
-#     @staticmethod
-#     def cnf_from_variables_and_clauses(variables, clauses):
-#         cnf = CNF()
-#         for variable in variables:
-#             cnf.add_variable(variable)
-#         for clause in clauses:
-#             cnf.add_clause(clause)
-#         return cnf
-
-#     @staticmethod
-#     def sorted_cnf(clauses):
-#         return TestCNF.cnf_from_variables_and_clauses(
-#             sorted(
-#                 set(variable
-#                     for polarity, variable in itertools.chain(*clauses))),
-#             clauses)
-
-#     @staticmethod
-#     def random_cnf(width, num_variables, num_clauses):
-#         return TestCNF.cnf_from_variables_and_clauses(
-#             range(1, num_variables + 1),
-#             [[(random.choice([True, False]), x + 1)
-#               for x in random.sample(range(num_variables), width)]
-#              for C in range(num_clauses)])
-
 
 def test_empty():
     F = CNF()
@@ -59,7 +33,7 @@ def test_safe_clause_insertion():
 
 def test_dimacs_ascii():
     "CNF should support unicode. This is Python 3 after all."
-    cnf = CNF(header='Unicöde string not ascii')
+    cnf = CNF(description='Unicöde string not ascii')
     cnf.add_variable('x')
     cnf.add_variable('ζ')
     cnf.add_clause([(True, "x"), (False, "ζ")])

@@ -159,7 +159,7 @@ def main():
 
     try:
 
-        command_line_utility(sys.argv)
+        cli(sys.argv)
 
     except ValueError as e:
         error_msg("DIMACS ERROR: " + str(e))

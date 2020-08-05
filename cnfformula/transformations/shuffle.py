@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-# -*- coding:utf-8 -*-
 
 import random
+from copy import copy
 
-from ..cnf import CNF
+from cnfformula.cnf import CNF
 
 
 def Shuffle(cnf,
@@ -28,9 +28,16 @@ def Shuffle(cnf,
 """
 
     # empty cnf
-    out = CNF(header='')
+    out = CNF()
+    out.header = copy(cnf.header)
 
-    out.header = "Reshuffling of:\n\n" + cnf.header
+    if 'description' in out.header:
+        out.header['description'] += " (reshuffled)"
+
+    i = 1
+    while 'transformation {}'.format(i) in out.header:
+        i += 1
+    out.header['transformation {}'.format(i)] = "Formula reshuffling"
 
     variables = list(cnf.variables())
     N = len(variables)

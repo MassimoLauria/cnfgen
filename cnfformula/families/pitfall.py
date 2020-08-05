@@ -75,7 +75,10 @@ def PitfallFormula(v, d, ny, nz, k):
     def xname(j, x):
         return "{}_{}".format(x, j)
 
-    phi = CNF()
+    phi = CNF(
+        description=
+        'Pitfall Formula with parameters (v={},d={},ny={},nz={},k={})'.format(
+            v, d, ny, nz, k))
     try:
         graph = networkx.random_regular_graph(d, v)
     except networkx.exception.NetworkXError:

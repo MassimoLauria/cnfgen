@@ -307,13 +307,8 @@ def build_latex_cmdline_description(argv, args, t_args):
         group of parsed arguments for the transformations
 
     """
-    # The full command line
-    cmdline_descr = [
-        "\\noindent\\textbf{Command line:}", "\\begin{lstlisting}[breaklines]",
-        "$ cnfgen " + " ".join(argv[1:]), "\\end{lstlisting}"
-    ]
-
     # The docstring of the formula family generator
+    cmdline_descr = []
     if hasattr(args.generator, "docstring"):
         cmdline_descr += [
             "\\noindent\\textbf{Docstring:}",
@@ -427,6 +422,8 @@ def cli(argv=sys.argv, mode='output'):
             except RuntimeError as e:
                 raise InternalBug(e)
 
+        cnf.header['command line'] = "cnfgen " + " ".join(argv[1:])
+
         if mode == 'formula':
             return cnf
 
@@ -441,9 +438,7 @@ def cli(argv=sys.argv, mode='output'):
 
         elif args.output_format == 'dimacs':
 
-            output = cnf.dimacs(export_header=args.verbose,
-                                extra_text="COMMAND LINE: cnfgen " +
-                                " ".join(argv[1:]) + "\n")
+            output = cnf.dimacs(export_header=args.verbose)
 
         else:
             raise InternalBug("Unknown output format")

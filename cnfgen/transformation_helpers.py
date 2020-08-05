@@ -51,16 +51,19 @@ class ShuffleCmd(TransformationHelper):
         parser.add_argument('--no-polarity-flips',
                             '-p',
                             action='store_true',
+                            default=False,
                             dest='no_polarity_flips',
                             help="No polarity flips")
         parser.add_argument('--no-variables-permutation',
                             '-v',
                             action='store_true',
-                            dest='no_variable_permutation',
+                            default=False,
+                            dest='no_variables_permutation',
                             help="No permutation of variables")
         parser.add_argument('--no-clauses-permutation',
                             '-c',
                             action='store_true',
+                            default=False,
                             dest='no_clauses_permutation',
                             help="No permutation of clauses")
 

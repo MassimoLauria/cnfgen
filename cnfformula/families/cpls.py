@@ -43,11 +43,10 @@ def CPLSFormula(a, b, c):
     log_c = 0
     while 2**log_c < c:
         log_c += 1
-    formula_name = "Thapen's coloured polynomial local search principle (CPLS) formula"
 
-    formula = CNF()
-    formula.header="{0} with a={1}, b={2}, c={3}\n".format(formula_name,a,b,c)\
-        + formula.header
+    description = "Thapen's CPLS formula with {} levels, {} nodes per level, {} colours".format(
+        a, b, c)
+    formula = CNF(description=description)
 
     # this allows notation G[i](x, y) and similar, which looks more like G_{i}(x, y) than G(i, x, y)
     class func_list(list):

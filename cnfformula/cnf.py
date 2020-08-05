@@ -18,15 +18,12 @@ https://github.com/MassimoLauria/cnfgen.git
 
 from itertools import product, islice
 from itertools import combinations, combinations_with_replacement
-from collections import Counter
+from collections import Counter, OrderedDict
 import re
 from math import ceil, log
 
 from cnfformula.info import info
 from .graphs import bipartite_sets, neighbors
-
-_default_header = "Generated with `cnfgen`\n{}\n{}\n\n".format(
-    info['copyright'], info['url'])
 
 
 class CNF(object):
@@ -65,7 +62,7 @@ class CNF(object):
     -2 4 0
     -3 4 -5 0
     """
-    def __init__(self, clauses=None, header=None):
+    def __init__(self, clauses=None, description=None):
         """Propositional formulas in conjunctive normal form.
 
         Parameters
@@ -78,11 +75,18 @@ class CNF(object):
 
             E.g. (not x3) or x4 or (not x2) is encoded as [(False,"x3"),(True,"x4"),False,"x2")]
 
-        header: string, optional
-            a preamble which documents the formula
+        description: string, optional
+            a description of the formula
         """
 
-        self._header = header if header != None else _default_header
+        self.header = OrderedDict()
+        if description is not None:
+            self.header['description'] = description
+
+        self.header['generator'] = "{} ({})".format(info['project'],
+                                                    info['version'])
+        self.header['copyright'] = info['copyright']
+        self.header['url'] = info['url']
 
         # Initial empty formula
         self._clauses = []
@@ -101,17 +105,6 @@ class CNF(object):
         for c in clauses or []:
             self.add_clause(c)
 
-    # Formula contains an header property
-    def _set_header(self, value):
-        """Header setter"""
-        self._header = value
-
-    def _get_header(self):
-        """Header getter"""
-        return self._header
-
-    header = property(_get_header, _set_header)
-
     #
     # Implementation of some standard methods
     #
@@ -127,7 +120,12 @@ class CNF(object):
         """String representation of the formula
         """
         assert self._coherent
-        return self._header
+        n = len(self._index2name) - 1
+        m = len(self)
+        text = "CNF with {} vars and {} clauses".format(n, m)
+        if 'description' in self.header:
+            text += " -- " + self.header['description']
+        return text
 
     def __len__(self):
         """Number of clauses in the formula
@@ -546,10 +544,11 @@ class CNF(object):
         # Produce header in ascii compatible format
         if export_header:
             # remove non ascii text
-            ascii_header = self.header.encode('ascii', errors='replace')
-            ascii_header = ascii_header.decode('ascii')
-            for line in ascii_header.split("\n")[:-1]:
-                output.write(("c " + line).rstrip() + "\n")
+            for field in self.header:
+                tmp = "c {}: {}\n".format(field, self.header[field])
+                tmp = tmp.encode('ascii', errors='replace').decode('ascii')
+                output.write(tmp)
+            output.write("c\n")
 
             # remove non ascii text
             if extra_text is not None:
@@ -639,21 +638,27 @@ class CNF(object):
 
         # formula header as a LaTeX comment
         if export_header:
-            for s in self.header.split("\n")[:-1]:
-                output.write(("% " + s).rstrip() + "\n")
+            for field in self.header:
+                tmp = "% {}: {}\n".format(field, self.header[field])
+                tmp = tmp.encode('ascii', errors='replace').decode('ascii')
+                output.write(tmp)
+            output.write("%\n")
 
         # document opening
         if full_document:
             output.write(latex_preamble)
             output.write("\\begin{document}\n")
-            title = self.header.split('\n')[0]
+            title = self.header['description']
             title = title.replace("_", "\\_")
             output.write("\\title{{{}}}\n".format(title))
             output.write("\\author{CNFgen formula generator}\n")
             output.write("\\maketitle\n")
             output.write("\\noindent\\textbf{Formula header:}\n")
             output.write("\\begin{lstlisting}[breaklines]\n")
-            output.write(self.header)
+            for field in self.header:
+                tmp = "{}: {}\n".format(field, self.header[field])
+                tmp = tmp.encode('ascii', errors='replace').decode('ascii')
+                output.write(tmp)
             output.write("\\end{lstlisting}\n")
             output.write("\\bigskip\n")
 

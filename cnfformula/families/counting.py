@@ -10,7 +10,7 @@ from cnfformula.graphs import neighbors
 from itertools import combinations
 
 
-def CountingPrinciple(M,p):
+def CountingPrinciple(M, p):
     """Generates the clauses for the counting matching principle.
     
     The principle claims that there is a way to partition M in sets of
@@ -21,27 +21,28 @@ def CountingPrinciple(M,p):
     - `p`  : size of each class
 
     """
-    cnf=CNF()
-
-    # Describe the formula
-    name="Counting Principle: {0} divided in parts of size {1}.".format(M,p)
-    cnf.header=name+"\n"+cnf.header
+    if M < p:
+        raise ValueError(
+            "Domain size must be larger or equal than the class size")
+    description = "Counting Principle: {0} divided in parts of size {1}.".format(
+        M, p)
+    cnf = CNF(description=description)
 
     def var_name(tpl):
-        return "Y_{{"+",".join("{0}".format(v) for v in tpl)+"}}"
+        return "Y_{{" + ",".join("{0}".format(v) for v in tpl) + "}}"
 
     # Incidence lists
-    incidence=[[] for _ in range(M)]
-    for tpl in combinations(range(M),p):
+    incidence = [[] for _ in range(M)]
+    for tpl in combinations(range(M), p):
         for i in tpl:
             incidence[i].append(tpl)
-    
+
     # Each element of the domain is in exactly one part.
     for el in range(M):
 
         edge_vars = [var_name(tpl) for tpl in incidence[el]]
 
-        for cls in CNF.equal_to_constraint(edge_vars,1):
+        for cls in CNF.equal_to_constraint(edge_vars, 1):
             cnf.add_clause(cls)
 
     return cnf
@@ -58,28 +59,26 @@ def PerfectMatchingPrinciple(G):
     G : undirected graph
 
     """
-    cnf=CNF()
-
     # Describe the formula
-    name="Perfect Matching Principle"
-    
-    if hasattr(G,'name'):
-        cnf.header=name+" of graph:\n"+G.name+"\n"+cnf.header
-    else:
-        cnf.header=name+".\n"+cnf.header
+    description = "Perfect Matching Principle"
 
-    def var_name(u,v):
-        if u<=v:
-            return 'x_{{{0},{1}}}'.format(u,v)
+    if hasattr(G, 'name'):
+        description += " on " + G.name
+
+    cnf = CNF(description=description)
+
+    def var_name(u, v):
+        if u <= v:
+            return 'x_{{{0},{1}}}'.format(u, v)
         else:
-            return 'x_{{{0},{1}}}'.format(v,u)
-            
+            return 'x_{{{0},{1}}}'.format(v, u)
+
     # Each vertex has exactly one edge set to one.
     for v in enumerate_vertices(G):
 
-        edge_vars = [var_name(u,v) for u in neighbors(G,v)]
+        edge_vars = [var_name(u, v) for u in neighbors(G, v)]
 
-        for cls in CNF.equal_to_constraint(edge_vars,1):
+        for cls in CNF.equal_to_constraint(edge_vars, 1):
             cnf.add_clause(cls)
 
-    return cnf    
+    return cnf
