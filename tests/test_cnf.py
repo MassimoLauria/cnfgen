@@ -9,7 +9,7 @@ from cnfformula import CNF
 
 def test_empty():
     F = CNF()
-    assert F._check_coherence()
+    assert F.debug()
     assert list(F.variables()) == []
     assert list(F.clauses()) == []
 

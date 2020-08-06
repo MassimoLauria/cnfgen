@@ -17,8 +17,8 @@ def dimacs2compressed_clauses(infile):
     n is the number of variables
     c is the list of compressed clauses.
     """
-    n = -1  # negative signal that spec line has not been read
-    m = -1
+    n = None  # negative signal that spec line has not been read
+    m = None
 
     my_header = ""
     my_clauses = []
@@ -36,7 +36,7 @@ def dimacs2compressed_clauses(infile):
 
         # parse spec line
         if l[0] == 'p':
-            if n >= 0:
+            if n is not None:
                 raise ValueError(
                     "There is a another spec at line {}".format(line_counter))
             try:
@@ -55,8 +55,10 @@ def dimacs2compressed_clauses(infile):
                 if lv == 0:
                     my_clauses.append(tuple(literal_buffer))
                     literal_buffer = []
-                else:
+                elif 1 <= abs(lv) <= n:
                     literal_buffer.append(lv)
+                else:
+                    raise ValueError
         except ValueError:
             raise ValueError("Invalid literal at line {}".format(line_counter))
 
@@ -64,7 +66,7 @@ def dimacs2compressed_clauses(infile):
     if len(literal_buffer) > 0:
         raise ValueError("Last clause was incomplete")
 
-    if m == '-1':
+    if n is None:
         raise ValueError("Missing spec line 'p cnf <n> <m>")
 
     if m != len(my_clauses):
@@ -96,5 +98,4 @@ def readCNF(infile=None):
     cnf._add_compressed_clauses(clauses)
 
     # return the formula
-    cnf._check_coherence(force=True)
     return cnf

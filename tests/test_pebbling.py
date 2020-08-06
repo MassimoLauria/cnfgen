@@ -9,7 +9,7 @@ from tests.utils import assertCnfEqual
 def test_null_graph():
     G = nx.DiGraph()
     peb = PebblingFormula(G)
-    assert peb._check_coherence()
+    assert peb.debug()
     assertCnfEqual(peb, CNF())
 
 
@@ -17,7 +17,7 @@ def test_single_vertex():
     G = nx.DiGraph()
     G.add_node('x')
     peb = PebblingFormula(G)
-    assert peb._check_coherence()
+    assert peb.debug()
 
     F = CNF()
     F.add_variable('x')
@@ -30,7 +30,7 @@ def test_path():
 
     G = nx.path_graph(10, nx.DiGraph())
     peb = PebblingFormula(G)
-    assert peb._check_coherence()
+    assert peb.debug()
 
     F = CNF()
     for i in range(10):
@@ -50,7 +50,7 @@ def test_star():
         G.add_node(i)
         G.add_edge(i, 10)
     peb = PebblingFormula(G)
-    assert peb._check_coherence()
+    assert peb.debug()
 
     F = CNF()
     for i in range(10):

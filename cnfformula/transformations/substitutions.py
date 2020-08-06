@@ -21,7 +21,6 @@ class BaseSubstitution(CNF):
         Arguments:
         - `cnf`: the original cnf
         """
-        assert cnf._coherent
         self._orig_cnf = cnf
         super(BaseSubstitution, self).__init__([])
         self.header = copy(cnf.header)
@@ -86,9 +85,6 @@ class BaseSubstitution(CNF):
         for block in varadditional[1:]:
             if block:
                 self._add_compressed_clauses(block)
-
-        assert self._orig_cnf._check_coherence()
-        assert self._check_coherence()
 
     def add_transformation_description(self, description):
         i = 1

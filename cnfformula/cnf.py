@@ -97,10 +97,6 @@ class CNF(object):
         self._name2index = dict()
         self._name2descr = dict()
 
-        # Internal coherence can be disrupted by some methods.  API
-        # methods require it to be rechecked.
-        self._coherent = True
-
         # Load the initial data into the CNF
         for c in clauses or []:
             self.add_clause(c)
@@ -113,13 +109,11 @@ class CNF(object):
         """Iterates over all clauses of the CNF
         """
         for cls in self._clauses:
-            assert self._coherent
             yield self._uncompress_clause(cls)
 
     def __str__(self):
         """String representation of the formula
         """
-        assert self._coherent
         n = len(self._index2name) - 1
         m = len(self)
         text = "CNF with {} vars and {} clauses".format(n, m)
@@ -195,8 +189,8 @@ class CNF(object):
         In particular it does not check if the indexes correspond to a
         variable in the formula.
 
-        To test consistency and re-enable the API, please call method
-        `CNF._check_coherence`.
+        To test consistency and re-enable the API, please use method
+        `CNF.debug()`.
 
         Arguments:
         - `clauses`: a sequence of compressed clauses.
@@ -215,7 +209,7 @@ class CNF(object):
         the high level API is available again.
 
         >>> c._add_compressed_clauses([[-1,2,3],[-2,1],[1,-3]])
-        >>> c._check_coherence()
+        >>> c.debug()
         True
         >>> print(c.dimacs(export_header=False))
         p cnf 3 3
@@ -228,7 +222,7 @@ class CNF(object):
 
         >>> c._add_compressed_clauses([[-2,-3]])
         >>> c._add_compressed_clauses([[-1, 2]])
-        >>> c._check_coherence()
+        >>> c.debug()
         True
         >>> print(c.dimacs(export_header=False))
         p cnf 3 5
@@ -238,18 +232,14 @@ class CNF(object):
         -2 -3 0
         -1 2 0
         """
-        self._coherent = False
         self._clauses.extend(tuple(c) for c in clauses)
 
-    def _check_coherence(self, force=False):
+    def debug(self):
         """Check if the formula is internally consistent.
 
         Certain fast manipulation methods are not safe if used
         incorrectly, so the CNF object may be corrupted. This method
         tests if that was not the case.
-
-        Arguments:
-        - `force`: force check even if the formula claims coherence
 
         >>> c=CNF()
         >>> c.add_variable("x")
@@ -259,17 +249,9 @@ class CNF(object):
         not coherent.
 
         >>> c._add_compressed_clauses([(-1,2),(1,-2),(1,3)])
-        >>> c._check_coherence()
+        >>> c.debug()
         False
-
-        We cannot use the API now
-
-        >>> c.clauses()
-        Traceback (most recent call last):
-        AssertionError
         """
-        if not force and self._coherent:
-            return True
 
         varindex = self._name2index
         varnames = self._index2name
@@ -292,7 +274,6 @@ class CNF(object):
                     return False
 
         # formula passed all tests
-        self._coherent = True
         return True
 
     #
@@ -361,8 +342,6 @@ class CNF(object):
             settings, the most restrictive one holds.
             (default: False)
         """
-        assert self._coherent
-
         # A clause must be an immutable object
         try:
             hash(tuple(clause))
@@ -445,7 +424,6 @@ class CNF(object):
         description: str, optional
              an explanation/description/comment about the variable.
         """
-        assert self._coherent
         try:
             if not var in self._name2index:
                 # name correpsond to the last variable so far
@@ -464,7 +442,6 @@ class CNF(object):
     def variables(self):
         """Returns (a copy of) the list of variable names.
         """
-        assert self._coherent
         vars_iterator = iter(self._index2name)
         next(vars_iterator)
         return vars_iterator
@@ -472,7 +449,6 @@ class CNF(object):
     def clauses(self):
         """Return the list of clauses
         """
-        assert self._coherent
         return self.__iter__()
 
     def dimacs(self, export_header=True, extra_text=None):
@@ -526,7 +502,7 @@ class CNF(object):
         return output.getvalue()
 
     def _dimacs_dump_clauses(self,
-                             output=None,
+                             output,
                              export_header=True,
                              extra_text=None):
         """Dump the dimacs encoding of the formula to the file-like output
@@ -535,8 +511,6 @@ class CNF(object):
         of the clauses, and write then on the output buffer, which is
         tipically a StringIO.
         """
-        assert self._coherent
-
         # Count the number of variables and clauses
         n = len(self._index2name) - 1
         m = len(self)
@@ -621,8 +595,6 @@ class CNF(object):
         ----------
         .. [1] http://www.latex-project.org/
         """
-        assert self._coherent
-
         clauses_per_page = 40
 
         latex_preamble = r"""%
