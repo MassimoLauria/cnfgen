@@ -7,14 +7,14 @@ from tests.utils import assertCnfEqual
 
 
 def test_not_planted():
-    F = RandomKCNF(4, 10, 20, 42)
-    G = RandomKCNF(4, 10, 20, 42, [])
+    F = RandomKCNF(4, 10, 20, seed=2311)
+    G = RandomKCNF(4, 10, 20, seed=2311, planted_assignments=[])
     assertCnfEqual(F, G)
 
 
 def test_one():
-    ass = [{'x_1': True, 'x_2': False}]
-    F = RandomKCNF(2, 2, 3, planted_assignments=ass)
+    assign = [{'x_1': True, 'x_2': False}]
+    F = RandomKCNF(2, 2, 3, planted_assignments=assign)
     G = CNF([
         [(True, 'x_1'), (False, 'x_2')],
         [(False, 'x_1'), (False, 'x_2')],

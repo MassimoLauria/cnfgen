@@ -94,7 +94,7 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
         when some paramenter is negative, or when k>n.
 
     """
-    if seed:
+    if seed is not None:
         random.seed(seed)
 
     if n < 0 or m < 0 or k < 0:

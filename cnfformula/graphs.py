@@ -892,7 +892,7 @@ def bipartite_random_left_regular(l, r, d, seed=None):
 
     """
     import random
-    if seed:
+    if seed is not None:
         random.seed(seed)
 
     if l < 0 or r < 0 or d < 0:
@@ -1017,7 +1017,7 @@ def bipartite_random_regular(l, r, d, seed=None):
     """
 
     import random
-    if seed:
+    if seed is not None:
         random.seed(seed)
 
     if l < 0 or r < 0 or d < 0:
@@ -1162,7 +1162,7 @@ def sample_missing_edges(G, m, seed=None):
     """
 
     import random
-    if seed:
+    if seed is not None:
         random.seed(seed)
 
     from networkx import non_edges

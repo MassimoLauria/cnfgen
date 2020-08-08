@@ -406,6 +406,8 @@ def cli(argv=sys.argv, mode='output'):
         # Generate the formula and apply transformations
         if hasattr(args, 'seed') and args.seed:
             random.seed(args.seed)
+            print('Set seed :', args.seed)
+            print('Set state:', random.getstate())
 
         try:
             cnf = args.generator.build_cnf(args)
@@ -424,7 +426,6 @@ def cli(argv=sys.argv, mode='output'):
 
         if hasattr(args, 'seed') and args.seed:
             cnf.header['random seed'] = args.seed
-            print(args.seed)
         cnf.header['command line'] = "cnfgen " + " ".join(argv[1:])
 
         if mode == 'formula':
