@@ -2,7 +2,7 @@ import networkx as nx
 import pytest
 from cnfformula import CNF, PebblingFormula
 
-from cnfgen import cnfgen
+from cnfgen.clitools import cnfgen
 from tests.utils import assertCnfEqual
 
 

@@ -1,6 +1,6 @@
 from cnfformula import CNF, RandomKCNF, PigeonholePrinciple
 from cnfformula import Shuffle
-from cnfgen import cnfgen
+from cnfgen.clitools import cnfgen
 
 import random
 from tests.utils import assertCnfEqual

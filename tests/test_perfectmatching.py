@@ -8,7 +8,7 @@ from cnfformula import TseitinFormula
 from networkx.algorithms.bipartite import random_graph as bipartite_random_graph
 from networkx.algorithms.bipartite import complete_bipartite_graph
 
-from cnfgen import cnfgen
+from cnfgen.clitools import cnfgen
 from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
 
 

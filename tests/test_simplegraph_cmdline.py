@@ -1,7 +1,7 @@
 import pytest
 
-from cnfgen.graph_cmdline import SimpleGraphHelper
-from cnfgen.cmdline import CLIParser, CLIError
+from cnfgen.clitools.graph_cmdline import SimpleGraphHelper
+from cnfgen.clitools.cmdline import CLIParser, CLIError
 
 
 def get_graph(args):

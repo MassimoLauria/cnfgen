@@ -9,7 +9,7 @@ from cnfformula import RamseyWitnessFormula
 
 from cnfformula.graphs import readGraph, writeGraph
 
-from cnfgen import cnfgen, CLIError
+from cnfgen.clitools import cnfgen, CLIError
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs, assertSAT, assertUNSAT
 
 example1 = """

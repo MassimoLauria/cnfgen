@@ -2,7 +2,7 @@ import random
 import io
 import pytest
 
-from cnfgen import cnfshuffle
+from cnfgen.clitools import cnfshuffle
 from cnfformula import Shuffle, RandomKCNF
 
 from tests.shufflereference import stableshuffle

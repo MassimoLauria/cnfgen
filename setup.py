@@ -21,8 +21,10 @@ setup(
     license=info['license'],
     packages=find_packages(".", exclude=["tests"]),
     entry_points={
-        'console_scripts':
-        ['cnfgen=cnfgen.main:main', 'cnfshuffle=cnfgen.cnfshuffle:main'],
+        'console_scripts': [
+            'cnfgen=cnfgen.clitools.cnfgen:main',
+            'cnfshuffle=cnfgen.clitools.cnfshuffle:main'
+        ],
     },
     install_requires=['networkx>=2.0', 'pydot>=1.2.3'],
     python_requires='>=3.4',

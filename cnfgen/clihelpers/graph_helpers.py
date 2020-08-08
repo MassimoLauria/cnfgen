@@ -19,7 +19,7 @@ from cnfformula import BinaryCliqueFormula
 from cnfformula import SubgraphFormula
 from cnfformula import RamseyWitnessFormula
 
-from .graph_cmdline import SimpleGraphHelper
+from cnfgen.clitools import SimpleGraphHelper
 from .formula_helpers import FormulaHelper
 
 

@@ -3,10 +3,10 @@
 """Implementation of Thapen's size-width tradeoff formula
 """
 
-from cnfgen.formula_helpers import FormulaHelper
-from cnfgen.cmdline import positive_int
-
 from cnfformula.families.cpls import CPLSFormula
+
+from cnfgen.clitools import positive_int
+from .formula_helpers import FormulaHelper
 
 
 class CPLSCmdHelper(FormulaHelper):

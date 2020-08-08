@@ -1,7 +1,7 @@
 import networkx as nx
 from cnfformula import CNF
 from cnfformula import EvenColoringFormula, TseitinFormula
-from cnfgen import cnfgen, CLIError
+from cnfgen.clitools import cnfgen, CLIError
 
 import pytest
 from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables

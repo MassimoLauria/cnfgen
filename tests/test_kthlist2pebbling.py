@@ -7,7 +7,7 @@ from cnfformula import OrSubstitution
 from cnfformula import XorSubstitution
 from cnfformula import FormulaLifting
 
-from cnfgen import kthlist2pebbling, CLIError
+from cnfgen.clitools import kthlist2pebbling, CLIError
 from tests.utils import redirect_stdin
 
 

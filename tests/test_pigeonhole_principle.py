@@ -9,7 +9,7 @@ from cnfformula import PigeonholePrinciple
 from cnfformula import GraphPigeonholePrinciple
 from cnfformula import BinaryPigeonholePrinciple
 
-from cnfgen import cnfgen, CLIError
+from cnfgen.clitools import cnfgen, CLIError
 
 from tests.utils import assertUNSAT, assertCnfEqual, assertCnfEqualsDimacs, assertCnfEqualsIgnoreVariables
 

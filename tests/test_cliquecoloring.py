@@ -2,7 +2,7 @@ import sys
 import pytest
 
 from cnfformula import CliqueColoring
-from cnfgen import cnfgen
+from cnfgen.clitools import cnfgen
 
 from tests.utils import assertSAT, assertUNSAT
 

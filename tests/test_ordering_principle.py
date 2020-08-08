@@ -4,7 +4,7 @@ import sys
 
 from cnfformula import CNF
 from cnfformula import OrderingPrinciple, GraphOrderingPrinciple
-from cnfgen import cnfgen, CLIError
+from cnfgen.clitools import cnfgen, CLIError
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs, assertCnfEqualsIgnoreVariables
 
 from itertools import product

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from cnfgen.cmdline import get_formula_helpers
-from cnfgen.cmdline import get_transformation_helpers
+from cnfgen.clitools import get_formula_helpers
+from cnfgen.clitools import get_transformation_helpers
 
 
 def test_find_formula_helpers():

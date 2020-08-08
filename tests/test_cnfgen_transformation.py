@@ -3,8 +3,8 @@
 import sys
 import pytest
 
-from cnfgen import cnfgen
-from cnfgen.cmdline import get_transformation_helpers, CLIError
+from cnfgen.clitools import cnfgen
+from cnfgen.clitools import get_transformation_helpers, CLIError
 
 
 def test_invalid_transformation_help():

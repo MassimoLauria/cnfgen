@@ -2,8 +2,8 @@ import pytest
 import random
 
 from cnfformula import CPLSFormula
-from cnfgen import cnfgen, CLIError
-from cnfgen.cmdline import get_formula_helpers
+from cnfgen.clitools import cnfgen, CLIError
+from cnfgen.clitools import get_formula_helpers
 
 
 def test_helper_exists():

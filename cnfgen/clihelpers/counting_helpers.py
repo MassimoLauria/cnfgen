@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Implementation of counting/matching formulas helpers
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -11,8 +11,8 @@ from cnfformula import PerfectMatchingPrinciple
 from cnfformula import TseitinFormula
 from cnfformula import SubsetCardinalityFormula
 
-from .graph_cmdline import SimpleGraphHelper
-from .graph_cmdline import BipartiteGraphHelper
+from cnfgen.clitools import SimpleGraphHelper
+from cnfgen.clitools import BipartiteGraphHelper
 
 from .formula_helpers import FormulaHelper
 

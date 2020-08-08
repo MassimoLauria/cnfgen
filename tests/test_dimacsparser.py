@@ -6,8 +6,8 @@ import io
 import pytest
 
 from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
-from cnfgen import cnfgen
-from cnfgen.cmdline import redirect_stdin, CLIError
+from cnfgen.clitools import cnfgen
+from cnfgen.clitools import redirect_stdin, CLIError
 
 
 def test_empty_file():

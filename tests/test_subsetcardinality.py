@@ -5,7 +5,7 @@ from networkx.algorithms.bipartite import complete_bipartite_graph
 from cnfformula import CNF
 from cnfformula import SubsetCardinalityFormula
 
-from cnfgen import cnfgen, CLIError
+from cnfgen.clitools import cnfgen, CLIError
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs
 
 

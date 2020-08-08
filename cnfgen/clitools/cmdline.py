@@ -108,28 +108,28 @@ def find_in_package(package, test, sortkey=None):
 
 def get_transformation_helpers():
 
-    import cnfgen
-    from .transformation_helpers import TransformationHelper
+    import cnfgen.clihelpers
+    from cnfgen.clihelpers.transformation_helpers import TransformationHelper
 
     def test(x):
         return isinstance(x, type) and \
             issubclass(x, TransformationHelper) and \
             x != TransformationHelper
 
-    return find_in_package(cnfgen, test, sortkey=lambda x: x.name)
+    return find_in_package(cnfgen.clihelpers, test, sortkey=lambda x: x.name)
 
 
 def get_formula_helpers():
 
-    import cnfgen
-    from .formula_helpers import FormulaHelper
+    import cnfgen.clihelpers
+    from cnfgen.clihelpers.formula_helpers import FormulaHelper
 
     def test(x):
         return isinstance(x, type) and \
             issubclass(x, FormulaHelper) and \
             x != FormulaHelper
 
-    return find_in_package(cnfgen, test, sortkey=lambda x: x.name)
+    return find_in_package(cnfgen.clihelpers, test, sortkey=lambda x: x.name)
 
 
 class CLIError(Exception):
@@ -212,12 +212,14 @@ def nonnegative_int(value):
         raise argparse.ArgumentTypeError(errmsg)
     return ivalue
 
+
 def positive_even_int(value):
     errmsg = "{} was supposed to be an even integer".format(value)
     ivalue = positive_int(value)
     if ivalue % 2 != 0:
         raise argparse.ArgumentTypeError(errmsg)
     return ivalue
+
 
 def probability(value):
     errmsg = "{} was supposed to be a real number in [0,1]".format(value)

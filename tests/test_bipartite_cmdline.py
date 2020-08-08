@@ -1,9 +1,9 @@
 import pytest
 
 from cnfformula.graphs import bipartite_sets
-from cnfgen.graph_cmdline import BipartiteGraphHelper
 
-from cnfgen.cmdline import CLIParser, CLIError
+from cnfgen.clitools.graph_cmdline import BipartiteGraphHelper
+from cnfgen.clitools.cmdline import CLIParser, CLIError
 
 
 def get_bipartite(args):

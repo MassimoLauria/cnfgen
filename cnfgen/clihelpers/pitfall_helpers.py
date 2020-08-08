@@ -9,7 +9,7 @@ https://massimolauria.net/cnfgen/
 from cnfformula.families.pitfall import PitfallFormula
 
 from .formula_helpers import FormulaHelper
-from .cmdline import positive_int, positive_even_int
+from cnfgen.clitools import positive_int, positive_even_int
 
 usage_string = """Pitfall Formula
 
@@ -45,6 +45,7 @@ example_string = """example:
  {0} 45 4 30 5 8      --- parameters used in the paper
  """
 
+
 class PitfallCmdHelper(FormulaHelper):
     name = 'pitfall'
     description = 'Pitfall formula'
@@ -66,9 +67,10 @@ class PitfallCmdHelper(FormulaHelper):
         parser.add_argument('nz',
                             type=positive_int,
                             help="number of safety variables")
-        parser.add_argument('k',
-                            type=positive_even_int,
-                            help="number of copies of the hard and pitfall parts")
+        parser.add_argument(
+            'k',
+            type=positive_even_int,
+            help="number of copies of the hard and pitfall parts")
 
     @staticmethod
     def build_cnf(args):

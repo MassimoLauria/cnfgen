@@ -9,10 +9,11 @@ https://massimolauria.net/cnfgen/
 import argparse
 from cnfformula import readCNF
 
+from cnfgen.clitools import redirect_stdin
+from cnfgen.clitools import interactive_msg
+from cnfgen.clitools import msg_prefix
+
 from .formula_helpers import FormulaHelper
-from .cmdline import redirect_stdin
-from .msg import interactive_msg
-from .msg import msg_prefix
 
 usage_string = """Dimacs reader
 

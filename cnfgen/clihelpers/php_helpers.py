@@ -16,10 +16,10 @@ from cnfformula import BinaryPigeonholePrinciple
 
 from cnfformula.graphs import bipartite_random_left_regular
 
-from .graph_cmdline import BipartiteGraphHelper
-from .formula_helpers import FormulaHelper
-from .cmdline import positive_int, nonnegative_int
+from cnfgen.clitools import BipartiteGraphHelper
+from cnfgen.clitools import positive_int, nonnegative_int
 
+from .formula_helpers import FormulaHelper
 import argparse
 
 usage_string = """Pigeonhole Principle
