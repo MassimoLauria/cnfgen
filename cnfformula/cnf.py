@@ -78,10 +78,12 @@ class CNF(object):
         description: string, optional
             a description of the formula
         """
-
+        default_description = 'Some CNF formula'
         self.header = OrderedDict()
         if description is not None:
             self.header['description'] = description
+        else:
+            self.header['description'] = default_description
 
         self.header['generator'] = "{} ({})".format(info['project'],
                                                     info['version'])

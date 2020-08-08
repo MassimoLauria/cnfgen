@@ -211,7 +211,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
                         '-S',
                         metavar="<seed>",
                         default=None,
-                        type=str,
+                        type=int,
                         action='store',
                         help="""Seed for any random process in the
                         program. (default: current time)
@@ -422,6 +422,9 @@ def cli(argv=sys.argv, mode='output'):
             except RuntimeError as e:
                 raise InternalBug(e)
 
+        if hasattr(args, 'seed') and args.seed:
+            cnf.header['random seed'] = args.seed
+            print(args.seed)
         cnf.header['command line'] = "cnfgen " + " ".join(argv[1:])
 
         if mode == 'formula':
