@@ -28,7 +28,18 @@ list assignments.
 
 
 def sample_clauses(k, indices, m, planted_assignments):
-    clauses = set()
+    """Sample m random k-clauses on a set of variables
+
+First it tries sparse sampling: 
+- samples with repetition which is fast
+- filters bad samples
+
+If after enough samples we haven't got enough clauses we use dense
+sampling, namely we generare all possible clauses and pick at random
+m of them. This approach always succeeds, but is quite slower and
+wasteful for just few samples."""
+    sampled = set()
+    clauses = []
     t = 0
     while len(clauses) < m and t < 10 * m:
         t += 1
@@ -36,8 +47,14 @@ def sample_clauses(k, indices, m, planted_assignments):
         cls = tuple((random.choice([True, False]), 'x_{0}'.format(i))
                     for i in sorted(random.sample(indices, k)))
 
-        if clause_satisfied(cls, planted_assignments):
-            clauses.add(cls)
+        if cls in sampled:
+            continue
+
+        if not clause_satisfied(cls, planted_assignments):
+            continue
+
+        sampled.add(cls)
+        clauses.append(cls)
 
     if len(clauses) < m:
         return sample_clauses_dense(k, indices, m, planted_assignments)
