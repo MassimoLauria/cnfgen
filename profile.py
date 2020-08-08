@@ -5,13 +5,14 @@ Profile script for CNFgen package
 
 import os
 import sys
+from cProfile import run
 from contextlib import contextmanager
 
 
 @contextmanager
 def erase_stdout():
 
-    with file(os.devnull, "w") as null:
+    with open(os.devnull, "w") as null:
         old_stdout = sys.stdout
         sys.stdout = null
 
@@ -22,7 +23,6 @@ def erase_stdout():
 
 def cnfgen_call():
     from cnfgen import cnfgen
-    from cnfgen import cnfgen
 
     cmd = ["cnfgen"] + sys.argv[1:]
 
@@ -32,10 +32,8 @@ def cnfgen_call():
 
 if __name__ == '__main__':
 
-    from cProfile import run as profile
-
     if len(sys.argv) <= 1:
         print("Usage: {} <cnfgen_args>".format(sys.argv[0]), file=sys.stderr)
         sys.exit(-1)
 
-    profile('cnfgen_call()', sort='tottime')
+    run('cnfgen_call()', sort='tottime')
