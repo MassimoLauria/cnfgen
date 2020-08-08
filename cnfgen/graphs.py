@@ -1208,21 +1208,23 @@ def sample_missing_edges(G, m, seed=None):
 
     else:
         # Sparse case: sample and retry
-        missing_edges = set()
+        sampled_edges = set()
+        addition = []
 
         for _ in range(100 * m):
 
-            if len(missing_edges) >= m:
+            if len(addition) >= m:
                 break
 
             u, v = edge_sampler()
-            if (u,v) not in missing_edges and \
-               (v,u) not in missing_edges and \
+            if (u,v) not in sampled_edges and \
+               (v,u) not in sampled_edges and \
                not G.has_edge(u,v):
-                missing_edges.add((u, v))
+                addition.append((u, v))
+                sampled_edges.add((u, v))
 
-        if len(missing_edges) >= m:
-            return missing_edges
+        if len(addition) >= m:
+            return addition
         else:
             raise RuntimeError(
                 "Improbable failure at sampling missing edges in a sparse graph."
