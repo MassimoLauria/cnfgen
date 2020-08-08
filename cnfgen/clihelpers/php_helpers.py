@@ -14,6 +14,8 @@ from cnfgen.families.pigeonhole import PigeonholePrinciple
 from cnfgen.families.pigeonhole import GraphPigeonholePrinciple
 from cnfgen.families.pigeonhole import BinaryPigeonholePrinciple
 
+from cnfgen.families.pigeonhole import RelativizedPigeonholePrinciple
+
 from cnfgen.graphs import bipartite_random_left_regular
 
 from cnfgen.clitools import BipartiteGraphHelper
@@ -287,3 +289,38 @@ class PTNCmdHelper(FormulaHelper):
         - `args`: command line options
         """
         return PythagoreanTriples(args.N)
+
+
+class RPHPCmdHelper(FormulaHelper):
+    """Command line helper for the Relativized Pigeonhole principle CNF"""
+
+    name = 'rphp'
+    description = 'relativized pigeonhole principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for relativized pigeonhole principle formula
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument('pigeons',
+                            metavar='<pigeons>',
+                            type=nonnegative_int,
+                            help="Number of pigeons")
+        parser.add_argument('resting_places',
+                            metavar='<restingplaces>',
+                            type=nonnegative_int,
+                            help="Number of resting places")
+        parser.add_argument('holes',
+                            metavar='<holes>',
+                            type=nonnegative_int,
+                            help="Number of holes")
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a RPHP formula according to the arguments
+        Arguments:
+        - `args`: command line options
+        """
+        return RelativizedPigeonholePrinciple(args.pigeons,
+                                              args.resting_places, args.holes)

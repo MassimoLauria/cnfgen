@@ -36,6 +36,7 @@ from cnfgen.families.pebbling import SparseStoneFormula
 from cnfgen.families.pigeonhole import PigeonholePrinciple
 from cnfgen.families.pigeonhole import GraphPigeonholePrinciple
 from cnfgen.families.pigeonhole import BinaryPigeonholePrinciple
+from cnfgen.families.pigeonhole import RelativizedPigeonholePrinciple
 from cnfgen.families.ramsey import PythagoreanTriples
 from cnfgen.families.ramsey import RamseyLowerBoundFormula
 from cnfgen.families.randomformulas import RandomKCNF

@@ -6,7 +6,6 @@
 from cnfgen.cnf import CNF
 from cnfgen.graphs import bipartite_sets
 
-from cnfgen.graphs import neighbors
 from itertools import combinations, product
 
 
@@ -193,3 +192,89 @@ def BinaryPigeonholePrinciple(pigeons, holes):
         bphp.add_clause_unsafe(c)
 
     return bphp
+
+
+def RelativizedPigeonholePrinciple(pigeons, resting_places, holes):
+    """Relativized Pigeonhole Principle CNF formula
+
+    The formula claims that pigeons can fly into holes with no
+    conflicts, with the additional caveat that before landing in
+    a hole, each pigeon stops in some resting place. No two pigeons
+    can rest in the same place.
+
+    A description can be found in [1]_
+
+    Parameters
+    ----------
+    pigeons: int
+        number of pigeons
+    resting_places: int
+        number of resting places
+    holes: int 
+        number of holes
+
+    References
+    ----------
+    .. [1] A. Atserias, M. Lauria and J. Nordström
+           Narrow Proofs May Be Maximally Long
+           IEEE Conference on Computational Complexity 2014
+
+    """
+    rphp = CNF()
+    rphp.header[
+        'description'] = "Relativized pigeonhole principle formula for {0} pigeons, {1} resting places and {2} holes".format(
+            pigeons, resting_places, holes)
+
+    if pigeons < 0:
+        raise ValueError('The number of pigeons must be non-negative')
+    if resting_places < 0:
+        raise ValueError('The number of resting places must be non-negative')
+    if holes < 0:
+        raise ValueError('The number of holes must be non-negative')
+
+    def p(u, v):
+        return 'p_{{{0},{1}}}'.format(u, v)
+
+    def q(v, w):
+        return 'q_{{{0},{1}}}'.format(v, w)
+
+    def r(v):
+        return 'r_{{{0}}}'.format(v)
+
+    U = range(1, 1 + pigeons)
+    V = range(1, 1 + resting_places)
+    W = range(1, 1 + holes)
+    for u, v in product(U, V):
+        rphp.add_variable(p(u, v))
+    for v, w in product(V, W):
+        rphp.add_variable(q(v, w))
+    for v in V:
+        rphp.add_variable(r(v))
+
+    # NOTE: the order of ranges in the products are chosen such that related clauses appear after each other
+
+    # (3.1a) p[u,1] v p[u,2] v ... v p[u,n] for all u \in [k]
+    # Each pigeon goes into a resting place
+    for u in U:
+        rphp.add_clause([(True, p(u, v)) for v in V], strict=True)
+    # (3.1b) ~p[u,v] v ~p[u',v] for all u, u' \in [k], u != u', v \in [n]
+    # no conflict on any resting place
+    for (v, (u, u_)) in product(V, combinations(U, 2)):
+        rphp.add_clause([(False, p(u, v)), (False, p(u_, v))], strict=True)
+    # (3.1c) ~p[u,v] v r[v] for all u \in [k], v \in [n]
+    # resting place activation
+    for (v, u) in product(V, U):
+        rphp.add_clause([(False, p(u, v)), (True, r(v))], strict=True)
+    # (3.1d) ~r[v] v q[v,1] v ... v q[v,k-1] for all v \in [n]
+    # pigeons leave the resting place
+    for v in V:
+        rphp.add_clause([(False, r(v))] + [(True, q(v, w)) for w in W],
+                        strict=True)
+    # (3.1e) ~r[v] v ~r[v'] v ~q[v,w] v ~q[v',w] for all v, v' \in [n], v != v', w \in [k-1]
+    # no conflict on any hole, for two pigeons coming from two resting places
+    for (w, (v, v_)) in product(W, combinations(V, 2)):
+        rphp.add_clause([(False, r(v)), (False, r(v_)), (False, q(v, w)),
+                         (False, q(v_, w))],
+                        strict=True)
+
+    return rphp
