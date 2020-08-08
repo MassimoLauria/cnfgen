@@ -6,19 +6,7 @@ Profile script for CNFgen package
 import os
 import sys
 from cProfile import run
-from contextlib import contextmanager
-
-
-@contextmanager
-def erase_stdout():
-
-    with open(os.devnull, "w") as null:
-        old_stdout = sys.stdout
-        sys.stdout = null
-
-        yield
-
-        sys.stdout = old_stdout
+from cnfgen.clitools.cmdline import paginate_or_redirect_stdout
 
 
 def cnfgen_call():
@@ -26,14 +14,23 @@ def cnfgen_call():
 
     cmd = ["cnfgen"] + sys.argv[1:]
 
-    with erase_stdout():
+    with open(os.devnull, "w") as null:
+        old_stdout = sys.stdout
+        sys.stdout = null
+
         cnfgen(cmd)
 
+        sys.stdout = old_stdout
 
-if __name__ == '__main__':
 
+def main():
     if len(sys.argv) <= 1:
         print("Usage: {} <cnfgen_args>".format(sys.argv[0]), file=sys.stderr)
         sys.exit(-1)
 
-    run('cnfgen_call()', sort='tottime')
+    with paginate_or_redirect_stdout(sys.stdout):
+        run('cnfgen_call()', sort='tottime')
+
+
+if __name__ == '__main__':
+    main()
