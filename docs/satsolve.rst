@@ -2,8 +2,8 @@ Testing satisfiability
 ===========================
 
 To   test  the   satisfiability  of   the  CNF   formula  encoded   in
-a    :py:class:`cnfformula.CNF`    instance    we    can    use    the
-:py:func:`cnfformula.CNF.is_satisfiable`                       method.
+a    :py:class:`cnfgen.CNF`    instance    we    can    use    the
+:py:func:`cnfgen.CNF.is_satisfiable`                       method.
 Testing satisfiability of a CNF is not at all considered to be an easy
 task.  In  full   generality  the  problem  is   NP-hard  [1]_,  which
 essentially means that there are no fast algorithm to solve it.
@@ -17,7 +17,7 @@ not  implement a  SAT  solver, but  uses behind  the  scenes the  ones
 installed in  the running environment.  If the formula  is satisfiable
 the value returned includes a satisfying assignment.
 
-   >>> from cnfformula import CNF
+   >>> from cnfgen import CNF
    >>> F = CNF([ [(True,'X'),(False,'Y')], [(False,'X')] ])
    >>> outcome,assignment = F.is_satisfiable()
    >>> outcome
@@ -30,7 +30,7 @@ the value returned includes a satisfying assignment.
 
 It is always possible to force ``CNFgen`` to use a specific solver or
 a specific  command line invocation  using the ``cmd``  parameters for
-:py:func:`cnfformula.CNF.is_satisfiable`.  ``CNFgen``   knows  how  to
+:py:func:`cnfgen.CNF.is_satisfiable`.  ``CNFgen``   knows  how  to
 interface with several  SAT solvers but when the  command line invokes
 an  unknown solver  the  parameter ``sameas``  can  suggest the  right
 interface to use.

@@ -1,8 +1,8 @@
-from cnfformula import CNF
+from cnfgen import CNF
 
-from cnfformula import OrSubstitution, XorSubstitution, MajoritySubstitution
-from cnfformula import AllEqualSubstitution, NotAllEqualSubstitution
-from cnfformula import IfThenElseSubstitution, ExactlyOneSubstitution
+from cnfgen import OrSubstitution, XorSubstitution, MajoritySubstitution
+from cnfgen import AllEqualSubstitution, NotAllEqualSubstitution
+from cnfgen import IfThenElseSubstitution, ExactlyOneSubstitution
 
 from tests.utils import assertCnfEqual
 

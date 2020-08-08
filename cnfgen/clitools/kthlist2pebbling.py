@@ -14,19 +14,19 @@ import os
 import sys
 import argparse
 
-from cnfformula import PebblingFormula
-from cnfformula import readGraph
+from cnfgen.families.pebbling import PebblingFormula
+from cnfgen.graphs import readGraph
 
-from .cmdline import paginate_or_redirect_stdout
-from .cmdline import redirect_stdin
-from .cmdline import setup_SIGINT
-from .cmdline import get_transformation_helpers
-from .cmdline import CLIParser, CLIError
+from cnfgen.clitools.cmdline import paginate_or_redirect_stdout
+from cnfgen.clitools.cmdline import redirect_stdin
+from cnfgen.clitools.cmdline import setup_SIGINT
+from cnfgen.clitools.cmdline import get_transformation_helpers
+from cnfgen.clitools.cmdline import CLIParser, CLIError
 
-from .msg import interactive_msg
-from .msg import error_msg
-from .msg import msg_prefix
-from .msg import InternalBug
+from cnfgen.clitools.msg import interactive_msg
+from cnfgen.clitools.msg import error_msg
+from cnfgen.clitools.msg import msg_prefix
+from cnfgen.clitools.msg import InternalBug
 
 #################################################################
 #          Command line tool follows

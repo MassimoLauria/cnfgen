@@ -3,17 +3,17 @@ Graph based formulas
 ====================
 
 The  most  interesting  benchmark  formulas have  a  graph  structure.
-See the following  example, where :py:func:`cnfformula.TseitinFormula`
+See the following  example, where :py:func:`cnfgen.TseitinFormula`
 is realized over a star graph with five arms.
 
 
-   >>> import cnfformula
+   >>> import cnfgen
    >>> import networkx as nx
    >>> from pprint import pprint
    >>> G = nx.star_graph(5)
    >>> sorted(G.edges())
    [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
-   >>> F = cnfformula.TseitinFormula(G,charges=[0,1,1,0,1,1])
+   >>> F = cnfgen.TseitinFormula(G,charges=[0,1,1,0,1,1])
    >>> pprint(F.is_satisfiable())
    (True,
     {'E_{0,1}': True,
@@ -46,10 +46,10 @@ the famous  NetworkX_ library behind the  scene. ``NetworkX`` supports
 reading and writing  graph from/to files, and  ``CNFgen`` leverages on
 that.  Furthermore  ``CNFgen``  implements  graph  I/O  in  few  other
 file formats. The function
-:py:func:`cnfformula.graphs.supported_formats` lists  the file formats
+:py:func:`cnfgen.graphs.supported_formats` lists  the file formats
 available for each graph type.
 
-   >>> from cnfformula.graphs import supported_formats
+   >>> from cnfgen.graphs import supported_formats
    >>> from pprint import pprint
    >>> pprint(supported_formats())
    {'bipartite': ['kthlist', 'matrix', 'gml', 'dot'],
@@ -80,16 +80,16 @@ Directed Acyclic Graphs and Bipartite Graphs
 acyclic graphs  (DAGs). In  ``CNFgen`` a  DAG is  any object  which is
 either           a           :py:class:`networkx.DiGraph`           or
 :py:class:`networkx.MultiDiGraph`  instance,   and  which  furthermore
-passes the test :py:func:`cnfformula.graphs.is_dag`.
+passes the test :py:func:`cnfgen.graphs.is_dag`.
 
    >>> import networkx as nx
    >>> G = nx.DiGraph()
    >>> nx.add_cycle(G,[1,2,3])
-   >>> cnfformula.graphs.is_dag(G)
+   >>> cnfgen.graphs.is_dag(G)
    False
    >>> H = nx.DiGraph()
    >>> nx.add_path(H,[1,2,3])
-   >>> cnfformula.graphs.is_dag(H)
+   >>> cnfgen.graphs.is_dag(H)
    True
    
 In the same way ``NetworkX`` does not have a particular data structure
@@ -99,13 +99,13 @@ the convention that  all vertices in the graph  have the ``bipartite``
 attribute  that  gets values  :math:`\{0,1\}`  [3]_.  The CNF  formula
 constructions that make use of  bipartite graphs usually associate the
 :math:`0`  part as  the  left  side, and  the  :math:`1`  part to  the
-right side.  The function :py:func:`cnfformula.graphs.has_bipartition`
+right side.  The function :py:func:`cnfgen.graphs.has_bipartition`
 tests whether this bipartition exists in a graph.
 
 
    >>> import networkx as nx
    >>> G = nx.bipartite.havel_hakimi_graph([2,1],[1,1,1])
-   >>> cnfformula.graphs.has_bipartition(G)
+   >>> cnfgen.graphs.has_bipartition(G)
    True
    >>> from pprint import pprint
    >>> pprint(dict(G.nodes()))
@@ -116,7 +116,7 @@ tests whether this bipartition exists in a graph.
     4: {'bipartite': 1}}
    >>> sorted(G.edges())
    [(0, 3), (0, 4), (1, 2)]
-   >>> F = cnfformula.GraphPigeonholePrinciple(G)
+   >>> F = cnfgen.GraphPigeonholePrinciple(G)
    >>> sorted(F.variables())
    ['p_{0,3}', 'p_{0,4}', 'p_{1,2}']
 
@@ -124,9 +124,9 @@ tests whether this bipartition exists in a graph.
 Graph I/O
 ---------
 
-The  :py:mod:`cnfformula.graphs`  module  implements  a  graph  reader
-:py:mod:`cnfformula.graphs.readGraph`     and    a     graph    writer
-:py:mod:`cnfformula.graphs.writeGraph`  to  facilitate  graph  I/O.
+The  :py:mod:`cnfgen.graphs`  module  implements  a  graph  reader
+:py:mod:`cnfgen.graphs.readGraph`     and    a     graph    writer
+:py:mod:`cnfgen.graphs.writeGraph`  to  facilitate  graph  I/O.
 ..
 Both  ``readGraph`` and  ``writeGraph`` operate  either on  filenames,
 encoded  as :py:class:`str`  or :py:class:`unicode`,  or otherwise  on
@@ -139,7 +139,7 @@ file-like objects such as
    >>> import sys
    >>> from io import BytesIO
    >>> import networkx as nx
-   >>> from cnfformula.graphs import readGraph, writeGraph
+   >>> from cnfgen.graphs import readGraph, writeGraph
 
    >>> G = nx.bipartite.havel_hakimi_graph([2,1],[1,1,1])
    >>> writeGraph(G,sys.stdout,graph_type='bipartite',file_format='gml')
@@ -203,7 +203,7 @@ There are  several advantages with  using those functions,  instead of
 the reader/writer  implemented ``NextowrkX``. First of  all the reader
 always  verifies that  when reading  a graph  of a  certain type,  the
 actual input  actually matches the type.  For example if the  graph is
-supposed  to  be  a DAG,  then  :py:func:`cnfformula.graphs.readGraph`
+supposed  to  be  a DAG,  then  :py:func:`cnfgen.graphs.readGraph`
 would check that.
 
    >>> buffer = StringIO('digraph A { 1 -- 2 -- 3 -- 1}')
@@ -293,7 +293,7 @@ Graph generators
 
 .. note::
 
-   See  the documentation  of the  module :py:mod:`cnfformula.graphs`
+   See  the documentation  of the  module :py:mod:`cnfgen.graphs`
    for more information about the ``CNFgen`` support code for graphs.
 
 

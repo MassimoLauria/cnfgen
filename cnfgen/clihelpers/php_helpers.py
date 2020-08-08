@@ -6,15 +6,15 @@ Copyright (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
-from cnfformula import CliqueColoring
-from cnfformula import RamseyLowerBoundFormula
-from cnfformula import PythagoreanTriples
+from cnfgen.families.cliquecoloring import CliqueColoring
+from cnfgen.families.ramsey import RamseyLowerBoundFormula
+from cnfgen.families.ramsey import PythagoreanTriples
 
-from cnfformula import PigeonholePrinciple
-from cnfformula import GraphPigeonholePrinciple
-from cnfformula import BinaryPigeonholePrinciple
+from cnfgen.families.pigeonhole import PigeonholePrinciple
+from cnfgen.families.pigeonhole import GraphPigeonholePrinciple
+from cnfgen.families.pigeonhole import BinaryPigeonholePrinciple
 
-from cnfformula.graphs import bipartite_random_left_regular
+from cnfgen.graphs import bipartite_random_left_regular
 
 from cnfgen.clitools import BipartiteGraphHelper
 from cnfgen.clitools import positive_int, nonnegative_int

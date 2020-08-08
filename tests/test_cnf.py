@@ -4,7 +4,7 @@ import random
 import itertools
 import pytest
 
-from cnfformula import CNF
+from cnfgen import CNF
 
 
 def test_empty():

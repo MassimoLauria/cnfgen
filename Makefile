@@ -1,12 +1,12 @@
 PROJECT:=cnfgen
 VIRTUALENV:= $(HOME)/.pyenv/versions/$(PROJECT)-venv
 PYTHON=python
-VERSIONFILE=cnfformula/version.py
+VERSIONFILE=$(PROJECT)/version.py
 
 all : test
 
 .PHONY: test install clean venv force
-.PHONY: docs-build docs-install-tools
+.PHONY: docs docs-install-tools
 .PHONY: testpackage package upload
 
 $(VERSIONFILE): force
@@ -65,10 +65,10 @@ DOC_DEPENDENCES:=sphinx sphinx-autobuild numpydoc sphinx_rtd_theme
 PYENV:= $(shell command -v pyenv 2> /dev/null)
 PYENV_PYVERSION:=$(shell pyenv install -l | grep '[[:space:]]3.7.[[:digit:]]*' | grep -v 'rc\|dev' | tail -1)
 
-docs-build: docs-install-tools $(VERSIONFILE)
+docs: docs-install-tools $(VERSIONFILE)
 	. $(VIRTUALENV)/bin/activate && \
 	python setup.py install && \
-	sphinx-apidoc -e -o docs cnfformula  && \
+	sphinx-apidoc -e -o docs $(PROJECT)  && \
 	$(MAKE) -C docs html && \
 	pip uninstall -y $(PROJECT)
 
@@ -95,4 +95,3 @@ endif
 	. $@ && pip install $(PKG_DEPENDENCES)
 	. $@ && pip install -e .
 	touch $@
-

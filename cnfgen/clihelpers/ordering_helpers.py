@@ -6,8 +6,8 @@ Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.l
 https://massimolauria.net/cnfgen/
 """
 
-from cnfformula import OrderingPrinciple
-from cnfformula import GraphOrderingPrinciple
+from cnfgen.families.ordering import OrderingPrinciple
+from cnfgen.families.ordering import GraphOrderingPrinciple
 
 from cnfgen.clitools import SimpleGraphHelper
 from .formula_helpers import FormulaHelper

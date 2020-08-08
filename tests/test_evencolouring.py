@@ -1,6 +1,6 @@
 import networkx as nx
-from cnfformula import CNF
-from cnfformula import EvenColoringFormula, TseitinFormula
+from cnfgen import CNF
+from cnfgen import EvenColoringFormula, TseitinFormula
 from cnfgen.clitools import cnfgen, CLIError
 
 import pytest

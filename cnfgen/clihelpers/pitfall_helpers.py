@@ -6,7 +6,7 @@ Copyright (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
-from cnfformula.families.pitfall import PitfallFormula
+from cnfgen.families.pitfall import PitfallFormula
 
 from .formula_helpers import FormulaHelper
 from cnfgen.clitools import positive_int, positive_even_int

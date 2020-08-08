@@ -6,10 +6,10 @@ Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.l
 https://massimolauria.net/cnfgen/
 """
 
-from cnfformula import CountingPrinciple
-from cnfformula import PerfectMatchingPrinciple
-from cnfformula import TseitinFormula
-from cnfformula import SubsetCardinalityFormula
+from cnfgen.families.counting import CountingPrinciple
+from cnfgen.families.counting import PerfectMatchingPrinciple
+from cnfgen.families.tseitin import TseitinFormula
+from cnfgen.families.subsetcardinality import SubsetCardinalityFormula
 
 from cnfgen.clitools import SimpleGraphHelper
 from cnfgen.clitools import BipartiteGraphHelper

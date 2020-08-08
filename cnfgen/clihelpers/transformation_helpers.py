@@ -7,17 +7,17 @@ https://massimolauria.net/cnfgen/
 """
 
 # Formula transformation implemented
-from cnfformula import Shuffle
-from cnfformula import AllEqualSubstitution
-from cnfformula import ExactlyOneSubstitution
-from cnfformula import FlipPolarity
-from cnfformula import FormulaLifting
-from cnfformula import IfThenElseSubstitution
-from cnfformula import MajoritySubstitution
-from cnfformula import NotAllEqualSubstitution
-from cnfformula import OrSubstitution
-from cnfformula import VariableCompression
-from cnfformula import XorSubstitution
+from cnfgen.transformations.shuffle import Shuffle
+from cnfgen.transformations.substitutions import AllEqualSubstitution
+from cnfgen.transformations.substitutions import ExactlyOneSubstitution
+from cnfgen.transformations.substitutions import FlipPolarity
+from cnfgen.transformations.substitutions import FormulaLifting
+from cnfgen.transformations.substitutions import IfThenElseSubstitution
+from cnfgen.transformations.substitutions import MajoritySubstitution
+from cnfgen.transformations.substitutions import NotAllEqualSubstitution
+from cnfgen.transformations.substitutions import OrSubstitution
+from cnfgen.transformations.substitutions import VariableCompression
+from cnfgen.transformations.substitutions import XorSubstitution
 
 from cnfgen.clitools import BipartiteGraphHelper
 

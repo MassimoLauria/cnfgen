@@ -1,6 +1,6 @@
 import pytest
 
-from cnfformula import RandomKCNF
+from cnfgen import RandomKCNF
 
 
 def test_empty_cnf():

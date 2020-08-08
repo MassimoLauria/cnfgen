@@ -68,7 +68,7 @@ to study their proof complexity or how SAT solvers perform on them.
 * Available transformations
 
   The   =cnfgen=  and   =cnftransform=   tools   expose  the   formula
-  transformations implemented in [[http://cnfgen.readthedocs.org/en/latest/][the  =cnfformula= library]]. Both tools
+  transformations implemented in [[http://cnfgen.readthedocs.org/en/latest/][the  =cnfgen= library]]. Both tools
   only apply  at most one  transformation at  a time. Via  python code
   there is definitely more flexibility.
 

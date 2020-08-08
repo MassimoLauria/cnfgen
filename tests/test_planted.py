@@ -1,7 +1,7 @@
 import pytest
 
-from cnfformula.cnf import CNF
-from cnfformula import RandomKCNF
+from cnfgen.cnf import CNF
+from cnfgen import RandomKCNF
 
 from tests.utils import assertCnfEqual
 

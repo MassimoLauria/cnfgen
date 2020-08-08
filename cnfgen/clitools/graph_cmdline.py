@@ -25,16 +25,16 @@ from networkx.algorithms.bipartite import complete_bipartite_graph
 from networkx.algorithms.bipartite import random_graph as bipartite_random_graph
 from networkx.algorithms.bipartite import gnmk_random_graph as bipartite_gnmk_random_graph
 
-from cnfformula import supported_graph_formats
-from cnfformula.graphs import readGraph, writeGraph
-from cnfformula.graphs import bipartite_random_left_regular, bipartite_random_regular, bipartite_shift
-from cnfformula.graphs import bipartite_sets
-from cnfformula.graphs import dag_complete_binary_tree, dag_pyramid
-from cnfformula.graphs import sample_missing_edges
+from cnfgen.graphs import supported_formats as supported_graph_formats
+from cnfgen.graphs import readGraph, writeGraph
+from cnfgen.graphs import bipartite_random_left_regular, bipartite_random_regular, bipartite_shift
+from cnfgen.graphs import bipartite_sets
+from cnfgen.graphs import dag_complete_binary_tree, dag_pyramid
+from cnfgen.graphs import sample_missing_edges
 
-from .msg import interactive_msg, msg_prefix
+from cnfgen.clitools.msg import interactive_msg, msg_prefix
 
-from .cmdline import redirect_stdin, CLIError, positive_int
+from cnfgen.clitools.cmdline import redirect_stdin, CLIError, positive_int
 
 
 def read_graph_from_input(args, suffix, grtype):

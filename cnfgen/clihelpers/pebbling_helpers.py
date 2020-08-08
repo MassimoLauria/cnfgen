@@ -8,9 +8,9 @@ https://massimolauria.net/cnfgen/
 
 import sys
 
-from cnfformula import PebblingFormula
-from cnfformula import StoneFormula
-from cnfformula import SparseStoneFormula
+from cnfgen.families.pebbling import PebblingFormula
+from cnfgen.families.pebbling import StoneFormula
+from cnfgen.families.pebbling import SparseStoneFormula
 
 from cnfgen.clitools import DirectedAcyclicGraphHelper
 from cnfgen.clitools import BipartiteGraphHelper

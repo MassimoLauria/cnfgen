@@ -2,8 +2,8 @@ import pytest
 import networkx as nx
 from networkx.algorithms.bipartite import complete_bipartite_graph
 
-from cnfformula import CNF
-from cnfformula import SubsetCardinalityFormula
+from cnfgen import CNF
+from cnfgen import SubsetCardinalityFormula
 
 from cnfgen.clitools import cnfgen, CLIError
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs

@@ -1,9 +1,9 @@
 import networkx as nx
 
-from cnfformula import CNF
-from cnfformula import PerfectMatchingPrinciple
-from cnfformula import GraphPigeonholePrinciple
-from cnfformula import TseitinFormula
+from cnfgen import CNF
+from cnfgen import PerfectMatchingPrinciple
+from cnfgen import GraphPigeonholePrinciple
+from cnfgen import TseitinFormula
 
 from networkx.algorithms.bipartite import random_graph as bipartite_random_graph
 from networkx.algorithms.bipartite import complete_bipartite_graph

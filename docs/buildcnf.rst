@@ -2,13 +2,13 @@
 How to build and use a CNF
 ==========================
 
-The    entry     point    to    :py:mod:`cnfformula`     library    is
-:py:class:`cnfformula.CNF`, which  is the data  structure representing
+The    entry     point    to    :py:mod:`cnfgen`     library    is
+:py:class:`cnfgen.CNF`, which  is the data  structure representing
 CNF formulas. Any  string (actually any `hashable` object)  is a valid
 name  for  a variable,  that  can  be  optionally documented  with  an
 additional description.
 
-   >>> from cnfformula import CNF
+   >>> from cnfgen import CNF
    >>> F = CNF()
    >>> F.add_variable("X",'this variable is the cause')
    >>> F.add_variable("Y",'this variable is the effect')
@@ -44,7 +44,7 @@ the formula (obviously without description).
    
 .. note::
 
-   By   default   the   :py:func:`cnfformula.CNF.add_clause`   forbids
+   By   default   the   :py:func:`cnfgen.CNF.add_clause`   forbids
    a  clauses to  contain  the  same literal  twice,  or  to have  two
    opposite literals  (i.e. a negative  and a positive literal  on the
    same variable). Furthermore, as mentioned  before, it allows to add
@@ -53,7 +53,7 @@ the formula (obviously without description).
    It is  possible to  make change  this behavior,  for example  it is
    possible  to allow  opposite  literals,  but simultaneously  forbid
    unknown      variables.      See     the      documentation      of
-   :py:func:`cnfformula.CNF.add_clause` for further details.
+   :py:func:`cnfgen.CNF.add_clause` for further details.
 
 Furthermore it is possible to  add clauses directly while constructing
 the CNF object. The code
@@ -72,7 +72,7 @@ Exporting formulas to DIMACS
 
 One of the main use of ``CNFgen``  is to produce formulas to be fed to
 SAT solvers. These solvers accept CNf formulas in DIMACS format [1]_,
-which can easily be obtained using :py:func:`cnfformula.CNF.dimacs`.
+which can easily be obtained using :py:func:`cnfgen.CNF.dimacs`.
 
    >>> c=CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], [(False,"x2"),(True,"x4")] ])
    >>> print( c.dimacs(export_header=False) )
@@ -93,7 +93,7 @@ this order, unless variables are added explicitly.
 Exporting formulas to LaTeX
 ----------------------------
 
-It is possible  to use :py:func:`cnfformula.CNF.latex` to  get a LaTeX
+It is possible  to use :py:func:`cnfgen.CNF.latex` to  get a LaTeX
 [2]_ encoding of  the CNF to include  in a document. In  that case the
 variable names  are included literally,  therefore it is  advisable to
 use variable names that would look good in Latex.
@@ -121,7 +121,7 @@ which renders as
 Instead of  outputting just the LaTeX  rendering of the formula  it is
 possible  to produce  a full  LaTeX  document by  setting the  keyword
 argument   ``full_document``    to   ``True``    in   the    call   to
-:py:func:`cnfformula.CNF.latex`. The document is ready to be compiled.
+:py:func:`cnfgen.CNF.latex`. The document is ready to be compiled.
 
    
 Reference

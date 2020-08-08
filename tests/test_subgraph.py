@@ -2,12 +2,12 @@ import networkx as nx
 from io import StringIO as sio
 from itertools import combinations
 
-from cnfformula import CNF
-from cnfformula import SubgraphFormula
-from cnfformula import CliqueFormula
-from cnfformula import RamseyWitnessFormula
+from cnfgen import CNF
+from cnfgen import SubgraphFormula
+from cnfgen import CliqueFormula
+from cnfgen import RamseyWitnessFormula
 
-from cnfformula.graphs import readGraph, writeGraph
+from cnfgen.graphs import readGraph, writeGraph
 
 from cnfgen.clitools import cnfgen, CLIError
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs, assertSAT, assertUNSAT

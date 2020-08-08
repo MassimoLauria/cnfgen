@@ -3,7 +3,7 @@
 import pytest
 import textwrap
 
-from cnfformula import some_solver_installed
+from cnfgen import some_solver_installed
 from cnfgen.clitools import redirect_stdin
 from contextlib import redirect_stdout
 

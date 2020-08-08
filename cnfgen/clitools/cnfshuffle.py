@@ -7,22 +7,22 @@ import sys
 import random
 import argparse
 
-from cnfformula import readCNF
-from cnfformula import Shuffle
+from cnfgen.utils.parsedimacs import readCNF
+from cnfgen.transformations.shuffle import Shuffle
 
-from .cmdline import paginate_or_redirect_stdout
-from .cmdline import redirect_stdin
-from .cmdline import setup_SIGINT
-from .cmdline import CLIParser, CLIError
+from cnfgen.clitools.cmdline import paginate_or_redirect_stdout
+from cnfgen.clitools.cmdline import redirect_stdin
+from cnfgen.clitools.cmdline import setup_SIGINT
+from cnfgen.clitools.cmdline import CLIParser, CLIError
 
-from .msg import interactive_msg
-from .msg import error_msg
-from .msg import msg_prefix
-from .msg import InternalBug
+from cnfgen.clitools.msg import interactive_msg
+from cnfgen.clitools.msg import error_msg
+from cnfgen.clitools.msg import msg_prefix
+from cnfgen.clitools.msg import InternalBug
 
 
 def cli(argv=sys.argv, mode='output'):
-    """CNFgen shuffler 
+    """CNFgen shuffler
 
     This function provide the main interface to cnfshuffle.
 

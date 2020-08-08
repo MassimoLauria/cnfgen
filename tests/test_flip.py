@@ -1,9 +1,9 @@
 import io
 
-from cnfformula import CNF
-from cnfformula import RandomKCNF
-from cnfformula import Shuffle
-from cnfformula import FlipPolarity
+from cnfgen import CNF
+from cnfgen import RandomKCNF
+from cnfgen import Shuffle
+from cnfgen import FlipPolarity
 
 from tests.utils import assertCnfEqual, redirect_stdin, redirect_stdout
 

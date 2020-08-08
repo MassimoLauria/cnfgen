@@ -12,20 +12,19 @@
    families
    graphs
    transform
-   cnfgen
+   clitool
    addfamily
    
-
 Welcome to CNFgen's documentation!
 ==================================
 
-The main components of CNFgen are the ``cnfformula`` library and
+The main components of CNFgen are the ``cnfgen`` library and
 the ``cnfgen`` command line utility.
 
-The ``cnfformula`` library
+The ``cnfgen`` library
 --------------------------
 
-The ``cnfformula``  library is capable to  generate Conjunctive Normal
+The ``cnfgen``  library is capable to  generate Conjunctive Normal
 Form   (CNF)   formulas,   manipulate   them  and,   when   there   is
 a satisfiability (SAT) solver properly  installed on your system, test
 their satisfiability. The CNFs can be  saved on file in DIMACS format,
@@ -34,12 +33,12 @@ LaTeX [2]_  to be included  in a  document. The library  contains many
 generators for formulas that  encode various combinatorial problems or
 that come from research in Proof Complexity [3]_.
 
-The  main  entry point  for  the  library is  the  :py:class:`cnfformula.CNF`
+The  main  entry point  for  the  library is  the  :py:class:`cnfgen.CNF`
 object. Let's see a simple example of its usage.
 
    >>> from pprint import pprint
-   >>> import cnfformula
-   >>> F = cnfformula.CNF()
+   >>> import cnfgen
+   >>> F = cnfgen.CNF()
    >>> F.add_clause([(True,"X"),(False,"Y")])
    >>> F.add_clause([(False,"X")])
    >>> outcome,assignment = F.is_satisfiable() # outputs a pair
@@ -65,7 +64,7 @@ object. Let's see a simple example of its usage.
 A typical  unsatisfiable formula  studied in  Proof Complexity  is the
 pigeonhole principle formula.
 
-   >>> from cnfformula import PigeonholePrinciple
+   >>> from cnfgen import PigeonholePrinciple
    >>> F = PigeonholePrinciple(5,4)
    >>> print(F.dimacs(export_header=False))
    p cnf 20 45
@@ -79,7 +78,7 @@ pigeonhole principle formula.
 The ``cnfgen`` command line tool
 --------------------------------
 
-The command line  tool is installed along  ``cnfformula`` package, and
+The command line  tool is installed along  ``cnfgen`` package, and
 provides  a somehow  limited  interface to  the library  capabilities.
 It provides ways  to produce formulas in DIMACS and  LaTeX format from
 the command line. To produce a  pigeonhole principle from 5 pigeons to

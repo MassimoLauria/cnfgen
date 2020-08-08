@@ -1,7 +1,33 @@
-The command line utility
-========================
+cnfgen package
+==============
 
-Most people are likely to use  ``CNFgen`` by command line. The command
-line has a powerful interface with many options and sensible defaults,
-so that the newcomer is not intimidated but it is still possible to generate
-nontrivial formula 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cnfgen.clihelpers
+   cnfgen.clitools
+   cnfgen.families
+   cnfgen.transformations
+   cnfgen.utils
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cnfgen.cnf
+   cnfgen.graphs
+   cnfgen.info
+   cnfgen.version
+
+Module contents
+---------------
+
+.. automodule:: cnfgen
+   :members:
+   :undoc-members:
+   :show-inheritance:

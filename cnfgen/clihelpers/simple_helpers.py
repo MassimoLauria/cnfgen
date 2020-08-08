@@ -6,8 +6,8 @@ Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.l
 https://massimolauria.net/cnfgen/
 """
 
-from cnfformula import CNF
-from cnfformula import RandomKCNF
+from cnfgen.cnf import CNF
+from cnfgen.families.randomformulas import RandomKCNF
 
 from .formula_helpers import FormulaHelper
 

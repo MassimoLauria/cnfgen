@@ -1,11 +1,11 @@
 import io
 
-from cnfformula import PebblingFormula
-from cnfformula import readGraph
+from cnfgen import PebblingFormula
+from cnfgen import readGraph
 
-from cnfformula import OrSubstitution
-from cnfformula import XorSubstitution
-from cnfformula import FormulaLifting
+from cnfgen import OrSubstitution
+from cnfgen import XorSubstitution
+from cnfgen import FormulaLifting
 
 from cnfgen.clitools import kthlist2pebbling, CLIError
 from tests.utils import redirect_stdin

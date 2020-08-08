@@ -3,7 +3,7 @@ import io
 import pytest
 
 from cnfgen.clitools import cnfshuffle
-from cnfformula import Shuffle, RandomKCNF
+from cnfgen import Shuffle, RandomKCNF
 
 from tests.shufflereference import stableshuffle
 from tests.utils import redirect_stdin, redirect_stdout

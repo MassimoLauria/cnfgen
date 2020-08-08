@@ -7,7 +7,7 @@ https://massimolauria.net/cnfgen/
 """
 
 import argparse
-from cnfformula import readCNF
+from cnfgen.utils.parsedimacs import readCNF
 
 from cnfgen.clitools import redirect_stdin
 from cnfgen.clitools import interactive_msg

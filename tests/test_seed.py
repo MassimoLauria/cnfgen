@@ -2,7 +2,7 @@
 
 import random
 import pytest
-from cnfformula import RandomKCNF
+from cnfgen import RandomKCNF
 from cnfgen.clitools import cnfgen, CLIError
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs
 

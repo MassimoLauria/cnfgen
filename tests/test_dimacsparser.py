@@ -1,6 +1,6 @@
-from cnfformula import CNF
-from cnfformula import RandomKCNF
-from cnfformula import readCNF
+from cnfgen import CNF
+from cnfgen import RandomKCNF
+from cnfgen import readCNF
 
 import io
 import pytest

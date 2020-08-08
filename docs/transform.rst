@@ -1,7 +1,7 @@
 Post-process a CNF formula
 ==========================
 
-After you produce a :py:class:`cnfformula.CNF`, maybe using one of the 
+After you produce a :py:class:`cnfgen.CNF`, maybe using one of the 
 `generators  included  <families.html>`_,  it  is  still  possible  to
 modify it. One simple  ways is to add new clauses  but there are ways
 to  make  the formula  harder  with  some structured  transformations.
@@ -46,7 +46,7 @@ Using CNF transformations
 We implement the following transformation methods. The ``none`` method
 just leaves  the formula  alone. It  is a  null transformation  in the
 sense that,  contrary to the  other methods, this one  returns exactly
-the  same :py:class:`cnfformula.CNF`  object  that it  gets in  input.
+the  same :py:class:`cnfgen.CNF`  object  that it  gets in  input.
 All the  other methods  would produce  a new CNF  object with  the new
 formula. The old one is left untouched.
 
@@ -58,29 +58,29 @@ formula. The old one is left untouched.
 +----------+----------------------------+--------------+----------------------------------------------------+
 | ``none`` | leaves the formula alone   |      ignored |                                                    |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``eq``   | all variables equal        |            3 | :py:class:`cnfformula.AllEqualSubstitution`        |
+| ``eq``   | all variables equal        |            3 | :py:class:`cnfgen.AllEqualSubstitution`            |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``ite``  | if x then y else z         |      ignored | :py:class:`cnfformula.IfThenElseSubstitution`      |
+| ``ite``  | if x then y else z         |      ignored | :py:class:`cnfgen.IfThenElseSubstitution`          |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``lift`` | lifting                    |            3 | :py:class:`cnfformula.FormulaLifting`              |
+| ``lift`` | lifting                    |            3 | :py:class:`cnfgen.FormulaLifting`                  |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``maj``  | Loose majority             |            3 | :py:class:`cnfformula.MajoritySubstitution`        |
+| ``maj``  | Loose majority             |            3 | :py:class:`cnfgen.MajoritySubstitution`            |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``neq``  | not all vars  equal        |            3 | :py:class:`cnfformula.NotAllEqualSubstitution`     |
+| ``neq``  | not all vars  equal        |            3 | :py:class:`cnfgen.NotAllEqualSubstitution`         |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``one``  | Exactly one                |            3 | :py:class:`cnfformula.ExactlyOneSubstitution`      |
+| ``one``  | Exactly one                |            3 | :py:class:`cnfgen.ExactlyOneSubstitution`          |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``or``   | OR substitution            |            2 | :py:class:`cnfformula.OrSubstitution`              |
+| ``or``   | OR substitution            |            2 | :py:class:`cnfgen.OrSubstitution`                  |
 +----------+----------------------------+--------------+----------------------------------------------------+
-| ``xor``  | XOR substitution           |            2 | :py:class:`cnfformula.XorSubstitution`             |
+| ``xor``  | XOR substitution           |            2 | :py:class:`cnfgen.XorSubstitution`                 |
 +----------+----------------------------+--------------+----------------------------------------------------+
                                                                                                             
 
-Any  :py:class:`cnfformula.CNF`   can  be  post-processed   using  the
-function   :py:func:`cnfformula.TransformFormula`.   For  example   to
+Any  :py:class:`cnfgen.CNF`   can  be  post-processed   using  the
+function   :py:func:`cnfgen.TransformFormula`.   For  example   to
 substitute each variable with a 2-XOR we can do
 
-   >>> from cnfformula import CNF, XorSubstitution
+   >>> from cnfgen import CNF, XorSubstitution
    >>> F = CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], [(False,"x2"),(True,"x4")] ])
    >>> G = XorSubstitution(F,2)
 

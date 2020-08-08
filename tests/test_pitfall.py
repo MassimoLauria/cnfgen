@@ -1,7 +1,7 @@
 import pytest
 import random
 
-from cnfformula import PitfallFormula
+from cnfgen import PitfallFormula
 from cnfgen.clitools import cnfgen, CLIError
 from cnfgen.clitools import get_formula_helpers
 

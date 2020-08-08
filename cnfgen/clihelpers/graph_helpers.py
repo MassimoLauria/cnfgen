@@ -6,18 +6,18 @@ Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.l
 https://massimolauria.net/cnfgen/
 """
 
-from cnfformula import GraphColoringFormula
-from cnfformula import EvenColoringFormula
+from cnfgen.families.coloring import GraphColoringFormula
+from cnfgen.families.coloring import EvenColoringFormula
 
-from cnfformula import DominatingSet
+from cnfgen.families.dominatingset import DominatingSet
 
-from cnfformula import GraphIsomorphism
-from cnfformula import GraphAutomorphism
+from cnfgen.families.graphisomorphism import GraphIsomorphism
+from cnfgen.families.graphisomorphism import GraphAutomorphism
 
-from cnfformula import CliqueFormula
-from cnfformula import BinaryCliqueFormula
-from cnfformula import SubgraphFormula
-from cnfformula import RamseyWitnessFormula
+from cnfgen.families.subgraph import CliqueFormula
+from cnfgen.families.subgraph import BinaryCliqueFormula
+from cnfgen.families.subgraph import SubgraphFormula
+from cnfgen.families.subgraph import RamseyWitnessFormula
 
 from cnfgen.clitools import SimpleGraphHelper
 from .formula_helpers import FormulaHelper

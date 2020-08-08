@@ -4,10 +4,10 @@ import pytest
 import networkx as nx
 from networkx.algorithms.bipartite import complete_bipartite_graph
 
-from cnfformula import CNF
-from cnfformula import PigeonholePrinciple
-from cnfformula import GraphPigeonholePrinciple
-from cnfformula import BinaryPigeonholePrinciple
+from cnfgen import CNF
+from cnfgen import PigeonholePrinciple
+from cnfgen import GraphPigeonholePrinciple
+from cnfgen import BinaryPigeonholePrinciple
 
 from cnfgen.clitools import cnfgen, CLIError
 

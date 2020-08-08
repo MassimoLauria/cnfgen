@@ -1,7 +1,7 @@
-cnfformula
-==========
+cnfgen
+======
 
 .. toctree::
    :maxdepth: 4
 
-   cnfformula
+   cnfgen

@@ -3,8 +3,8 @@
 import pytest
 import networkx as nx
 
-from cnfformula import CNF
-from cnfformula import GraphAutomorphism, GraphIsomorphism
+from cnfgen import CNF
+from cnfgen import GraphAutomorphism, GraphIsomorphism
 
 from tests.utils import assertSAT, assertUNSAT, assertCnfEqual
 

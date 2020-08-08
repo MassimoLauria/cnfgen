@@ -2,8 +2,8 @@ import pytest
 import networkx as nx
 import sys
 
-from cnfformula import CNF
-from cnfformula import OrderingPrinciple, GraphOrderingPrinciple
+from cnfgen import CNF
+from cnfgen import OrderingPrinciple, GraphOrderingPrinciple
 from cnfgen.clitools import cnfgen, CLIError
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs, assertCnfEqualsIgnoreVariables
 

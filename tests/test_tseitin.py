@@ -3,7 +3,7 @@ import networkx as nx
 import pytest
 import io
 
-from cnfformula import TseitinFormula
+from cnfgen import TseitinFormula
 from cnfgen.clitools import cnfgen, CLIError
 from cnfgen.clitools import redirect_stdin
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs

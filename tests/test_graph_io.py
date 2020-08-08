@@ -5,9 +5,9 @@ from io import BytesIO
 import networkx as nx
 import pytest
 
-import cnfformula
-from cnfformula.graphs import readGraph, writeGraph, supported_formats
-from cnfformula.graphs import bipartite_sets, has_dot_library
+import cnfgen
+from cnfgen.graphs import readGraph, writeGraph, supported_formats
+from cnfgen.graphs import bipartite_sets, has_dot_library
 
 from tests.utils import example_filename
 
@@ -103,7 +103,7 @@ def test_low_level_gml_broken_NetworkXError():
 
 def test_low_level_dimacs_read_path2():
 
-    G = cnfformula.graphs._read_graph_dimacs_format(sio(dimacs_path2))
+    G = cnfgen.graphs._read_graph_dimacs_format(sio(dimacs_path2))
 
     assert G.order() == 3
     assert len(G.edges()) == 2

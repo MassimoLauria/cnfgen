@@ -2,15 +2,15 @@
 Formula families
 ================
 
-One of the most useful features of ``CNFgen`` is the implementation of
-several important families of CNF formulas, many of them either coming
-from  the  proof  complexity  literature or  encoding  some  important
-problem  from combinatorics.  The formula  are accessible  through the
-:py:mod:`cnfformula` package. See for example this construction of the
+The defining features  of ``CNFgen`` is the  implementation of several
+important families  of CNF formulas,  many of them either  coming from
+the  proof complexity  literature or  encoding some  important problem
+from   combinatorics.  The   formula   are   accessible  through   the
+:py:mod:`cnfgen`  package. See  for example  this construction  of the
 pigeohole principle formula with 5 pigeons and 4 holes.
 
-   >>> import cnfformula
-   >>> F = cnfformula.PigeonholePrinciple(5,4)
+   >>> import cnfgen
+   >>> F = cnfgen.PigeonholePrinciple(5,4)
    >>> F.is_satisfiable()
    (False, None)
 
@@ -27,19 +27,20 @@ the following modules. This makes it easy to
 .. toctree::
    :titlesonly:
 
-   Counting formulas <cnfformula.families.counting>
-   Graph coloring <cnfformula.families.coloring>
-   Graph Isomorphism <cnfformula.families.graphisomorphism>
-   Ordering principles <cnfformula.families.ordering>
-   Pebbling formulas <cnfformula.families.pebbling>
-   Pigeonhole principle <cnfformula.families.pigeonhole>
-   Ramsey numbers <cnfformula.families.ramsey>
-   Random CNFs <cnfformula.families.randomformulas>
-   Clique and Subgraph formulas <cnfformula.families.subgraph>
-   Subset Cardinality <cnfformula.families.subsetcardinality>
-   Clique-Coloring formulas <cnfformula.families.cliquecoloring>
-   Tseitin formula <cnfformula.families.tseitin>
-   Basic formulas <cnfformula.families.simple>
+   Counting formulas <cnfgen.families.counting>
+   Graph coloring <cnfgen.families.coloring>
+   Graph Isomorphism <cnfgen.families.graphisomorphism>
+   Ordering principles <cnfgen.families.ordering>
+   Pebbling formulas <cnfgen.families.pebbling>
+   Pigeonhole principle <cnfgen.families.pigeonhole>
+   Pitfall formulas <cnfgen.families.pitfall>
+   Ramsey numbers <cnfgen.families.ramsey>
+   Random CNFs <cnfgen.families.randomformulas>
+   Clique and Subgraph formulas <cnfgen.families.subgraph>
+   Subset Cardinality <cnfgen.families.subsetcardinality>
+   Clique-Coloring formulas <cnfgen.families.cliquecoloring>
+   Tseitin formula <cnfgen.families.tseitin>
+   Coloured Polynomial Local Search <cnfgen.families.cpls>
 
 
 Command line invocation
@@ -57,12 +58,11 @@ DIMACS format with the following command line.
 .. code-block:: shell
 
    $ cnfgen php 5 4
-   c Pigeonhole principle formula for 5 pigeons and 4 holes
-   c Generated with `cnfgen`
-   c (C) 2012-2019 Massimo Lauria <massimo.lauria@uniroma1.it>
-   c https://massimolauria.net/cnfgen
-   c
-   c COMMAND LINE: cnfgen php 5 4
+   c description: Pigeonhole principle formula for 5 pigeons and 4 holes
+   c generator: CNFgen (0.8.6-5-g56a1e50)
+   c copyright: (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
+   c url: https://massimolauria.net/cnfgen
+   c command line: cnfgen php 5 4
    c
    p cnf 20 45
    1 2 3 4 0

@@ -1,6 +1,6 @@
 import pytest
 
-from cnfformula.graphs import bipartite_sets
+from cnfgen.graphs import bipartite_sets
 
 from cnfgen.clitools.graph_cmdline import BipartiteGraphHelper
 from cnfgen.clitools.cmdline import CLIParser, CLIError
