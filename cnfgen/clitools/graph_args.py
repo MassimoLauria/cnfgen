@@ -168,6 +168,10 @@ Here we assume that all parts have numeric arguments, except for
         optionname = spec[position]
         if optionname in constructions:
             raise ValueError("No need for another construction specification")
+        elif optionname not in options[graphtype] and optionname[0] == '-':
+            raise ValueError(
+                "Optional arguments as `{}` should be before any positional/graph argument"
+                .format(optionname))
         elif optionname not in options[graphtype]:
             raise ValueError(
                 "`{}` is not a valid option for a graph of type `{}`".format(
@@ -193,7 +197,7 @@ def obtain_gnd(parsed):
         d = int(d)
         assert n > 0
         assert d > 0
-    except (TypeError, AssertionError):
+    except (TypeError, AssertionError, ValueError):
         raise ValueError('\'gnd\' expects arguments <N> <D> with N>0, D>0')
 
     if (n * d) % 2 == 1:
@@ -212,7 +216,7 @@ def obtain_gnp(parsed):
         p = float(p)
         assert n > 0
         assert 0 < p < 1
-    except (TypeError, AssertionError):
+    except (TypeError, ValueError, AssertionError):
         raise ValueError(
             '\'gnp\' expects arguments <N> <p> with N>0, p in [0,1]')
 
@@ -228,7 +232,7 @@ def obtain_gnm(parsed):
         m = int(m)
         assert n > 0
         assert m >= 0
-    except (TypeError, AssertionError):
+    except (TypeError, ValueError, AssertionError):
         raise ValueError('\'gnm\' expects arguments <N> <M> with N>0, M>=0')
 
     G = networkx.gnm_random_graph(n, m)
@@ -243,7 +247,7 @@ def obtain_complete_simple_graph(parsed):
             raise ValueError
         n = int(parsed['args'][0])
         assert n > 0
-    except (TypeError, AssertionError):
+    except (TypeError, ValueError, AssertionError):
         raise ValueError('\'complete\' expects argument <N> with N>0')
 
     G = networkx.complete_graph(n)
@@ -258,7 +262,7 @@ def obtain_empty_simple_graph(parsed):
             raise ValueError
         n = int(parsed['args'][0])
         assert n > 0
-    except (TypeError, AssertionError):
+    except (TypeError, ValueError, AssertionError):
         raise ValueError('\'complete\' expects argument <N> with N>0')
 
     G = networkx.empty_graph(n)
@@ -293,7 +297,7 @@ def modify_simple_graph_plantclique(parsed, G):
             raise ValueError
         cliquesize = int(parsed['plantclique'][0])
         assert cliquesize >= 0
-    except (TypeError, AssertionError):
+    except (TypeError, ValueError, AssertionError):
         raise ValueError('\'plantclique\' expects argument <k> with k>=0')
 
     if cliquesize > G.order():
@@ -313,7 +317,7 @@ def modify_simple_graph_addedges(parsed, G):
             raise ValueError
         k = int(parsed['addedges'][0])
         assert k >= 0
-    except (TypeError, AssertionError):
+    except (TypeError, ValueError, AssertionError):
         raise ValueError('\'addedges\' expects argument <k> with k>=0')
 
     G.add_edges_from(sample_missing_edges(G, k))
@@ -366,10 +370,18 @@ def obtain_simple_graph(parsed):
 
 
 class SimpleGraphAction(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super(SimpleGraphAction, self).__init__(option_strings,
+                                                dest,
+                                                nargs='*',
+                                                **kwargs)
+
     def __call__(self, parser, args, values, option_string=None):
         try:
             parsed = parse_graph_argument('simple', values)
             G = obtain_simple_graph(parsed)
-            self.dest = G
+            setattr(args, self.dest, G)
         except ValueError as e:
             parser.error(str(e))
