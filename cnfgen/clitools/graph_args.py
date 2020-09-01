@@ -222,6 +222,7 @@ def obtain_gnp(parsed):
 
     G = networkx.gnp_random_graph(n, p)
     G.name = 'Random {}-biased graph of {} vertices'.format(p, n)
+    return G
 
 
 def obtain_gnm(parsed):
@@ -289,6 +290,7 @@ def obtain_grid_or_torus(parsed, periodic):
 
     G = networkx.grid_graph(dimensions, periodic=periodic)
     G.name = "{} graph of dimension {}".format(name, dimensions)
+    return G
 
 
 def modify_simple_graph_plantclique(parsed, G):
@@ -375,7 +377,7 @@ class SimpleGraphAction(argparse.Action):
             raise ValueError("nargs not allowed")
         super(SimpleGraphAction, self).__init__(option_strings,
                                                 dest,
-                                                nargs='*',
+                                                nargs='+',
                                                 **kwargs)
 
     def __call__(self, parser, args, values, option_string=None):
