@@ -20,6 +20,7 @@ from cnfgen.families.subgraph import SubgraphFormula
 from cnfgen.families.subgraph import RamseyWitnessFormula
 
 from cnfgen.clitools import SimpleGraphHelper
+from cnfgen.clitools.graph_args import SimpleGraphAction
 from .formula_helpers import FormulaHelper
 
 
@@ -117,7 +118,7 @@ class GAutoCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        SimpleGraphHelper.setup_command_line(parser)
+        parser.add_argument('G', action=SimpleGraphAction)
 
     @staticmethod
     def build_cnf(args):
@@ -126,8 +127,8 @@ class GAutoCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return GraphAutomorphism(G)
+        #G = SimpleGraphHelper.obtain_graph(args)
+        return GraphAutomorphism(args.G)
 
 
 class GIsoCmdHelper(FormulaHelper):
@@ -143,8 +144,11 @@ class GIsoCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        SimpleGraphHelper.setup_command_line(parser, suffix="1", required=True)
-        SimpleGraphHelper.setup_command_line(parser, suffix="2", required=True)
+        parser.add_argument('G1', action=SimpleGraphAction)
+        parser.add_argument('--and', action='store_true', required=True)
+        parser.add_argument('G2', action=SimpleGraphAction)
+        # SimpleGraphHelper.setup_command_line(parser, suffix="1", required=True)
+        # SimpleGraphHelper.setup_command_line(parser, suffix="2", required=True)
 
     @staticmethod
     def build_cnf(args):
@@ -153,9 +157,9 @@ class GIsoCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        G1 = SimpleGraphHelper.obtain_graph(args, suffix="1")
-        G2 = SimpleGraphHelper.obtain_graph(args, suffix="2")
-        return GraphIsomorphism(G1, G2)
+        # G1 = SimpleGraphHelper.obtain_graph(args, suffix="1")
+        # G2 = SimpleGraphHelper.obtain_graph(args, suffix="2")
+        return GraphIsomorphism(args.G1, args.G2)
 
 
 class KCliqueCmdHelper(FormulaHelper):
