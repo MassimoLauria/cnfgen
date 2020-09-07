@@ -44,7 +44,7 @@ class OR(FormulaHelper):
         """
         clause = [ (True,"x_{}".format(i)) for i in range(args.P) ] + \
                  [ (False,"y_{}".format(i)) for i in range(args.N) ]
-        description = "Clause with {} positive and {} negative literals".format(
+        description = "A single clause with {} positive and {} negative literals".format(
             args.P, args.N)
         orcnf = CNF([clause], description)
 
@@ -82,10 +82,9 @@ class AND(FormulaHelper):
         """
         clauses = [ [(True,"x_{}".format(i))] for i in range(args.P) ] + \
                   [ [(False,"y_{}".format(i))] for i in range(args.N) ]
-        andcnf = CNF(clauses)
-        andcnf.header = "Singleton clauses: {} positive and {} negative\n\n""".format(args.P,args.N) +\
-                        andcnf.header
-        return andcnf
+        description = "Singleton clauses: {} positive and {} negative".format(
+            args.P, args.N)
+        return CNF(clauses, description)
 
 
 class EMPTY(FormulaHelper):

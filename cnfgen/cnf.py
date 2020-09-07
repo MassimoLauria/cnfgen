@@ -172,7 +172,11 @@ class CNF(object):
         (-1, -2)
 
         """
-        return tuple((1 if p else -1) * self._name2index[n] for p, n in clause)
+        try:
+            return tuple(
+                (1 if p else -1) * self._name2index[n] for p, n in clause)
+        except TypeError:
+            raise TypeError("{} is not a well formatted clause".format(clause))
 
     def _add_compressed_clauses(self, clauses):
         """(INTERNAL USE) Add to the CNF a list of compressed clauses.
@@ -363,8 +367,12 @@ class CNF(object):
 
         # Check opposite literals
         if not opposite_literals:
-            positive = set([v for (p, v) in clause if p])
-            negative = set([v for (p, v) in clause if not p])
+            try:
+                positive = set([v for (p, v) in clause if p])
+                negative = set([v for (p, v) in clause if not p])
+            except TypeError:
+                raise TypeError(
+                    "{} is not a well formatted clause".format(clause))
             if len(positive & negative) > 0:
                 emsg = "{ " + ", ".join(positive & negative) + " }"
                 raise ValueError(
@@ -1015,6 +1023,39 @@ class CNF(object):
             yield c
         for c in cls.greater_or_equal_constraint(variables, value):
             yield c
+
+    @classmethod
+    def not_equal_to_constraint(cls, variables, value):
+        """Clauses encoding a \"not equal to\" constraint
+     
+        E.g. X1 + X2 + X3 + X4 = 1
+     
+        (X1 v X2 v X3 v X4)
+        (~X1 v ~X2)
+        (~X1 v ~X3)
+        (~X1 v ~X4)
+        (~X2 v ~X3)
+        (~X2 v ~X4)
+        (~X3 v ~X4)
+     
+        Parameters
+        ----------
+        variables : list of variables
+           variables in the constraint
+        value: int
+           target values
+     
+        Returns
+        -------
+            a list of clauses
+        """
+        if value < 0 or value > len(variables):
+            return
+        for kvars in combinations(variables, value):
+            others = [v for v in variables if v not in kvars]
+            neg = [(False, var) for var in kvars]
+            pos = [(True, other) for other in others]
+            yield neg + pos
 
     @classmethod
     def loose_majority_constraint(cls, variables):

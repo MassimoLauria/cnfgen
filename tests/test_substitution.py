@@ -2,7 +2,8 @@ from cnfgen import CNF
 
 from cnfgen import OrSubstitution, XorSubstitution, MajoritySubstitution
 from cnfgen import AllEqualSubstitution, NotAllEqualSubstitution
-from cnfgen import IfThenElseSubstitution, ExactlyOneSubstitution
+from cnfgen import IfThenElseSubstitution
+from cnfgen import ExactlyKSubstitution, ExactlyOneSubstitution
 
 from tests.utils import assertCnfEqual
 

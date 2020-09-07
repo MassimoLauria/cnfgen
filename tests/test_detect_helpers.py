@@ -25,7 +25,7 @@ def test_find_formula_examples():
 def test_find_transformation_helpers():
     """All formula transformations are detected."""
     transformations = get_transformation_helpers()
-    assert len(transformations) == 13
+    assert len(transformations) == 17
 
 
 def test_find_transformation_examples():

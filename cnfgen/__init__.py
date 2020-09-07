@@ -52,6 +52,10 @@ from cnfgen.families.cpls import CPLSFormula
 # Formula transformation implemented
 from cnfgen.transformations.substitutions import AllEqualSubstitution
 from cnfgen.transformations.substitutions import ExactlyOneSubstitution
+from cnfgen.transformations.substitutions import ExactlyKSubstitution
+from cnfgen.transformations.substitutions import AnythingButKSubstitution
+from cnfgen.transformations.substitutions import AtLeastKSubstitution
+from cnfgen.transformations.substitutions import AtMostKSubstitution
 from cnfgen.transformations.substitutions import FlipPolarity
 from cnfgen.transformations.substitutions import FormulaLifting
 from cnfgen.transformations.substitutions import IfThenElseSubstitution

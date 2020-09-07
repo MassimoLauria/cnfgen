@@ -10,6 +10,10 @@ https://massimolauria.net/cnfgen/
 from cnfgen.transformations.shuffle import Shuffle
 from cnfgen.transformations.substitutions import AllEqualSubstitution
 from cnfgen.transformations.substitutions import ExactlyOneSubstitution
+from cnfgen.transformations.substitutions import ExactlyKSubstitution
+from cnfgen.transformations.substitutions import AnythingButKSubstitution
+from cnfgen.transformations.substitutions import AtMostKSubstitution
+from cnfgen.transformations.substitutions import AtLeastKSubstitution
 from cnfgen.transformations.substitutions import FlipPolarity
 from cnfgen.transformations.substitutions import FormulaLifting
 from cnfgen.transformations.substitutions import IfThenElseSubstitution
@@ -216,6 +220,66 @@ class ExactlyOneSubstitutionCmd(TransformationHelper):
     @staticmethod
     def transform_cnf(F, args):
         return ExactlyOneSubstitution(F, args.N)
+
+
+class AtLeastKSubstitutionCmd(TransformationHelper):
+    name = 'atleast'
+    description = 'substitute variable x with predicate x1+x2+...+xN >= K'
+
+    @staticmethod
+    def setup_command_line(parser):
+        parser.add_argument('N', type=int, action='store', help="arity")
+
+        parser.add_argument('K', type=int, action='store', help="threshold")
+
+    @staticmethod
+    def transform_cnf(F, args):
+        return AtLeastKSubstitution(F, args.N, args.K)
+
+
+class AtMostKSubstitutionCmd(TransformationHelper):
+    name = 'atmost'
+    description = 'substitute variable x with predicate x1+x2+...+xN <= K'
+
+    @staticmethod
+    def setup_command_line(parser):
+        parser.add_argument('N', type=int, action='store', help="arity")
+
+        parser.add_argument('K', type=int, action='store', help="threshold")
+
+    @staticmethod
+    def transform_cnf(F, args):
+        return AtMostKSubstitution(F, args.N, args.K)
+
+
+class ExactlyKSubstitutionCmd(TransformationHelper):
+    name = 'exact'
+    description = 'substitute variable x with predicate x1+x2+...+xN = K'
+
+    @staticmethod
+    def setup_command_line(parser):
+        parser.add_argument('N', type=int, action='store', help="arity")
+
+        parser.add_argument('K', type=int, action='store', help="value")
+
+    @staticmethod
+    def transform_cnf(F, args):
+        return ExactlyKSubstitution(F, args.N, args.K)
+
+
+class AnythingButKSubstitutionCmd(TransformationHelper):
+    name = 'anybut'
+    description = 'substitute variable x with predicate x1+x2+...+xN != K'
+
+    @staticmethod
+    def setup_command_line(parser):
+        parser.add_argument('N', type=int, action='store', help="arity")
+
+        parser.add_argument('K', type=int, action='store', help="value")
+
+    @staticmethod
+    def transform_cnf(F, args):
+        return AnythingButKSubstitution(F, args.N, args.K)
 
 
 # Technically lifting is not a substitution, therefore it should be in
