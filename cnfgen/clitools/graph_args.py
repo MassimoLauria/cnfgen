@@ -103,6 +103,7 @@ Here we assume that all parts have numeric arguments, except for
         raise ValueError('Empty graph specification')
 
     result = {}
+    result['graphtype'] = graphtype
     position = 0  # next place to parse
 
     def consumenumbers():
@@ -136,14 +137,14 @@ Here we assume that all parts have numeric arguments, except for
     if spec[0] in constructions[graphtype]:
         result['construction'] = spec[0]
         result['filename'] = None
-        result['graphformat'] = None
+        result['fileformat'] = None
         position += 1
         result['args'] = consumenumbers()
     # Or a file with format specification
     elif spec[0] in formats[graphtype]:
         result['construction'] = None
         result['args'] = None
-        result['graphformat'] = spec[0]
+        result['fileformat'] = spec[0]
         if len(spec) < 2:
             raise ValueError('Filename expected after graph format')
         result['filename'] = spec[1]
@@ -160,7 +161,7 @@ Here we assume that all parts have numeric arguments, except for
     else:
         result['construction'] = None
         result['filename'] = spec[0]
-        result['graphformat'] = 'autodetect'
+        result['fileformat'] = 'autodetect'
         position += 1
 
     # Now we load the graph options
@@ -293,6 +294,14 @@ def obtain_grid_or_torus(parsed, periodic):
     return G
 
 
+def obtain_grid(parsed):
+    return obtain_grid_or_torus(parsed, periodic=False)
+
+
+def obtain_torus(parsed):
+    return obtain_grid_or_torus(parsed, periodic=True)
+
+
 def modify_simple_graph_plantclique(parsed, G):
     try:
         if len(parsed['plantclique']) != 1:
@@ -340,10 +349,10 @@ def obtain_simple_graph(parsed):
         G = obtain_gnp(parsed)
 
     elif parsed['construction'] == 'grid':
-        G = obtain_grid_or_torus(parsed, periodic=False)
+        G = obtain_grid(parsed)
 
     elif parsed['construction'] == 'torus':
-        G = obtain_grid_or_torus(parsed, periodic=True)
+        G = obtain_torus(parsed)
 
     elif parsed['construction'] == 'complete':
         G = obtain_complete_simple_graph(parsed)
@@ -353,7 +362,7 @@ def obtain_simple_graph(parsed):
 
     else:
         assert 'filename' in parsed
-        assert 'graphformat' in parsed
+        assert 'fileformat' in parsed
         raise RuntimeError('reading graph from input is not implemented yet')
 
     # Graph modifications

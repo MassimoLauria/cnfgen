@@ -10,6 +10,7 @@ from cnfgen.families.ordering import OrderingPrinciple
 from cnfgen.families.ordering import GraphOrderingPrinciple
 
 from cnfgen.clitools import SimpleGraphHelper
+from cnfgen.clitools.graph_args import SimpleGraphAction
 from .formula_helpers import FormulaHelper
 
 
@@ -112,7 +113,11 @@ class GOPCmdHelper(FormulaHelper):
                             default=False,
                             action='store_true',
                             help="allow a minimum element")
-        SimpleGraphHelper.setup_command_line(parser)
+        parser.add_argument('G',
+                            metavar="<graph>",
+                            action=SimpleGraphAction,
+                            help='Graph underlying the ordering principle')
+        #SimpleGraphHelper.setup_command_line(parser)
 
     @staticmethod
     def build_cnf(args):
@@ -121,6 +126,5 @@ class GOPCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return GraphOrderingPrinciple(G, args.total, args.smart, args.plant,
-                                      args.knuth)
+        return GraphOrderingPrinciple(args.G, args.total, args.smart,
+                                      args.plant, args.knuth)
