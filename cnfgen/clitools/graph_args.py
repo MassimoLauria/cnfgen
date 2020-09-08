@@ -41,21 +41,46 @@ https://github.com/MassimoLauria/cnfgen.git
 """
 import os
 import argparse
-import random
-import networkx
-from itertools import combinations
 
 from cnfgen.graphs import supported_formats
-from cnfgen.graphs import sample_missing_edges
+from cnfgen.clitools.msg import InternalBug
+
+# Simple graphs
+from cnfgen.clitools.graph_build import obtain_gnp
+from cnfgen.clitools.graph_build import obtain_gnm
+from cnfgen.clitools.graph_build import obtain_gnd
+from cnfgen.clitools.graph_build import obtain_grid
+from cnfgen.clitools.graph_build import obtain_torus
+from cnfgen.clitools.graph_build import obtain_complete_simple
+from cnfgen.clitools.graph_build import obtain_empty_simple
+from cnfgen.clitools.graph_build import modify_simple_graph_addedges
+from cnfgen.clitools.graph_build import modify_simple_graph_plantclique
+
+# Bipartite graphs
+from cnfgen.clitools.graph_build import obtain_glrp
+from cnfgen.clitools.graph_build import obtain_glrm
+from cnfgen.clitools.graph_build import obtain_glrd
+from cnfgen.clitools.graph_build import obtain_bipartite_regular
 
 constructions = {
-    'simple': ['gnp', 'gnm', 'gnd', 'grid', 'torus', 'complete', 'empty'],
+    'simple': {
+        'gnp': obtain_gnp,
+        'gnm': obtain_gnm,
+        'gnd': obtain_gnd,
+        'grid': obtain_grid,
+        'torus': obtain_torus,
+        'complete': obtain_complete_simple,
+        'empty': obtain_empty_simple
+    },
     'dag': ['tree', 'pyramid'],
     'digraph': ['tree', 'pyramid'],
-    'bipartite': ['glrp', 'glrm', 'glrd', 'regular', 'shift', 'complete']
+    'bipartite': {
+        'glrp': obtain_glrp,
+        'glrm': obtain_glrm,
+        'glrd': obtain_glrd,
+        'bregular': obtain_bipartite_regular
+    }  #,  'regular':, 'shift':, 'complete':}
 }
-
-formats = supported_formats()
 
 options = {
     'dag': ['save'],
@@ -63,6 +88,8 @@ options = {
     'simple': ['plantclique', 'addedges', 'save'],
     'bipartite': ['plantbiclique', 'addedges', 'save']
 }
+
+formats = supported_formats()
 
 
 def determine_graph_format_from_filename(filename):
@@ -190,187 +217,38 @@ Here we assume that all parts have numeric arguments, except for
     return result
 
 
-def obtain_gnd(parsed):
-    """Build a graph according to gnd construction"""
-    try:
-        n, d = parsed['args']
-        n = int(n)
-        d = int(d)
-        assert n > 0
-        assert d > 0
-    except (TypeError, AssertionError, ValueError):
-        raise ValueError('\'gnd\' expects arguments <N> <D> with N>0, D>0')
-
-    if (n * d) % 2 == 1:
-        raise ValueError('\'gnd\' expects arguments <N> <D> with even N * D')
-
-    G = networkx.random_regular_graph(d, n)
-    G.name = 'Random {}-regular graph of {} vertices'.format(d, n)
-    return G
-
-
-def obtain_gnp(parsed):
-    """Build a graph according to gnp construction"""
-    try:
-        n, p = parsed['args']
-        n = int(n)
-        p = float(p)
-        assert n > 0
-        assert 0 < p < 1
-    except (TypeError, ValueError, AssertionError):
-        raise ValueError(
-            '\'gnp\' expects arguments <N> <p> with N>0, p in [0,1]')
-
-    G = networkx.gnp_random_graph(n, p)
-    G.name = 'Random {}-biased graph of {} vertices'.format(p, n)
-    return G
-
-
-def obtain_gnm(parsed):
-    """Build a graph according to gnm construction"""
-    try:
-        n, m = parsed['args']
-        n = int(n)
-        m = int(m)
-        assert n > 0
-        assert m >= 0
-    except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'gnm\' expects arguments <N> <M> with N>0, M>=0')
-
-    G = networkx.gnm_random_graph(n, m)
-    G.name = 'Random graph of {} vertices with {} edges'.format(n, m)
-    return G
-
-
-def obtain_complete_simple_graph(parsed):
-    """Build a simple complete graph"""
-    try:
-        if len(parsed['args']) != 1:
-            raise ValueError
-        n = int(parsed['args'][0])
-        assert n > 0
-    except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'complete\' expects argument <N> with N>0')
-
-    G = networkx.complete_graph(n)
-    G.name = "Complete graphs of {} vertices".format(n)
-    return G
-
-
-def obtain_empty_simple_graph(parsed):
-    """Build a simple empty graph"""
-    try:
-        if len(parsed['args']) != 1:
-            raise ValueError
-        n = int(parsed['args'][0])
-        assert n > 0
-    except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'complete\' expects argument <N> with N>0')
-
-    G = networkx.empty_graph(n)
-    G.name = "Empty graphs of {} vertices".format(n)
-    return G
-
-
-def obtain_grid_or_torus(parsed, periodic):
-    """Build a graph according to grid/toris construction"""
-    dimensions = parsed['args']
-    if periodic:
-        name = 'torus'
-    else:
-        name = 'grid'
-    try:
-        dimensions = [int(x) for x in dimensions]
-        for d in dimensions:
-            if d <= 0:
-                raise ValueError
-    except (TypeError, ValueError):
-        raise ValueError(
-            'Dimensions d1 x ... x dn of a {} must be positive integer'.format(
-                name))
-
-    G = networkx.grid_graph(dimensions, periodic=periodic)
-    G.name = "{} graph of dimension {}".format(name, dimensions)
-    return G
-
-
-def obtain_grid(parsed):
-    return obtain_grid_or_torus(parsed, periodic=False)
-
-
-def obtain_torus(parsed):
-    return obtain_grid_or_torus(parsed, periodic=True)
-
-
-def modify_simple_graph_plantclique(parsed, G):
-    try:
-        if len(parsed['plantclique']) != 1:
-            raise ValueError
-        cliquesize = int(parsed['plantclique'][0])
-        assert cliquesize >= 0
-    except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'plantclique\' expects argument <k> with k>=0')
-
-    if cliquesize > G.order():
-        raise ValueError("Planted clique cannot be larger than graph")
-
-    clique = random.sample(G.nodes(), cliquesize)
-
-    for v, w in combinations(clique, 2):
-        G.add_edge(v, w)
-    G.name += " + planted {}-clique".format(cliquesize)
-    return G
-
-
-def modify_simple_graph_addedges(parsed, G):
-    try:
-        if len(parsed['addedges']) != 1:
-            raise ValueError
-        k = int(parsed['addedges'][0])
-        assert k >= 0
-    except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'addedges\' expects argument <k> with k>=0')
-
-    G.add_edges_from(sample_missing_edges(G, k))
-    G.name += " + {} random edges".format(k)
-    return G
-
-
-def obtain_simple_graph(parsed):
-    """Build a simple graph according to parsed graph argument
+def obtain_graph(parsed):
+    """Build a graph according to parsed graph argument
     """
-    if parsed['construction'] == 'gnd':
-        G = obtain_gnd(parsed)
+    try:
+        graphtype = parsed['graphtype']
+    except KeyError:
+        raise InternalBug(
+            "Unknown graph type has been accepted on command line.")
 
-    elif parsed['construction'] == 'gnp':
-        G = obtain_gnp(parsed)
+    assert graphtype in constructions
 
-    elif parsed['construction'] == 'gnm':
-        G = obtain_gnm(parsed)
-
-    elif parsed['construction'] == 'grid':
-        G = obtain_grid(parsed)
-
-    elif parsed['construction'] == 'torus':
-        G = obtain_torus(parsed)
-
-    elif parsed['construction'] == 'complete':
-        G = obtain_complete_simple_graph(parsed)
-
-    elif parsed['construction'] == 'empty':
-        G = obtain_empty_simple_graph(parsed)
+    if parsed['construction'] in constructions[graphtype]:
+        obtain_G = constructions[graphtype][parsed['construction']]
+        G = obtain_G(parsed)
 
     else:
+        assert parsed['construction'] is None
         assert 'filename' in parsed
         assert 'fileformat' in parsed
         raise RuntimeError('reading graph from input is not implemented yet')
 
     # Graph modifications
-    if 'plantclique' in parsed:
-        G = modify_simple_graph_plantclique(parsed, G)
-
-    if 'addedges' in parsed:
-        G = modify_simple_graph_addedges(parsed, G)
+    if graphtype == 'simple':
+        if 'plantclique' in parsed:
+            G = modify_simple_graph_plantclique(parsed, G)
+        if 'addedges' in parsed:
+            G = modify_simple_graph_addedges(parsed, G)
+    # elif graphtype == 'bipartite':
+    #     if 'plantbiclique' in parsed:
+    #         G = modify_bipartite_graph_plantbiclique(parsed, G)
+    #     if 'addedges' in parsed:
+    #         G = modify_bipartite_graph_addedges(parsed, G)
 
     # Output the graph is requested
     if 'save' in parsed:
@@ -380,19 +258,44 @@ def obtain_simple_graph(parsed):
     return G
 
 
-class ObtainSimpleGraph(argparse.Action):
+class ObtainGraphAction(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         if nargs is not None:
             raise ValueError("nargs not allowed")
-        super(ObtainSimpleGraph, self).__init__(option_strings,
+        super(ObtainGraphAction, self).__init__(option_strings,
                                                 dest,
                                                 nargs='+',
                                                 **kwargs)
 
+
+class ObtainSimpleGraph(ObtainGraphAction):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super(ObtainSimpleGraph, self).__init__(option_strings, dest, **kwargs)
+
     def __call__(self, parser, args, values, option_string=None):
         try:
             parsed = parse_graph_argument('simple', values)
-            G = obtain_simple_graph(parsed)
+            assert parsed['graphtype'] == 'simple'
+            G = obtain_graph(parsed)
             setattr(args, self.dest, G)
+        except ValueError as e:
+            parser.error(str(e))
+
+
+class ObtainBipartiteGraph(ObtainGraphAction):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super(ObtainBipartiteGraph, self).__init__(option_strings, dest,
+                                                   **kwargs)
+
+    def __call__(self, parser, args, values, option_string=None):
+        try:
+            parsed = parse_graph_argument('bipartite', values)
+            assert parsed['graphtype'] == 'bipartite'
+            B = obtain_graph(parsed)
+            setattr(args, self.dest, B)
         except ValueError as e:
             parser.error(str(e))

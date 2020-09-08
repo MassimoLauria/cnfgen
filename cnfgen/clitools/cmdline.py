@@ -22,7 +22,7 @@ import signal
 from contextlib import redirect_stdout
 from contextlib import contextmanager
 
-from cnfgen.clitools.graph_args import ObtainSimpleGraph
+from cnfgen.clitools.graph_args import ObtainGraphAction
 
 
 @contextmanager
@@ -144,7 +144,7 @@ This error occurs when the command line contains some errors. """
 class CLIHelpFormatter(argparse.RawDescriptionHelpFormatter):
     def _format_args(self, action, default_metavar):
         get_metavar = self._metavar_formatter(action, default_metavar)
-        if type(action) == ObtainSimpleGraph:
+        if isinstance(action, ObtainGraphAction):
             result = '%s' % get_metavar(1)
             return result
         else:

@@ -18,7 +18,7 @@ from cnfgen.families.pigeonhole import RelativizedPigeonholePrinciple
 
 from cnfgen.graphs import bipartite_random_left_regular
 
-from cnfgen.clitools import BipartiteGraphHelper
+from cnfgen.clitools.graph_args import ObtainBipartiteGraph
 from cnfgen.clitools import positive_int, nonnegative_int
 
 from .formula_helpers import FormulaHelper
@@ -144,7 +144,10 @@ class GPHPCmdHelper(FormulaHelper):
         parser.add_argument('--onto',
                             action='store_true',
                             help="every hole has a sitting pigeon")
-        BipartiteGraphHelper.setup_command_line(parser)
+        parser.add_argument(
+            'B',
+            help='bipartite graph (either a file or graph specification)',
+            action=ObtainBipartiteGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -153,8 +156,7 @@ class GPHPCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        G = BipartiteGraphHelper.obtain_graph(args)
-        return GraphPigeonholePrinciple(G,
+        return GraphPigeonholePrinciple(args.B,
                                         functional=args.functional,
                                         onto=args.onto)
 
