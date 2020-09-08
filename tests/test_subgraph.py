@@ -103,8 +103,8 @@ def test_parameters():
     for base in range(2, 5):
         for template in range(2, 5):
             parameters = [
-                "cnfgen", "-q", "subgraph", "--complete", base, "--completeT",
-                template
+                "cnfgen", "-q", "subgraph", "-G", "complete", base, "-H",
+                "complete", template
             ]
             G = nx.complete_graph(base)
             T = nx.complete_graph(template)
@@ -114,8 +114,8 @@ def test_parameters():
             assert lib == cli
 
             parameters = [
-                "cnfgen", "-q", "subgraph", "--complete", base, "--emptyT",
-                template
+                "cnfgen", "-q", "subgraph", "-G", "complete", base, "-H",
+                "empty", template
             ]
             G = nx.complete_graph(base)
             T = nx.empty_graph(template)

@@ -5,6 +5,7 @@
 Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
+import argparse
 
 from cnfgen.families.coloring import GraphColoringFormula
 from cnfgen.families.coloring import EvenColoringFormula
@@ -19,8 +20,7 @@ from cnfgen.families.subgraph import BinaryCliqueFormula
 from cnfgen.families.subgraph import SubgraphFormula
 from cnfgen.families.subgraph import RamseyWitnessFormula
 
-from cnfgen.clitools import SimpleGraphHelper
-from cnfgen.clitools.graph_args import SimpleGraphAction
+from cnfgen.clitools import ObtainSimpleGraph, positive_int
 from .formula_helpers import FormulaHelper
 
 
@@ -38,11 +38,13 @@ class KColorCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
         parser.add_argument('k',
-                            metavar='<k>',
-                            type=int,
+                            type=positive_int,
                             action='store',
                             help="number of available colors")
-        SimpleGraphHelper.setup_command_line(parser)
+        parser.add_argument(
+            'G',
+            help='simple undirected graph (a file or a graph specification)',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -51,8 +53,7 @@ class KColorCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return GraphColoringFormula(G, list(range(1, args.k + 1)))
+        return GraphColoringFormula(args.G, list(range(1, args.k + 1)))
 
 
 class ECCmdHelper(FormulaHelper):
@@ -61,12 +62,14 @@ class ECCmdHelper(FormulaHelper):
 
     @staticmethod
     def setup_command_line(parser):
-        SimpleGraphHelper.setup_command_line(parser)
+        parser.add_argument(
+            'G',
+            help='simple undirected graph (a file or a graph specification)',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
-        G = SimpleGraphHelper.obtain_graph(args)
-        return EvenColoringFormula(G)
+        return EvenColoringFormula(args.G)
 
 
 class DominatingSetCmdHelper(FormulaHelper):
@@ -82,17 +85,19 @@ class DominatingSetCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('d',
-                            metavar='<d>',
-                            type=int,
-                            action='store',
-                            help="size of the dominating set")
         parser.add_argument('--alternative',
                             '-a',
                             action='store_true',
                             default=False,
                             help="produce the provably hard version")
-        SimpleGraphHelper.setup_command_line(parser)
+        parser.add_argument('d',
+                            type=int,
+                            action='store',
+                            help="size of the dominating set")
+        parser.add_argument(
+            'G',
+            help='simple undirected graph (a file or a graph specification)',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -101,41 +106,27 @@ class DominatingSetCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return DominatingSet(G, args.d, alternative=args.alternative)
+        return DominatingSet(args.G, args.d, alternative=args.alternative)
 
 
-class GAutoCmdHelper(FormulaHelper):
-    """Command line helper for Graph Automorphism formula
-    """
-    name = 'gauto'
-    description = 'graph automorphism formula'
+iso_description = """The formula takes one or two graphs as input.
 
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for graph automorphism formula
+ {0} G1           --- test if G1 has nontrivial automorphisms
+ {0} G1 -e G2     --- test if G1 and G2 are isomorphic
 
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('G', action=SimpleGraphAction)
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a graph automorphism formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        #G = SimpleGraphHelper.obtain_graph(args)
-        return GraphAutomorphism(args.G)
+examples:
+ {0} grid 3 3
+ {0} complete 4 -e empty 4 plantclique 4
+ {0} first.gml -e second.gml
+ {0} gnm 10 5
+"""
 
 
 class GIsoCmdHelper(FormulaHelper):
     """Command line helper for Graph Isomorphism formula
     """
-    name = 'giso'
-    description = 'graph isomorphism formula'
+    name = 'iso'
+    description = 'graph isomorphism/automorphism formula'
 
     @staticmethod
     def setup_command_line(parser):
@@ -144,22 +135,24 @@ class GIsoCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('G1', action=SimpleGraphAction)
-        parser.add_argument('--and', action='store_true', required=True)
-        parser.add_argument('G2', action=SimpleGraphAction)
-        # SimpleGraphHelper.setup_command_line(parser, suffix="1", required=True)
-        # SimpleGraphHelper.setup_command_line(parser, suffix="2", required=True)
+        parser.usage = '{} [-h] G1 [-e G2]'.format(parser.prog)
+        parser.description = iso_description.format(parser.prog)
+        parser.add_argument('G',
+                            help=argparse.SUPPRESS,
+                            action=ObtainSimpleGraph)
+        parser.add_argument('-e',
+                            metavar='G2',
+                            help=argparse.SUPPRESS,
+                            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
-        """Build a graph automorphism formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        # G1 = SimpleGraphHelper.obtain_graph(args, suffix="1")
-        # G2 = SimpleGraphHelper.obtain_graph(args, suffix="2")
-        return GraphIsomorphism(args.G1, args.G2)
+        G = args.G
+        if hasattr(args, 'equiv'):
+            G2 = args.equiv
+            return GraphIsomorphism(G, G2)
+        else:
+            return GraphAutomorphism(G)
 
 
 class KCliqueCmdHelper(FormulaHelper):
@@ -176,11 +169,14 @@ class KCliqueCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
         parser.add_argument('k',
-                            metavar='<k>',
                             type=int,
                             action='store',
                             help="size of the clique to be found")
-        SimpleGraphHelper.setup_command_line(parser)
+        parser.add_argument(
+            'G',
+            help=
+            'simple undirected graph (either a file or graph specification)',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -189,8 +185,7 @@ class KCliqueCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return CliqueFormula(G, args.k)
+        return CliqueFormula(args.G, args.k)
 
 
 class BinaryKCliqueCmdHelper(FormulaHelper):
@@ -207,11 +202,14 @@ class BinaryKCliqueCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
         parser.add_argument('k',
-                            metavar='<k>',
                             type=int,
                             action='store',
                             help="size of the clique to be found")
-        SimpleGraphHelper.setup_command_line(parser)
+        parser.add_argument(
+            'G',
+            help=
+            'simple undirected graph (either a file or graph specification)',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -220,8 +218,7 @@ class BinaryKCliqueCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return BinaryCliqueFormula(G, args.k)
+        return BinaryCliqueFormula(args.G, args.k)
 
 
 class RWCmdHelper(FormulaHelper):
@@ -247,7 +244,10 @@ class RWCmdHelper(FormulaHelper):
                             type=int,
                             action='store',
                             help="size of the stable to be found")
-        SimpleGraphHelper.setup_command_line(parser)
+        parser.add_argument(
+            'G',
+            help='simple undirected graph (a file or a graph specification)',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -256,8 +256,22 @@ class RWCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        G = SimpleGraphHelper.obtain_graph(args)
-        return RamseyWitnessFormula(G, args.k, args.s)
+        return RamseyWitnessFormula(args.G, args.k, args.s)
+
+
+subgraph_description = """The formula takes two graphs: a main <graph> 
+and a candidate <subgraph>, and claims that
+the latter is indeed a subgraph of the former.
+
+positional arguments:
+ -G <graph>      --- main graph (a file or a graph specification)
+ -H <subgraph>   --- candidate subgraph (a file or a graph specification)
+
+examples:
+ {0} -G grid 4 4 -H grid 2 2
+ {0} -G gnd 10 4 -H complete 5  (decides whether there is a 5-clique)
+ {0} -G large.gml -H small.dot
+"""
 
 
 class SubGraphCmdHelper(FormulaHelper):
@@ -273,16 +287,25 @@ class SubGraphCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        SimpleGraphHelper.setup_command_line(parser, suffix="", required=True)
-        SimpleGraphHelper.setup_command_line(parser, suffix="T", required=True)
+        parser.usage = '{} [-h] -G <graph> -H <subgraph>'.format(parser.prog)
+        parser.description = subgraph_description.format(parser.prog)
+
+        parser.add_argument('-G',
+                            metavar='<graph>',
+                            required=True,
+                            help=argparse.SUPPRESS,
+                            action=ObtainSimpleGraph)
+        parser.add_argument('-H',
+                            metavar='<subgraph>',
+                            required=True,
+                            help=argparse.SUPPRESS,
+                            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
-        """Build a graph automorphism formula according to the arguments
+        """Build a subgraph formula according to the arguments
 
         Arguments:
         - `args`: command line options
         """
-        G = SimpleGraphHelper.obtain_graph(args, suffix="")
-        T = SimpleGraphHelper.obtain_graph(args, suffix="T")
-        return SubgraphFormula(G, [T], symmetric=False)
+        return SubgraphFormula(args.G, [args.H], symmetric=False)

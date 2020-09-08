@@ -15,9 +15,7 @@ from cnfgen.clitools import msg_prefix
 
 from .formula_helpers import FormulaHelper
 
-usage_string = """Dimacs reader
-
-This is not a real formula construction. The formula is built by
+description_string = """This is not a proper formula construction. The formula is built by
 reading a DIMACS file. This command is particularly useful to apply
 some transformations to that file.
 
@@ -40,7 +38,8 @@ class DimacsCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.usage = usage_string.format(parser.prog)
+        parser.usage = "{} [-h] [<inputfile>]".format(parser.prog)
+        parser.description = description_string.format(parser.prog)
         parser.add_argument('input',
                             nargs='?',
                             help=argparse.SUPPRESS,

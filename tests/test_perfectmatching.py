@@ -43,7 +43,7 @@ def test_cycle():
 
 def test_complete():
     for n in range(2, 5):
-        parameters = ["cnfgen", "-q", "matching", "--complete", n]
+        parameters = ["cnfgen", "-q", "matching", "complete", n]
         graph = nx.complete_graph(n)
         F = PerfectMatchingPrinciple(graph)
         lib = F.dimacs(export_header=False)

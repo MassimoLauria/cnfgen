@@ -7,13 +7,14 @@ from cnfgen.clitools import get_transformation_helpers
 def test_find_formula_helpers():
     """All formula families are detected."""
     subcommands = get_formula_helpers()
-    assert len(subcommands) == 34
+    assert len(subcommands) == 33
 
 
 def test_find_formula_examples():
     """All formula families are detected."""
     names = [fh.name for fh in get_formula_helpers()]
     assert 'php' in names
+    assert 'iso' in names
     assert 'tseitin' in names
     assert 'dimacs' in names
     assert 'ec' in names

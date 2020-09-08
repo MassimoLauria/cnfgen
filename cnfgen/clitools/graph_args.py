@@ -346,7 +346,7 @@ def obtain_simple_graph(parsed):
         G = obtain_gnp(parsed)
 
     elif parsed['construction'] == 'gnm':
-        G = obtain_gnp(parsed)
+        G = obtain_gnm(parsed)
 
     elif parsed['construction'] == 'grid':
         G = obtain_grid(parsed)
@@ -380,11 +380,11 @@ def obtain_simple_graph(parsed):
     return G
 
 
-class SimpleGraphAction(argparse.Action):
+class ObtainSimpleGraph(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         if nargs is not None:
             raise ValueError("nargs not allowed")
-        super(SimpleGraphAction, self).__init__(option_strings,
+        super(ObtainSimpleGraph, self).__init__(option_strings,
                                                 dest,
                                                 nargs='+',
                                                 **kwargs)

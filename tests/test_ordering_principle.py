@@ -70,7 +70,7 @@ def test_cli_op():
 def test_cli_gop():
     for total, smart, plant, knuth in product((True, False), (True, False),
                                               (True, False), (False, 2, 3)):
-        parameters = ["cnfgen", "-q", "gop", "--complete", "5"]
+        parameters = ["cnfgen", "-q", "gop", "complete", "5"]
         if total:
             parameters.append("--total")
         if smart:

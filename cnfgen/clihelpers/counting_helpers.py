@@ -11,7 +11,7 @@ from cnfgen.families.counting import PerfectMatchingPrinciple
 from cnfgen.families.tseitin import TseitinFormula
 from cnfgen.families.subsetcardinality import SubsetCardinalityFormula
 
-from cnfgen.clitools import SimpleGraphHelper
+from cnfgen.clitools import ObtainSimpleGraph
 from cnfgen.clitools import BipartiteGraphHelper
 
 from .formula_helpers import FormulaHelper
@@ -32,7 +32,7 @@ class ParityCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('N', metavar='<N>', type=int, help="domain size")
+        parser.add_argument('N', type=int, help="domain size")
 
     @staticmethod
     def build_cnf(args):
@@ -52,12 +52,14 @@ class PMatchingCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        SimpleGraphHelper.setup_command_line(parser)
+        parser.add_argument(
+            'G',
+            help='simple undirected graph (a file or a graph specification)',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
-        G = SimpleGraphHelper.obtain_graph(args)
-        return PerfectMatchingPrinciple(G)
+        return PerfectMatchingPrinciple(args.G)
 
 
 class CountingCmdHelper(FormulaHelper):
@@ -103,9 +105,8 @@ class TseitinCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
         parser.add_argument(
-            '--charge',
-            metavar='<charge>',
-            default='first',
+            'charge',
+            metavar='charge',
             choices=['first', 'random', 'randomodd', 'randomeven'],
             help="""charge on the vertices.
                                     `first'  puts odd charge on first vertex;
@@ -113,7 +114,10 @@ class TseitinCmdHelper(FormulaHelper):
                                     `randomodd' puts random odd  charge on vertices;
                                     `randomeven' puts random even charge on vertices.
                                      """)
-        SimpleGraphHelper.setup_command_line(parser)
+        parser.add_argument(
+            'G',
+            help='simple undirected graph (a file or a graph specification)',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -122,7 +126,7 @@ class TseitinCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        G = SimpleGraphHelper.obtain_graph(args)
+        G = args.G
 
         if G.order() < 1:
             charge = None

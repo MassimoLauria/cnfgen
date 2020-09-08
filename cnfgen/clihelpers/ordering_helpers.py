@@ -9,8 +9,7 @@ https://massimolauria.net/cnfgen/
 from cnfgen.families.ordering import OrderingPrinciple
 from cnfgen.families.ordering import GraphOrderingPrinciple
 
-from cnfgen.clitools import SimpleGraphHelper
-from cnfgen.clitools.graph_args import SimpleGraphAction
+from cnfgen.clitools import ObtainSimpleGraph
 from .formula_helpers import FormulaHelper
 
 
@@ -115,9 +114,8 @@ class GOPCmdHelper(FormulaHelper):
                             help="allow a minimum element")
         parser.add_argument('G',
                             metavar="<graph>",
-                            action=SimpleGraphAction,
+                            action=ObtainSimpleGraph,
                             help='Graph underlying the ordering principle')
-        #SimpleGraphHelper.setup_command_line(parser)
 
     @staticmethod
     def build_cnf(args):

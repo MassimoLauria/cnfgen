@@ -22,6 +22,8 @@ import signal
 from contextlib import redirect_stdout
 from contextlib import contextmanager
 
+from cnfgen.clitools.graph_args import ObtainSimpleGraph
+
 
 @contextmanager
 def paginate_or_redirect_stdout(outputstream):
@@ -139,6 +141,17 @@ This error occurs when the command line contains some errors. """
     pass
 
 
+class CLIHelpFormatter(argparse.RawDescriptionHelpFormatter):
+    def _format_args(self, action, default_metavar):
+        get_metavar = self._metavar_formatter(action, default_metavar)
+        if type(action) == ObtainSimpleGraph:
+            result = '%s' % get_metavar(1)
+            return result
+        else:
+            return super(CLIHelpFormatter,
+                         self)._format_args(action, default_metavar)
+
+
 class CLIParser(argparse.ArgumentParser):
     """Argument Parser for CNFGen
 
@@ -154,7 +167,6 @@ exception, instead of calling exit.
                prefix_chars='-',
                fromfile_prefix_chars=None,
                argument_default=None,
-               formatter_class=argparse.RawDescriptionHelpFormatter,
                conflict_handler='error',
                add_help=True,
                allow_abbrev=True):
@@ -164,7 +176,7 @@ exception, instead of calling exit.
                              description=description,
                              epilog=epilog,
                              parents=parents,
-                             formatter_class=formatter_class,
+                             formatter_class=CLIHelpFormatter,
                              prefix_chars=prefix_chars,
                              fromfile_prefix_chars=fromfile_prefix_chars,
                              argument_default=argument_default,

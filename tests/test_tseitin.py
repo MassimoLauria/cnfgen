@@ -64,7 +64,7 @@ def test_star():
     assert len([C for C in F.clauses() if len(C) == 1]) == 10
     for C in F.clauses():
         if len(C) == 1:
-            assert C[0][0] == False
+            assert not C[0][0]
 
 
 def test_charge_even():
@@ -72,7 +72,7 @@ def test_charge_even():
     F = TseitinFormula(graph, [0] * 11)
     for C in F.clauses():
         if len(C) == 1:
-            assert C[0][0] == False
+            assert not C[0][0]
 
 
 def test_charge_odd():
@@ -80,7 +80,7 @@ def test_charge_odd():
     F = TseitinFormula(graph, [1] * 11)
     for C in F.clauses():
         if len(C) == 1:
-            assert C[0][0] == True
+            assert C[0][0]
 
 
 def test_charge_first():
@@ -92,7 +92,7 @@ def test_charge_first():
 
 def test_parameters():
     for sz in range(1, 5):
-        parameters = ["cnfgen", "-q", "tseitin", "--complete", str(sz)]
+        parameters = ["cnfgen", "-q", "tseitin", "first", "complete", sz]
         graph = nx.complete_graph(sz)
         F = TseitinFormula(graph)
         lib = F.dimacs(export_header=False)
@@ -101,21 +101,16 @@ def test_parameters():
 
 
 def test_commandline1():
-    parameters = [
-        "cnfgen", "-q", "tseitin", "--gnd", "10", '4', "--charge", "randomodd"
-    ]
+    parameters = ["cnfgen", "-q", "tseitin", "randomodd", "gnd", 10, 4]
     assert cnfgen(parameters, mode='string') is not None
 
 
 def test_commandline2():
-    parameters = [
-        "cnfgen", "-q", "tseitin", "--gnm", "10", '20', "--charge",
-        "randomeven"
-    ]
+    parameters = ["cnfgen", "-q", "tseitin", 'randomeven', "gnm", 10, 20]
     assert cnfgen(parameters, mode='string') is not None
 
 
 def test_no_graph_format():
     with pytest.raises(CLIError):
         with redirect_stdin(io.StringIO('')):
-            cnfgen(['cnfgen', 'tseitin', "--charge", "randomodd"])
+            cnfgen(['cnfgen', 'tseitin', "randomodd"])

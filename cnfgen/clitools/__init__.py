@@ -9,6 +9,8 @@ from cnfgen.clitools.graph_cmdline import SimpleGraphHelper
 from cnfgen.clitools.graph_cmdline import BipartiteGraphHelper
 from cnfgen.clitools.graph_cmdline import DirectedAcyclicGraphHelper
 
+from cnfgen.clitools.graph_args import ObtainSimpleGraph
+
 from cnfgen.clitools.cmdline import get_formula_helpers
 from cnfgen.clitools.cmdline import get_transformation_helpers
 

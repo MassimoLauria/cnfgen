@@ -48,10 +48,10 @@ def test_redundant_save_format():
 
 def test_redundant_graph_format():
     r = P('simple', 'dot file.dot addedges 10')
-    assert r['graphformat'] == 'dot'
+    assert r['fileformat'] == 'dot'
 
 
 def test_detect_graph_format():
     r = P('bipartite', 'file.matrix')
-    assert r['graphformat'] == 'autodetect'
+    assert r['fileformat'] == 'autodetect'
     assert r['filename'] == 'file.matrix'
