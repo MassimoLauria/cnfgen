@@ -84,7 +84,7 @@ def test_cli_complete():
     for rows in range(2, 5):
         for columns in range(2, 5):
             parameters = [
-                "cnfgen", "-q", "subsetcard", "--bcomplete",
+                "cnfgen", "-q", "subsetcard", "complete",
                 str(rows),
                 str(columns)
             ]
@@ -98,4 +98,4 @@ def test_cli_complete():
 
 def test_cli_not_bipartite():
     with pytest.raises(CLIError):
-        cnfgen(["cnfgen", "-q", "subsetcard", "--complete", "3"])
+        cnfgen(["cnfgen", "-q", "subsetcard", "gnd", "10", "5", "3"])

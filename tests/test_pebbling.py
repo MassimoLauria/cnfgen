@@ -77,7 +77,7 @@ def test_tree():
 
         F = PebblingFormula(G)
         lib = F.dimacs(export_header=False)
-        cli = cnfgen(["cnfgen", "-q", "peb", "--tree", sz], mode='string')
+        cli = cnfgen(["cnfgen", "-q", "peb", "tree", sz], mode='string')
         assert lib == cli
 
 
@@ -87,5 +87,5 @@ def test_pyramid():
     G.name = 'Pyramid of height 2'
     F = PebblingFormula(G)
     lib = F.dimacs(export_header=False)
-    cli = cnfgen(["cnfgen", "-q", "peb", "--pyramid", 2], mode='string')
+    cli = cnfgen(["cnfgen", "-q", "peb", "pyramid", 2], mode='string')
     assert lib == cli

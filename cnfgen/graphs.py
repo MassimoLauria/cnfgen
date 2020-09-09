@@ -5,7 +5,6 @@ formulas that are graph based.
 """
 
 import copy
-
 __all__ = [
     "supported_formats", "readGraph", "writeGraph", "is_dag",
     "has_bipartition", "bipartite_sets", "enumerate_vertices",
@@ -38,6 +37,7 @@ import sys
 from io import StringIO, BytesIO
 import io
 import os
+import fileinput
 
 import networkx
 import networkx.algorithms
@@ -109,7 +109,6 @@ def _process_graph_io_arguments(iofile, graph_type, file_format, multi_edges):
             raise ValueError(
                 "Cannot guess a file format from an IO stream with no name. Please specify the format manually."
             )
-
         if extension not in _graphformats[graph_type]:
             raise ValueError("Cannot guess a file format for {} graphs from the extension of \"{}\". Please specify the format manually.".\
                              format(graph_type,iofile.name))
@@ -117,8 +116,9 @@ def _process_graph_io_arguments(iofile, graph_type, file_format, multi_edges):
             file_format = extension
 
     elif file_format not in _graphformats[graph_type]:
-        raise ValueError("For {} graphs we only support these formats: ".
-                         format(graph_type) + _graphformats[graph_type])
+        raise ValueError(
+            "For {} graphs we only support these formats: {}".format(
+                graph_type, _graphformats[graph_type]))
 
     return (grtype, file_format)
 
@@ -701,7 +701,7 @@ def _read_graph_matrix_format(inputfile):
                 line = inputfile.readline()
 
                 if len(line) == 0:
-                    raise StopIteration  # end of file
+                    return
 
                 line_cnt += 1
                 tokens = line.split()
@@ -749,6 +749,7 @@ def _read_graph_matrix_format(inputfile):
     # check that there are is no more data
     try:
         (b, l) = next(scanner)
+        print(b, l)
         raise ValueError(
             "[Input error at line {}] There are more than {}x{} entries".
             format(l, n, m))

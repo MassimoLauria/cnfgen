@@ -7,13 +7,19 @@ https://github.com/MassimoLauria/cnfgen.git
 
 import random
 import networkx
-from itertools import combinations
+from itertools import combinations, product
 
 from networkx.algorithms.bipartite import complete_bipartite_graph
 from networkx.algorithms.bipartite import random_graph as bipartite_random_graph
 from networkx.algorithms.bipartite import gnmk_random_graph as bipartite_gnmk_random_graph
 
-from cnfgen.graphs import bipartite_random_left_regular, bipartite_random_regular, bipartite_shift
+from cnfgen.graphs import bipartite_random_left_regular
+from cnfgen.graphs import bipartite_random_regular
+from cnfgen.graphs import bipartite_shift
+from cnfgen.graphs import bipartite_sets
+
+from cnfgen.graphs import dag_complete_binary_tree
+from cnfgen.graphs import dag_pyramid
 
 from cnfgen.graphs import sample_missing_edges
 
@@ -317,4 +323,62 @@ def obtain_empty_bipartite(parsed):
 
     G = bipartite_gnmk_random_graph(left, right, 0)
     G.name = "Empty bipartite graph with ({},{}) vertices".format(left, right)
+    return G
+
+
+def modify_bipartite_graph_plantbiclique(parsed, G):
+    try:
+        if len(parsed['plantbiclique']) != 2:
+            raise ValueError
+        cliqueleft = int(parsed['plantbiclique'][0])
+        cliqueright = int(parsed['plantbiclique'][1])
+        assert cliqueleft >= 0
+        assert cliqueright >= 0
+    except (TypeError, ValueError, AssertionError):
+        raise ValueError(
+            '\'plantbiclique\' expects argument <A> <B> with A>=0, B>=0')
+
+    left, right = bipartite_sets(G)
+    if cliqueleft > len(left) or cliqueright > len(right):
+        raise ValueError("Planted clique does not fit in the graph")
+
+    left = random.sample(left, cliqueleft)
+    right = random.sample(right, cliqueright)
+
+    for v, w in product(left, right):
+        G.add_edge(v, w)
+    G.name += " + planted ({},{})-biclique".format(cliqueleft, cliqueright)
+    return G
+
+
+#
+# Directed acyclic graphs
+#
+def obtain_tree(parsed):
+    """Build a complete rooted tree directed toward root"""
+    try:
+        if len(parsed['args']) != 1:
+            raise ValueError
+        height = parsed['args'][0]
+        height = int(height)
+        assert height >= 0
+    except (TypeError, ValueError, AssertionError):
+        raise ValueError('\'tree\' expects a single height argument h>=0')
+    G = dag_complete_binary_tree(height)
+    G.name = "Complete binary tree of height {}".format(height)
+    return G
+
+
+def obtain_pyramid(parsed):
+    """Build a pyramid graph"""
+    try:
+        if len(parsed['args']) != 1:
+            raise ValueError
+        height = parsed['args'][0]
+        height = int(height)
+        assert height >= 0
+    except (TypeError, ValueError, AssertionError):
+        raise ValueError('\'pyramid\' expects a single height argument h>=0')
+    G = dag_pyramid(height)
+    G.name = "Pyramid graph of height {}".format(height)
     return G

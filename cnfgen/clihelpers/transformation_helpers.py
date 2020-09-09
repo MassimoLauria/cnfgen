@@ -23,7 +23,7 @@ from cnfgen.transformations.substitutions import OrSubstitution
 from cnfgen.transformations.substitutions import VariableCompression
 from cnfgen.transformations.substitutions import XorSubstitution
 
-from cnfgen.clitools import BipartiteGraphHelper
+from cnfgen.clitools import ObtainBipartiteGraph
 
 
 class TransformationHelper:
@@ -327,13 +327,14 @@ class XorCompressionCmd(TransformationHelper):
 
     @staticmethod
     def setup_command_line(parser):
-        BipartiteGraphHelper.setup_command_line(parser)
+        parser.add_argument(
+            'B',
+            action=ObtainBipartiteGraph,
+            help="mapping between new and old variables (a bipartite graph)")
 
     @staticmethod
     def transform_cnf(F, args):
-        B = BipartiteGraphHelper.obtain_graph(args)
-
-        return VariableCompression(F, B, function='xor')
+        return VariableCompression(F, args.B, function='xor')
 
 
 class MajCompressionCmd(TransformationHelper):
@@ -342,10 +343,11 @@ class MajCompressionCmd(TransformationHelper):
 
     @staticmethod
     def setup_command_line(parser):
-        BipartiteGraphHelper.setup_command_line(parser)
+        parser.add_argument(
+            'B',
+            action=ObtainBipartiteGraph,
+            help="mapping between new and old variables (a bipartite graph)")
 
     @staticmethod
     def transform_cnf(F, args):
-        B = BipartiteGraphHelper.obtain_graph(args)
-
-        return VariableCompression(F, B, function='maj')
+        return VariableCompression(F, args.B, function='maj')

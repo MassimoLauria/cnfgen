@@ -43,6 +43,7 @@ import os
 import argparse
 
 from cnfgen.graphs import supported_formats
+from cnfgen.graphs import readGraph, writeGraph
 from cnfgen.clitools.msg import InternalBug
 
 # Simple graphs
@@ -63,9 +64,17 @@ from cnfgen.clitools.graph_build import obtain_bipartite_regular
 from cnfgen.clitools.graph_build import obtain_bipartite_shift
 from cnfgen.clitools.graph_build import obtain_complete_bipartite
 from cnfgen.clitools.graph_build import obtain_empty_bipartite
+from cnfgen.clitools.graph_build import modify_bipartite_graph_plantbiclique
+
+# Directed (Acyclic) graphs
+from cnfgen.clitools.graph_build import obtain_tree
+from cnfgen.clitools.graph_build import obtain_pyramid
 
 # Generic
 from cnfgen.clitools.graph_build import modify_graph_addedges
+
+# Read input
+from cnfgen.clitools.graph_fileinput import read_graph_from_input
 
 constructions = {
     'simple': {
@@ -77,8 +86,14 @@ constructions = {
         'complete': obtain_complete_simple,
         'empty': obtain_empty_simple
     },
-    'dag': ['tree', 'pyramid'],
-    'digraph': ['tree', 'pyramid'],
+    'dag': {
+        'tree': obtain_tree,
+        'pyramid': obtain_pyramid
+    },
+    'digraph': {
+        'tree': obtain_tree,
+        'pyramid': obtain_pyramid
+    },
     'bipartite': {
         'glrp': obtain_glrp,
         'glrm': obtain_glrm,
@@ -199,6 +214,8 @@ Here we assume that all parts have numeric arguments, except for
         result['fileformat'] = 'autodetect'
         position += 1
 
+    # check file specification now
+
     # Now we load the graph options
     while position < len(spec):
         optionname = spec[position]
@@ -218,6 +235,8 @@ Here we assume that all parts have numeric arguments, except for
         elif optionname == 'save':
             position += 1
             result['save'] = consumesaveinfo()
+            if len(result['save']) == 1:
+                result['save'].insert(0, 'autodetect')
         else:
             position += 1
             result[optionname] = consumenumbers()
@@ -244,22 +263,25 @@ def obtain_graph(parsed):
         assert parsed['construction'] is None
         assert 'filename' in parsed
         assert 'fileformat' in parsed
-        raise RuntimeError('reading graph from input is not implemented yet')
+        filename = parsed['filename']
+        fileformat = parsed['fileformat']
+        G = read_graph_from_input(graphtype, filename, fileformat)
 
     # Add planted cliques
     if graphtype == 'simple':
         if 'plantclique' in parsed:
             G = modify_simple_graph_plantclique(parsed, G)
-    # elif graphtype == 'bipartite':
-    #     if 'plantbiclique' in parsed:
-    #         G = modify_bipartite_graph_plantbiclique(parsed, G)
+    elif graphtype == 'bipartite':
+        if 'plantbiclique' in parsed:
+            G = modify_bipartite_graph_plantbiclique(parsed, G)
     # Add random edges
     if 'addedges' in parsed:
         G = modify_graph_addedges(parsed, G)
 
-    # Output the graph is requested
+    # Output the graph when requested
     if 'save' in parsed:
-        raise ValueError('Saving generated graph not implemented yet')
+        saveformat, savefilename = parsed['save']
+        writeGraph(G, savefilename, graphtype, saveformat)
 
     assert hasattr(G, 'name')
     return G
@@ -302,6 +324,23 @@ class ObtainBipartiteGraph(ObtainGraphAction):
         try:
             parsed = parse_graph_argument('bipartite', values)
             assert parsed['graphtype'] == 'bipartite'
+            B = obtain_graph(parsed)
+            setattr(args, self.dest, B)
+        except ValueError as e:
+            parser.error(str(e))
+
+
+class ObtainDirectedAcyclicGraph(ObtainGraphAction):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super(ObtainDirectedAcyclicGraph,
+              self).__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, args, values, option_string=None):
+        try:
+            parsed = parse_graph_argument('dag', values)
+            assert parsed['graphtype'] == 'dag'
             B = obtain_graph(parsed)
             setattr(args, self.dest, B)
         except ValueError as e:

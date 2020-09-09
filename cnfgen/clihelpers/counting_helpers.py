@@ -12,7 +12,7 @@ from cnfgen.families.tseitin import TseitinFormula
 from cnfgen.families.subsetcardinality import SubsetCardinalityFormula
 
 from cnfgen.clitools import ObtainSimpleGraph
-from cnfgen.clitools import BipartiteGraphHelper
+from cnfgen.clitools import ObtainBipartiteGraph
 
 from .formula_helpers import FormulaHelper
 
@@ -165,10 +165,11 @@ class SCCmdHelper(FormulaHelper):
                             default=False,
                             action='store_true',
                             help="encode cardinality constraints as equations")
-
-        BipartiteGraphHelper.setup_command_line(parser)
+        parser.add_argument(
+            'B',
+            help='bipartite graph (a file or a graph specification)',
+            action=ObtainBipartiteGraph)
 
     @staticmethod
     def build_cnf(args):
-        B = BipartiteGraphHelper.obtain_graph(args)
-        return SubsetCardinalityFormula(B, args.equal)
+        return SubsetCardinalityFormula(args.B, args.equal)

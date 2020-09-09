@@ -12,8 +12,11 @@ from cnfgen.families.pebbling import PebblingFormula
 from cnfgen.families.pebbling import StoneFormula
 from cnfgen.families.pebbling import SparseStoneFormula
 
-from cnfgen.clitools import DirectedAcyclicGraphHelper
-from cnfgen.clitools import BipartiteGraphHelper
+from cnfgen.graphs import bipartite_sets
+
+from cnfgen.clitools import ObtainDirectedAcyclicGraph
+from cnfgen.clitools import ObtainBipartiteGraph
+from cnfgen.clitools import positive_int
 
 from .formula_helpers import FormulaHelper
 
@@ -31,7 +34,12 @@ class PebblingCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        DirectedAcyclicGraphHelper.setup_command_line(parser)
+        parser.add_argument(
+            'D',
+            metavar='<dag>',
+            action=ObtainDirectedAcyclicGraph,
+            help='directed acyclic graph (either a file or graph specification)'
+        )
 
     @staticmethod
     def build_cnf(args):
@@ -40,19 +48,14 @@ class PebblingCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        D = DirectedAcyclicGraphHelper.obtain_graph(args)
-        try:
-            return PebblingFormula(D)
-        except ValueError as e:
-            print("\nError: {}".format(e), file=sys.stderr)
-            sys.exit(-1)
+        return PebblingFormula(args.D)
 
 
 class StoneCmdHelper(FormulaHelper):
     """Command line helper for stone formulas
     """
     name = 'stone'
-    description = 'stone formula'
+    description = 'stone formula (dense and sparse)'
     __doc__ = StoneFormula.__doc__
 
     @staticmethod
@@ -62,11 +65,22 @@ class StoneCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        DirectedAcyclicGraphHelper.setup_command_line(parser)
         parser.add_argument('s',
-                            metavar='<s>',
-                            type=int,
+                            metavar='<stones>',
+                            type=positive_int,
                             help="number of stones")
+        parser.add_argument(
+            'D',
+            metavar='<dag>',
+            action=ObtainDirectedAcyclicGraph,
+            help='directed acyclic graph (either a file or graph specification)'
+        )
+        parser.add_argument(
+            '--sparse',
+            metavar='B',
+            action=ObtainBipartiteGraph,
+            help=
+            "a sparse mapping between stones and vertices (a bipartite graph)")
 
     @staticmethod
     def build_cnf(args):
@@ -75,42 +89,17 @@ class StoneCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        D = DirectedAcyclicGraphHelper.obtain_graph(args)
-        try:
-            return StoneFormula(D, args.s)
-        except ValueError as e:
-            print("\nError: {}".format(e), file=sys.stderr)
-            sys.exit(-1)
-
-
-class SparseStoneCmdHelper(FormulaHelper):
-    """Command line helper for stone formulas
-    """
-    name = 'stonesparse'
-    description = 'stone formula (sparse version)'
-    __doc__ = SparseStoneFormula.__doc__
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for stone formulas
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        DirectedAcyclicGraphHelper.setup_command_line(parser)
-        BipartiteGraphHelper.setup_command_line(parser, suffix="_mapping")
-
-    @staticmethod
-    def build_cnf(args):
-        """Build the pebbling formula
-
-        Arguments:
-        - `args`: command line options
-        """
-        D = DirectedAcyclicGraphHelper.obtain_graph(args)
-        B = BipartiteGraphHelper.obtain_graph(args, suffix="_mapping")
-        try:
+        D = args.D
+        if hasattr(args, 'sparse'):
+            B = args.sparse
+            Left, Right = bipartite_sets(B)
+            nvertices = D.order()
+            nstones = args.s
+            if (len(Left), len(Right)) != (nvertices, nstones):
+                raise ValueError(
+                    "Size of left and right sides must match #vertices in DAG and #stones, respectively."
+                )
             return SparseStoneFormula(D, B)
-        except ValueError as e:
-            print("\nError: {}".format(e), file=sys.stderr)
-            sys.exit(-1)
+
+        else:
+            return StoneFormula(D, args.s)
