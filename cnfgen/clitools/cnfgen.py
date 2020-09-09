@@ -151,14 +151,16 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     """
 
     # First we setup the parser for transformation command lines
-    t_parser = CLIParser(add_help=False)
+    t_parser = CLIParser(add_help=False, formatter_class=CLIHelpFormatter)
 
     t_subparsers = t_parser.add_subparsers(
         prog=progname + " <formula> <args> -T",
         title="Available formula transformation",
         metavar="<transformation>")
     for sc in thelpers:
-        p = t_subparsers.add_parser(sc.name, help=sc.description)
+        p = t_subparsers.add_parser(sc.name,
+                                    help=sc.description,
+                                    formatter_class=CLIHelpFormatter)
         sc.setup_command_line(p)
         sc.subparser = p
         p.set_defaults(transformation=sc)
@@ -166,7 +168,8 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     # now we setup the main parser for the formula generation command
     parser = CLIParser(prog=progname,
                        usage=usage_string.format(progname),
-                       description=description_string.format(progname))
+                       description=description_string.format(progname),
+                       formatter_class=CLIHelpFormatter)
 
     class PrintTutorial(argparse.Action):
         def __call__(self, parser, args, values, option_string=None):
