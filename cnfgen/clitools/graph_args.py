@@ -61,6 +61,9 @@ from cnfgen.clitools.graph_build import obtain_glrp
 from cnfgen.clitools.graph_build import obtain_glrm
 from cnfgen.clitools.graph_build import obtain_glrd
 from cnfgen.clitools.graph_build import obtain_bipartite_regular
+from cnfgen.clitools.graph_build import obtain_bipartite_shift
+from cnfgen.clitools.graph_build import obtain_complete_bipartite
+from cnfgen.clitools.graph_build import obtain_empty_bipartite
 
 constructions = {
     'simple': {
@@ -78,8 +81,11 @@ constructions = {
         'glrp': obtain_glrp,
         'glrm': obtain_glrm,
         'glrd': obtain_glrd,
-        'bregular': obtain_bipartite_regular
-    }  #,  'regular':, 'shift':, 'complete':}
+        'regular': obtain_bipartite_regular,
+        'shift': obtain_bipartite_shift,
+        'complete': obtain_complete_bipartite,
+        'empty': obtain_empty_bipartite
+    }
 }
 
 options = {

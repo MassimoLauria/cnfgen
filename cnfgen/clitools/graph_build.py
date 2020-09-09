@@ -234,7 +234,7 @@ def obtain_glrd(parsed):
 
 
 def obtain_bipartite_regular(parsed):
-    """Build a random bipartite with a fixed number of sampled edges"""
+    """Build a random bipartite, regular on both sides"""
     try:
         left, right, degree = parsed['args']
         left = int(left)
@@ -245,10 +245,76 @@ def obtain_bipartite_regular(parsed):
         assert 0 <= degree <= right
         assert (degree * left % right) == 0
     except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'bregular\' expects three arguments <L> <R> <d>\n'
+        raise ValueError('\'regular\' expects three arguments <L> <R> <d>\n'
                          'with L>0, R>0, 0<= d <= R\n'
                          'where R divides L*d')
     G = bipartite_random_regular(left, right, degree)
     G.name = "Random regular bipartite with ({},{}) vertices and left degree {}".format(
         left, right, degree)
+    return G
+
+
+def obtain_bipartite_shift(parsed):
+    """Build a bipartite graph where edges follow a fixed pattern"""
+    values = parsed['args']
+    if len(values) < 2:
+        raise ValueError(
+            "'shift' requires two or more positive int parameters.")
+
+    try:
+        N, M, pattern = int(values[0]), int(values[1]), sorted(
+            int(x) for x in values[2:])
+
+        assert N > 0
+        assert M > 0
+
+        for i in range(len(pattern) - 1):
+            if pattern[i] == pattern[i + 1]:
+                raise ValueError
+
+        if any([x < 0 or x > M for x in pattern]):
+            raise ValueError
+    except (TypeError, ValueError, AssertionError):
+        raise ValueError(
+            '\'shift\' expect args <N> <M> <v1> <v2> ... \nThe results is an (N,M) bipartite.\nVertex i connexted to i+v1, i+v2,... (mod M)\n<v1> <v2> ... must not have repetitions and be between 0 and M'
+        )
+
+    G = bipartite_shift(N, M, pattern)
+    G.name = 'Bipartite with {},{} vertices and shifting edge pattern {}'.format(
+        N, M, pattern)
+    return G
+
+
+def obtain_complete_bipartite(parsed):
+    """Build a bipartite complete graph"""
+    try:
+        if len(parsed['args']) != 2:
+            raise ValueError
+        left = int(parsed['args'][0])
+        right = int(parsed['args'][1])
+        assert left > 0
+        assert right > 0
+    except (TypeError, ValueError, AssertionError):
+        raise ValueError('\'complete\' expects argument <L> <R> with L>0, R>0')
+
+    G = complete_bipartite_graph(left, right)
+    G.name = "Complete bipartite graph with ({},{}) vertices".format(
+        left, right)
+    return G
+
+
+def obtain_empty_bipartite(parsed):
+    """Build an empty complete graph"""
+    try:
+        if len(parsed['args']) != 2:
+            raise ValueError
+        left = int(parsed['args'][0])
+        right = int(parsed['args'][1])
+        assert left > 0
+        assert right > 0
+    except (TypeError, ValueError, AssertionError):
+        raise ValueError('\'complete\' expects argument <L> <R> with L>0, R>0')
+
+    G = bipartite_gnmk_random_graph(left, right, 0)
+    G.name = "Empty bipartite graph with ({},{}) vertices".format(left, right)
     return G

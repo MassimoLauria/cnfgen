@@ -219,7 +219,7 @@ def test_bphp_unsat():
 def test_gphp_lib_vs_cli():
     for functional in (True, False):
         for onto in (True, False):
-            parameters = ["cnfgen", "-q", "gphp", "--bcomplete", '5', '4']
+            parameters = ["cnfgen", "-q", "gphp", "complete", '5', '4']
             if functional:
                 parameters.append("--functional")
             if onto:
@@ -233,4 +233,4 @@ def test_gphp_lib_vs_cli():
 
 def test_not_bipartite():
     with pytest.raises(CLIError):
-        cnfgen(["cnfgen", "gphp", "--complete", "3"])
+        cnfgen(["cnfgen", "gphp", "complete", "3"])
