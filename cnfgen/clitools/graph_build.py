@@ -156,7 +156,7 @@ def modify_simple_graph_plantclique(parsed, G):
     return G
 
 
-def modify_simple_graph_addedges(parsed, G):
+def modify_graph_addedges(parsed, G):
     try:
         if len(parsed['addedges']) != 1:
             raise ValueError

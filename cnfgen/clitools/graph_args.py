@@ -53,7 +53,6 @@ from cnfgen.clitools.graph_build import obtain_grid
 from cnfgen.clitools.graph_build import obtain_torus
 from cnfgen.clitools.graph_build import obtain_complete_simple
 from cnfgen.clitools.graph_build import obtain_empty_simple
-from cnfgen.clitools.graph_build import modify_simple_graph_addedges
 from cnfgen.clitools.graph_build import modify_simple_graph_plantclique
 
 # Bipartite graphs
@@ -64,6 +63,9 @@ from cnfgen.clitools.graph_build import obtain_bipartite_regular
 from cnfgen.clitools.graph_build import obtain_bipartite_shift
 from cnfgen.clitools.graph_build import obtain_complete_bipartite
 from cnfgen.clitools.graph_build import obtain_empty_bipartite
+
+# Generic
+from cnfgen.clitools.graph_build import modify_graph_addedges
 
 constructions = {
     'simple': {
@@ -244,17 +246,16 @@ def obtain_graph(parsed):
         assert 'fileformat' in parsed
         raise RuntimeError('reading graph from input is not implemented yet')
 
-    # Graph modifications
+    # Add planted cliques
     if graphtype == 'simple':
         if 'plantclique' in parsed:
             G = modify_simple_graph_plantclique(parsed, G)
-        if 'addedges' in parsed:
-            G = modify_simple_graph_addedges(parsed, G)
     # elif graphtype == 'bipartite':
     #     if 'plantbiclique' in parsed:
     #         G = modify_bipartite_graph_plantbiclique(parsed, G)
-    #     if 'addedges' in parsed:
-    #         G = modify_bipartite_graph_addedges(parsed, G)
+    # Add random edges
+    if 'addedges' in parsed:
+        G = modify_graph_addedges(parsed, G)
 
     # Output the graph is requested
     if 'save' in parsed:
