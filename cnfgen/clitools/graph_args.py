@@ -317,6 +317,8 @@ class ObtainSimpleGraph(ObtainGraphAction):
             setattr(args, self.dest, G)
         except ValueError as e:
             parser.error(str(e))
+        except FileNotFoundError as e:
+            parser.error(str(e))
 
 
 class ObtainBipartiteGraph(ObtainGraphAction):
@@ -334,6 +336,8 @@ class ObtainBipartiteGraph(ObtainGraphAction):
             setattr(args, self.dest, B)
         except ValueError as e:
             parser.error(str(e))
+        except FileNotFoundError as e:
+            parser.error(str(e))
 
 
 class ObtainDirectedAcyclicGraph(ObtainGraphAction):
@@ -350,4 +354,6 @@ class ObtainDirectedAcyclicGraph(ObtainGraphAction):
             B = obtain_graph(parsed)
             setattr(args, self.dest, B)
         except ValueError as e:
+            parser.error(str(e))
+        except FileNotFoundError as e:
             parser.error(str(e))

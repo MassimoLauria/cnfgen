@@ -6,6 +6,7 @@ import networkx as nx
 import pytest
 
 import cnfgen
+from cnfgen.clitools import CLIError
 from cnfgen.graphs import readGraph, writeGraph, supported_formats
 from cnfgen.graphs import bipartite_sets, has_dot_library
 
@@ -230,3 +231,10 @@ def test_undoable_io():
     # assumes that '/does_not_exist.gml' is not writable
     with pytest.raises(IOError):
         writeGraph(nx.Graph(), "/does_not_exist.gml", graph_type='simple')
+
+
+def test_cli_filenotfound():
+
+    # assumes that 'does_not_exist.gml' does not exist in the working directory
+    with pytest.raises(CLIError):
+        cnfgen.cnfgen(['cnfgen', 'gop', 'does_not_exists.gml'], mode='string')
