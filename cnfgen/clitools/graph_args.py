@@ -293,6 +293,13 @@ def obtain_graph(parsed):
     return G
 
 
+def make_graph_from_spec(graphtype, args):
+    """Produce a graph from a graph specification string"""
+    parsed = parse_graph_argument(graphtype, args)
+    assert parsed['graphtype'] == graphtype
+    return obtain_graph(parsed)
+
+
 class ObtainGraphAction(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         if nargs is not None:
@@ -303,6 +310,30 @@ class ObtainGraphAction(argparse.Action):
                                                 **kwargs)
 
 
+def _make_graph_action(graphtype):
+    """Create an Argparse action for the appropriate graph type"""
+    class X(ObtainGraphAction):
+        def __init__(self, option_strings, dest, nargs=None, **kwargs):
+            if nargs is not None:
+                raise ValueError("nargs not allowed")
+            super(ObtainSimpleGraph, self).__init__(option_strings, dest,
+                                                    **kwargs)
+
+        def __call__(self, parser, args, values, option_string=None):
+            try:
+                G = make_graph_from_spec(graphtype, values)
+                setattr(args, self.dest, G)
+            except ValueError as e:
+                parser.error(str(e))
+            except FileNotFoundError as e:
+                parser.error(str(e))
+
+
+# ObtainSimpleGraph = _make_graph_action('simple')
+# ObtainBipartiteGraph = _make_graph_action('bipartite')
+# ObtainDirectedAcyclicGraph = _make_graph_action('dag')
+
+
 class ObtainSimpleGraph(ObtainGraphAction):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         if nargs is not None:
@@ -311,9 +342,7 @@ class ObtainSimpleGraph(ObtainGraphAction):
 
     def __call__(self, parser, args, values, option_string=None):
         try:
-            parsed = parse_graph_argument('simple', values)
-            assert parsed['graphtype'] == 'simple'
-            G = obtain_graph(parsed)
+            G = make_graph_from_spec('simple', values)
             setattr(args, self.dest, G)
         except ValueError as e:
             parser.error(str(e))
@@ -330,9 +359,7 @@ class ObtainBipartiteGraph(ObtainGraphAction):
 
     def __call__(self, parser, args, values, option_string=None):
         try:
-            parsed = parse_graph_argument('bipartite', values)
-            assert parsed['graphtype'] == 'bipartite'
-            B = obtain_graph(parsed)
+            B = make_graph_from_spec('bipartite', values)
             setattr(args, self.dest, B)
         except ValueError as e:
             parser.error(str(e))
@@ -349,10 +376,8 @@ class ObtainDirectedAcyclicGraph(ObtainGraphAction):
 
     def __call__(self, parser, args, values, option_string=None):
         try:
-            parsed = parse_graph_argument('dag', values)
-            assert parsed['graphtype'] == 'dag'
-            B = obtain_graph(parsed)
-            setattr(args, self.dest, B)
+            D = make_graph_from_spec('dag', values)
+            setattr(args, self.dest, D)
         except ValueError as e:
             parser.error(str(e))
         except FileNotFoundError as e:

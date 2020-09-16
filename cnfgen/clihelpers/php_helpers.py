@@ -139,7 +139,7 @@ class PHPCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        if hasattr(args, 'B'):
+        if hasattr(args, 'B') and args.B is not None:
             return GraphPigeonholePrinciple(args.B,
                                             functional=args.functional,
                                             onto=args.onto)
