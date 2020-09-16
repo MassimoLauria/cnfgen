@@ -65,6 +65,8 @@ class StoneCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
+        usage_string = "{} [-h] <stones> <dag> [--sparse <mapping>]"
+        parser.usage = usage_string.format(parser.prog)
         parser.add_argument('s',
                             metavar='<stones>',
                             type=positive_int,
@@ -77,10 +79,10 @@ class StoneCmdHelper(FormulaHelper):
         )
         parser.add_argument(
             '--sparse',
-            metavar='B',
+            metavar='<mapping>',
             action=ObtainBipartiteGraph,
-            help=
-            "a sparse mapping between stones and vertices (a bipartite graph)")
+            help="mapping between vertices and stones (i.e. a bipartite graph)"
+        )
 
     @staticmethod
     def build_cnf(args):
@@ -90,7 +92,7 @@ class StoneCmdHelper(FormulaHelper):
         - `args`: command line options
         """
         D = args.D
-        if hasattr(args, 'sparse'):
+        if hasattr(args, 'sparse') and args.sparse is not None:
             B = args.sparse
             Left, Right = bipartite_sets(B)
             nvertices = D.order()

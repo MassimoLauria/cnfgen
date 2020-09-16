@@ -327,7 +327,6 @@ class ObtainBipartiteGraph(ObtainGraphAction):
                                                    **kwargs)
 
     def __call__(self, parser, args, values, option_string=None):
-        print(values)
         try:
             parsed = parse_graph_argument('bipartite', values)
             assert parsed['graphtype'] == 'bipartite'
