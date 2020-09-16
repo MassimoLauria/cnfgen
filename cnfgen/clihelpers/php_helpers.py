@@ -19,6 +19,7 @@ from cnfgen.families.pigeonhole import RelativizedPigeonholePrinciple
 from cnfgen.graphs import bipartite_random_left_regular
 
 from cnfgen.clitools.graph_args import ObtainBipartiteGraph
+from cnfgen.clitools.cmdline import CLIParser, CLIHelpFormatter
 from cnfgen.clitools import positive_int, nonnegative_int
 
 from .formula_helpers import FormulaHelper
@@ -27,29 +28,55 @@ import argparse
 usage_string = """Pigeonhole Principle
 
 Pigeonhole principle claims that P pigeons can fly to H holes with no
-two pigeons in the same hole. This is unsatisfiable when P > H. It is
-possible to specify a bipartite graph that specifies which pigeons can
-fly to which holes.
+two pigeons in the same hole. This is unsatisfiable when P > H.
+Instead of just the number of pigeon and holes, it is possible to
+specify a bipartite graph B that specifies which pigeons can fly to
+which holes. Left vertices of B are pigeons, right vertices are holes.
 
 positional arguments:
  {0} N           --- N+1 pigeons fly to N holes
  {0} M N         --- M pigeons fly to N holes
  {0} M N D       --- M pigeons fly to N holes, pigeon left degree D
+ {0} <bipartite> --- bipartite graph specification
  """
 
 example_string = """examples:
- {0} 100           --- 101 pigeons and 100 holes (unsat)
- {0} 14 10         --- 14 pigeons and 10 holes (unsat)
- {0} 9  10         --- 9  pigeons and 10 holes (sat)
- {0} 12 10 3       --- 12 pigeons and 10 holes,
- {1}                   pigeon can go to 3 random holes
+ {0} 100             --- 101 pigeons and 100 holes (unsat)
+ {0} 14 10           --- 14 pigeons and 10 holes (unsat)
+ {0} 9  10           --- 9  pigeons and 10 holes (sat)
+ {0} 12 10 3         --- 12 pigeons and 10 holes,
+ {1}                     pigeon can go to 3 random holes
+ {0} graph.gml       --- pigeons and holes specificed by the graph
+ {1}                     in file 'graph.gml'
+ {0} regular 12 8 4  --- 12 pigeons and 8 holes, each pigeon has
+ {1}                     and exactly 4 outgoing edges, each hole has
+ {1}                     exactly 6 incoming edges
  """
+
+
+def is_some_number(string):
+    try:
+        float(string)
+        return True
+    except ValueError:
+        return False
 
 
 class PHPArgs(argparse.Action):
     def __call__(self, parser, args, values, option_string=None):
+        # now we setup the main parser for the formula generation command
+        innerparser = CLIParser(prog=parser.prog,
+                                formatter_class=CLIHelpFormatter)
+        innerparser.add_argument('B', action=ObtainBipartiteGraph)
+
         if len(values) == 0:
             parser.error('php formula needs <pigeons> <holes> specification')
+
+        # Use graph spec instead of numeric parameters
+        # when first argument is not a number
+        if not is_some_number(values[0]):
+            innerparser.parse_args(values, namespace=args)
+            return
 
         if len(values) > 3:
             parser.error('too many arguments for php formula')
@@ -112,7 +139,12 @@ class PHPCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        if args.holes == args.degree:
+        if hasattr(args, 'B'):
+            return GraphPigeonholePrinciple(args.B,
+                                            functional=args.functional,
+                                            onto=args.onto)
+
+        elif args.holes == args.degree:
             return PigeonholePrinciple(args.pigeons,
                                        args.holes,
                                        functional=args.functional,
@@ -123,42 +155,6 @@ class PHPCmdHelper(FormulaHelper):
             return GraphPigeonholePrinciple(G,
                                             functional=args.functional,
                                             onto=args.onto)
-
-
-class GPHPCmdHelper(FormulaHelper):
-    """Command line helper for the Pigeonhole principle on graphs"""
-
-    name = 'gphp'
-    description = 'graph pigeonhole principle'
-
-    @staticmethod
-    def setup_command_line(parser):
-        """Setup the command line options for pigeonhole principle formula over graphs
-
-        Arguments:
-        - `parser`: parser to load with options.
-        """
-        parser.add_argument('--functional',
-                            action='store_true',
-                            help="pigeons sit in at most one hole")
-        parser.add_argument('--onto',
-                            action='store_true',
-                            help="every hole has a sitting pigeon")
-        parser.add_argument(
-            'B',
-            help='bipartite graph (either a file or graph specification)',
-            action=ObtainBipartiteGraph)
-
-    @staticmethod
-    def build_cnf(args):
-        """Build a Graph PHP formula according to the arguments
-
-        Arguments:
-        - `args`: command line options
-        """
-        return GraphPigeonholePrinciple(args.B,
-                                        functional=args.functional,
-                                        onto=args.onto)
 
 
 class BPHPCmdHelper(FormulaHelper):

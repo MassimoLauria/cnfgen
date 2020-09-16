@@ -214,7 +214,12 @@ Here we assume that all parts have numeric arguments, except for
         result['fileformat'] = 'autodetect'
         position += 1
 
-    # check file specification now
+    # Improve error message
+    grmsg = ""
+    if result['construction'] is not None:
+        grmsg = "build with construction '{}'".format(result['construction'])
+    elif result['filename'] is not None:
+        grmsg = "read from file '{}'".format(result['filename'])
 
     # Now we load the graph options
     while position < len(spec):
@@ -226,9 +231,10 @@ Here we assume that all parts have numeric arguments, except for
                 "Optional arguments as `{}` should be before any positional/graph argument"
                 .format(optionname))
         elif optionname not in options[graphtype]:
+            print(result)
             raise ValueError(
-                "`{}` is not a valid option for a graph of type `{}`".format(
-                    optionname, graphtype))
+                "`{}` is not a valid option for '{}' graph\n{}".format(
+                    optionname, graphtype, grmsg))
         elif optionname in result:
             raise ValueError(
                 "Multiple occurrences of `{}` option.".format(optionname))
@@ -321,6 +327,7 @@ class ObtainBipartiteGraph(ObtainGraphAction):
                                                    **kwargs)
 
     def __call__(self, parser, args, values, option_string=None):
+        print(values)
         try:
             parsed = parse_graph_argument('bipartite', values)
             assert parsed['graphtype'] == 'bipartite'

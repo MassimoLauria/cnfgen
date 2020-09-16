@@ -52,13 +52,11 @@ from cnfgen.clitools.msg import InternalBug
 #################################################################
 
 # Help strings
-usage_string = """{} [-h] [-V] [--output <output>]
-                 [--output-format {{latex,dimacs}}] [--seed <seed>]
-                 [--verbose | --quiet] [--tutorial]
-                 <formula> <args> ...
-                 [-T <transformation> <args>]
-                 [-T <transformation> <args>]
-                 ..."""
+usage_string = """{} [-h] [-V] [--tutorial] [...options...]
+              <formula> <args>
+              [-T <transformation> <args>]
+              [-T <transformation> <args>]
+              ..."""
 
 description_string = """example:
  {0} php 100 40         --- Pigeonhole principle 100 pigeons 40 holes (unsat)
@@ -194,17 +192,23 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
         help="""Save the formula to <output>. Setting '<output>' to '-' sends the
                         formula to standard output. (default: -)
                         """)
-    parser.add_argument('--output-format',
-                        '-of',
-                        choices=['latex', 'dimacs'],
-                        default='dimacs',
-                        help="""
+    ofgroup = parser.add_mutually_exclusive_group()
+    ofgroup.add_argument('--output-format',
+                         '-of',
+                         choices=['latex', 'dimacs'],
+                         default='dimacs',
+                         help="""
                         Output format of the formulas. 'latex' is
                         convenient to insert formulas into papers, and
                         'dimacs' is the format used by sat solvers.
                         (default: dimacs)
                         """)
-
+    ofgroup.add_argument('--latex',
+                         '-l',
+                         dest='output_format',
+                         action='store_const',
+                         const='latex',
+                         help="Outputs formula in 'latex' format")
     parser.add_argument('--seed',
                         '-S',
                         metavar="<seed>",
