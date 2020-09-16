@@ -4,10 +4,7 @@
 """
 
 from cnfgen.cnf import CNF
-
 from cnfgen.graphs import enumerate_vertices, neighbors
-
-import random
 
 
 def TseitinFormula(graph, charges=None):
@@ -21,10 +18,13 @@ def TseitinFormula(graph, charges=None):
     - `charges': odd or even charge for each vertex
     """
     V = enumerate_vertices(graph)
+    parity = None
 
-    if charges == None:
+    if charges is None:
         charges = [1] + [0] * (len(V) - 1)  # odd charge on first vertex
+        parity = 'odd'
     else:
+        parity = 'even' if sum(charges) % 2 == 0 else 'odd'
         charges = [bool(c) for c in charges]  # map to boolean
 
     if len(charges) < len(V):
@@ -32,7 +32,9 @@ def TseitinFormula(graph, charges=None):
                                    )  # pad with even charges
 
     # init formula
-    tse = CNF()
+    description = "Tseitin formula on {0}, with {1} charge".format(
+        graph.name, parity)
+    tse = CNF(description=description)
     edgename = {}
 
     for (u, v) in sorted(graph.edges(), key=sorted):

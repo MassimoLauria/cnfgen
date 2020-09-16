@@ -231,7 +231,6 @@ Here we assume that all parts have numeric arguments, except for
                 "Optional arguments as `{}` should be before any positional/graph argument"
                 .format(optionname))
         elif optionname not in options[graphtype]:
-            print(result)
             raise ValueError(
                 "`{}` is not a valid option for '{}' graph\n{}".format(
                     optionname, graphtype, grmsg))

@@ -104,10 +104,10 @@ def test_cli_not_bipartite():
 def test_cli_shortcut_one_arg():
     F = cnfgen(["cnfgen", "-q", "subsetcard", "10"], mode='formula')
     # 10 x 10 4 regular graph + 1 edge: 41 vars
-    assert len(F.variables()) == 41
+    assert len(list(F.variables())) == 41
 
 
 def test_cli_shortcut_two_args():
-    F = cnfgen(["cnfgen", "-q", "subsetcard", "15" "6"])
-    # 10 x 10 6-regular graph + 1 edge: 61 vars
-    assert len(F.variables()) == 61
+    F = cnfgen(["cnfgen", "-q", "subsetcard", "15", "6"], mode='formula')
+    # 15 x 15 6-regular graph + 1 edge: 91 vars
+    assert len(list(F.variables())) == 91

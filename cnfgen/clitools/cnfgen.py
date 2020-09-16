@@ -149,16 +149,14 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     """
 
     # First we setup the parser for transformation command lines
-    t_parser = CLIParser(add_help=False, formatter_class=CLIHelpFormatter)
+    t_parser = CLIParser(add_help=False)
 
     t_subparsers = t_parser.add_subparsers(
         prog=progname + " <formula> <args> -T",
         title="Available formula transformation",
         metavar="<transformation>")
     for sc in thelpers:
-        p = t_subparsers.add_parser(sc.name,
-                                    help=sc.description,
-                                    formatter_class=CLIHelpFormatter)
+        p = t_subparsers.add_parser(sc.name, help=sc.description)
         sc.setup_command_line(p)
         sc.subparser = p
         p.set_defaults(transformation=sc)
@@ -235,9 +233,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
                                        title="Available formula types",
                                        metavar='<formula>')
     for sc in fhelpers:
-        p = subparsers.add_parser(sc.name,
-                                  help=sc.description,
-                                  formatter_class=CLIHelpFormatter)
+        p = subparsers.add_parser(sc.name, help=sc.description)
         sc.setup_command_line(p)
         sc.subparser = p
         p.set_defaults(generator=sc)

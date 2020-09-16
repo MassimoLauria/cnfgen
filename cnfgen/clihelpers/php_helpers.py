@@ -38,7 +38,7 @@ positional arguments:
  {0} M N         --- M pigeons fly to N holes
  {0} M N D       --- M pigeons fly to N holes, pigeon left degree D
  {0} <bipartite> --- bipartite graph specification
- """
+"""
 
 example_string = """examples:
  {0} 100             --- 101 pigeons and 100 holes (unsat)
@@ -51,7 +51,7 @@ example_string = """examples:
  {0} regular 12 8 4  --- 12 pigeons and 8 holes, each pigeon has
  {1}                     and exactly 4 outgoing edges, each hole has
  {1}                     exactly 6 incoming edges
- """
+"""
 
 
 def is_some_number(string):

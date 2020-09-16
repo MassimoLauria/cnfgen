@@ -242,3 +242,39 @@ def probability(value):
     if not (0 <= p <= 1.0):
         raise argparse.ArgumentTypeError(errmsg)
     return p
+
+
+def compose_two_parsers(parser1, parser2, test=None):
+    """Create an argparse action which compose two parsers
+
+The action takes all remaining arguments and uses a test to determine
+which parser should parse them, using `test` function, given as argument.
+
+If `test` is `None` then uses the default test:
+     is the first argument a number ---> parser1
+     otherwise ---> parser2
+"""
+    class TmpAction(argparse.Action):
+        def __call__(self, parser, args, values, option_string=None):
+
+            nonlocal test
+
+            parser1.prog = parser.prog
+            parser2.prog = parser.prog
+
+            def is_first_a_number(x):
+                try:
+                    float(x[0])
+                    return True
+                except ValueError:
+                    return False
+
+            if test is None:
+                test = is_first_a_number
+
+            if test(values):
+                parser1.parse_args(values, namespace=args)
+            else:
+                parser2.parse_args(values, namespace=args)
+
+    return TmpAction

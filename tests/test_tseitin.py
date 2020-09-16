@@ -114,3 +114,13 @@ def test_no_graph_format():
     with pytest.raises(CLIError):
         with redirect_stdin(io.StringIO('')):
             cnfgen(['cnfgen', 'tseitin', "randomodd"])
+
+
+def test_short_commandline1():
+    parameters = ["cnfgen", "-q", "tseitin", 10, 4]
+    assert cnfgen(parameters, mode='string') is not None
+
+
+def test_short_commandline2():
+    parameters = ["cnfgen", "-q", "tseitin", 20, 5]
+    assert cnfgen(parameters, mode='string') is not None

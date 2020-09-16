@@ -13,10 +13,15 @@ from cnfgen.families.subsetcardinality import SubsetCardinalityFormula
 
 from cnfgen.clitools import ObtainSimpleGraph
 from cnfgen.clitools import ObtainBipartiteGraph
+from cnfgen.clitools import make_graph_from_spec
+
+from cnfgen.clitools import CLIParser, compose_two_parsers
+from cnfgen.clitools import positive_int
 
 from .formula_helpers import FormulaHelper
 
 import random
+import argparse
 
 
 class ParityCmdHelper(FormulaHelper):
@@ -104,7 +109,12 @@ class TseitinCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument(
+        shortcut = CLIParser()
+        shortcut.add_argument('N', type=positive_int, action='store')
+        shortcut.add_argument('d', type=positive_int, action='store')
+
+        longform = CLIParser()
+        longform.add_argument(
             'charge',
             metavar='charge',
             choices=['first', 'random', 'randomodd', 'randomeven'],
@@ -114,10 +124,16 @@ class TseitinCmdHelper(FormulaHelper):
                                     `randomodd' puts random odd  charge on vertices;
                                     `randomeven' puts random even charge on vertices.
                                      """)
-        parser.add_argument(
+        longform.add_argument(
             'G',
             help='simple undirected graph (a file or a graph specification)',
             action=ObtainSimpleGraph)
+
+        tsaction = compose_two_parsers(shortcut, longform)
+        parser.add_argument('args',
+                            action=tsaction,
+                            nargs='+',
+                            help=argparse.SUPPRESS)
 
     @staticmethod
     def build_cnf(args):
@@ -126,10 +142,21 @@ class TseitinCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        G = args.G
+        if not hasattr(args, 'G'):
+            N = args.N
+            d = args.d
+            G = make_graph_from_spec('simple', ["gnd", N, d])
+            charge = [random.randint(0, 1) for _ in range(G.order() - 1)]
+            charge.append(1 - sum(charge) % 2)
+        else:
+            G = args.G
 
         if G.order() < 1:
             charge = None
+
+        elif not hasattr(args, 'charge'):
+
+            pass
 
         elif args.charge == 'first':
 
@@ -160,16 +187,36 @@ class SCCmdHelper(FormulaHelper):
     @staticmethod
     def setup_command_line(parser):
 
+        # now we setup the main parser for the formula generation command
+        firstparser = CLIParser()
+        firstparser.add_argument('N', type=positive_int, action='store')
+        firstparser.add_argument('d',
+                                 nargs='?',
+                                 type=positive_int,
+                                 action='store',
+                                 default=4)
+        secondparser = CLIParser()
+        secondparser.add_argument('B', action=ObtainBipartiteGraph)
+
+        scaction = compose_two_parsers(firstparser, secondparser)
+
         parser.add_argument('--equal',
                             '-e',
                             default=False,
                             action='store_true',
                             help="encode cardinality constraints as equations")
-        parser.add_argument(
-            'B',
-            help='bipartite graph (a file or a graph specification)',
-            action=ObtainBipartiteGraph)
+        parser.add_argument('args',
+                            action=scaction,
+                            nargs='+',
+                            help=argparse.SUPPRESS)
 
     @staticmethod
     def build_cnf(args):
-        return SubsetCardinalityFormula(args.B, args.equal)
+        if hasattr(args, 'N'):
+            N = args.N
+            d = args.d
+            B = make_graph_from_spec('bipartite',
+                                     ['regular', N, N, d, 'addedges', 1])
+        elif hasattr(args, 'B'):
+            B = args.B
+        return SubsetCardinalityFormula(B, args.equal)

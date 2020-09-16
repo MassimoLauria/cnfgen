@@ -70,7 +70,7 @@ def test_cli_op():
 def test_cli_gop():
     for total, smart, plant, knuth in product((True, False), (True, False),
                                               (True, False), (False, 2, 3)):
-        parameters = ["cnfgen", "-q", "gop", "complete", "5"]
+        parameters = ["cnfgen", "-q", "op", "complete", "5"]
         if total:
             parameters.append("--total")
         if smart:
@@ -87,3 +87,33 @@ def test_cli_gop():
             graph = nx.complete_graph(5)
             F = GraphOrderingPrinciple(graph, total, smart, plant, knuth)
             assertCnfEqualsDimacs(F, cnfgen(parameters, mode='string'))
+
+
+def test_cli_op_complete():
+    F = cnfgen(['cnfgen', 'op', 10], mode='formula')
+    for c in F:
+        assert len(c) <= 10
+
+
+def test_cli_op_sparse():
+    F = cnfgen(['cnfgen', 'op', 10, 4], mode='formula')
+    for c in F:
+        assert len(c) <= 4
+
+
+def test_cli_op_graph1():
+    F = cnfgen(['cnfgen', 'op', 'grid', 5, 5], mode='formula')
+    for c in F:
+        assert len(c) <= 4
+
+
+def test_cli_op_graph2():
+    F = cnfgen(['cnfgen', 'op', 'gnd', 10, 6], mode='formula')
+    for c in F:
+        assert len(c) <= 6
+
+
+def test_cli_op_graph3():
+    F = cnfgen(['cnfgen', 'op', 'complete', 10], mode='formula')
+    for c in F:
+        assert len(c) <= 10

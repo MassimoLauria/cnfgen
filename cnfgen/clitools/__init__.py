@@ -3,11 +3,15 @@
 from cnfgen.clitools.cnfgen import cli as cnfgen
 from cnfgen.clitools.cnfshuffle import cli as cnfshuffle
 from cnfgen.clitools.kthlist2pebbling import cli as kthlist2pebbling
+
 from cnfgen.clitools.cmdline import CLIError
+from cnfgen.clitools.cmdline import CLIParser
+from cnfgen.clitools.cmdline import compose_two_parsers
 
 from cnfgen.clitools.graph_args import ObtainSimpleGraph
 from cnfgen.clitools.graph_args import ObtainBipartiteGraph
 from cnfgen.clitools.graph_args import ObtainDirectedAcyclicGraph
+from cnfgen.clitools.graph_args import make_graph_from_spec
 
 from cnfgen.clitools.cmdline import get_formula_helpers
 from cnfgen.clitools.cmdline import get_transformation_helpers
