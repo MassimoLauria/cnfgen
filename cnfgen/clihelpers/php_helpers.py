@@ -25,32 +25,34 @@ from cnfgen.clitools import positive_int, nonnegative_int
 from .formula_helpers import FormulaHelper
 import argparse
 
-usage_string = """Pigeonhole Principle
+usage_string = """{0} [-h] [--functional] [--onto] <pigeon and holes>
 
-Pigeonhole principle claims that P pigeons can fly to H holes with no
-two pigeons in the same hole. This is unsatisfiable when P > H.
-Instead of just the number of pigeon and holes, it is possible to
-specify a bipartite graph B that specifies which pigeons can fly to
-which holes. Left vertices of B are pigeons, right vertices are holes.
+usage variants:
 
-positional arguments:
- {0} N           --- N+1 pigeons fly to N holes
- {0} M N         --- M pigeons fly to N holes
- {0} M N D       --- M pigeons fly to N holes, pigeon left degree D
- {0} <bipartite> --- bipartite graph specification
+ {0} N               --- N+1 pigeons fly to N holes
+ {0} M N             --- M pigeons fly to N holes
+ {0} M N D           --- M pigeons fly to N holes, pigeon left degree D
+ {0} <bipartite>     --- bipartite graph specification
 """
 
-example_string = """examples:
+description_string = """Pigeonhole principle claims that P pigeons can fly to H holes with
+no two pigeons in the same hole. This is unsatisfiable when P > H.
+Instead of just the number of pigeon and holes, it is possible to
+specify a bipartite graph <bipartite> that specifies which pigeons can
+fly to which holes. Left vertices of <bipartite> are pigeons, right
+vertices are holes.
+
+examples:
  {0} 100             --- 101 pigeons and 100 holes (unsat)
  {0} 14 10           --- 14 pigeons and 10 holes (unsat)
  {0} 9  10           --- 9  pigeons and 10 holes (sat)
  {0} 12 10 3         --- 12 pigeons and 10 holes,
- {1}                     pigeon can go to 3 random holes
+ {1}                     pigeon can go to 3 random holes (unsat)
  {0} graph.gml       --- pigeons and holes specificed by the graph
  {1}                     in file 'graph.gml'
  {0} regular 12 8 4  --- 12 pigeons and 8 holes, each pigeon has
  {1}                     and exactly 4 outgoing edges, each hole has
- {1}                     exactly 6 incoming edges
+ {1}                     exactly 6 incoming edges (unsat)
 """
 
 
@@ -119,8 +121,9 @@ class PHPCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
         parser.usage = usage_string.format(parser.prog)
-        parser.description = example_string.format(parser.prog,
-                                                   " " * len(parser.prog))
+        parser.description = description_string.format(parser.prog,
+                                                       " " * len(parser.prog))
+
         parser.add_argument('pigeonholes',
                             action=PHPArgs,
                             nargs='*',
