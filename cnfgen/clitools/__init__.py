@@ -6,6 +6,7 @@ from cnfgen.clitools.kthlist2pebbling import cli as kthlist2pebbling
 
 from cnfgen.clitools.cmdline import CLIError
 from cnfgen.clitools.cmdline import CLIParser
+from cnfgen.clitools.cmdline import CLIHelpFormatter
 from cnfgen.clitools.cmdline import compose_two_parsers
 
 from cnfgen.clitools.graph_args import ObtainSimpleGraph

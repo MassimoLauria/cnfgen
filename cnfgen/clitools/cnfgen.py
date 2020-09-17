@@ -94,8 +94,8 @@ parameter 3.
 Some formulas are built on top of graph structures, passed as input
 files or randomly generated. The command lines
 
-    {0} tseitin -i graph.dot
-    {0} tseitin --gnd 10 4
+    {0} tseitin randomodd graph.dot
+    {0} tseitin random gnd 10 4
 
 build Tseitin formulas, respectively, over a graph passed as a DOT
 file, and over a random 4-regular graph of 10 vertices.

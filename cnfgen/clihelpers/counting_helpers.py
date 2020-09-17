@@ -96,6 +96,34 @@ class CountingCmdHelper(FormulaHelper):
         return CountingPrinciple(args.M, args.p)
 
 
+tse_help_usage = """{0} [-h] <charge> <graph>
+
+usage variants:
+ {0} N d              --- random d-regular graph with N vertices. Random odd charge
+ {0} <charge> <graph> --- specific <charge> on specific <graph>
+"""
+
+tse_help_description = """A Tseitin formula is defined over a simple undirected graph G.
+Each vertex has a {{0,1}} charge and the variables of the formula are
+graph's edges. Formula asks to set all edges so that the charge of
+each vertex is equal (mod 2) with the sum of the values of the edges
+adjacent to that edge.
+
+examples:
+ {0} 100 4                 --- Random odd charge on 4-regular graph of size 100
+ {0} randomeven gnd 20 6   --- Random odd charge on 6-regular graph of size 20
+ {0} first file.dot        --- Put odd charge just on first vertex on graph in 'file.dot'
+
+positional arguments:
+  <charge>       --- It can be one of the following:
+                     `first'  puts odd charge on first vertex;
+                     `random' puts a random charge on vertices;
+                     `randomodd' puts random odd  charge on vertices;
+                     `randomeven' puts random even charge on vertices.
+  <graph>        --- specification for a simple undirected graph
+"""
+
+
 class TseitinCmdHelper(FormulaHelper):
     """Command line helper for Tseitin  formulas
     """
@@ -109,6 +137,11 @@ class TseitinCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
+
+        parser.usage = tse_help_usage.format(parser.prog)
+        parser.description = tse_help_description.format(
+            parser.prog, " " * len(parser.prog))
+
         shortcut = CLIParser()
         shortcut.add_argument('N', type=positive_int, action='store')
         shortcut.add_argument('d', type=positive_int, action='store')
@@ -116,7 +149,7 @@ class TseitinCmdHelper(FormulaHelper):
         longform = CLIParser()
         longform.add_argument(
             'charge',
-            metavar='charge',
+            metavar='<charge>',
             choices=['first', 'random', 'randomodd', 'randomeven'],
             help="""charge on the vertices.
                                     `first'  puts odd charge on first vertex;
@@ -126,6 +159,7 @@ class TseitinCmdHelper(FormulaHelper):
                                      """)
         longform.add_argument(
             'G',
+            metavar='<graph>',
             help='simple undirected graph (a file or a graph specification)',
             action=ObtainSimpleGraph)
 
@@ -180,12 +214,40 @@ class TseitinCmdHelper(FormulaHelper):
         return TseitinFormula(G, charge)
 
 
+ssc_help_usage = """{0} [-h] [--equal] <bipartite>
+
+usage variants:
+ {0} N               --- unsat instance of width 3
+ {0} N d             --- unsat instance of width d//2 + 1
+ {0} <bipartite>     --- formula over arbitrary bipartite graph
+"""
+
+ssc_help_description = """Subset cardinality formula is defined over a bipartite graph: boolean
+values are associated to the edges of the graph are set to {{0,1}}.
+The formula claims that all vertices on the left have the (loose)
+majority of edges set to 1, and all vertices on the right have the
+(loose) majority of edges set to 0. The hard unsat cases are when the
+graph is a (N,N)-bipartite d-regular graph with an additional edge.
+In particular with d=4 such formula is an unsat 3-CNF, typically hard
+for resolution.
+
+examples:
+ {0} 100             --- (100,100)-bipartite 4-regular + 1 edge
+ {0} 20 6            --- (20,20)-bipartite 4-regular + 1 edge
+ {0} scheme.matrix   --- edges of the graphs are specificed by
+ {1}                     graph in 'scheme.matrix'"""
+
+
 class SCCmdHelper(FormulaHelper):
     name = 'subsetcard'
     description = 'subset cardinality formulas'
 
     @staticmethod
     def setup_command_line(parser):
+
+        parser.usage = ssc_help_usage.format(parser.prog)
+        parser.description = ssc_help_description.format(
+            parser.prog, " " * len(parser.prog))
 
         # now we setup the main parser for the formula generation command
         firstparser = CLIParser()
@@ -206,6 +268,7 @@ class SCCmdHelper(FormulaHelper):
                             action='store_true',
                             help="encode cardinality constraints as equations")
         parser.add_argument('args',
+                            metavar='<graph_description>',
                             action=scaction,
                             nargs='+',
                             help=argparse.SUPPRESS)
