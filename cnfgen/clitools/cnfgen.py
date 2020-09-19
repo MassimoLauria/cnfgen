@@ -470,6 +470,15 @@ def main():
         print(e, file=sys.stderr)
         sys.exit(-1)
 
+    except (BrokenPipeError, IOError):
+        # avoid errors when stdout is closed before the end of the
+        # program (i.e. piping into a command line which does
+        # not work.)
+        pass
+
+    # avoid signaling BrokenPipeError as whatnot
+    sys.stderr.close()
+
 
 if __name__ == '__main__':
     main()
