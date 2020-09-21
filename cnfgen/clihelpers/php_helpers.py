@@ -21,6 +21,7 @@ from cnfgen.graphs import bipartite_random_left_regular
 from cnfgen.clitools import ObtainBipartiteGraph
 from cnfgen.clitools import CLIParser, CLIHelpFormatter
 from cnfgen.clitools import positive_int, nonnegative_int
+from cnfgen.clitools import make_graph_doc
 
 from .formula_helpers import FormulaHelper
 import argparse
@@ -122,6 +123,9 @@ class PHPCmdHelper(FormulaHelper):
         parser.usage = help_usage.format(parser.prog)
         parser.description = help_description.format(parser.prog,
                                                      " " * len(parser.prog))
+
+        parser.epilog = "Parameters <bipartite>:" + make_graph_doc(
+            'bipartite', parser.prog)
 
         parser.add_argument('pigeonholes',
                             action=PHPArgs,

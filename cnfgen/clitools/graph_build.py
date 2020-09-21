@@ -20,6 +20,7 @@ from cnfgen.graphs import bipartite_sets
 
 from cnfgen.graphs import dag_complete_binary_tree
 from cnfgen.graphs import dag_pyramid
+from cnfgen.graphs import dag_path
 
 from cnfgen.graphs import sample_missing_edges
 
@@ -36,10 +37,10 @@ def obtain_gnd(parsed):
         assert n > 0
         assert d > 0
     except (TypeError, AssertionError, ValueError):
-        raise ValueError('\'gnd\' expects arguments <N> <D> with N>0, D>0')
+        raise ValueError('\'gnd\' expects arguments N d with N>0, d>0')
 
     if (n * d) % 2 == 1:
-        raise ValueError('\'gnd\' expects arguments <N> <D> with even N * D')
+        raise ValueError('\'gnd\' expects arguments N d with even N * d')
 
     G = networkx.random_regular_graph(d, n)
     G.name = 'Random {}-regular graph of {} vertices'.format(d, n)
@@ -55,8 +56,7 @@ def obtain_gnp(parsed):
         assert n > 0
         assert 0 <= p <= 1
     except (TypeError, ValueError, AssertionError):
-        raise ValueError(
-            '\'gnp\' expects arguments <N> <p> with N>0, p in [0,1]')
+        raise ValueError('\'gnp\' expects arguments N p with N>0, p in [0,1]')
 
     G = networkx.gnp_random_graph(n, p)
     G.name = 'Random {}-biased graph of {} vertices'.format(p, n)
@@ -74,8 +74,7 @@ def obtain_gnm(parsed):
         assert m <= n * (n - 1) // 2
     except (TypeError, ValueError, AssertionError):
         raise ValueError(
-            '\'gnm\' expects arguments <N> <M> with N>0 and 0 <= M <= N(N-1)/2'
-        )
+            '\'gnm\' expects arguments N m with N>0 and 0 <= m <= N(N-1)/2')
 
     G = networkx.gnm_random_graph(n, m)
     G.name = 'Random graph of {} vertices with {} edges'.format(n, m)
@@ -90,7 +89,7 @@ def obtain_complete_simple(parsed):
         n = int(parsed['args'][0])
         assert n > 0
     except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'complete\' expects argument <N> with N>0')
+        raise ValueError('\'complete\' expects argument N with N>0')
 
     G = networkx.complete_graph(n)
     G.name = "Complete graphs of {} vertices".format(n)
@@ -105,7 +104,7 @@ def obtain_empty_simple(parsed):
         n = int(parsed['args'][0])
         assert n > 0
     except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'complete\' expects argument <N> with N>0')
+        raise ValueError('\'complete\' expects argument N with N>0')
 
     G = networkx.empty_graph(n)
     G.name = "Empty graphs of {} vertices".format(n)
@@ -149,7 +148,7 @@ def modify_simple_graph_plantclique(parsed, G):
         cliquesize = int(parsed['plantclique'][0])
         assert cliquesize >= 0
     except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'plantclique\' expects argument <k> with k>=0')
+        raise ValueError('\'plantclique\' expects argument k with k>=0')
 
     if cliquesize > G.order():
         raise ValueError("Planted clique cannot be larger than graph")
@@ -169,7 +168,7 @@ def modify_graph_addedges(parsed, G):
         k = int(parsed['addedges'][0])
         assert k >= 0
     except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'addedges\' expects argument <k> with k>=0')
+        raise ValueError('\'addedges\' expects argument m with m>=0')
 
     G.add_edges_from(sample_missing_edges(G, k))
     G.name += " + {} random edges".format(k)
@@ -191,7 +190,7 @@ def obtain_glrp(parsed):
         assert 0 <= p <= 1
     except (TypeError, ValueError, AssertionError):
         raise ValueError(
-            '\'glrp\' expects three arguments <L> <R> <p>\n with L>0, R>0, p in [0,1]'
+            '\'glrp\' expects three arguments L R p\n with L>0, R>0, p in [0,1]'
         )
     G = bipartite_random_graph(left, right, p)
     G.name = 'Random {}-biased bipartite with ({},{}) vertices'.format(
@@ -211,7 +210,7 @@ def obtain_glrm(parsed):
         assert 0 <= edges <= left * right
     except (TypeError, ValueError, AssertionError):
         raise ValueError(
-            '\'glrm\' expects three arguments <L> <R> <m>\n with L>0, R>0, 0<= m <= L*R'
+            '\'glrm\' expects three arguments L R m\n with L>0, R>0, 0<= m <= L*R'
         )
     G = bipartite_gnmk_random_graph(left, right, edges)
     G.name = 'Random bipartite with ({},{}) vertices and {} edges'.format(
@@ -231,7 +230,7 @@ def obtain_glrd(parsed):
         assert 0 <= degree <= right
     except (TypeError, ValueError, AssertionError):
         raise ValueError(
-            '\'glrd\' expects three arguments <L> <R> <d>\n with L>0, R>0, 0<= d <= R'
+            '\'glrd\' expects three arguments L R d\n with L>0, R>0, 0<= d <= R'
         )
     G = bipartite_random_left_regular(left, right, degree)
     G.name = "Random {}-left regular bipartite with ({},{}) vertices".format(
@@ -251,7 +250,7 @@ def obtain_bipartite_regular(parsed):
         assert 0 <= degree <= right
         assert (degree * left % right) == 0
     except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'regular\' expects three arguments <L> <R> <d>\n'
+        raise ValueError('\'regular\' expects three arguments L R d\n'
                          'with L>0, R>0, 0<= d <= R\n'
                          'where R divides L*d')
     G = bipartite_random_regular(left, right, degree)
@@ -268,26 +267,26 @@ def obtain_bipartite_shift(parsed):
             "'shift' requires two or more positive int parameters.")
 
     try:
-        N, M, pattern = int(values[0]), int(values[1]), sorted(
+        L, R, pattern = int(values[0]), int(values[1]), sorted(
             int(x) for x in values[2:])
 
-        assert N > 0
-        assert M > 0
+        assert L > 0
+        assert R > 0
 
         for i in range(len(pattern) - 1):
             if pattern[i] == pattern[i + 1]:
                 raise ValueError
 
-        if any([x < 0 or x > M for x in pattern]):
+        if any([x < 0 or x > R for x in pattern]):
             raise ValueError
     except (TypeError, ValueError, AssertionError):
         raise ValueError(
-            '\'shift\' expect args <N> <M> <v1> <v2> ... \nThe results is an (N,M) bipartite.\nVertex i connexted to i+v1, i+v2,... (mod M)\n<v1> <v2> ... must not have repetitions and be between 0 and M'
+            '\'shift\' expect args L R v1 v2 ... \nThe results is an (L,R)-bipartite.\nVertex i connected to i+v1, i+v2,... (mod R)\n<v1> <v2> ... must not have repetitions and be between 0 and R'
         )
 
-    G = bipartite_shift(N, M, pattern)
+    G = bipartite_shift(L, R, pattern)
     G.name = 'Bipartite with {},{} vertices and shifting edge pattern {}'.format(
-        N, M, pattern)
+        L, R, pattern)
     return G
 
 
@@ -301,7 +300,7 @@ def obtain_complete_bipartite(parsed):
         assert left > 0
         assert right > 0
     except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'complete\' expects argument <L> <R> with L>0, R>0')
+        raise ValueError('\'complete\' expects argument L R with L>0, R>0')
 
     G = complete_bipartite_graph(left, right)
     G.name = "Complete bipartite graph with ({},{}) vertices".format(
@@ -336,7 +335,7 @@ def modify_bipartite_graph_plantbiclique(parsed, G):
         assert cliqueright >= 0
     except (TypeError, ValueError, AssertionError):
         raise ValueError(
-            '\'plantbiclique\' expects argument <A> <B> with A>=0, B>=0')
+            '\'plantbiclique\' expects argument A B with A>=0, B>=0')
 
     left, right = bipartite_sets(G)
     if cliqueleft > len(left) or cliqueright > len(right):
@@ -381,4 +380,19 @@ def obtain_pyramid(parsed):
         raise ValueError('\'pyramid\' expects a single height argument h>=0')
     G = dag_pyramid(height)
     G.name = "Pyramid graph of height {}".format(height)
+    return G
+
+
+def obtain_path(parsed):
+    """Build a directed path"""
+    try:
+        if len(parsed['args']) != 1:
+            raise ValueError
+        length = parsed['args'][0]
+        length = int(length)
+        assert length >= 0
+    except (TypeError, ValueError, AssertionError):
+        raise ValueError('\'path\' expects a single length argument L>=0')
+    G = dag_path(length)
+    G.name = "Directed path of length {}".format(length)
     return G

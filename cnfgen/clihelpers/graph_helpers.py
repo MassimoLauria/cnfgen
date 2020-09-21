@@ -65,8 +65,7 @@ class ECCmdHelper(FormulaHelper):
     @staticmethod
     def setup_command_line(parser):
 
-        parser.epilog = "Parameter G:\n" + make_graph_doc(
-            'simple', parser.prog)
+        parser.epilog = "Parameter G:" + make_graph_doc('simple', parser.prog)
 
         parser.add_argument('G',
                             help='simple undirected graph (see below)',
@@ -90,7 +89,7 @@ class DominatingSetCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.epilog = "Parameter G:\n" + make_graph_doc(
+        parser.epilog = "Parameter G:" + make_graph_doc(
             'simple', parser.prog + ' d')
 
         parser.add_argument('--alternative',
@@ -145,7 +144,7 @@ class GIsoCmdHelper(FormulaHelper):
         parser.usage = '{} [-h] G1 [-e G2]'.format(parser.prog)
         parser.description = iso_description.format(parser.prog)
 
-        parser.epilog = "Parameter G1 (and likewise G2):\n" + make_graph_doc(
+        parser.epilog = "Parameter G1 (and likewise G2):" + make_graph_doc(
             'simple', parser.prog)
 
         parser.add_argument('G1',
@@ -179,7 +178,7 @@ class KCliqueCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.epilog = "Parameter G:\n" + make_graph_doc(
+        parser.epilog = "Parameter G:" + make_graph_doc(
             'simple', parser.prog + ' k')
 
         parser.add_argument('k',
@@ -214,7 +213,7 @@ class BinaryKCliqueCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
 
-        parser.epilog = "Parameter G:\n" + make_graph_doc(
+        parser.epilog = "Parameter G:" + make_graph_doc(
             'simple', parser.prog + ' k')
 
         parser.add_argument('k',
@@ -249,7 +248,7 @@ class RWCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
 
-        parser.epilog = "Parameter G:\n" + make_graph_doc(
+        parser.epilog = "Parameter G:" + make_graph_doc(
             'simple', parser.prog + ' k s')
 
         parser.add_argument('k',
@@ -307,7 +306,7 @@ class SubGraphCmdHelper(FormulaHelper):
         parser.usage = '{} [-h] -G <graph> -H <subgraph>'.format(parser.prog)
         parser.description = subgraph_description.format(parser.prog)
 
-        parser.epilog = "Parameters <graph> and <subgraph>:\n" + make_graph_doc(
+        parser.epilog = "Parameters <graph> and <subgraph>:" + make_graph_doc(
             'simple', parser.prog + ' -G <graph> -H')
 
         parser.add_argument('-G',

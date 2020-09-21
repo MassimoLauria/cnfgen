@@ -14,7 +14,7 @@ from cnfgen.families.pebbling import SparseStoneFormula
 
 from cnfgen.graphs import bipartite_sets
 
-from cnfgen.clitools import ObtainDirectedAcyclicGraph
+from cnfgen.clitools import ObtainDirectedAcyclicGraph, make_graph_doc
 from cnfgen.clitools import ObtainBipartiteGraph
 from cnfgen.clitools import positive_int
 
@@ -34,6 +34,9 @@ class PebblingCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
+
+        parser.epilog = "Parameter <dag>:" + make_graph_doc('dag', parser.prog)
+
         parser.add_argument(
             'D',
             metavar='<dag>',
@@ -67,6 +70,13 @@ class StoneCmdHelper(FormulaHelper):
         """
         usage_string = "{} [-h] <stones> <dag> [--sparse <mapping>]"
         parser.usage = usage_string.format(parser.prog)
+
+        parser.epilog = "Parameter <dag>:" + make_graph_doc('dag', parser.prog)
+
+        parser.epilog += "\n\n"
+        parser.epilog += "Parameter <mapping>:" + make_graph_doc(
+            'bipartite', parser.prog)
+
         parser.add_argument('s',
                             metavar='<stones>',
                             type=positive_int,

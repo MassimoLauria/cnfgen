@@ -23,7 +23,7 @@ from cnfgen.transformations.substitutions import OrSubstitution
 from cnfgen.transformations.substitutions import VariableCompression
 from cnfgen.transformations.substitutions import XorSubstitution
 
-from cnfgen.clitools import ObtainBipartiteGraph
+from cnfgen.clitools import ObtainBipartiteGraph, make_graph_doc
 
 
 class TransformationHelper:
@@ -327,6 +327,10 @@ class XorCompressionCmd(TransformationHelper):
 
     @staticmethod
     def setup_command_line(parser):
+
+        parser.epilog = "Parameters B:" + make_graph_doc(
+            'bipartite', parser.prog)
+
         parser.add_argument(
             'B',
             action=ObtainBipartiteGraph,
@@ -343,6 +347,10 @@ class MajCompressionCmd(TransformationHelper):
 
     @staticmethod
     def setup_command_line(parser):
+
+        parser.epilog = "Parameters B:" + make_graph_doc(
+            'bipartite', parser.prog)
+
         parser.add_argument(
             'B',
             action=ObtainBipartiteGraph,

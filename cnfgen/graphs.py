@@ -1134,6 +1134,33 @@ def dag_complete_binary_tree(height):
     return D
 
 
+def dag_path(length):
+    """Generates a directed path DAG
+
+    Parameters
+    ----------
+    length : int
+        the length of the path
+
+    Returns
+    -------
+    networkx.DiGraph
+    """
+    D = networkx.DiGraph()
+    D.name = 'Directed path of length {}'.format(length)
+    D.ordered_vertices = []
+    # vertices
+    V = ['v_{}'.format(i) for i in range(0, length + 1)]
+    for v in V:
+        D.add_node(v)
+        D.ordered_vertices.append(v)
+    # edges
+    for i in range(len(V) - 1):
+        D.add_edge(V[i], V[i + 1])
+
+    return D
+
+
 def sample_missing_edges(G, m, seed=None):
     """Sample m pairs of missing edges in G
 

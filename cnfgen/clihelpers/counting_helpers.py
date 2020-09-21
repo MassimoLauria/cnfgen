@@ -142,7 +142,7 @@ class TseitinCmdHelper(FormulaHelper):
         parser.description = tse_help_description.format(
             parser.prog, " " * len(parser.prog))
 
-        parser.epilog = "Parameter <graph>:\n" + make_graph_doc(
+        parser.epilog = "Parameter <graph>:" + make_graph_doc(
             'simple', parser.prog + ' <charge>')
 
         shortcut = CLIParser()
@@ -251,6 +251,9 @@ class SCCmdHelper(FormulaHelper):
         parser.usage = ssc_help_usage.format(parser.prog)
         parser.description = ssc_help_description.format(
             parser.prog, " " * len(parser.prog))
+
+        parser.epilog = "Parameters <bipartite>:" + make_graph_doc(
+            'bipartite', parser.prog)
 
         # now we setup the main parser for the formula generation command
         firstparser = CLIParser()

@@ -69,6 +69,7 @@ from cnfgen.clitools.graph_build import modify_bipartite_graph_plantbiclique
 # Directed (Acyclic) graphs
 from cnfgen.clitools.graph_build import obtain_tree
 from cnfgen.clitools.graph_build import obtain_pyramid
+from cnfgen.clitools.graph_build import obtain_path
 
 # Generic
 from cnfgen.clitools.graph_build import modify_graph_addedges
@@ -87,6 +88,7 @@ constructions = {
         'empty': obtain_empty_simple
     },
     'dag': {
+        'path': obtain_path,
         'tree': obtain_tree,
         'pyramid': obtain_pyramid
     },
