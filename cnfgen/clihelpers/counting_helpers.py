@@ -13,7 +13,7 @@ from cnfgen.families.subsetcardinality import SubsetCardinalityFormula
 
 from cnfgen.clitools import ObtainSimpleGraph
 from cnfgen.clitools import ObtainBipartiteGraph
-from cnfgen.clitools import make_graph_from_spec
+from cnfgen.clitools import make_graph_from_spec, make_graph_doc
 
 from cnfgen.clitools import CLIParser, compose_two_parsers
 from cnfgen.clitools import positive_int
@@ -120,7 +120,7 @@ positional arguments:
                      `random' puts a random charge on vertices;
                      `randomodd' puts random odd  charge on vertices;
                      `randomeven' puts random even charge on vertices.
-  <graph>        --- specification for a simple undirected graph
+  <graph>        --- a simple undirected graph (see below)
 """
 
 
@@ -141,6 +141,9 @@ class TseitinCmdHelper(FormulaHelper):
         parser.usage = tse_help_usage.format(parser.prog)
         parser.description = tse_help_description.format(
             parser.prog, " " * len(parser.prog))
+
+        parser.epilog = "Parameter <graph>:\n" + make_graph_doc(
+            'simple', parser.prog + ' <charge>')
 
         shortcut = CLIParser()
         shortcut.add_argument('N', type=positive_int, action='store')

@@ -20,7 +20,7 @@ from cnfgen.families.subgraph import BinaryCliqueFormula
 from cnfgen.families.subgraph import SubgraphFormula
 from cnfgen.families.subgraph import RamseyWitnessFormula
 
-from cnfgen.clitools import ObtainSimpleGraph, positive_int
+from cnfgen.clitools import ObtainSimpleGraph, positive_int, make_graph_doc
 from .formula_helpers import FormulaHelper
 
 
@@ -37,14 +37,16 @@ class KColorCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
+        parser.epilog = "Parameter G:\n" + make_graph_doc(
+            'simple', parser.prog + ' k')
+
         parser.add_argument('k',
                             type=positive_int,
                             action='store',
                             help="number of available colors")
-        parser.add_argument(
-            'G',
-            help='simple undirected graph (a file or a graph specification)',
-            action=ObtainSimpleGraph)
+        parser.add_argument('G',
+                            help='simple undirected graph (see below)',
+                            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -62,10 +64,13 @@ class ECCmdHelper(FormulaHelper):
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument(
-            'G',
-            help='simple undirected graph (a file or a graph specification)',
-            action=ObtainSimpleGraph)
+
+        parser.epilog = "Parameter G:\n" + make_graph_doc(
+            'simple', parser.prog)
+
+        parser.add_argument('G',
+                            help='simple undirected graph (see below)',
+                            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -85,6 +90,9 @@ class DominatingSetCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
+        parser.epilog = "Parameter G:\n" + make_graph_doc(
+            'simple', parser.prog + ' d')
+
         parser.add_argument('--alternative',
                             '-a',
                             action='store_true',
@@ -94,10 +102,9 @@ class DominatingSetCmdHelper(FormulaHelper):
                             type=int,
                             action='store',
                             help="size of the dominating set")
-        parser.add_argument(
-            'G',
-            help='simple undirected graph (a file or a graph specification)',
-            action=ObtainSimpleGraph)
+        parser.add_argument('G',
+                            help='simple undirected graph (see below)',
+                            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -137,7 +144,11 @@ class GIsoCmdHelper(FormulaHelper):
         """
         parser.usage = '{} [-h] G1 [-e G2]'.format(parser.prog)
         parser.description = iso_description.format(parser.prog)
-        parser.add_argument('G',
+
+        parser.epilog = "Parameter G1 (and likewise G2):\n" + make_graph_doc(
+            'simple', parser.prog)
+
+        parser.add_argument('G1',
                             help=argparse.SUPPRESS,
                             action=ObtainSimpleGraph)
         parser.add_argument('-e',
@@ -168,15 +179,16 @@ class KCliqueCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
+        parser.epilog = "Parameter G:\n" + make_graph_doc(
+            'simple', parser.prog + ' k')
+
         parser.add_argument('k',
                             type=int,
                             action='store',
                             help="size of the clique to be found")
-        parser.add_argument(
-            'G',
-            help=
-            'simple undirected graph (either a file or graph specification)',
-            action=ObtainSimpleGraph)
+        parser.add_argument('G',
+                            help='simple undirected graph (see below)',
+                            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -201,15 +213,17 @@ class BinaryKCliqueCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
+
+        parser.epilog = "Parameter G:\n" + make_graph_doc(
+            'simple', parser.prog + ' k')
+
         parser.add_argument('k',
                             type=int,
                             action='store',
                             help="size of the clique to be found")
-        parser.add_argument(
-            'G',
-            help=
-            'simple undirected graph (either a file or graph specification)',
-            action=ObtainSimpleGraph)
+        parser.add_argument('G',
+                            help='simple undirected graph (see below)',
+                            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -234,6 +248,10 @@ class RWCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
+
+        parser.epilog = "Parameter G:\n" + make_graph_doc(
+            'simple', parser.prog + ' k s')
+
         parser.add_argument('k',
                             metavar='<k>',
                             type=int,
@@ -244,10 +262,9 @@ class RWCmdHelper(FormulaHelper):
                             type=int,
                             action='store',
                             help="size of the stable to be found")
-        parser.add_argument(
-            'G',
-            help='simple undirected graph (a file or a graph specification)',
-            action=ObtainSimpleGraph)
+        parser.add_argument('G',
+                            help='simple undirected graph (see below)',
+                            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -289,6 +306,9 @@ class SubGraphCmdHelper(FormulaHelper):
         """
         parser.usage = '{} [-h] -G <graph> -H <subgraph>'.format(parser.prog)
         parser.description = subgraph_description.format(parser.prog)
+
+        parser.epilog = "Parameters <graph> and <subgraph>:\n" + make_graph_doc(
+            'simple', parser.prog + ' -G <graph> -H')
 
         parser.add_argument('-G',
                             metavar='<graph>',

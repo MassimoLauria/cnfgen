@@ -13,7 +13,7 @@ from cnfgen.families.ordering import GraphOrderingPrinciple
 
 from cnfgen.clitools import ObtainSimpleGraph
 from cnfgen.clitools import CLIParser, compose_two_parsers
-from cnfgen.clitools import make_graph_from_spec
+from cnfgen.clitools import make_graph_from_spec, make_graph_doc
 
 from .formula_helpers import FormulaHelper
 
@@ -62,6 +62,9 @@ class OPCmdHelper(FormulaHelper):
         parser.usage = help_usage.format(parser.prog)
         parser.description = help_description.format(parser.prog,
                                                      " " * len(parser.prog))
+
+        parser.epilog = "Parameter <graph>:\n" + make_graph_doc(
+            'simple', parser.prog)
 
         g = parser.add_mutually_exclusive_group()
         g.add_argument('--total',
