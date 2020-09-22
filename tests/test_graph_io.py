@@ -10,8 +10,6 @@ from cnfgen.clitools import CLIError
 from cnfgen.graphs import readGraph, writeGraph, supported_formats
 from cnfgen.graphs import bipartite_sets, has_dot_library
 
-from tests.utils import example_filename
-
 dot_path2 = 'graph G { 0 -- 1 -- 2}'
 gml_path2 = """
         graph [
@@ -198,24 +196,24 @@ def test_readGraph_kthlist_bipartite():
     assert len(R) == 3
 
 
-def test_readGraph_dot_file_as_gml():
+def test_readGraph_dot_file_as_gml(shared_datadir):
 
     if 'dot' not in supported_formats()['simple']:
         pytest.skip("No support for Dot file I/O.")
 
-    with open(example_filename('path2.dot'), 'r') as ifile:
+    with open(shared_datadir / 'path2.dot', 'r') as ifile:
         # Parsing should fail here
         with pytest.raises(ValueError):
             readGraph(ifile, graph_type='simple', file_format='gml')
 
 
-def test_readGraph_dot_file_remember_name():
+def test_readGraph_dot_file_remember_name(shared_datadir):
     """Even if we are reading the file from a IO stream, we still remember
 the original file name so we can guess the format."""
     if 'dot' not in supported_formats()['simple']:
         pytest.skip("No support for Dot file I/O.")
 
-    with open(example_filename('path2.dot'), 'r') as ifile:
+    with open(shared_datadir / 'path2.dot', 'r') as ifile:
         # Parser should guess that it is a dot file
         G = readGraph(ifile, graph_type='simple')
         assert G.order() == 3

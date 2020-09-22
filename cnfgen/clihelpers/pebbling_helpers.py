@@ -35,14 +35,11 @@ class PebblingCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
 
-        parser.epilog = "Parameter <dag>:" + make_graph_doc('dag', parser.prog)
-
         parser.add_argument(
             'D',
             metavar='<dag>',
             action=ObtainDirectedAcyclicGraph,
-            help='directed acyclic graph (either a file or graph specification)'
-        )
+            help='a directed acyclic graph (see \'cnfgen --help-dag\')')
 
     @staticmethod
     def build_cnf(args):
@@ -71,12 +68,6 @@ class StoneCmdHelper(FormulaHelper):
         usage_string = "{} [-h] <stones> <dag> [--sparse <mapping>]"
         parser.usage = usage_string.format(parser.prog)
 
-        parser.epilog = "Parameter <dag>:" + make_graph_doc('dag', parser.prog)
-
-        parser.epilog += "\n\n"
-        parser.epilog += "Parameter <mapping>:" + make_graph_doc(
-            'bipartite', parser.prog)
-
         parser.add_argument('s',
                             metavar='<stones>',
                             type=positive_int,
@@ -85,13 +76,13 @@ class StoneCmdHelper(FormulaHelper):
             'D',
             metavar='<dag>',
             action=ObtainDirectedAcyclicGraph,
-            help='directed acyclic graph (either a file or graph specification)'
-        )
+            help='a directed acyclic graph (see \'cnfgen --help-graph\')')
         parser.add_argument(
             '--sparse',
             metavar='<mapping>',
             action=ObtainBipartiteGraph,
-            help="mapping between vertices and stones (i.e. a bipartite graph)"
+            help=
+            "a bipartite graph between vertices and stones (see 'cnfgen --help-bipartite')"
         )
 
     @staticmethod

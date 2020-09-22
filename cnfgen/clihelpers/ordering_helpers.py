@@ -23,7 +23,7 @@ help_usage = """{0} [-h] [--total] [--smart]
 usage variants:
  {0} N         --- ordering principle on domain of size N
  {0} N d       --- graph ordering principle on random d-regular graph with N vertices.
- {0} <graph>   --- graph ordering principle on <graph>
+ {0} <graph>   --- graph ordering principle on <graph> (see 'cnfgen --help-graph')
 """
 
 help_description = """The ordering principle (OP) claims that a partially ordered set of
@@ -41,7 +41,7 @@ examples:
  {0} 50                    --- Ordering principle on 50 elements
  {0} 100 4                 --- GOP on 4-regular graph of size 100
  {0} gnm 20 60             --- GOP on random graph with 20 vertices and 60 edges
- {0} --plant               --- GOP on graph in 'file.dot', satisfiable variant
+ {0} file.dot --plant      --- GOP on graph in 'file.dot', satisfiable variant
 """
 
 
@@ -62,9 +62,6 @@ class OPCmdHelper(FormulaHelper):
         parser.usage = help_usage.format(parser.prog)
         parser.description = help_description.format(parser.prog,
                                                      " " * len(parser.prog))
-
-        parser.epilog = "Parameter <graph>:\n" + make_graph_doc(
-            'simple', parser.prog)
 
         g = parser.add_mutually_exclusive_group()
         g.add_argument('--total',
@@ -109,7 +106,7 @@ class OPCmdHelper(FormulaHelper):
         gopparser.add_argument('G',
                                metavar="<graph>",
                                action=ObtainSimpleGraph,
-                               help='Graph underlying the ordering principle')
+                               help='a simple undirected graph')
         opaction = compose_two_parsers(gtparser, gopparser)
         parser.add_argument('args',
                             action=opaction,

@@ -10,20 +10,8 @@ from contextlib import redirect_stdout
 __all__ = [
     'assertCnfEqual', "assertCnfEqualsDimacs",
     "assertCnfEqualsIgnoreVariables", "assertSAT", "assertUNSAT",
-    'redirect_stdin', "redirect_stdout", 'example_filename'
+    'redirect_stdin', "redirect_stdout"
 ]
-
-
-def example_filename(filename):
-    import os.path
-
-    this_dir = os.path.dirname(os.path.abspath(__file__))
-    absfilename = os.path.join(this_dir, 'testdata', filename)
-
-    if not os.path.isfile(absfilename):
-        raise ValueError("Test data file {} is missing.".format(filename))
-    else:
-        return absfilename
 
 
 def assertCnfEqual(cnf1, cnf2):

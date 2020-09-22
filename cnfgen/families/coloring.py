@@ -122,7 +122,7 @@ def EvenColoringFormula(G):
 
         if G.degree(v) % 2 == 1:
             raise ValueError(
-                "Markstrom formulas requires all vertices to have even degree."
+                "Markstrom's Even Coloring formulas requires all vertices to have even degree."
             )
 
         edge_vars = [var_name(u, v) for u in neighbors(G, v)]

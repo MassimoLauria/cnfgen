@@ -59,7 +59,7 @@ class PMatchingCmdHelper(FormulaHelper):
         """
         parser.add_argument(
             'G',
-            help='simple undirected graph (a file or a graph specification)',
+            help='a simple undirected graph (see \'cnfgen --help-graph\')',
             action=ObtainSimpleGraph)
 
     @staticmethod
@@ -147,7 +147,7 @@ class TseitinCmdHelper(FormulaHelper):
                               nargs='?',
                               type=positive_int,
                               action='store',
-                              default=3)
+                              default=None)
 
         longform = CLIParser()
         longform.add_argument(
@@ -163,7 +163,7 @@ class TseitinCmdHelper(FormulaHelper):
         longform.add_argument(
             'G',
             metavar='<graph>',
-            help='simple undirected graph (a file or a graph specification)',
+            help='a simple undirected graph (see \'cnfgen --help-graph\')',
             action=ObtainSimpleGraph)
 
         tsaction = compose_two_parsers(shortcut, longform)
@@ -181,10 +181,15 @@ class TseitinCmdHelper(FormulaHelper):
         """
         if not hasattr(args, 'G'):
             N = args.N
+            if N % 2 == 1 and args.d is None:
+                raise ValueError(
+                    "There are no {}-regular graphs with {} vertices.\n"
+                    "The number of vertices must be even.".format(3, N))
             d = args.d
             if N * d % 2 == 1:
                 raise ValueError(
-                    "There are no {}-regular graphs with {} vertices".format(
+                    "There are no {}-regular graphs with {} vertices.\n"
+                    "Either the order or the degree must be even.".format(
                         d, N))
             G = make_graph_from_spec('simple', ["gnd", N, d])
             charge = [random.randint(0, 1) for _ in range(G.order() - 1)]
@@ -226,7 +231,7 @@ ssc_help_usage = """{0} [-h] [--equal] <bipartite>
 usage variants:
  {0} N               --- unsat instance of width 3
  {0} N d             --- unsat instance of width d//2 + 1
- {0} <bipartite>     --- formula over arbitrary bipartite graph
+ {0} <bipartite>     --- formula over a bipartite graph (see 'cnfgen --help-bipartite')
 """
 
 ssc_help_description = """Subset cardinality formula is defined over a bipartite graph: boolean
@@ -255,9 +260,6 @@ class SCCmdHelper(FormulaHelper):
         parser.usage = ssc_help_usage.format(parser.prog)
         parser.description = ssc_help_description.format(
             parser.prog, " " * len(parser.prog))
-
-        parser.epilog = "Parameters <bipartite>:" + make_graph_doc(
-            'bipartite', parser.prog)
 
         # now we setup the main parser for the formula generation command
         firstparser = CLIParser()

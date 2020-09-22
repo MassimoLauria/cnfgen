@@ -49,13 +49,11 @@ class DimacsCmdHelper(FormulaHelper):
     @staticmethod
     def build_cnf(args):
 
-        msg = """Waiting for a DIMACS formula on <stdin>.
-Alternatively you can feed a formula to <stdin>
-with piping or giving a filename on the command line."""
+        msg = """Waiting for a DIMACS formula on <stdin>."""
 
         with redirect_stdin(args.input):
             with msg_prefix("INPUT: "):
-                interactive_msg(msg, filltext=70)
+                interactive_msg(msg)
 
             F = readCNF()
 

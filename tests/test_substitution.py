@@ -1,9 +1,12 @@
+import pytest
+
 from cnfgen import CNF
 
 from cnfgen import OrSubstitution, XorSubstitution, MajoritySubstitution
 from cnfgen import AllEqualSubstitution, NotAllEqualSubstitution
 from cnfgen import IfThenElseSubstitution
 from cnfgen import ExactlyKSubstitution, ExactlyOneSubstitution
+from cnfgen.clitools import cnfgen, CLIError
 
 from tests.utils import assertCnfEqual
 
@@ -152,3 +155,37 @@ def test_exactly_one():
     lift = ExactlyOneSubstitution(cnf, 2)
     lift2 = ExactlyOneSubstitution(cnf, 2)
     assertCnfEqual(lift, lift2)
+
+
+def test_cli_xorcompression_good1():
+    F = cnfgen(["cnfgen", 'php', 7, 5, '-T', 'xorcomp', 12, 3], mode='formula')
+    assert len(list(F.variables())) == 12
+
+
+def test_cli_xorcompression_good2():
+    F = cnfgen(["cnfgen", 'php', 7, 5, '-T', 'xorcomp', 'glrd', 35, 12, 3],
+               mode='formula')
+    assert len(list(F.variables())) == 12
+
+
+def test_cli_xorcompression_bad():
+    with pytest.raises(CLIError):
+        cnfgen(["cnfgen", 'php', 7, 5, '-T', 'xorcomp', 'glrd', 30, 12, 3],
+               mode='formula')
+
+
+def test_cli_majcompression_good1():
+    F = cnfgen(["cnfgen", 'php', 7, 5, '-T', 'majcomp', 12, 3], mode='formula')
+    assert len(list(F.variables())) == 12
+
+
+def test_cli_majcompression_good2():
+    F = cnfgen(["cnfgen", 'php', 7, 5, '-T', 'majcomp', 'glrd', 35, 12, 3],
+               mode='formula')
+    assert len(list(F.variables())) == 12
+
+
+def test_cli_majcompression_bad():
+    with pytest.raises(CLIError):
+        cnfgen(["cnfgen", 'php', 7, 5, '-T', 'majcomp', 'glrd', 30, 12, 3],
+               mode='formula')

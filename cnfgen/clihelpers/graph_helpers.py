@@ -37,16 +37,14 @@ class KColorCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.epilog = "Parameter G:\n" + make_graph_doc(
-            'simple', parser.prog + ' k')
-
         parser.add_argument('k',
                             type=positive_int,
                             action='store',
                             help="number of available colors")
-        parser.add_argument('G',
-                            help='simple undirected graph (see below)',
-                            action=ObtainSimpleGraph)
+        parser.add_argument(
+            'G',
+            help='simple undirected graph (see \'cnfgen --help-graph\')',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -65,11 +63,10 @@ class ECCmdHelper(FormulaHelper):
     @staticmethod
     def setup_command_line(parser):
 
-        parser.epilog = "Parameter G:" + make_graph_doc('simple', parser.prog)
-
-        parser.add_argument('G',
-                            help='simple undirected graph (see below)',
-                            action=ObtainSimpleGraph)
+        parser.add_argument(
+            'G',
+            help='simple undirected graph (see \'cnfgen --help-graph\')',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -89,9 +86,6 @@ class DominatingSetCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.epilog = "Parameter G:" + make_graph_doc(
-            'simple', parser.prog + ' d')
-
         parser.add_argument('--alternative',
                             '-a',
                             action='store_true',
@@ -101,9 +95,10 @@ class DominatingSetCmdHelper(FormulaHelper):
                             type=int,
                             action='store',
                             help="size of the dominating set")
-        parser.add_argument('G',
-                            help='simple undirected graph (see below)',
-                            action=ObtainSimpleGraph)
+        parser.add_argument(
+            'G',
+            help='simple undirected graph (see \'cnfgen --help-graph\')',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -144,16 +139,16 @@ class GIsoCmdHelper(FormulaHelper):
         parser.usage = '{} [-h] G1 [-e G2]'.format(parser.prog)
         parser.description = iso_description.format(parser.prog)
 
-        parser.epilog = "Parameter G1 (and likewise G2):" + make_graph_doc(
-            'simple', parser.prog)
-
-        parser.add_argument('G1',
-                            help=argparse.SUPPRESS,
-                            action=ObtainSimpleGraph)
-        parser.add_argument('-e',
-                            metavar='G2',
-                            help=argparse.SUPPRESS,
-                            action=ObtainSimpleGraph)
+        parser.add_argument(
+            'G1',
+            help='a simple undirected graph (see \'cnfgen --help-graph\')',
+            action=ObtainSimpleGraph)
+        parser.add_argument(
+            '-e',
+            metavar='G2',
+            action=ObtainSimpleGraph,
+            help='another simple undirected graph (see \'cnfgen --help-graph\')'
+        )
 
     @staticmethod
     def build_cnf(args):
@@ -178,16 +173,14 @@ class KCliqueCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.epilog = "Parameter G:" + make_graph_doc(
-            'simple', parser.prog + ' k')
-
         parser.add_argument('k',
                             type=int,
                             action='store',
                             help="size of the clique to be found")
-        parser.add_argument('G',
-                            help='simple undirected graph (see below)',
-                            action=ObtainSimpleGraph)
+        parser.add_argument(
+            'G',
+            help='a simple undirected graph (see \'cnfgen --help-graph\')',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -213,16 +206,14 @@ class BinaryKCliqueCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
 
-        parser.epilog = "Parameter G:" + make_graph_doc(
-            'simple', parser.prog + ' k')
-
         parser.add_argument('k',
                             type=int,
                             action='store',
                             help="size of the clique to be found")
-        parser.add_argument('G',
-                            help='simple undirected graph (see below)',
-                            action=ObtainSimpleGraph)
+        parser.add_argument(
+            'G',
+            help='a simple undirected graph (see \'cnfgen --help-graph\')',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -248,9 +239,6 @@ class RWCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
 
-        parser.epilog = "Parameter G:" + make_graph_doc(
-            'simple', parser.prog + ' k s')
-
         parser.add_argument('k',
                             metavar='<k>',
                             type=int,
@@ -261,9 +249,10 @@ class RWCmdHelper(FormulaHelper):
                             type=int,
                             action='store',
                             help="size of the stable to be found")
-        parser.add_argument('G',
-                            help='simple undirected graph (see below)',
-                            action=ObtainSimpleGraph)
+        parser.add_argument(
+            'G',
+            help='a simple undirected graph (see \'cnfgen --help-graph\')',
+            action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -280,8 +269,8 @@ and a candidate <subgraph>, and claims that
 the latter is indeed a subgraph of the former.
 
 positional arguments:
- -G <graph>      --- main graph (a file or a graph specification)
- -H <subgraph>   --- candidate subgraph (a file or a graph specification)
+ -G <graph>      --- main graph         (see \'cnfgen --help-graph\')
+ -H <subgraph>   --- candidate subgraph (see \'cnfgen --help-graph\')
 
 examples:
  {0} -G grid 4 4 -H grid 2 2
@@ -305,9 +294,6 @@ class SubGraphCmdHelper(FormulaHelper):
         """
         parser.usage = '{} [-h] -G <graph> -H <subgraph>'.format(parser.prog)
         parser.description = subgraph_description.format(parser.prog)
-
-        parser.epilog = "Parameters <graph> and <subgraph>:" + make_graph_doc(
-            'simple', parser.prog + ' -G <graph> -H')
 
         parser.add_argument('-G',
                             metavar='<graph>',
