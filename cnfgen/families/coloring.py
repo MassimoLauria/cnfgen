@@ -9,6 +9,7 @@ from cnfgen.graphs import enumerate_edges
 from cnfgen.graphs import neighbors
 
 from itertools import combinations
+from combinations.abc import Iterable
 import collections
 
 
@@ -36,7 +37,7 @@ def GraphColoringFormula(G, colors, functional=True):
     if isinstance(colors, int) and colors >= 0:
         colors = list(range(1, colors + 1))
 
-    if not isinstance(colors, collections.Iterable):
+    if not isinstance(colors, Iterable):
         ValueError(
             "Parameter \"colors\" is expected to be a number or an iterable")
 
