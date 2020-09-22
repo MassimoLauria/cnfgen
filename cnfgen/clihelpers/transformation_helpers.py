@@ -6,6 +6,8 @@ Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.l
 https://massimolauria.net/cnfgen/
 """
 
+import argparse
+
 # Formula transformation implemented
 from cnfgen.transformations.shuffle import Shuffle
 from cnfgen.transformations.substitutions import AllEqualSubstitution
@@ -23,7 +25,8 @@ from cnfgen.transformations.substitutions import OrSubstitution
 from cnfgen.transformations.substitutions import VariableCompression
 from cnfgen.transformations.substitutions import XorSubstitution
 
-from cnfgen.clitools import ObtainBipartiteGraph, make_graph_doc
+from cnfgen.clitools import ObtainBipartiteGraph, make_graph_doc, make_graph_from_spec
+from cnfgen.clitools import CLIParser, positive_int, compose_two_parsers
 
 
 class TransformationHelper:
@@ -328,17 +331,56 @@ class XorCompressionCmd(TransformationHelper):
     @staticmethod
     def setup_command_line(parser):
 
-        parser.epilog = "Parameters B:" + make_graph_doc(
-            'bipartite', parser.prog)
+        parser.usage = """
+ {0} N
+ {0} N d
+ {0} <bipartite>""".format(parser.prog)
 
-        parser.add_argument(
-            'B',
-            action=ObtainBipartiteGraph,
-            help="mapping between new and old variables (a bipartite graph)")
+        parser.description = """Variable compression: each variable in the original formula is
+substituted with the XOR of d members of a set of N new variables.
+Alternatively you can use
+
+ {0} <mapping>
+
+to give an explicit mapping between each original variable and the
+corresponding set of new variables. In this case <mapping> is
+a bipartite graph (see 'cnfgen --help-bipartite').
+
+positional arguments:
+  N           number of new variables
+  d           arity of majority
+  <mapping>   a bipartite graph (see 'cnfgen --help-bipartite')
+""".format(parser.prog)
+
+        firstparser = CLIParser()
+        firstparser.add_argument('N', type=positive_int, action='store')
+        firstparser.add_argument('d',
+                                 nargs='?',
+                                 type=positive_int,
+                                 action='store',
+                                 default=3)
+        secondparser = CLIParser()
+        secondparser.add_argument('B', action=ObtainBipartiteGraph)
+
+        action = compose_two_parsers(firstparser, secondparser)
+
+        parser.add_argument('args',
+                            metavar='<graph_description>',
+                            action=action,
+                            nargs='*',
+                            help=argparse.SUPPRESS)
 
     @staticmethod
     def transform_cnf(F, args):
-        return VariableCompression(F, args.B, function='xor')
+        if hasattr(args, 'N'):
+            N = args.N
+            d = args.d
+            V = len(list(F.variables()))
+            B = make_graph_from_spec('bipartite', ['glrd', V, N, d])
+        elif hasattr(args, 'B'):
+            B = args.B
+
+        return VariableCompression(F, B, function='xor')
 
 
 class MajCompressionCmd(TransformationHelper):
@@ -348,14 +390,53 @@ class MajCompressionCmd(TransformationHelper):
     @staticmethod
     def setup_command_line(parser):
 
-        parser.epilog = "Parameters B:" + make_graph_doc(
-            'bipartite', parser.prog)
+        parser.usage = """
+ {0} N
+ {0} N d
+ {0} <bipartite>""".format(parser.prog)
 
-        parser.add_argument(
-            'B',
-            action=ObtainBipartiteGraph,
-            help="mapping between new and old variables (a bipartite graph)")
+        parser.description = """Variable compression: each variable in the original formula is
+substituted with the majority of d members of a set of N new
+variables. Alternatively you can use
+
+ {0} <mapping>
+
+to give an explicit mapping between each original variable and the
+corresponding set of new variables. In this case <mapping> is
+a bipartite graph (see 'cnfgen --help-bipartite').
+
+positional arguments:
+  N           number of new variables
+  d           arity of majority
+  <mapping>   a bipartite graph (see 'cnfgen --help-bipartite')
+""".format(parser.prog)
+
+        firstparser = CLIParser()
+        firstparser.add_argument('N', type=positive_int, action='store')
+        firstparser.add_argument('d',
+                                 nargs='?',
+                                 type=positive_int,
+                                 action='store',
+                                 default=3)
+        secondparser = CLIParser()
+        secondparser.add_argument('B', action=ObtainBipartiteGraph)
+
+        action = compose_two_parsers(firstparser, secondparser)
+
+        parser.add_argument('args',
+                            metavar='<graph_description>',
+                            action=action,
+                            nargs='*',
+                            help=argparse.SUPPRESS)
 
     @staticmethod
     def transform_cnf(F, args):
-        return VariableCompression(F, args.B, function='maj')
+        if hasattr(args, 'N'):
+            N = args.N
+            d = args.d
+            V = len(list(F.variables()))
+            B = make_graph_from_spec('bipartite', ['glrd', V, N, d])
+        elif hasattr(args, 'B'):
+            B = args.B
+
+        return VariableCompression(F, B, function='maj')
