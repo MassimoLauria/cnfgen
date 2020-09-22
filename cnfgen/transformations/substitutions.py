@@ -669,7 +669,7 @@ class VariableCompression(BaseSubstitution):
         cnf : CNF
             the original cnf formula
         B : networkx.Graph
-            a bipartite graph. The right side must have the number of
+            a bipartite graph. The left side must have the number of
             vertices equal to the number of original variables
         
         function: string 
@@ -684,22 +684,22 @@ class VariableCompression(BaseSubstitution):
 
         Left, Right = bipartite_sets(B)
 
-        if len(Right) != len(list(cnf.variables())):
+        if len(Left) != len(list(cnf.variables())):
             raise ValueError(
                 "Right side of the graph must match the variable numbers of the CNF."
             )
 
         self._pattern = B
         self._function = function
-        for n, v in zip(cnf.variables(), Right):
+        for n, v in zip(cnf.variables(), Left):
             self._name_vertex_dict[n] = v
 
         super(VariableCompression, self).__init__(
-            cnf, new_variables=["Y_{{{0}}}".format(i) for i in Left])
+            cnf, new_variables=["Y_{{{0}}}".format(i) for i in Right])
 
         self.add_transformation_description(
             "Variable {}-compression from {} to {} variables".format(
-                function, len(Right), len(Left)))
+                function, len(Left), len(Right)))
 
     def transform_a_literal(self, polarity, varname):
         """Substitute a literal with a (negated) XOR
