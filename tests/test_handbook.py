@@ -9,19 +9,24 @@ def test_php_cli():
     F = cnfgen(['cnfgen', 'php', 5], mode='formula')
     assert len(list(F.variables())) == 30
     assert len(F) == 6 + 15 * 5
+    assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', 8, 5], mode='formula')
     assert len(list(F.variables())) == 40
     assert len(F) == 8 + 28 * 5
+    assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', '--functional', 8, 5], mode='formula')
     assert len(list(F.variables())) == 40
     assert len(F) == 8 + 28 * 5 + 10 * 8
+    assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', '--onto', 8, 5], mode='formula')
     assert len(list(F.variables())) == 40
     assert len(F) == 8 + 5 + 28 * 5
+    assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', '--onto', '--functional', 8, 5],
                mode='formula')
     assert len(list(F.variables())) == 40
     assert len(F) == 8 + 5 + 28 * 5 + 10 * 8
+    assert not F.is_satisfiable()[0]
 
 
 def test_gphp_cli():
@@ -30,43 +35,58 @@ def test_gphp_cli():
         assert len(c) <= 3
     assert len(list(F.variables())) == 24
     assert len(F) <= 8 + 28 * 5
+    assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', '--functional', 8, 5, 3], mode='formula')
     for c in F:
         assert len(c) <= 3
     assert len(list(F.variables())) == 24
     assert len(F) <= 8 + 28 * 5 + 10 * 8
+    assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', '--onto', 8, 5, 3], mode='formula')
     assert len(list(F.variables())) == 24
     assert len(F) <= 8 + 5 + 28 * 5
+    assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', '--onto', '--functional', 8, 5, 3],
                mode='formula')
     assert len(list(F.variables())) == 24
     assert len(F) <= 8 + 5 + 28 * 5 + 10 * 8
+    assert not F.is_satisfiable()[0]
 
 
 def test_parity_cli(shared_datadir):
-    cnfgen(['cnfgen', 'parity', 8], mode='formula')
-    cnfgen(['cnfgen', 'parity', 5], mode='formula')
+    F = cnfgen(['cnfgen', 'parity', 8], mode='formula')
+    assert F.is_satisfiable()[0]
+    F = cnfgen(['cnfgen', 'parity', 5], mode='formula')
+    assert not F.is_satisfiable()[0]
     cnfgen(['cnfgen', 'matching', 'gnd', 10, 3], mode='formula')
     with pytest.raises(CLIError):
         cnfgen(['cnfgen', 'matching', 'gnd', 9, 3], mode='formula')
-    cnfgen(['cnfgen', 'matching', shared_datadir / 'oddvertices_gnd_15_4.gml'],
-           mode='formula')
+    F = cnfgen(
+        ['cnfgen', 'matching', shared_datadir / 'oddvertices_gnd_15_4.gml'],
+        mode='formula')
+    assert not F.is_satisfiable()[0]
 
 
 def test_tseitin_cli(shared_datadir):
-    F = cnfgen(['cnfgen', 'tseitin', 8, 4], mode='formula')
+    F = cnfgen(['cnfgen', 'tseitin', 8, 3], mode='formula')
+    assert not F.is_satisfiable()[0]
     for c in F:
-        assert len(c) == 4
-    assert len(F) == 8 * 2**4 // 2
-    F = cnfgen(['cnfgen', 'tseitin', 8], mode='formula')
-    for c in F:
-        print(c)
         assert len(c) == 3
     assert len(F) == 8 * 2**3 // 2
 
-    cnfgen(['cnfgen', 'tseitin', 'randomodd', 'grid', 4, 4], mode='formula')
-    cnfgen(['cnfgen', 'tseitin', 'randomeven', 'grid', 4, 4], mode='formula')
+    F = cnfgen(['cnfgen', 'tseitin', 8], mode='formula')
+    assert not F.is_satisfiable()[0]
+    for c in F:
+        assert len(c) == 4
+    assert len(F) == 8 * 2**4 // 2
+
+    F = cnfgen(['cnfgen', 'tseitin', 'randomodd', 'grid', 4, 4],
+               mode='formula')
+    assert not F.is_satisfiable()[0]
+
+    F = cnfgen(['cnfgen', 'tseitin', 'randomeven', 'grid', 4, 4],
+               mode='formula')
+    assert F.is_satisfiable()[0]
 
     cnfgen(
         ['cnfgen', 'tseitin', 'randomodd', shared_datadir / 'gnm_10_30.gml'],
@@ -82,7 +102,8 @@ def test_randkcnf_cli():
 
 
 def test_kcolor_cli(shared_datadir):
-    cnfgen(['cnfgen', 'kcolor', 4, 'gnd', 10, 3], mode='formula')
+    F = cnfgen(['cnfgen', 'kcolor', 4, 'gnd', 10, 3], mode='formula')
+    assert F.is_satisfiable()[0]
     cnfgen(
         ['cnfgen', 'kcolor', 3, shared_datadir / 'oddvertices_gnd_15_4.gml'],
         mode='formula')
@@ -90,20 +111,24 @@ def test_kcolor_cli(shared_datadir):
 
 def test_kclique_cli(shared_datadir):
     cnfgen(['cnfgen', 'kclique', 4, 'gnd', 15, 6], mode='formula')
-    cnfgen(['cnfgen', 'kclique', 4, 'gnd', 16, 3, 'plantclique', 4],
-           mode='formula')
-    cnfgen(
+    F = cnfgen(['cnfgen', 'kclique', 4, 'gnd', 16, 3, 'plantclique', 4],
+               mode='formula')
+    assert F.is_satisfiable()[0]
+    F = cnfgen(
         ['cnfgen', 'kclique', 5, shared_datadir / 'oddvertices_gnd_15_4.gml'],
         mode='formula')
+    assert not F.is_satisfiable()[0]
 
 
 def test_subsetcard_cli(shared_datadir):
     F = cnfgen(['cnfgen', 'subsetcard', 10], mode='formula')
     for c in F:
         assert len(c) == 3
+    assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'subsetcard', 10, 4], mode='formula')
     for c in F:
         len(c) == 3
+    assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'subsetcard', 10, 6], mode='formula')
     for c in F:
         assert len(c) == 4
@@ -112,15 +137,20 @@ def test_subsetcard_cli(shared_datadir):
 
 
 def test_op_cli(shared_datadir):
-    cnfgen(['cnfgen', 'op', 5], mode='formula')
-    cnfgen(['cnfgen', 'op', '--total', 5], mode='formula')
+    F = cnfgen(['cnfgen', 'op', 5], mode='formula')
+    assert not F.is_satisfiable()[0]
+    F = cnfgen(['cnfgen', 'op', '--total', 5], mode='formula')
+    assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'op', 10, 3], mode='formula')
+    assert not F.is_satisfiable()[0]
     for c in F:
         assert len(c) <= 3
-    cnfgen(['cnfgen', 'op', '--total', 10, 3], mode='formula')
+    F = cnfgen(['cnfgen', 'op', '--total', 10, 3], mode='formula')
+    assert not F.is_satisfiable()[0]
     for c in F:
         assert len(c) <= 3
     F = cnfgen(['cnfgen', 'op', 10, 5], mode='formula')
+    assert not F.is_satisfiable()[0]
     for c in F:
         assert len(c) <= 5
 
@@ -128,15 +158,24 @@ def test_op_cli(shared_datadir):
 def test_peb_cli(shared_datadir):
     F = cnfgen(['cnfgen', 'peb', 'pyramid', 5], mode='formula')
     assert len(list(F.variables())) == 21
+    assert not F.is_satisfiable()[0]
+
     F = cnfgen(['cnfgen', 'peb', 'pyramid', 5, '-T', 'xor', 2], mode='formula')
     assert len(list(F.variables())) == 42
+    assert not F.is_satisfiable()[0]
+
     F = cnfgen(['cnfgen', 'peb', 'pyramid', 5, '-T', 'or', 2], mode='formula')
     assert len(list(F.variables())) == 42
-    cnfgen(['cnfgen', 'peb', shared_datadir / 'dag.gml', '-T', 'xor', 2],
-           mode='formula')
+    assert not F.is_satisfiable()[0]
+    F = cnfgen(['cnfgen', 'peb', shared_datadir / 'dag.gml', '-T', 'xor', 2],
+               mode='formula')
+    assert not F.is_satisfiable()[0]
 
 
 def test_ec_cli():
     with pytest.raises(CLIError):
         cnfgen(['cnfgen', 'ec', 'gnd', 10, 5], mode='formula')
-    cnfgen(['cnfgen', 'ec', 'gnd', 10, 6], mode='formula')
+    F = cnfgen(['cnfgen', 'ec', 'gnd', 10, 6], mode='formula')
+    assert F.is_satisfiable()[0]
+    F = cnfgen(['cnfgen', 'ec', 'complete', 5], mode='formula')
+    assert F.is_satisfiable()[0]

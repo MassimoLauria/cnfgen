@@ -1,7 +1,6 @@
 dist: xenial       # required for python >=3.7
 language: python
 python:
-  - "3.4"
   - "3.5"
   - "3.6"
   - "3.7"
@@ -14,13 +13,6 @@ env:
   - NETWORKX_VERSION=2.3
   - NETWORKX_VERSION=2.4
 
-# Networkx 2.3 does not support Python 3.4
-matrix:
-  exclude:
-  - python: "3.4"
-    env: NETWORKX_VERSION=2.3
-  - python: "3.4"
-    env: NETWORKX_VERSION=2.4
 
 before_install:
   - sudo apt-get install minisat
@@ -28,7 +20,7 @@ before_install:
 install:
   - pip install -q networkx==$NETWORKX_VERSION
   - pip install -r requirements.txt
-  - pip install pytest
+  - pip install pytest pytest-datadir
   - python setup.py -q install
 # command to run tests
 script: pytest

@@ -97,7 +97,7 @@ class CountingCmdHelper(FormulaHelper):
 
 
 tse_help_usage = """
- {0} N                --- random 3-regular graph with N vertices. Random odd charge
+ {0} N                --- random 4-regular graph with N vertices. Random odd charge
  {0} N d              --- random d-regular graph with N vertices. Random odd charge
  {0} <charge> <graph> --- specific <charge> on specific <graph>
 """
@@ -147,7 +147,7 @@ class TseitinCmdHelper(FormulaHelper):
                               nargs='?',
                               type=positive_int,
                               action='store',
-                              default=None)
+                              default=4)
 
         longform = CLIParser()
         longform.add_argument(
@@ -181,11 +181,11 @@ class TseitinCmdHelper(FormulaHelper):
         """
         if not hasattr(args, 'G'):
             N = args.N
-            if N % 2 == 1 and args.d is None:
+            d = args.d
+            if N <= d:
                 raise ValueError(
                     "There are no {}-regular graphs with {} vertices.\n"
-                    "The number of vertices must be even.".format(3, N))
-            d = 3 if args.d is None else args.d
+                    "The graph order must be larger than degree.".format(d, N))
             if N * d % 2 == 1:
                 raise ValueError(
                     "There are no {}-regular graphs with {} vertices.\n"
