@@ -12,7 +12,7 @@ from cnfgen.families.pebbling import PebblingFormula
 from cnfgen.families.pebbling import StoneFormula
 from cnfgen.families.pebbling import SparseStoneFormula
 
-from cnfgen.graphs import bipartite_sets
+from cnfgen.graphs import bipartite_sets, bipartite_random_left_regular
 
 from cnfgen.clitools import ObtainDirectedAcyclicGraph, make_graph_doc
 from cnfgen.clitools import ObtainBipartiteGraph
@@ -65,7 +65,7 @@ class StoneCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        usage_string = "{} [-h] <stones> <dag> [--sparse <mapping>]"
+        usage_string = "{} [-h] <stones> <dag> [--sparse d]"
         parser.usage = usage_string.format(parser.prog)
 
         parser.add_argument('s',
@@ -79,30 +79,40 @@ class StoneCmdHelper(FormulaHelper):
             help='a directed acyclic graph (see \'cnfgen --help-graph\')')
         parser.add_argument(
             '--sparse',
-            metavar='<mapping>',
-            action=ObtainBipartiteGraph,
-            help=
-            "a bipartite graph between vertices and stones (see 'cnfgen --help-bipartite')"
-        )
+            metavar='d',
+            type=positive_int,
+            help="each vertex can only choose among d many stones")
+        # parser.add_argument(
+        #     '--mapping',
+        #     metavar='<bipartite>',
+        #     action=ObtainBipartiteGraph,
+        #     help=
+        #     "a bipartite graph between vertices and stones (see 'cnfgen --help-bipartite')"
+        # )
 
     @staticmethod
     def build_cnf(args):
-        """Build the pebbling formula
+        """Build the stone formula
 
         Arguments:
         - `args`: command line options
         """
         D = args.D
+        # if hasattr(args, 'mapping') and args.mapping is not None:
+        #     B = args.mapping
+        #     Left, Right = bipartite_sets(B)
+        #     nvertices = D.order()
+        #     nstones = args.s
+        #     if (len(Left), len(Right)) != (nvertices, nstones):
+        #         raise ValueError(
+        #             "Size of left and right sides of <bipartite> must match #vertices in DAG and #stones, respectively."
+        #         )
+        #     return SparseStoneFormula(D, B)
         if hasattr(args, 'sparse') and args.sparse is not None:
-            B = args.sparse
-            Left, Right = bipartite_sets(B)
+            degree = args.sparse
             nvertices = D.order()
             nstones = args.s
-            if (len(Left), len(Right)) != (nvertices, nstones):
-                raise ValueError(
-                    "Size of left and right sides must match #vertices in DAG and #stones, respectively."
-                )
+            B = bipartite_random_left_regular(nvertices, nstones, degree)
             return SparseStoneFormula(D, B)
-
         else:
             return StoneFormula(D, args.s)
