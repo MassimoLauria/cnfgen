@@ -108,13 +108,10 @@ def test_stone_tree_cli():
 
 
 def test_sstone_pyramid_cli():
-    cnfgen([
-        "cnfgen", "-q", "stone", 5, "pyramid", 5, "--sparse", "glrd", 21, 5, 4
-    ],
+    cnfgen(["cnfgen", "-q", "stone", 5, "pyramid", 5, "--sparse", 4],
            mode='string')
 
 
 def test_sstone_tree_cli():
-    cnfgen(
-        ["cnfgen", "-q", "stone", 5, "tree", 3, "--sparse", "glrd", 15, 5, 3],
-        mode='string')
+    cnfgen(["cnfgen", "-q", "stone", 5, "tree", 3, "--sparse", 3],
+           mode='string')
