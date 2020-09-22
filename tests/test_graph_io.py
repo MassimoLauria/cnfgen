@@ -213,7 +213,8 @@ the original file name so we can guess the format."""
     if 'dot' not in supported_formats()['simple']:
         pytest.skip("No support for Dot file I/O.")
 
-    with open(shared_datadir / 'path2.dot', 'r') as ifile:
+    fname = str(shared_datadir / 'path2.dot')
+    with open(fname) as ifile:
         # Parser should guess that it is a dot file
         G = readGraph(ifile, graph_type='simple')
         assert G.order() == 3
