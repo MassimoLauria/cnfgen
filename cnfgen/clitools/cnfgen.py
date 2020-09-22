@@ -47,6 +47,8 @@ from cnfgen.clitools.msg import error_msg
 from cnfgen.clitools.msg import msg_prefix
 from cnfgen.clitools.msg import InternalBug
 
+from cnfgen.clitools.graph_docs import make_graph_doc
+
 #################################################################
 #          Command line tool follows
 #################################################################
@@ -169,11 +171,14 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
                        description=description_string.format(progname),
                        formatter_class=CLIHelpFormatter)
 
-    class PrintTutorial(argparse.Action):
-        def __call__(self, parser, args, values, option_string=None):
-            with paginate_or_redirect_stdout(sys.stdout):
-                print(tutorial_string.format(progname))
-            sys.exit(os.EX_OK)
+    def print_help(string):
+        class _PrintHelp(argparse.Action):
+            def __call__(self, parser, args, values, option_string=None):
+                with paginate_or_redirect_stdout(sys.stdout):
+                    print(string.format(progname))
+                sys.exit(os.EX_OK)
+
+        return _PrintHelp
 
     parser.add_argument('-V',
                         '--version',
@@ -181,8 +186,22 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
                         version='{project} ({version})'.format(**info))
     parser.add_argument('--tutorial',
                         nargs=0,
-                        action=PrintTutorial,
-                        help="show a brief tutorial")
+                        action=print_help(tutorial_string),
+                        help="show a brief tutorial on CNFgen")
+    parser.add_argument(
+        '--help-graph',
+        nargs=0,
+        action=print_help(make_graph_doc('simple', '{0} ... ')),
+        help="how to specify simple graphs on the command line")
+    parser.add_argument(
+        '--help-bipartite',
+        nargs=0,
+        action=print_help(make_graph_doc('bipartite', '{0} ... ')),
+        help="how to specify simple graphs on the command line")
+    parser.add_argument('--help-dag',
+                        nargs=0,
+                        action=print_help(make_graph_doc('dag', '{0} ... ')),
+                        help="how to specify DAGs on the command line")
     parser.add_argument(
         '--output',
         '-o',

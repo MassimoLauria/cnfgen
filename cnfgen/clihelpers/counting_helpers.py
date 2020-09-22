@@ -96,9 +96,7 @@ class CountingCmdHelper(FormulaHelper):
         return CountingPrinciple(args.M, args.p)
 
 
-tse_help_usage = """{0} [-h] <charge> <graph>
-
-usage variants:
+tse_help_usage = """
  {0} N                --- random 3-regular graph with N vertices. Random odd charge
  {0} N d              --- random d-regular graph with N vertices. Random odd charge
  {0} <charge> <graph> --- specific <charge> on specific <graph>
@@ -121,7 +119,7 @@ positional arguments:
                      `random' puts a random charge on vertices;
                      `randomodd' puts random odd  charge on vertices;
                      `randomeven' puts random even charge on vertices.
-  <graph>        --- a simple undirected graph (see below)
+  <graph>        --- a simple undirected graph (see 'cnfgen --help-graph')
 """
 
 
@@ -142,9 +140,6 @@ class TseitinCmdHelper(FormulaHelper):
         parser.usage = tse_help_usage.format(parser.prog)
         parser.description = tse_help_description.format(
             parser.prog, " " * len(parser.prog))
-
-        parser.epilog = "Parameter <graph>:" + make_graph_doc(
-            'simple', parser.prog + ' <charge>')
 
         shortcut = CLIParser()
         shortcut.add_argument('N', type=positive_int, action='store')
@@ -174,7 +169,7 @@ class TseitinCmdHelper(FormulaHelper):
         tsaction = compose_two_parsers(shortcut, longform)
         parser.add_argument('args',
                             action=tsaction,
-                            nargs='+',
+                            nargs='*',
                             help=argparse.SUPPRESS)
 
     @staticmethod
@@ -187,6 +182,10 @@ class TseitinCmdHelper(FormulaHelper):
         if not hasattr(args, 'G'):
             N = args.N
             d = args.d
+            if N * d % 2 == 1:
+                raise ValueError(
+                    "There are no {}-regular graphs with {} vertices".format(
+                        d, N))
             G = make_graph_from_spec('simple', ["gnd", N, d])
             charge = [random.randint(0, 1) for _ in range(G.order() - 1)]
             charge.append(1 - sum(charge) % 2)
@@ -281,7 +280,7 @@ class SCCmdHelper(FormulaHelper):
         parser.add_argument('args',
                             metavar='<graph_description>',
                             action=scaction,
-                            nargs='+',
+                            nargs='*',
                             help=argparse.SUPPRESS)
 
     @staticmethod

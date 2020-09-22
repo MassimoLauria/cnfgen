@@ -262,6 +262,10 @@ If `test` is `None` then uses the default test:
             parser1.prog = parser.prog
             parser2.prog = parser.prog
 
+            if len(values) == 0:
+                parser.error("{0} requires some arguments.".format(
+                    parser.prog))
+
             def is_first_a_number(x):
                 try:
                     float(x[0])
