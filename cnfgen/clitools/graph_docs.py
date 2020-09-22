@@ -15,7 +15,7 @@ examples:
 
 ---- Graph from a file ----
  {prefix} <filename>
- {prefix} <format> <filename>        --- format in {{{formats}}}
+ {prefix} <format> <filename>        --- format one of {formats}
 
 Specifying the graph format is required only when it cannot be
 inferred from the filename extension, or does not match it.
@@ -40,7 +40,7 @@ more of the following options to the graph specifications.
 For reproducibility it is possible the graph using the option
 
    save <filename>
-   save <format> <filename>   ---- format in {{{formats}}}
+   save <format> <filename>   ---- format is one of {formats}
 
 where <format> is only required when cannot be inferred by the
 filename extension.
@@ -61,7 +61,7 @@ examples:
 
 ---- Graph from a file ----
  {prefix} <filename>
- {prefix} <format> <filename>        --- format in {{{formats}}}
+ {prefix} <format> <filename>        --- format is one of {formats}
 
 Specifying the graph format is required only when it cannot be
 inferred from the filename extension, or does not match it.
@@ -87,7 +87,7 @@ more of the following options to the graph specifications.
 For reproducibility it is possible the graph using the option
 
    save <filename>
-   save <format> <filename>   ---- format in {{{formats}}}
+   save <format> <filename>   ---- format is one of {formats}
 
 where <format> is only required when cannot be inferred by the
 filename extension.
@@ -106,7 +106,7 @@ examples:
 
 ---- Graph from a file ----
  {prefix} <filename>
- {prefix} <format> <filename>        --- format in {{{formats}}}
+ {prefix} <format> <filename>        --- format one of {formats}
 
 Specifying the graph format is required only when it cannot be
 inferred from the filename extension, or does not match it.
@@ -120,7 +120,7 @@ inferred from the filename extension, or does not match it.
 For reproducibility it is possible the graph using the option
 
    save <filename>
-   save <format> <filename>   ---- format in {{{formats}}}
+   save <format> <filename>   ---- format one of {formats}
 
 where <format> is only required when cannot be inferred by the
 filename extension.

@@ -113,7 +113,7 @@ class OPCmdHelper(FormulaHelper):
         opaction = compose_two_parsers(gtparser, gopparser)
         parser.add_argument('args',
                             action=opaction,
-                            nargs='+',
+                            nargs='*',
                             help=argparse.SUPPRESS)
 
     @staticmethod
@@ -127,7 +127,13 @@ class OPCmdHelper(FormulaHelper):
             return GraphOrderingPrinciple(args.G, args.total, args.smart,
                                           args.plant, args.knuth)
         elif hasattr(args, 'd') and args.d is not None:
-            G = make_graph_from_spec('simple', ['gnd', args.N, args.d])
+            N = args.N
+            d = args.d
+            if N * d % 2 == 1:
+                raise ValueError(
+                    "There are no {}-regular graphs with {} vertices".format(
+                        d, N))
+            G = make_graph_from_spec('simple', ['gnd', N, d])
             return GraphOrderingPrinciple(G, args.total, args.smart,
                                           args.plant, args.knuth)
         else:
