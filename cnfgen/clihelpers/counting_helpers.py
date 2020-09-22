@@ -185,7 +185,7 @@ class TseitinCmdHelper(FormulaHelper):
                 raise ValueError(
                     "There are no {}-regular graphs with {} vertices.\n"
                     "The number of vertices must be even.".format(3, N))
-            d = args.d
+            d = 3 if args.d is None else args.d
             if N * d % 2 == 1:
                 raise ValueError(
                     "There are no {}-regular graphs with {} vertices.\n"
