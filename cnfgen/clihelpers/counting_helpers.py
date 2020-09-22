@@ -99,6 +99,7 @@ class CountingCmdHelper(FormulaHelper):
 tse_help_usage = """{0} [-h] <charge> <graph>
 
 usage variants:
+ {0} N                --- random 3-regular graph with N vertices. Random odd charge
  {0} N d              --- random d-regular graph with N vertices. Random odd charge
  {0} <charge> <graph> --- specific <charge> on specific <graph>
 """
@@ -147,7 +148,11 @@ class TseitinCmdHelper(FormulaHelper):
 
         shortcut = CLIParser()
         shortcut.add_argument('N', type=positive_int, action='store')
-        shortcut.add_argument('d', type=positive_int, action='store')
+        shortcut.add_argument('d',
+                              nargs='?',
+                              type=positive_int,
+                              action='store',
+                              default=3)
 
         longform = CLIParser()
         longform.add_argument(
