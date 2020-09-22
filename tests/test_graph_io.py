@@ -201,7 +201,8 @@ def test_readGraph_dot_file_as_gml(shared_datadir):
     if 'dot' not in supported_formats()['simple']:
         pytest.skip("No support for Dot file I/O.")
 
-    with open(shared_datadir / 'path2.dot', 'r') as ifile:
+    fname = str(shared_datadir / 'path2.dot')
+    with open(fname, 'r') as ifile:
         # Parsing should fail here
         with pytest.raises(ValueError):
             readGraph(ifile, graph_type='simple', file_format='gml')
