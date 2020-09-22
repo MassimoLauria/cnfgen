@@ -9,8 +9,7 @@ from cnfgen.graphs import enumerate_edges
 from cnfgen.graphs import neighbors
 
 from itertools import combinations
-from combinations.abc import Iterable
-import collections
+from collections.abc import Iterable
 
 
 def GraphColoringFormula(G, colors, functional=True):
