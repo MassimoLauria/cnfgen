@@ -66,7 +66,7 @@ description_string = """example:
  {0} randkcnf 3 10 5    --- Random 3-CNF with 10 vars and 5 clauses
 
 tutorial:
- {0} --tutorial         --- shows a command line tutorial
+ {0} --tutorial         --- show a brief tutorial on CNFgen
 
 """
 
@@ -191,16 +191,16 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     parser.add_argument(
         '--help-graph',
         nargs=0,
-        action=print_help(make_graph_doc('simple', '{0} ... ')),
+        action=print_help(make_graph_doc('simple', '{0} ...')),
         help="how to specify simple graphs on the command line")
     parser.add_argument(
         '--help-bipartite',
         nargs=0,
-        action=print_help(make_graph_doc('bipartite', '{0} ... ')),
-        help="how to specify simple graphs on the command line")
+        action=print_help(make_graph_doc('bipartite', '{0} ...')),
+        help="how to specify bipartite graphs on the command line")
     parser.add_argument('--help-dag',
                         nargs=0,
-                        action=print_help(make_graph_doc('dag', '{0} ... ')),
+                        action=print_help(make_graph_doc('dag', '{0} ...')),
                         help="how to specify DAGs on the command line")
     parser.add_argument(
         '--output',

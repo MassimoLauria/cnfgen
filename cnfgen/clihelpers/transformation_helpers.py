@@ -142,7 +142,7 @@ class XorSubstitutionCmd(TransformationHelper):
 
 class AllEqualsSubstitutionCmd(TransformationHelper):
     name = 'eq'
-    description = 'substitute variable x with predicate x1==x2==...==xN (i.e. all equals)'
+    description = 'substitute x with predicate x1==x2==...==xN (i.e. all equals)'
 
     @staticmethod
     def setup_command_line(parser):
@@ -160,7 +160,7 @@ class AllEqualsSubstitutionCmd(TransformationHelper):
 
 class NeqSubstitutionCmd(TransformationHelper):
     name = 'neq'
-    description = 'substitute variable x with predicate |{x1,x2,...,xN}|>1 (i.e. not all equals)'
+    description = 'substitute x with |{x1,x2,...,xN}|>1 (i.e. not all equals)'
 
     @staticmethod
     def setup_command_line(parser):
@@ -178,7 +178,7 @@ class NeqSubstitutionCmd(TransformationHelper):
 
 class MajSubstitution(TransformationHelper):
     name = 'maj'
-    description = 'substitute variable x with predicate Majority(x1,x2,...,xN)'
+    description = 'substitute x with Majority(x1,x2,...,xN)'
 
     @staticmethod
     def setup_command_line(parser):
@@ -196,7 +196,7 @@ class MajSubstitution(TransformationHelper):
 
 class IfThenElseSubstitutionCmd(TransformationHelper):
     name = 'ite'
-    description = 'substitute variable x with predicate "if X then Y else Z"'
+    description = 'substitute x with "if X then Y else Z"'
 
     @staticmethod
     def setup_command_line(parser):
@@ -209,7 +209,7 @@ class IfThenElseSubstitutionCmd(TransformationHelper):
 
 class ExactlyOneSubstitutionCmd(TransformationHelper):
     name = 'one'
-    description = 'substitute variable x with predicate x1+x2+...+xN = 1'
+    description = 'substitute x with x1 + x2 + ... + xN = 1'
 
     @staticmethod
     def setup_command_line(parser):
@@ -227,7 +227,7 @@ class ExactlyOneSubstitutionCmd(TransformationHelper):
 
 class AtLeastKSubstitutionCmd(TransformationHelper):
     name = 'atleast'
-    description = 'substitute variable x with predicate x1+x2+...+xN >= K'
+    description = 'substitute x with x1 + x2 + ... + xN >= K'
 
     @staticmethod
     def setup_command_line(parser):
@@ -242,7 +242,7 @@ class AtLeastKSubstitutionCmd(TransformationHelper):
 
 class AtMostKSubstitutionCmd(TransformationHelper):
     name = 'atmost'
-    description = 'substitute variable x with predicate x1+x2+...+xN <= K'
+    description = 'substitute x with x1 + x2 + ... + xN <= K'
 
     @staticmethod
     def setup_command_line(parser):
@@ -257,7 +257,7 @@ class AtMostKSubstitutionCmd(TransformationHelper):
 
 class ExactlyKSubstitutionCmd(TransformationHelper):
     name = 'exact'
-    description = 'substitute variable x with predicate x1+x2+...+xN = K'
+    description = 'substitute x with x1 + x2 + ... + xN == K'
 
     @staticmethod
     def setup_command_line(parser):
@@ -272,7 +272,7 @@ class ExactlyKSubstitutionCmd(TransformationHelper):
 
 class AnythingButKSubstitutionCmd(TransformationHelper):
     name = 'anybut'
-    description = 'substitute variable x with predicate x1+x2+...+xN != K'
+    description = 'substitute x with x1 + x2 + ... + xN != K'
 
     @staticmethod
     def setup_command_line(parser):
