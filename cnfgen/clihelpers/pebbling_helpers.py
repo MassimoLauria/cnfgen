@@ -65,7 +65,7 @@ class StoneCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        usage_string = "{} [-h] <stones> <dag> [--sparse d]"
+        usage_string = "{} [-h] <stones> <dag> [--sparse <degree>]"
         parser.usage = usage_string.format(parser.prog)
 
         parser.add_argument('s',
@@ -79,9 +79,9 @@ class StoneCmdHelper(FormulaHelper):
             help='a directed acyclic graph (see \'cnfgen --help-graph\')')
         parser.add_argument(
             '--sparse',
-            metavar='d',
+            metavar='<degree>',
             type=positive_int,
-            help="each vertex can only choose among d many stones")
+            help="each vertex can only choose among <degree> many stones")
         # parser.add_argument(
         #     '--mapping',
         #     metavar='<bipartite>',
@@ -112,6 +112,8 @@ class StoneCmdHelper(FormulaHelper):
             degree = args.sparse
             nvertices = D.order()
             nstones = args.s
+            if degree > nstones:
+                raise ValueError("It must hold that <degree> <= <stones>")
             B = bipartite_random_left_regular(nvertices, nstones, degree)
             return SparseStoneFormula(D, B)
         else:

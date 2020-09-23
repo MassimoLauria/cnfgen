@@ -2,7 +2,7 @@ import networkx as nx
 import pytest
 from cnfgen import CNF, PebblingFormula
 
-from cnfgen.clitools import cnfgen
+from cnfgen.clitools import cnfgen, CLIError
 from tests.utils import assertCnfEqual
 
 
@@ -115,3 +115,9 @@ def test_sstone_pyramid_cli():
 def test_sstone_tree_cli():
     cnfgen(["cnfgen", "-q", "stone", 5, "tree", 3, "--sparse", 3],
            mode='string')
+
+
+def test_sstone_tree_cli():
+    with pytest.raises(CLIError):
+        cnfgen(["cnfgen", "-q", "stone", 5, "tree", 3, "--sparse", 10],
+               mode='string')
