@@ -11,6 +11,7 @@ from cnfgen.families.coloring import GraphColoringFormula
 from cnfgen.families.coloring import EvenColoringFormula
 
 from cnfgen.families.dominatingset import DominatingSet
+from cnfgen.families.dominatingset import Tiling
 
 from cnfgen.families.graphisomorphism import GraphIsomorphism
 from cnfgen.families.graphisomorphism import GraphAutomorphism
@@ -108,6 +109,34 @@ class DominatingSetCmdHelper(FormulaHelper):
         - `args`: command line options
         """
         return DominatingSet(args.G, args.d, alternative=args.alternative)
+
+
+class TilingCmdHelper(FormulaHelper):
+    """Command line helper for tiling
+    """
+    name = 'tiling'
+    description = 'tiling'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for tiling formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.add_argument(
+            'G',
+            help='simple undirected graph (see \'cnfgen --help-graph\')',
+            action=ObtainSimpleGraph)
+
+    @staticmethod
+    def build_cnf(args):
+        """Build the tiling formula
+
+        Arguments:
+        - `args`: command line options
+        """
+        return Tiling(args.G)
 
 
 iso_description = """The formula takes one or two graphs as input.
