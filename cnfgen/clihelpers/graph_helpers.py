@@ -115,7 +115,7 @@ class TilingCmdHelper(FormulaHelper):
     """Command line helper for tiling
     """
     name = 'tiling'
-    description = 'tiling'
+    description = 'tiling formula'
 
     @staticmethod
     def setup_command_line(parser):
