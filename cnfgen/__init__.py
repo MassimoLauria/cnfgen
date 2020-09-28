@@ -26,6 +26,7 @@ from cnfgen.families.coloring import EvenColoringFormula
 from cnfgen.families.counting import CountingPrinciple
 from cnfgen.families.counting import PerfectMatchingPrinciple
 from cnfgen.families.dominatingset import DominatingSet
+from cnfgen.families.dominatingset import Tiling
 from cnfgen.families.graphisomorphism import GraphIsomorphism
 from cnfgen.families.graphisomorphism import GraphAutomorphism
 from cnfgen.families.ordering import OrderingPrinciple
