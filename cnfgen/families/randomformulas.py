@@ -16,7 +16,6 @@ Test if clauses `cls` is satisfied by all assigment in the
 list assignments.
 """
     for assignment in assignments:
-
         if any(var in assignment and polarity == assignment[var]
                for (polarity, var) in cls):
             continue

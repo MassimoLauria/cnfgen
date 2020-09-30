@@ -1,6 +1,7 @@
 import pytest
 
 from cnfgen import RandomKCNF
+from cnfgen.clitools import cnfgen, CLIError
 
 
 def test_empty_cnf():
@@ -55,3 +56,23 @@ def test_negative_variables():
 def test_negative_clauses():
     with pytest.raises(ValueError):
         RandomKCNF(3, 5, -1)
+
+
+def test_random_cnf_planted():
+    planted = [{"x_1": True, "x_2": False, "x_3": True}]
+    F = RandomKCNF(3, 3, 7, planted_assignments=planted)
+    for c in F:
+        assert len(c) == 3
+
+
+def test_randomkcnf_cnfgen():
+    cnfgen(["cnfgen", 'randkcnf', 4, 6, 10])
+
+
+def test_randomkcnf_cnfgen_planted():
+    cnfgen(["cnfgen", 'randkcnf', 3, 6, 10, '-p'])
+
+
+def test_randomkcnf_cnfgen_planted_bad():
+    with pytest.raises(CLIError):
+        cnfgen(["cnfgen", 'randkcnf', 3, 3, 8, '-p'])

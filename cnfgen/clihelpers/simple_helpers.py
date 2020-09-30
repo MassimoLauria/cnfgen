@@ -11,6 +11,8 @@ from cnfgen.families.randomformulas import RandomKCNF
 
 from .formula_helpers import FormulaHelper
 
+import random
+
 
 class OR(FormulaHelper):
     """Command line helper for a single clause formula
@@ -155,6 +157,11 @@ class RandCmdHelper(FormulaHelper):
                             metavar='<m>',
                             type=int,
                             help="number of clauses")
+        parser.add_argument('--plant',
+                            '-p',
+                            action='store_true',
+                            default=False,
+                            help="plant a sat assignment at random")
 
     @staticmethod
     def build_cnf(args):
@@ -163,4 +170,17 @@ class RandCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        return RandomKCNF(args.k, args.n, args.m)
+        n = args.n
+        if args.plant:
+            planted = {}
+            signs = random.choices([True, False], k=n)
+
+            for i in range(n):
+                planted["x_{0}".format(i + 1)] = signs[i]
+
+            return RandomKCNF(args.k,
+                              args.n,
+                              args.m,
+                              planted_assignments=[planted])
+        else:
+            return RandomKCNF(args.k, args.n, args.m)
