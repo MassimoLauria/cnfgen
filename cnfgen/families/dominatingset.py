@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-"""Formulas that encode coloring related problems
+"""Formulas that encode dominating set problems
 """
 
 from cnfgen.cnf import CNF
@@ -98,5 +98,53 @@ def DominatingSet(G, d, alternative=False):
     neighborhoods = sorted(set(N(v) for v in V))
     for N in neighborhoods:
         F.add_clause([(True, D(v)) for v in N])
+
+    return F
+
+def Tiling(G):
+    r"""Generates the clauses for a tiling of G
+
+    The formula encodes the fact that the graph :math:`G` has a
+    tiling. This means that it is possible to pick a subset of
+    vertices :math:`D` so that all vertices have distance at most one
+    from exactly one verteix in :math:`D`.
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        a simple undirected graph
+
+    Returns
+    -------
+    CNF
+       the CNF encoding of a tiling of graph :math:`G`
+
+    """
+    # Describe the formula
+    description = "tiling"
+
+    if hasattr(G, 'name'):
+        description += " of " + G.name
+
+    F = CNF(description=description)
+
+    # Fix the vertex order
+    V=enumerate_vertices(G)
+
+    def D(v):
+        return "x_{{{0}}}".format(v)
+
+    def N(v):
+        return tuple(sorted([v] + [u for u in G.neighbors(v)]))
+
+    # Create variables
+    for v in V:
+        F.add_variable(D(v))
+
+    # Every neighborhood must have exactly one true D variable
+    neighborhoods = sorted(set(N(v) for v in V))
+    for N in neighborhoods:
+        for cls in CNF.equal_to_constraint([D(v) for v in N], 1):
+            F.add_clause(list(cls), strict=True)
 
     return F
