@@ -65,6 +65,21 @@ def test_random_cnf_planted():
         assert len(c) == 3
 
 
+def test_random_cnf_planted_2():
+    planted = [{
+        "x_1": True,
+        "x_2": False,
+        "x_3": True,
+        "x_4": False,
+        "x_5": True,
+        "x_6": True
+    }]
+    F = RandomKCNF(3, 6, 10, planted_assignments=planted)
+    for c in F:
+        assert len(c) == 3
+    assert len(F) == 10
+
+
 def test_randomkcnf_cnfgen():
     cnfgen(["cnfgen", 'randkcnf', 4, 6, 10])
 

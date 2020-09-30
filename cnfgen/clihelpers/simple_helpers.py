@@ -173,10 +173,9 @@ class RandCmdHelper(FormulaHelper):
         n = args.n
         if args.plant:
             planted = {}
-            signs = random.choices([True, False], k=n)
 
             for i in range(n):
-                planted["x_{0}".format(i + 1)] = signs[i]
+                planted["x_{0}".format(i + 1)] = random.choice([True, False])
 
             return RandomKCNF(args.k,
                               args.n,
