@@ -88,11 +88,12 @@ class OPCmdHelper(FormulaHelper):
             dest='knuth',
             const=3,
             help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for k>i,j")
-        parser.add_argument('--plant',
-                            '-p',
-                            default=False,
-                            action='store_true',
-                            help="allow a minimum element (makes satisiable)")
+        parser.add_argument(
+            '--plant',
+            '-p',
+            default=False,
+            action='store_true',
+            help="allow a minimum element (makes formula satisfiable)")
 
         gtparser = CLIParser()
         gtparser.add_argument('N', metavar='<N>', type=int, help="domain size")

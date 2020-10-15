@@ -94,9 +94,24 @@ def test_tseitin_cli(shared_datadir):
 
 
 def test_randkcnf_cli():
-    cnfgen(['cnfgen', 'randkcnf', 3, 10, 7], mode='formula')
-    cnfgen(['cnfgen', 'randkcnf', 4, 10, 7], mode='formula')
-    cnfgen(['cnfgen', 'randkcnf', 6, 15, 4], mode='formula')
+    F = cnfgen(['cnfgen', 'randkcnf', 3, 10, 7], mode='formula')
+    assert len(list(F.variables())) == 10
+    assert len(F) == 7
+    for c in F:
+        assert len(c) == 3
+
+    F = cnfgen(['cnfgen', 'randkcnf', 4, 10, 7], mode='formula')
+    assert len(list(F.variables())) == 10
+    assert len(F) == 7
+    for c in F:
+        assert len(c) == 4
+
+    F = cnfgen(['cnfgen', 'randkcnf', 6, 15, 4], mode='formula')
+    assert len(list(F.variables())) == 15
+    assert len(F) == 4
+    for c in F:
+        assert len(c) == 6
+
     with pytest.raises(CLIError):
         cnfgen(['cnfgen', 'randkcnf', 10, 1, 14], mode='formula')
 
@@ -104,6 +119,7 @@ def test_randkcnf_cli():
 def test_kcolor_cli(shared_datadir):
     F = cnfgen(['cnfgen', 'kcolor', 4, 'gnd', 10, 3], mode='formula')
     assert F.is_satisfiable()[0]
+    F = cnfgen(['cnfgen', 'kcolor', 4, 'gnp', 10, .3], mode='formula')
     cnfgen(
         ['cnfgen', 'kcolor', 3, shared_datadir / 'oddvertices_gnd_15_4.gml'],
         mode='formula')
@@ -114,6 +130,7 @@ def test_kclique_cli(shared_datadir):
     F = cnfgen(['cnfgen', 'kclique', 4, 'gnd', 16, 3, 'plantclique', 4],
                mode='formula')
     assert F.is_satisfiable()[0]
+    F = cnfgen(['cnfgen', 'kclique', 4, 'gnp', 10, .3], mode='formula')
     F = cnfgen(
         ['cnfgen', 'kclique', 5, shared_datadir / 'oddvertices_gnd_15_4.gml'],
         mode='formula')
@@ -164,6 +181,11 @@ def test_peb_cli(shared_datadir):
     assert len(list(F.variables())) == 42
     assert not F.is_satisfiable()[0]
 
+    F = cnfgen(['cnfgen', 'peb', 'pyramid', 2, '-T', 'lift', 3],
+               mode='formula')
+    assert len(list(F.variables())) == 36
+    assert not F.is_satisfiable()[0]
+
     F = cnfgen(['cnfgen', 'peb', 'pyramid', 5, '-T', 'or', 2], mode='formula')
     assert len(list(F.variables())) == 42
     assert not F.is_satisfiable()[0]
@@ -177,5 +199,16 @@ def test_ec_cli():
         cnfgen(['cnfgen', 'ec', 'gnd', 10, 5], mode='formula')
     F = cnfgen(['cnfgen', 'ec', 'gnd', 10, 6], mode='formula')
     assert F.is_satisfiable()[0]
+    F = cnfgen(['cnfgen', 'ec', 'gnd', 9, 6], mode='formula')
+    assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'ec', 'complete', 5], mode='formula')
     assert F.is_satisfiable()[0]
+
+
+def test_cliquecoloring_cli():
+    with pytest.raises(CLIError):
+        cnfgen(['cnfgen', 'cliquecoloring', 6, -3, 5], mode='formula')
+    F = cnfgen(['cnfgen', 'cliquecoloring', 6, 4, 3], mode='formula')
+    assert not F.is_satisfiable()[0]
+    F = cnfgen(['cnfgen', 'cliquecoloring', 7, 3, 2], mode='formula')
+    assert not F.is_satisfiable()[0]
