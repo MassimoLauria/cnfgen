@@ -122,20 +122,6 @@ def GraphOrderingPrinciple(graph,
                                 (True, varname(v1, v3))],
                                strict=True)
 
-        elif total:
-            # With totality we still need just two axiom per triangle
-            for (v1, v2, v3) in combinations(V, 3):
-
-                gop.add_clause([(False, varname(v1, v2)),
-                                (False, varname(v2, v3)),
-                                (False, varname(v3, v1))],
-                               strict=True)
-
-                gop.add_clause([(False, varname(v1, v3)),
-                                (False, varname(v3, v2)),
-                                (False, varname(v2, v1))],
-                               strict=True)
-
         else:
             for (v1, v2, v3) in permutations(V, 3):
 
