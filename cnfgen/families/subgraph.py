@@ -247,3 +247,4 @@ def RamseyWitnessFormula(G, k, s):
     description = "{} does not contain {}-cliques nor {}-independent sets.".format(
         G.name, k, s)
     F.header['description'] = description
+    return F
