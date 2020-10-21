@@ -64,11 +64,11 @@
 
   If  the file  ends with  one of  the extensions  =.kthlist=, =.gml=,
   =.dot=, =.matrix=, =.dimacs= then the  program assumes that the file
-  is the  corresponding format. It  is possible to specify  the format
-  using the  =-gf= option in  the command line, which  is particularly
-  useful when the graph is read  from standard input or written on the
-  standard  output, or  when the  file  extension does  not match  its
-  file format.
+  is the corresponding format, otherwise  it is always possible in the
+  command line  to add the file  format before the file  name to avoid
+  ambiguity. This is  particularly useful when the graph  is read from
+  standard input or  written on the standard output, or  when the file
+  extension does not match its file format.
 
 ** Encoding
 

@@ -38,131 +38,211 @@ to study their proof complexity or how SAT solvers perform on them.
 
 * Usage
 
-  CNFgen  include two  tools with  formula transformation  capability:
-  the  first  is  =cnfgen=  itself,   which  can  apply  one  or  more
-  transformations after it generates the CNF, and directly outputs the
-  DIMACS of the final formula,
+  CNFgen include  formula transformation capability:   =cnfgen= itself
+  can  apply  one or  more  such  transformations  to the  formula  it
+  generates,
 
   : cnfgen <family> <params> -T <tr1> <args1> -T <tr2> <args2> ...
 
-  while =cnftransform=  applies a  single transformations to  a DIMACS
-  formula in input, using the command line
+  Furthermore it  is possible  to apply a  transformation to  a DIMACS
+  file =input.cnf=,  using the command line
 
-  : cnftransform  [-i <inputfile>] [-o <outputfile>] <transform> <params>
+  : cnfgen dimacs input.cnf -T <tr1> <args1> -T <tr2> <args2> ...
   
   For example,  if we want  to substitute each  variables of a  CNF in
-  DIMACS  format,  given in  standard  input,  with  a  XOR of  3  new
-  variables and output the formula on standard output it is sufficient
-  to type
+  DIMACS file =input.cnf= with a XOR of 3 new variables and output the
+  formula on standard output it is sufficient to type
 
-  : cnftransform xor 3
+  : cnfgen dimacs input.cnf -T xor 3
    
   For a list of all implemented transformations you can type either 
    
-  : cnfgen --help-transform
+  : cnfgen --help
 
-  or
-   
-  : cnftransform --help
+  To get the help for a specific transformation type
 
-* Available transformations
+  : cnfgen <formula_type> <formula_params> -T <transformation_name> -h
+  
+  For example
 
-  The   =cnfgen=  and   =cnftransform=   tools   expose  the   formula
-  transformations implemented in [[http://cnfgen.readthedocs.org/en/latest/][the  =cnfgen= library]]. Both tools
-  only apply  at most one  transformation at  a time. Via  python code
-  there is definitely more flexibility.
+  : cnfgen peb pyramid 3  -T shuffle -h
 
-*** Exactly one
+  where the formula  generated is ignored, and the  help for =shuffle=
+  transformation is shown.
+  
+* Shuffling
 
-    We substitute  each variable x  with a function  f(x₁,x₂,...,) over
-    =<N>= new  variables, where  the function  is true  if and  only if
-    exactly one of the new variable is true.
+  Shuffle the  CNF, by randomly  permuting the order of  clauses, of
+  variables and randomly flipping the variable polarity.
 
-    : cnfgen -T one -Ta <N> <formula_type> <formula_param>
+  : cnfgen <formula_type> <formula_params> -T shuffle
+
+#+begin_example
+p cnf 10 5
+2 -5 -8 0
+1 3 10 0
+5 8 10 0
+-1 8 -9 0
+3 -6 7 0
+#+end_example
+
+  can be  shuffled into  the following  (here we  did not  shuffle the
+  clauses to make  the isomorphism between the two  formulas easier to
+  spot).
+
+#+begin_example
+p cnf 10 5
+-5 3 -9 0
+-2 1 -7 0
+-3 9 -7 0
+2 9 -8 0
+1 -4 -6 0
+#+end_example
+
+
+* One dimensional lifting
+
+  For   each   variable   $x$    we   introduce   $t$   variables
+  $(x_1,x_2,...,x_d)$     and    $d$     selector    variables
+  $(y_1,y_2,...,x_d)$.  The value  of  the  original variable  is
+  substituted with  the value of  the $x_i$ variables for  which the
+  selector  $y_i$  is active.  We  want  at  least one  selector  to
+  be active.
+
+  Concretely the  variable $x$  is substituted by  $\bigwedge_i (y_i
+  \rightarrow  x_i)$.  Furthermore the  clause  $y_1  \vee y_2  \vee
+  \ldots \vee y_d$  is added to the formula to  guarantee that at
+  least one selector is active.
+ 
+  : cnfgen <formula_type> <formula_param> -T lift d
+
+* Substitution
+
+  Pick a formula $F$. We  can take a function $g:\{0,1\}^d \rightarrow
+  \{0,1\}$ and substitute  each variable $x$ in $F$ with  the value of
+  function $g$ on $d$ new variables $x_1, \ldots, x_d$. For example if
+  $g$ is XOR and $d$  is 2 then the CNF \[ x \land  (y \lor \neg z) \]
+  becomes \[ x_1 \oplus x_2 \land (y_1 \oplus y_2 \lor \neg z_1 \oplus
+  z_2) \;. \]
+
+  Each of  the two original clauses  must be represented in  CNF form:
+  $x_1 \oplus  x_2$ becomes  $(x_1 \lor  x_2)\land(\neg x_1  \lor \neg
+  x_2)$; and $y_1 \oplus y_2 \lor \neg z_1 \oplus z_2$ becomes
+
+\begin{align*}
+  (&&      y_1 &\quad\lor&      y_2 &\quad\lor&      z_1  &\quad\lor& \neg z_2 &)\quad\land\\
+  (&& \neg y_1 &\quad\lor& \neg y_2 &\quad\lor&      z_1  &\quad\lor& \neg z_2 &)\quad\land\\
+  (&&      y_1 &\quad\lor&      y_2 &\quad\lor& \neg z_1  &\quad\lor&      z_2 &)\quad\land\\
+  (&& \neg y_1 &\quad\lor& \neg y_2 &\quad\lor& \neg z_1  &\quad\lor&      z_2 &)
+\end{align*}
+
+  Some of the substitutions can be a little bit more complex than XOR,
+  but the XOR is a good example of how to make a formula harder.
 
 *** Exclusive OR
 
-    We substitute each  variable x with the XOR of  =<N>= new variables
-    (x₁,x₂,...).
+    Here  $g(x_1,x_2,\ldots,x_d)$ is  $x_1  \oplus  x_2 \oplus  \ldots
+    \oplus x_d$.
 
-    : cnfgen -T xor -Ta <N> <formula_type> <formula_param>
+    : cnfgen <formula_type> <formula_param> -T xor d
 
-*** If Then Else
+*** OR
 
-    We  substitute  each  variable  x  with  the  function  over  three
-    variables y₀,y₁,y₂  such that if y₀  is true then the  value of the
-    function is equal to y₁, otherwise it is equal to y₂.
+    Here  $g(x_1,x_2,\ldots,x_d)$   is  $x_1  \lor  x_2   \lor  \ldots
+    \lor x_d$.
 
-    : cnfgen -T ite <formula_type> <formula_param>
+    : cnfgen <formula_type> <formula_param> -T or d
 
 *** All equals
 
-    We substitute  each variable x  with a function  f(x₁,x₂,...,) over
-    =<N>= new  variables, where  the function  is true  if and  only if
-    the variables are either all true or all false.
+    Here $g(x_1,x_2,\ldots,x_d)$ is true  when the values of variables
+    $x_1,x_2,\ldots,x_d$ are all the same.
 
-    : cnfgen -T eq -Ta <N> <formula_type> <formula_param>
+    : cnfgen <formula_type> <formula_param> -T eq d
 
 *** Not all equals
 
-    We substitute  each variable x  with a function  f(x₁,x₂,...,) over
-    =<N>= new  variables, where  the function  is true  if and  only if
-    at least two of the arguments are different.
+    Here $g(x_1,x_2,\ldots,x_d)$ is true when there is at least a true
+    variables    and    at    least    a    false    variable    among
+    $x_1,x_2,\ldots,x_d$.
 
-    : cnfgen -T neq -Ta <N> <formula_type> <formula_param>
+    : cnfgen <formula_type> <formula_param> -T neq d
 
-*** Or
+*** Exactly one
 
-    We substitute  each variable  x with the  disjunction of  =<N>= new
-    variables (x₁,x₂,...).
+    Here $g(x_1,x_2,\ldots,x_d)$ is true if  and only if *exactly one*
+    variable among $x_1,x_2,\ldots,x_d$ is true.
 
-    : cnfgen -T or -Ta <N> <formula_type> <formula_param>
+    : cnfgen <formula_type> <formula_param> -T one d
+
+*** Exactly $k$
+
+    Here $g(x_1,x_2,\ldots,x_d)$ is true if  and only if *exactly $k$*
+    variables among $x_1,x_2,\ldots,x_d$ are true.
+
+    : cnfgen <formula_type> <formula_param> -T exact d k
+
+*** At Most $k$
+
+    Here  $g(x_1,x_2,\ldots,x_d)$ is  true  when  *at most $k$* variables  among
+    $x_1,x_2,\ldots,x_d$ are true.
+
+    : cnfgen <formula_type> <formula_param> -T atmost d k
+
+*** At Least $k$
+
+    Here $g(x_1,x_2,\ldots,x_d)$ is true when *at least $k$* variables
+    among $x_1,x_2,\ldots,x_d$ are true.
+
+    : cnfgen <formula_type> <formula_param> -T atleast d k
+
+*** Any value but $k$
+
+    Here  $g(x_1,x_2,\ldots,x_d)$  is true  when  the  number of  true
+    variables among $x_1,x_2,\ldots,x_d$ is different from $k$
+
+    : cnfgen <formula_type> <formula_param> -T anybut d k
+
+*** If Then Else
+
+    Here $d=3$  and $g(x_1,x_2,x_3)$ is  equal to $x_2$ when  $x_1$ is
+    true, and is equal to $x_3$ otherwise.
+
+    : cnfgen <formula_type> <formula_param> -T ite
 
 *** Loose Majority
 
-    We substitute  each variable x  with a function  f(x₁,x₂,...,) over
-    =<N>= new  variables, where  the function  is true  if and  only if
-    at least half of the variables are true.
+    Here  $g(x_1,x_2,\ldots,x_d)$  is  true   when  at  least  $\left\lceil
+    \frac{d}{2} \right\rceil$ of the variables are true.
 
-    : cnfgen -T maj -Ta <N> <formula_type> <formula_param>
+    : cnfgen <formula_type> <formula_param> -T maj d
 
-*** One dimensional lifting
+* Variable compression
+  
+  An  interesting  manipulation  of  a CNF  is  variable  compression.
+  Consider a formula $F$ over $N$ variables.
 
-    For each variable x we introduce =<N>= value variables (x₁,x₂,...)
-    and  =<N>=  selector  variables  (y₁,y₂,...).  The  value  of  the
-    original  variable  is  substituted  with  the  value  of  the  xᵢ
-    variables for  which the selector yᵢ  is active. We want  at least
-    one selector to be active.
+  Similar to variable substitution, each variables $x$ of the original
+  formula  $F$ is  substituted  by the  boolean function  $g:\{0,1\}^d
+  \rightarrow \{0,1\}$ applied to $d$  variables. But instead of using
+  new variables  $x_1, \ldots, x_d$  in $g$,  we use $d$  variables at
+  random picked from  a common pool of $M$ variables  (usually with $M
+  \ll N$).
+  
+  In this way the total number of variables decreases, but locally the
+  complexity of  any small group of  clauses increases as in  the case
+  of substitution.
 
-    Concretely  the  variable  x  is   substituted  by  ∧ᵢ(yᵢ  →  xᵢ).
-    Furthermore the  clause y₁  ∨ y₂ ∨  … is added  to the  formula to
-    guarantee that at least one selector is active.
- 
-    : cnfgen -T lift -Ta <N> <formula_type> <formula_param>
+  In =cnfgen=  we have implemented  two options for the  function $g$,
+  which are XOR and Majority.  To use variable compression the command
+  lines are
 
-* Background
+  : cnfgen <formula_type> <formula_params> -T xorcomp M d
+  : cnfgen <formula_type> <formula_params> -T majcomp M d
 
-  Pick  a  formula F  on  variables  {xᵢ}.  We  can take  a  function
-  g:{0,1}ˡ→{0,1}  and  substitute each  variable  with  the value  of
-  function g on l independent copies of the variables. For example if
-  g is XOR and l=2 then the CNF
+  so that each  variable is substituted by, respectively,  the XOR and
+  Majority of $d$ variables picked at random among $M$ new variables.
 
-  x ∧ (y v ¬z)
-
-  becomes
-
-  x₁⊕x₂ ∧ (y₁⊕y₂ v ¬z₁⊕z₂).
-
-  Each of the  two original clauses must be represented  in CNF form:
-  x₁⊕x₂ becomes (x₁ v x₂)∧( ¬x₁ v ¬x₂); and y₁⊕y₂ v ¬z₁⊕z₂ becomes
-
-  ( y₁ v  y₂  z₁ v ¬z₂)∧
-  (¬y₁ v ¬y₂  z₁ v ¬z₂)∧
-  ( y₁ v  y₂ ¬z₁ v  z₂)∧
-  (¬y₁ v ¬y₂ ¬z₁ v  z₂)
-
-  Some of  the transformations can be  a little bit more  complex than
-  that, but the XOR is a good example of how to make a formula harder.
 
 
 #+BEGIN_EXPORT html
