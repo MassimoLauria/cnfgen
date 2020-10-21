@@ -35,29 +35,32 @@
 
 * What is a CNF?
 
-  A propositional formula a  representation of a function oven {0,1}
-  variables. Consider such a variable  x, then ¬x is a formula
-  which  has  value 1-x.  This  is  called  the /negation/  of  x.
-  Expressions of the form x  and ¬x are called \literals/, and
-  a /clause/ is a disjunction
+  A  propositional formula  is  a representation  of  a function  over
+  $\{\mathrm{True},\mathrm{False}\}$    variables.    Consider    such
+  a variable $x$, the formula  $\overline{x}$ is called the /negation/
+  of $x$, and  has the opposite value of $x$.  Expressions of the form
+  $x$  and $\overline{x}$  are called  /literals/, and  a /clause/  is
+  a disjunction
+  #
+  \[
+  \ell_1 \lor \ell_2 \ldots 
+  \]
+  #
+  where  each   $\ell_i$  is   a  literal.   A  clause   evaluates  to
+  $\mathrm{True}$ when  *at least*  one of  the literals  evaluates to
+  $\mathrm{True}$, and evaluates to  $\mathrm{False}$ otherwise. A CNF
+  is a conjunction of clauses \[ C_1 \land C_2 \ldots \]
+  #
+  and the CNF evaluates to  $\mathrm{True}$ if *all* clauses evaluates
+  to $\mathrm{True}$.
 
-  l₁ v l₂ v … 
-
-  where each lᵢ is a literal. A clause evaluates to one if and only
-  if *at  least* one of the  literals evaluates to  one. Otherwise the
-  clause evaluates to zero.
-  A CNF is a conjunction of clauses
-
-  C₁ ∧ C₂ ∧ … 
-
-  and the CNF evaluates to one if *all* clauses evaluates to one.
-
-  To  *falsify* a  formula we  need an  input for  which the  formula
-  evaluates to 0;  to *satisfy* a formula we need  an input for which
-  it evaluates to 1.  Observe that  to falsify a CNF it is sufficient
-  to pick  a clause  and set  the variables  in such  a way  that all
-  literals in  the clause  evaluate to zero.   There is  no efficient
-  algorithm that decides whether a CNF is satisfiable or not.
+  To  *falsify* a  formula  we need  an input  for  which the  formula
+  evaluates to  $\mathrm{False}$; to  *satisfy* a  formula we  need an
+  input for  which it  evaluates to  $\mathrm{True}$. Observe  that to
+  falsify  a  CNF it  is  sufficient  to pick  a  clause  and set  the
+  variables in such a way that  all literals in the clause evaluate to
+  $\mathrm{False}$.  There  is  no efficient  algorithm  that  decides
+  whether a CNF is satisfiable or not.
 
 * DIMACS encoding of CNFs
 
@@ -74,16 +77,13 @@
   : <i> <i> <i> 0
   : ...
   Each  line  after  the  specification represents  a  clause  in  the
-  following way:  a  positive number t is the positive  literal on the
-  variable indexed by t. A negative number t is the negated literal on
-  the variable indexed by -t.
+  following way:  a  positive number =t= is the positive  literal on the
+  variable indexed by =t=. A negative number =t= is the negated literal on
+  the variable indexed by =-t=.
 
-  For example if the formula is defined  on n variables x₁, x₂, x₃, …,
-  then the line =3 -1 5 6 -4 0=  encodes the clause x3 v ¬x₁ v x₅ v x₆
-  v ¬x₄.
-
-
-
+  For example  if the formula is  defined on $n$ variables  $x_1, x_2,
+  x_3, \ldots$, then the line =3 -1  5 6 -4 0= encodes the clause $x_3
+  \lor \overline{x_1} \lor x_5 \lor x_6 \lor \overline{x_4}$.
 
 #+BEGIN_EXPORT html
     </section></div>

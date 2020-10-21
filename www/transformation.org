@@ -121,19 +121,23 @@ p cnf 10 5
   Pick a formula $F$. We  can take a function $g:\{0,1\}^d \rightarrow
   \{0,1\}$ and substitute  each variable $x$ in $F$ with  the value of
   function $g$ on $d$ new variables $x_1, \ldots, x_d$. For example if
-  $g$ is XOR and $d$  is 2 then the CNF \[ x \land  (y \lor \neg z) \]
-  becomes \[ x_1 \oplus x_2 \land (y_1 \oplus y_2 \lor \neg z_1 \oplus
-  z_2) \;. \]
-
+  $g$ is XOR and $d$ is 2 then  the CNF \[ x \land (y \lor \overline{z}) \]
+  becomes 
+  #
+  \[ 
+  x_1 \oplus x_2 \land (y_1 \oplus y_2 \lor \overline{z_1 \oplus z_2}) \;. 
+  \]
+  
   Each of  the two original clauses  must be represented in  CNF form:
-  $x_1 \oplus  x_2$ becomes  $(x_1 \lor  x_2)\land(\neg x_1  \lor \neg
-  x_2)$; and $y_1 \oplus y_2 \lor \neg z_1 \oplus z_2$ becomes
+  $x_1  \oplus  x_2$  becomes   $(x_1  \lor  x_2)\land(\overline{x_1}  \lor
+  \overline{x_2})$;  and $y_1  \oplus y_2  \lor \overline{z_1  \oplus z_2}$
+  becomes
 
 \begin{align*}
-  (&&      y_1 &\quad\lor&      y_2 &\quad\lor&      z_1  &\quad\lor& \neg z_2 &)\quad\land\\
-  (&& \neg y_1 &\quad\lor& \neg y_2 &\quad\lor&      z_1  &\quad\lor& \neg z_2 &)\quad\land\\
-  (&&      y_1 &\quad\lor&      y_2 &\quad\lor& \neg z_1  &\quad\lor&      z_2 &)\quad\land\\
-  (&& \neg y_1 &\quad\lor& \neg y_2 &\quad\lor& \neg z_1  &\quad\lor&      z_2 &)
+       \; (\;           y_1  \lor      y_2  \lor      z_1  \lor \overline{z_2} \;)\\
+  \land\; (\; \overline{y_1} \lor \overline{y_2} \lor      z_1  \lor \overline{z_2} \;)\\
+  \land\; (\;      y_1  \lor      y_2  \lor \overline{z_1} \lor       z_2 \;)\\
+  \land\; (\; \overline{y_1} \lor \overline{y_2} \lor \overline{z_1} \lor       z_2 \;)
 \end{align*}
 
   Some of the substitutions can be a little bit more complex than XOR,
