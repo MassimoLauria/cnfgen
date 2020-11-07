@@ -38,8 +38,9 @@ from cnfgen.families.pigeonhole import PigeonholePrinciple
 from cnfgen.families.pigeonhole import GraphPigeonholePrinciple
 from cnfgen.families.pigeonhole import BinaryPigeonholePrinciple
 from cnfgen.families.pigeonhole import RelativizedPigeonholePrinciple
+from cnfgen.families.ramsey import RamseyNumber
 from cnfgen.families.ramsey import PythagoreanTriples
-from cnfgen.families.ramsey import RamseyLowerBoundFormula
+from cnfgen.families.ramsey import VanDerWaerden
 from cnfgen.families.randomformulas import RandomKCNF
 from cnfgen.families.subgraph import SubgraphFormula
 from cnfgen.families.subgraph import CliqueFormula

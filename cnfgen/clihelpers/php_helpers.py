@@ -7,8 +7,9 @@ https://massimolauria.net/cnfgen/
 """
 
 from cnfgen.families.cliquecoloring import CliqueColoring
-from cnfgen.families.ramsey import RamseyLowerBoundFormula
+from cnfgen.families.ramsey import RamseyNumber
 from cnfgen.families.ramsey import PythagoreanTriples
+from cnfgen.families.ramsey import VanDerWaerden
 
 from cnfgen.families.pigeonhole import PigeonholePrinciple
 from cnfgen.families.pigeonhole import GraphPigeonholePrinciple
@@ -264,7 +265,62 @@ class RamseyCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        return RamseyLowerBoundFormula(args.s, args.k, args.N)
+        return RamseyNumber(args.s, args.k, args.N)
+
+
+vdw_help_usage = """
+ {0} N k1 k2             --- claims vdw(k1,k2) > N
+ {0} N k1 k2 k3 ... kt   --- claims vdw(k1,k2,...,kt) > N
+"""
+
+vdw_help_description = """A van der Waerden formula claims that N is smaller
+than the van der Waerden number vdw(k1,k2,...,kt), which is the smallest prefix 
+of the integers that cannot be t-colored without some arithmetic progression of
+(1) color i, (2) length ki. 
+
+Formula is satisfiable iff there is a t-coloring of 1...N with no such
+arithmetic progressions.
+
+positional arguments:
+  N           interval 1...N to be colored     
+  k1 k2 ...   lengths of the forbidden arith. progressions
+"""
+
+
+class VDWCmdHelper(FormulaHelper):
+    """Command line helper for RamseyNumber formulas
+    """
+    name = 'vdw'
+    description = 'van der Waerden principle'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Ramsey formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.usage = vdw_help_usage.format(parser.prog)
+        parser.description = vdw_help_description
+
+        parser.add_argument('N', type=nonnegative_int, help=argparse.SUPPRESS)
+
+        parser.add_argument('k1', type=positive_int, help=argparse.SUPPRESS)
+        parser.add_argument('k2', type=positive_int, help=argparse.SUPPRESS)
+
+        parser.add_argument('ks',
+                            nargs='*',
+                            type=positive_int,
+                            help=argparse.SUPPRESS)
+
+    @staticmethod
+    def build_cnf(args):
+        """Build a Ramsey formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        return VanDerWaerden(args.N, args.k1, args.k2, *args.ks)
 
 
 class PTNCmdHelper(FormulaHelper):
