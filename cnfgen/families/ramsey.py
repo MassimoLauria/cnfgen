@@ -28,8 +28,10 @@ def PythagoreanTriples(N):
     Raises
     ------
     ValueError
-       Parameters are not positive integers
-
+       Parameters are not positive
+    TypeError
+       Parameters are not integers
+   
     References
     ----------
     .. [1] M. J. Heule, O. Kullmann, and V. W. Marek. 
@@ -64,12 +66,41 @@ def PythagoreanTriples(N):
 
 
 def RamseyNumber(s, k, N):
-    """Formula claiming that Ramsey number r(s,k) > N
+    """Ramsey number r(s,k) > N
 
-    Arguments:
-    - `s`: independent set size
-    - `k`: clique size
-    - `N`: vertices
+    This formula, given :math:`s`, :math:`k`, and :math:`N`, claims
+    that there is some graph with :math:`N` vertices which has neither
+    independent sets of size :math:`s` nor cliques of size :math:`k`.
+    
+    It turns out that there is a number :math:`r(s,k)` so that every
+    graph with at least :math:`r(s,k)` vertices must contain either
+    one or the other. Hence the generated formula is satisfiable if
+    and only if
+
+    .. math::
+
+         r(s,k) > N
+
+    Parameters
+    ----------
+    s  : int
+         independent set size
+    k  : int
+         clique size
+    N  : int
+         number of vertices
+
+    Returns
+    -------
+    A CNF object
+
+    Raises
+    ------
+    ValueError
+       Parameters are not positive
+    TypeError
+       Parameters are not integers
+
     """
 
     description = "{}-vertices graph free of {}-independent sets and {}-cliques".format(
@@ -142,7 +173,7 @@ def VanDerWaerden(N, k1, k2, *ks):
          i, i+d, i+2d, \ldots, i +(k-1)d
 
     have color :math:`c`. In fact, given any number of lengths
-    :math:`k_1`, :math:`k_2`,...,:math:`k_C`, there is some value of
+    :math:`k_1`, :math:`k_2`,..., :math:`k_C`, there is some value of
     :math:`N` large enough so that no matter how the integers
     :math:`1, \ldots, N` are colored with :math:`C` colors, such
     coloring must have one arithmetic progression of color
@@ -181,6 +212,13 @@ def VanDerWaerden(N, k1, k2, *ks):
     Returns
     -------
     A CNF object
+
+    Raises
+    ------
+    ValueError
+       Parameters are not positive
+    TypeError
+       Parameters are not integers
     """
 
     for v in [N, k1, k2] + list(ks):
