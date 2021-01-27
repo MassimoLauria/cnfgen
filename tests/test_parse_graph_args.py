@@ -41,6 +41,16 @@ def test_invalid_construction():
         P('bipartite', 'nonsense 10 10')
 
 
+def test_complete_graph():
+    r = P('simple', 'complete 4')
+    assert r['args'] == ['4']
+
+
+def test_complete_multipartite_graph():
+    r = P('simple', 'complete 14 5')
+    assert r['args'] == ['14', '5']
+
+
 def test_redundant_save_format():
     r = P('simple', 'complete 10 save dot file.dot')
     assert r['save'] == ['dot', 'file.dot']

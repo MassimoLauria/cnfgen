@@ -34,6 +34,24 @@ def test_complete():
         assert G.degree(v) == 9
 
 
+def test_complete_multipartite():
+    G = get_graph("complete 5 4")
+    assert G.order() == 20
+    assert G.size() == 150
+    for v in G.nodes():
+        assert G.degree(v) == 15
+
+
+def test_complete_fail0():
+    with pytest.raises(ValueError):
+        get_graph("complete")
+
+
+def test_complete_fail3():
+    with pytest.raises(ValueError):
+        get_graph("complete 2 2 2 ")
+
+
 def test_grid():
     G = get_graph("grid 8 5")
     assert G.order() == 40

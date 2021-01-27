@@ -26,11 +26,13 @@ is required only when it does not match the extension of <filename>.
                  ---- Graph constructions ----
 
   {prefix} gnp N p               --- N vertices, p-biased independent edges
-  {prefix} gnm N m               --- N vertices, M edges at random
+  {prefix} gnp N p t             --- t-partite with t*N vertices, p-biased edges between parts
+  {prefix} gnm N m               --- N vertices, m edges at random
   {prefix} gnd N d               --- Random d-regular graph of order N
   {prefix} grid  d1 d2 d3 ...    --- d1 x d2 x d3 x ... grid graph
   {prefix} torus d1 d2 d3 ...    --- d1 x d2 x d3 x ... torus graph
   {prefix} complete N            --- complete graph of order N
+  {prefix} complete N t          --- complete t-partite graph with t*N vertices
   {prefix} empty N               --- empty graph of order N
 
                  ---- Graph modifications ----

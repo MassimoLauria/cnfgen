@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Graph constructions that are available on the command line
 
-Copyright (C) 2020  Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2020, 2021  Massimo Lauria <massimo.lauria@uniroma1.it>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
@@ -47,19 +47,50 @@ def obtain_gnd(parsed):
     return G
 
 
+def multipartite_tnp(t, n, p):
+    """Build a t-partite graph with n vertex per partition, and p-biased edges"""
+
+    G = networkx.empty_graph(t * n)
+
+    for i, j in combinations(range(t), 2):
+        for a in range(n * i, n * (i + 1)):
+            for b in range(n * j, n * (j + 1)):
+                if random.random() < p:
+                    G.add_edge(a, b)
+
+    G.name = 'Random {2}-biased {0}-partite graph with {1} vertices per part'.format(
+        t, n, p)
+    return G
+
+
 def obtain_gnp(parsed):
     """Build a graph according to gnp construction"""
     try:
-        n, p = parsed['args']
+        if len(parsed['args']) == 2:
+            n, p = parsed['args']
+            t = 1
+        elif len(parsed['args']) == 3:
+            n, p, t = parsed['args']
+        else:
+            raise ValueError
         n = int(n)
         p = float(p)
+        t = int(t)
         assert n > 0
         assert 0 <= p <= 1
+        assert t > 0
     except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'gnp\' expects arguments N p with N>0, p in [0,1]')
+        raise ValueError(
+            '\'gnp\' expects arguments N p with N>0, p in [0,1]\n' +
+            'and optional argument t>0 for a t-partite random graph')
 
-    G = networkx.gnp_random_graph(n, p)
-    G.name = 'Random {}-biased graph of {} vertices'.format(p, n)
+    if t == 1:
+        G = networkx.gnp_random_graph(n, p)
+        G.name = 'Random {}-biased graph of {} vertices'.format(p, n)
+    else:
+        G = multipartite_tnp(t, n, p)
+        G.name = 'Random {2}-biased {0}-partite graph with {1} vertices per part'.format(
+            t, n, p)
     return G
 
 
@@ -84,15 +115,30 @@ def obtain_gnm(parsed):
 def obtain_complete_simple(parsed):
     """Build a simple complete graph"""
     try:
-        if len(parsed['args']) != 1:
+        if len(parsed['args']) == 1:
+            n = int(parsed['args'][0])
+            b = 1
+        elif len(parsed['args']) == 2:
+            n = int(parsed['args'][0])
+            b = int(parsed['args'][1])
+        else:
             raise ValueError
-        n = int(parsed['args'][0])
         assert n > 0
+        assert b > 0
     except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'complete\' expects argument N with N>0')
+        raise ValueError(
+            '\'complete\' expects argument N with N>0,\n' +
+            'and optional B with B>0 to get complete B multipartite\n' +
+            "with N vertices per block.")
 
-    G = networkx.complete_graph(n)
-    G.name = "Complete graphs of {} vertices".format(n)
+    if b == 1:
+        G = networkx.complete_graph(n)
+        G.name = "Complete graphs of {} vertices".format(n)
+    else:
+        blocksizes = [n] * b
+        G = networkx.complete_multipartite_graph(*blocksizes)
+        G.name = "Complete multipartite graph with {} blocks of {} vertices".format(
+            b, n)
     return G
 
 
