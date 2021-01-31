@@ -102,7 +102,7 @@ def test_low_level_gml_broken_NetworkXError():
 
 def test_low_level_dimacs_read_path2():
 
-    G = cnfgen.graphs._read_graph_dimacs_format(sio(dimacs_path2))
+    G = cnfgen.graphs.base._read_graph_dimacs_format(sio(dimacs_path2))
 
     assert G.order() == 3
     assert len(G.edges()) == 2
