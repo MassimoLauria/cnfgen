@@ -208,6 +208,15 @@ def readGraph(input_file,
 
     elif file_format == 'gml':
 
+        # Labels must be strings in GML, even if they represent
+        # integers. We convert them back to ints if that is the case,
+        # so that they get properly sorted.
+        def destringizer(x):
+            try:
+                return int(x)
+            except ValueError:
+                return x
+
         # Networkx's GML reader expects to read from ascii encoded
         # binary file. We could have sent the data to a temporary
         # binary buffer but for some reasons networkx's GML reader
@@ -216,8 +225,9 @@ def readGraph(input_file,
         # encoded ascii lines.
 
         try:
-            G = grtype(
-                networkx.read_gml(line.encode('ascii') for line in input_file))
+            G = grtype(networkx.read_gml(
+                (line.encode('ascii') for line in input_file),
+                destringizer=destringizer))
         except networkx.NetworkXError as errmsg:
             raise ValueError("[Parse error in GML input] {} ".format(errmsg))
         except UnicodeEncodeError as errmsg:
