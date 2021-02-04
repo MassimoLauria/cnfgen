@@ -210,6 +210,10 @@ class KCliqueCmdHelper(FormulaHelper):
             'G',
             help='a simple undirected graph (see \'cnfgen --help-graph\')',
             action=ObtainSimpleGraph)
+        parser.add_argument('--no-monotone',
+                            action='store_false',
+                            dest='monotone',
+                            help="Do not enforce the solution to be in increasing order")
 
     @staticmethod
     def build_cnf(args):
@@ -218,7 +222,7 @@ class KCliqueCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        return CliqueFormula(args.G, args.k)
+        return CliqueFormula(args.G, args.k, args.monotone)
 
 
 class BinaryKCliqueCmdHelper(FormulaHelper):
