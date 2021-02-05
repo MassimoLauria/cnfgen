@@ -461,7 +461,8 @@ class CNF(object):
         """
         return self.__iter__()
 
-    def dimacs(self, export_header=True, extra_text=None):
+    def dimacs(self, export_header=True, extra_text=None,
+               export_varnames=False):
         """Produce the dimacs encoding of the formula
 
         The formula is rendered in the DIMACS format for CNF formulas,
@@ -478,6 +479,10 @@ class CNF(object):
 
         extra_text : str, optional
             Additional text attached to the header
+
+        export_varnames : bool, optional
+            determines whether a map from variable indices to variable
+            names should be appended to the header.
 
         Returns
         -------
@@ -508,13 +513,15 @@ class CNF(object):
         """
         from io import StringIO
         output = StringIO()
-        self._dimacs_dump_clauses(output, export_header, extra_text)
+        self._dimacs_dump_clauses(output, export_header, extra_text,
+                                  export_varnames)
         return output.getvalue()
 
     def _dimacs_dump_clauses(self,
                              output,
                              export_header=True,
-                             extra_text=None):
+                             extra_text=None,
+                             export_varnames=False):
         """Dump the dimacs encoding of the formula to the file-like output
 
         This is for internal use only. It produces the dimacs output
@@ -540,6 +547,10 @@ class CNF(object):
                 ascii_extra = ascii_extra.decode('ascii')
                 for line in ascii_extra.split("\n"):
                     output.write(("c " + line).rstrip() + "\n")
+
+        if export_varnames:
+            for index,name in enumerate(self._index2name[1:]):
+                output.write("c varname {} {}\n".format(index+1,name))
 
         # Formula specification
         output.write("p cnf {0} {1}".format(n, m))

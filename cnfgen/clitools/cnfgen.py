@@ -249,6 +249,9 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
                    dest='verbose',
                    help="""Output just the formula with no header.""")
 
+    parser.add_argument('--varnames', action='store_true', default=False,
+                        help="Output map from variable indices to names.")
+
     # setup each formula command parser
     subparsers = parser.add_subparsers(prog=progname,
                                        title="Available formula types",
@@ -460,7 +463,8 @@ def cli(argv=sys.argv, mode='output'):
 
         elif args.output_format == 'dimacs':
 
-            output = cnf.dimacs(export_header=args.verbose)
+            output = cnf.dimacs(export_header=args.verbose,
+                                export_varnames=args.varnames)
 
         else:
             raise InternalBug("Unknown output format")
