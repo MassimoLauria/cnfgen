@@ -198,7 +198,7 @@ def modify_simple_graph_plantclique(parsed, G):
     if cliquesize > G.order():
         raise ValueError("Planted clique cannot be larger than graph")
 
-    clique = random.sample(G.nodes(), cliquesize)
+    clique = random.sample(list(G.nodes()), cliquesize)
 
     for v, w in combinations(clique, 2):
         G.add_edge(v, w)
