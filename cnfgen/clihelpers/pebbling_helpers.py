@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Implementation of some graph formulas helpers
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -12,7 +12,7 @@ from cnfgen.families.pebbling import PebblingFormula
 from cnfgen.families.pebbling import StoneFormula
 from cnfgen.families.pebbling import SparseStoneFormula
 
-from cnfgen.graphs import bipartite_sets, bipartite_random_left_regular
+from cnfgen.graphs import bipartite_random_left_regular
 
 from cnfgen.clitools import ObtainDirectedAcyclicGraph, make_graph_doc
 from cnfgen.clitools import ObtainBipartiteGraph
@@ -82,13 +82,6 @@ class StoneCmdHelper(FormulaHelper):
             metavar='<degree>',
             type=positive_int,
             help="each vertex can only choose among <degree> many stones")
-        # parser.add_argument(
-        #     '--mapping',
-        #     metavar='<bipartite>',
-        #     action=ObtainBipartiteGraph,
-        #     help=
-        #     "a bipartite graph between vertices and stones (see 'cnfgen --help-bipartite')"
-        # )
 
     @staticmethod
     def build_cnf(args):
@@ -98,16 +91,6 @@ class StoneCmdHelper(FormulaHelper):
         - `args`: command line options
         """
         D = args.D
-        # if hasattr(args, 'mapping') and args.mapping is not None:
-        #     B = args.mapping
-        #     Left, Right = bipartite_sets(B)
-        #     nvertices = D.order()
-        #     nstones = args.s
-        #     if (len(Left), len(Right)) != (nvertices, nstones):
-        #         raise ValueError(
-        #             "Size of left and right sides of <bipartite> must match #vertices in DAG and #stones, respectively."
-        #         )
-        #     return SparseStoneFormula(D, B)
         if hasattr(args, 'sparse') and args.sparse is not None:
             degree = args.sparse
             nvertices = D.order()

@@ -11,7 +11,7 @@ to the `cnfgen` library.
 
 
 
-Copyright (C) 2012-2020  Massimo Lauria <lauria.massimo@gmail.com>
+Copyright (C) 2012-2021  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -23,7 +23,7 @@ import re
 from math import ceil, log
 
 from cnfgen.info import info
-from cnfgen.graphs import bipartite_sets, neighbors
+from cnfgen.graphs import BipartiteGraph, has_bipartition
 
 
 class CNF(object):
@@ -1214,7 +1214,9 @@ class CNF(object):
 
             if self.Pattern is not None:
 
-                gL, gR = bipartite_sets(self.Pattern)
+                if not has_bipartition(self.Pattern):
+                    raise ValueError("The pattern must be a bipartite graph")
+                gL, gR = self.Pattern.parts()
 
                 if len(gL) != len(self.Domain):
                     raise ValueError(
@@ -1253,9 +1255,10 @@ class CNF(object):
             if self.Pattern is None:
                 return self.Range
             else:
-                v = self.DomainToVertex[d]
+                u = self.DomainToVertex[d]
                 return [
-                    self.VertexToRange[u] for u in neighbors(self.Pattern, v)
+                    self.VertexToRange[v]
+                    for v in self.Pattern.right_neighbors(u)
                 ]
 
         def counterimages(self, r):
@@ -1264,7 +1267,8 @@ class CNF(object):
             else:
                 v = self.RangeToVertex[r]
                 return [
-                    self.VertexToDomain[u] for u in neighbors(self.Pattern, v)
+                    self.VertexToDomain[u]
+                    for u in self.Pattern.left_neighbors(v)
                 ]
 
         def variables(self):

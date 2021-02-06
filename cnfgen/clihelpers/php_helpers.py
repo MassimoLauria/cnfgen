@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Formula Helpers for pigeonhole principle formulas
 
-Copyright (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012-2021 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 

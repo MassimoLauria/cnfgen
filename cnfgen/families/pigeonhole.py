@@ -4,8 +4,7 @@
 """
 
 from cnfgen.cnf import CNF
-from cnfgen.graphs import bipartite_sets
-
+from cnfgen.graphs import has_bipartition
 from itertools import combinations, product
 
 
@@ -139,7 +138,10 @@ def GraphPigeonholePrinciple(graph, functional=False, onto=False):
     description = "{0} formula on {1}".format(formula_name, graph.name)
     gphp = CNF(description=description)
 
-    Left, Right = bipartite_sets(graph)
+    if not has_bipartition(graph):
+        raise ValueError("The pattern graph must be bipartite")
+
+    Left, Right = graph.parts()
 
     mapping = gphp.unary_mapping(Left,
                                  Right,

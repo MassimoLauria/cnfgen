@@ -2,10 +2,8 @@
 # -*- coding:utf-8 -*-
 """Implementation of subset cardinality formulas
 """
-
 from cnfgen.cnf import CNF
-
-from cnfgen.graphs import bipartite_sets, enumerate_edges, neighbors
+from cnfgen.graphs import has_bipartition
 
 
 def SubsetCardinalityFormula(B, equalities=False):
@@ -49,7 +47,7 @@ def SubsetCardinalityFormula(B, equalities=False):
 
     Parameters
     ----------
-    B : networkx.Graph
+    B : cnfgen.graphs.BipartiteGraph
         the graph vertices must have the 'bipartite' attribute
         set. Left vertices must have it set to 0 and the right ones to 1.
         A KeyException is raised otherwise.
@@ -75,24 +73,23 @@ def SubsetCardinalityFormula(B, equalities=False):
            Theory and Applications of Satisfiability Testing--SAT 2010(2010)
 
     """
-    Left, Right = bipartite_sets(B)
+    if not has_bipartition(B):
+        raise ValueError("Argument B is not a bipartite graph")
+
+    Left, Right = B.parts()
 
     description = "Subset cardinality formula for {0}".format(B.name)
     ssc = CNF(description=description)
 
     def var_name(u, v):
         """Compute the variable names."""
-        if u <= v:
-            return 'x_{{{0},{1}}}'.format(u, v)
-        else:
-            return 'x_{{{0},{1}}}'.format(v, u)
+        return 'x_{{{0},{1}}}'.format(u, v)
+
+    for u, v in B.edges():
+        ssc.add_variable(var_name(u, v))
 
     for u in Left:
-        for v in neighbors(B, u):
-            ssc.add_variable(var_name(u, v))
-
-    for u in Left:
-        edge_vars = [var_name(u, v) for v in neighbors(B, u)]
+        edge_vars = [var_name(u, v) for v in B.right_neighbors(u)]
 
         if equalities:
             for cls in CNF.exactly_half_ceil(edge_vars):
@@ -102,7 +99,7 @@ def SubsetCardinalityFormula(B, equalities=False):
                 ssc.add_clause(cls, strict=True)
 
     for v in Right:
-        edge_vars = [var_name(u, v) for u in neighbors(B, v)]
+        edge_vars = [var_name(u, v) for u in B.left_neighbors(v)]
 
         if equalities:
             for cls in CNF.exactly_half_floor(edge_vars):

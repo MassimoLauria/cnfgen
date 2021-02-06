@@ -1,13 +1,13 @@
 import sys
 import pytest
 
-import networkx as nx
-from networkx.algorithms.bipartite import complete_bipartite_graph
-
 from cnfgen import CNF
 from cnfgen import PigeonholePrinciple
 from cnfgen import GraphPigeonholePrinciple
 from cnfgen import BinaryPigeonholePrinciple
+from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph
+
+import networkx as nx
 
 from cnfgen.clitools import cnfgen, CLIError
 
@@ -124,9 +124,9 @@ def test_two_pigeons_two_holes_functional_onto():
     assertCnfEqualsDimacs(F, dimacs)
 
 
-def test_empty():
+def test_empty_graph():
     G = CNF()
-    graph = nx.Graph()
+    graph = BipartiteGraph(0, 0)
     for functional in (True, False):
         for onto in (True, False):
             F = GraphPigeonholePrinciple(graph, functional, onto)
@@ -138,7 +138,7 @@ def test_complete():
         for holes in range(2, 5):
             for functional in (True, False):
                 for onto in (True, False):
-                    graph = complete_bipartite_graph(pigeons, holes)
+                    graph = CompleteBipartiteGraph(pigeons, holes)
                     F = GraphPigeonholePrinciple(graph, functional, onto)
                     G = PigeonholePrinciple(pigeons, holes, functional, onto)
                     assertCnfEqualsIgnoreVariables(F, G)
@@ -224,7 +224,7 @@ def test_gphp_lib_vs_cli():
                 parameters.append("--functional")
             if onto:
                 parameters.append("--onto")
-            graph = complete_bipartite_graph(5, 4)
+            graph = CompleteBipartiteGraph(5, 4)
             F = GraphPigeonholePrinciple(graph, functional, onto)
             lib = F.dimacs(export_header=False)
             cli = cnfgen(parameters, mode='string')

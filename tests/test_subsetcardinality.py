@@ -1,9 +1,9 @@
 import pytest
 import networkx as nx
-from networkx.algorithms.bipartite import complete_bipartite_graph
 
 from cnfgen import CNF
 from cnfgen import SubsetCardinalityFormula
+from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph
 
 from cnfgen.clitools import cnfgen, CLIError
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs
@@ -11,7 +11,7 @@ from tests.utils import assertCnfEqual, assertCnfEqualsDimacs
 
 def test_empty():
     G = CNF()
-    graph = nx.Graph()
+    graph = BipartiteGraph(0, 0)
     F = SubsetCardinalityFormula(graph)
     assertCnfEqual(F, G)
 
@@ -23,7 +23,7 @@ def test_not_bipartite():
 
 
 def test_complete_even():
-    graph = complete_bipartite_graph(2, 2)
+    graph = CompleteBipartiteGraph(2, 2)
     F = SubsetCardinalityFormula(graph)
     dimacs = """\
     p cnf 4 4
@@ -32,11 +32,12 @@ def test_complete_even():
     -1 -3 0
     -2 -4 0
     """
+    print(F.latex())
     assertCnfEqualsDimacs(F, dimacs)
 
 
 def test_complete_even_odd():
-    graph = complete_bipartite_graph(2, 3)
+    graph = CompleteBipartiteGraph(2, 3)
     F = SubsetCardinalityFormula(graph)
     dimacs = """\
     p cnf 6 9
@@ -54,7 +55,7 @@ def test_complete_even_odd():
 
 
 def test_complete_odd():
-    graph = complete_bipartite_graph(3, 3)
+    graph = CompleteBipartiteGraph(3, 3)
     F = SubsetCardinalityFormula(graph)
     dimacs = """\
     p cnf 9 18
@@ -88,7 +89,7 @@ def test_cli_complete():
                 str(rows),
                 str(columns)
             ]
-            graph = complete_bipartite_graph(rows, columns)
+            graph = CompleteBipartiteGraph(rows, columns)
             F = SubsetCardinalityFormula(graph)
 
             lib = F.dimacs(export_header=False)

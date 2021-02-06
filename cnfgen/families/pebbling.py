@@ -5,7 +5,6 @@
 
 from cnfgen.cnf import CNF
 from cnfgen.graphs import is_dag, enumerate_vertices
-from cnfgen.graphs import has_bipartition, bipartite_sets
 
 from itertools import product
 from collections import OrderedDict
@@ -313,13 +312,7 @@ def SparseStoneFormula(D, B):
         raise ValueError(
             "Stone formulas are defined only for directed acyclic graphs.")
 
-    if not has_bipartition(B):
-        raise ValueError(
-            "Vertices to stones mapping must be specified with a bipartite graph"
-        )
-
-    Left, Right = bipartite_sets(B)
-    nstones = len(Right)
+    Left, stones = B.parts()
 
     if len(Left) != D.order():
         raise ValueError(
@@ -328,7 +321,7 @@ def SparseStoneFormula(D, B):
 
     if hasattr(D, 'name'):
         description = "Sparse stone formula of {} with {} stones".format(
-            D.name, nstones)
+            D.name, len(stones))
     else:
         description = "Sparse stone formula with {} stones".format(nstones)
 
@@ -336,8 +329,6 @@ def SparseStoneFormula(D, B):
 
     # add variables in the appropriate order
     vertices = enumerate_vertices(D)
-    stones = list(range(1, nstones + 1))
-
     mapping = cnf.unary_mapping(vertices, stones, sparsity_pattern=B)
 
     stone_formula_helper(cnf, D, mapping)

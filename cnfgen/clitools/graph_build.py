@@ -9,14 +9,13 @@ import random
 import networkx
 from itertools import combinations, product
 
-from networkx.algorithms.bipartite import complete_bipartite_graph
-from networkx.algorithms.bipartite import random_graph as bipartite_random_graph
-from networkx.algorithms.bipartite import gnmk_random_graph as bipartite_gnmk_random_graph
-
-from cnfgen.graphs import bipartite_random_left_regular
+from cnfgen.graphs import bipartite_random
 from cnfgen.graphs import bipartite_random_regular
+from cnfgen.graphs import bipartite_random_m_edges
+from cnfgen.graphs import bipartite_random_left_regular
 from cnfgen.graphs import bipartite_shift
-from cnfgen.graphs import bipartite_sets
+from cnfgen.graphs import CompleteBipartiteGraph
+from cnfgen.graphs import BipartiteGraph
 
 from cnfgen.graphs import dag_complete_binary_tree
 from cnfgen.graphs import dag_pyramid
@@ -238,7 +237,7 @@ def obtain_glrp(parsed):
         raise ValueError(
             '\'glrp\' expects three arguments L R p\n with L>0, R>0, p in [0,1]'
         )
-    G = bipartite_random_graph(left, right, p)
+    G = bipartite_random(left, right, p)
     G.name = 'Random {}-biased bipartite with ({},{}) vertices'.format(
         p, left, right)
     return G
@@ -258,7 +257,7 @@ def obtain_glrm(parsed):
         raise ValueError(
             '\'glrm\' expects three arguments L R m\n with L>0, R>0, 0<= m <= L*R'
         )
-    G = bipartite_gnmk_random_graph(left, right, edges)
+    G = bipartite_random_m_edges(left, right, edges)
     G.name = 'Random bipartite with ({},{}) vertices and {} edges'.format(
         left, right, edges)
     return G
@@ -348,7 +347,7 @@ def obtain_complete_bipartite(parsed):
     except (TypeError, ValueError, AssertionError):
         raise ValueError('\'complete\' expects argument L R with L>0, R>0')
 
-    G = complete_bipartite_graph(left, right)
+    G = CompleteBipartiteGraph(left, right)
     G.name = "Complete bipartite graph with ({},{}) vertices".format(
         left, right)
     return G
@@ -366,7 +365,7 @@ def obtain_empty_bipartite(parsed):
     except (TypeError, ValueError, AssertionError):
         raise ValueError('\'complete\' expects argument <L> <R> with L>0, R>0')
 
-    G = bipartite_gnmk_random_graph(left, right, 0)
+    G = BipartiteGraph(left, right)
     G.name = "Empty bipartite graph with ({},{}) vertices".format(left, right)
     return G
 
@@ -383,7 +382,7 @@ def modify_bipartite_graph_plantbiclique(parsed, G):
         raise ValueError(
             '\'plantbiclique\' expects argument A B with A>=0, B>=0')
 
-    left, right = bipartite_sets(G)
+    left, right = G.parts()
     if cliqueleft > len(left) or cliqueright > len(right):
         raise ValueError("Planted clique does not fit in the graph")
 

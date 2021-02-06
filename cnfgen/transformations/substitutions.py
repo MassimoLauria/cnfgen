@@ -5,7 +5,7 @@ from itertools import combinations, product, permutations
 from copy import copy
 
 from cnfgen.cnf import CNF
-from cnfgen.graphs import bipartite_sets, neighbors
+# from cnfgen.graphs import bipartite_sets, neighbors
 
 ###
 ### Substitions
@@ -668,7 +668,7 @@ class VariableCompression(BaseSubstitution):
         ----------
         cnf : CNF
             the original cnf formula
-        B : networkx.Graph
+        B : cnfgen.graphs.BipartiteGraph
             a bipartite graph. The left side must have the number of
             vertices equal to the number of original variables
         
@@ -682,11 +682,11 @@ class VariableCompression(BaseSubstitution):
                 "Function specification for variable compression must be either 'xor' or 'maj'."
             )
 
-        Left, Right = bipartite_sets(B)
+        Left, Right = B.parts()
 
         if len(Left) != len(list(cnf.variables())):
             raise ValueError(
-                "Right side of the graph must match the variable numbers of the CNF."
+                "Left side of the graph must match the variable numbers of the CNF."
             )
 
         self._pattern = B
@@ -706,12 +706,12 @@ class VariableCompression(BaseSubstitution):
 
         Arguments:
         - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
+        - `varname`: variable to be substituted
 
         Returns: a list of clauses
         """
         varname = self._name_vertex_dict[varname]
-        local_vars = neighbors(self._pattern, varname)
+        local_vars = self._pattern.right_neighbors(varname)
         local_names = ["Y_{{{0}}}".format(i) for i in local_vars]
 
         if self._function == 'xor':

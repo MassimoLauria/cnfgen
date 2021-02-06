@@ -1,7 +1,5 @@
 import pytest
 
-from cnfgen.graphs import bipartite_sets
-
 from cnfgen.clitools.cmdline import CLIParser, CLIError
 from cnfgen.clitools.graph_args import parse_graph_argument
 from cnfgen.clitools.graph_args import obtain_graph
@@ -17,7 +15,7 @@ def test_glrp():
 
     assert G.order() == 19
 
-    left, right = bipartite_sets(G)
+    left, right = G.parts()
 
     assert len(left) == 10
     assert len(right) == 9
@@ -29,7 +27,7 @@ def test_glrm():
     assert G.order() == 19
     assert G.size() == 15
 
-    left, right = bipartite_sets(G)
+    left, right = G.parts()
 
     assert len(left) == 10
     assert len(right) == 9
@@ -41,13 +39,13 @@ def test_glrd():
     assert G.order() == 33
     assert G.size() == 60
 
-    left, right = bipartite_sets(G)
+    left, right = G.parts()
 
     assert len(left) == 20
     assert len(right) == 13
 
-    for v in left:
-        assert G.degree(v) == 3
+    for u in left:
+        assert G.right_degree(u) == 3
 
 
 def test_regular():
@@ -56,16 +54,16 @@ def test_regular():
     assert G.order() == 18
     assert G.size() == 40
 
-    left, right = bipartite_sets(G)
+    left, right = G.parts()
 
     assert len(left) == 10
     assert len(right) == 8
 
-    for v in left:
-        assert G.degree(v) == 4
+    for u in left:
+        assert G.right_degree(u) == 4
 
     for v in right:
-        assert G.degree(v) == 5
+        assert G.left_degree(v) == 5
 
 
 def test_regular_fail():
@@ -79,13 +77,16 @@ def test_shift_empty():
     assert G.order() == 19
     assert G.size() == 0
 
-    left, right = bipartite_sets(G)
+    left, right = G.parts()
 
     assert len(left) == 10
     assert len(right) == 9
 
-    for v in left:
-        assert G.degree(v) == 0
+    for u in left:
+        assert G.right_degree(u) == 0
+
+    for v in right:
+        assert G.left_degree(v) == 0
 
 
 def test_bshift_1248():
@@ -94,16 +95,16 @@ def test_bshift_1248():
     assert G.order() == 20
     assert G.size() == 40
 
-    left, right = bipartite_sets(G)
+    left, right = G.parts()
 
     assert len(left) == 10
     assert len(right) == 10
 
-    for v in left:
-        assert G.degree(v) == 4
+    for u in left:
+        assert G.right_degree(u) == 4
 
     for v in right:
-        assert G.degree(v) == 4
+        assert G.left_degree(v) == 4
 
 
 def test_bshift_1248bis():
@@ -112,16 +113,16 @@ def test_bshift_1248bis():
     assert G.order() == 23
     assert G.size() == 52
 
-    left, right = bipartite_sets(G)
+    left, right = G.parts()
 
     assert len(left) == 13
     assert len(right) == 10
 
-    for v in left:
-        assert G.degree(v) == 4
+    for u in left:
+        assert G.right_degree(u) == 4
 
     for v in right:
-        assert G.degree(v) >= 4
+        assert G.left_degree(v) >= 4
 
 
 def test_complete():
@@ -130,16 +131,16 @@ def test_complete():
     assert G.order() == 19
     assert G.size() == 90
 
-    left, right = bipartite_sets(G)
+    left, right = G.parts()
 
     assert len(left) == 10
     assert len(right) == 9
 
-    for v in left:
-        assert G.degree(v) == 9
+    for u in left:
+        assert G.right_degree(u) == 9
 
     for v in right:
-        assert G.degree(v) == 10
+        assert G.left_degree(v) == 10
 
 
 def test_already_complete():
@@ -153,16 +154,16 @@ def test_empty_to_complete():
     assert G.order() == 19
     assert G.size() == 90
 
-    left, right = bipartite_sets(G)
+    left, right = G.parts()
 
     assert len(left) == 10
     assert len(right) == 9
 
-    for v in left:
-        assert G.degree(v) == 9
+    for u in left:
+        assert G.right_degree(u) == 9
 
     for v in right:
-        assert G.degree(v) == 10
+        assert G.left_degree(v) == 10
 
 
 def test_addedges():

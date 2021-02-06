@@ -7,6 +7,7 @@ from cnfgen import TseitinFormula
 
 from networkx.algorithms.bipartite import random_graph as bipartite_random_graph
 from networkx.algorithms.bipartite import complete_bipartite_graph
+from cnfgen.graphs import BipartiteGraph
 
 from cnfgen.clitools import cnfgen
 from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
@@ -20,17 +21,19 @@ def test_empty():
 
 
 def test_complete_bipartite():
-    graph = complete_bipartite_graph(5, 7)
-    G = GraphPigeonholePrinciple(graph, functional=True, onto=True)
-    F = PerfectMatchingPrinciple(graph)
-    assertCnfEqualsIgnoreVariables(F, G)
+    G = complete_bipartite_graph(5, 7)
+    B = BipartiteGraph.from_networkx(G)
+    PHP = GraphPigeonholePrinciple(B, functional=True, onto=True)
+    PM = PerfectMatchingPrinciple(G)
+    assertCnfEqualsIgnoreVariables(PHP, PM)
 
 
 def test_random_bipartite():
-    graph = bipartite_random_graph(5, 7, .3, seed=42)
-    G = GraphPigeonholePrinciple(graph, functional=True, onto=True)
-    F = PerfectMatchingPrinciple(graph)
-    assertCnfEqualsIgnoreVariables(F, G)
+    G = bipartite_random_graph(5, 7, .3, seed=42)
+    B = BipartiteGraph.from_networkx(G)
+    PHP = GraphPigeonholePrinciple(B, functional=True, onto=True)
+    PM = PerfectMatchingPrinciple(G)
+    assertCnfEqualsIgnoreVariables(PHP, PM)
 
 
 def test_cycle():

@@ -92,34 +92,27 @@ passes the test :py:func:`cnfgen.graphs.is_dag`.
    >>> cnfgen.graphs.is_dag(H)
    True
    
-In the same way ``NetworkX`` does not have a particular data structure
-for    bipartite     graphs    (     :py:class:`networkx.Graph`    and
-:py:class:`networkx.MultiGraph` are possible  choices), but it follows
-the convention that  all vertices in the graph  have the ``bipartite``
-attribute  that  gets values  :math:`\{0,1\}`  [3]_.  The CNF  formula
-constructions that make use of  bipartite graphs usually associate the
-:math:`0`  part as  the  left  side, and  the  :math:`1`  part to  the
-right side.  The function :py:func:`cnfgen.graphs.has_bipartition`
-tests whether this bipartition exists in a graph.
+For   bipartite    graphs   we    use   a   custom    data   structure
+:py:class:`cnfgen.graphs.BipartiteGraph` to  compensate for  the lacks
+of a specific one in ``Networkx``. Vertices are identified as integers
+starting  from  1  and  the  left and  right  sides  have  independent
+enumerations (this  means that the  same identifier may occur  on both
+sides).  The  function :py:func:`cnfgen.graphs.has_bipartition`  tests
+whether the a graph object is bipartite graph.
 
-
-   >>> import networkx as nx
-   >>> G = nx.bipartite.havel_hakimi_graph([2,1],[1,1,1])
-   >>> cnfgen.graphs.has_bipartition(G)
-   True
-   >>> from pprint import pprint
-   >>> pprint(dict(G.nodes()))
-   {0: {'bipartite': 0},
-    1: {'bipartite': 0},
-    2: {'bipartite': 1},
-    3: {'bipartite': 1},
-    4: {'bipartite': 1}}
-   >>> sorted(G.edges())
-   [(0, 3), (0, 4), (1, 2)]
-   >>> F = cnfgen.GraphPigeonholePrinciple(G)
+   >>> B = cnfgen.graphs.BipartiteGraph(2,3)
+   >>> B.left_order()
+   2
+   >>> B.right_order()
+   3
+   >>> B.order()
+   5
+   >>> B.add_edges_from([(1,2),(2,1),(2,3)])
+   >>> B.size()
+   3
+   >>> F = cnfgen.GraphPigeonholePrinciple(B)
    >>> sorted(F.variables())
-   ['p_{0,3}', 'p_{0,4}', 'p_{1,2}']
-
+   ['p_{1,2}', 'p_{2,1}', 'p_{2,3}']
    
 Graph I/O
 ---------

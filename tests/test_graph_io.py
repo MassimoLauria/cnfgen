@@ -8,7 +8,7 @@ import pytest
 import cnfgen
 from cnfgen.clitools import CLIError
 from cnfgen.graphs import readGraph, writeGraph, supported_formats
-from cnfgen.graphs import bipartite_sets, has_dot_library
+from cnfgen.graphs import has_dot_library
 
 dot_path2 = 'graph G { 0 -- 1 -- 2}'
 gml_path2 = """
@@ -179,8 +179,8 @@ def test_readGraph_kthlist_non_bipartite():
     assert G.order() == 5
     assert len(G.edges()) == 5
 
-    with pytest.raises(ValueError):
-        bipartite_sets(G)
+    with pytest.raises(AttributeError):
+        G.parts()
 
 
 def test_readGraph_kthlist_bipartite():
@@ -191,7 +191,7 @@ def test_readGraph_kthlist_bipartite():
 
     assert G.order() == 5
 
-    L, R = bipartite_sets(G)
+    L, R = G.parts()
     assert len(L) == 2
     assert len(R) == 3
 

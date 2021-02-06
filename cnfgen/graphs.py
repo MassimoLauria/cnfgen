@@ -7,9 +7,10 @@ formulas that are graph based.
 import copy
 __all__ = [
     "supported_formats", "readGraph", "writeGraph", "is_dag",
-    "has_bipartition", "bipartite_sets", "enumerate_vertices",
-    "enumerate_edges", "neighbors", "bipartite_random_left_regular",
-    "bipartite_random_regular", "dag_complete_binary_tree", "dag_pyramid"
+    "enumerate_vertices", "enumerate_edges", "neighbors",
+    "bipartite_random_left_regular", "bipartite_random_regular",
+    "bipartite_random_m_edges", "bipartite_random", "dag_complete_binary_tree",
+    "dag_pyramid"
 ]
 
 #################################################################
@@ -38,9 +39,174 @@ from io import StringIO, BytesIO
 import io
 import os
 import fileinput
-
 import networkx
-import networkx.algorithms
+
+from itertools import product
+
+
+class EdgeList():
+    """Edge list for bipartite graphs"""
+    def __init__(self, B):
+        self.B = B
+
+    def __len__(self):
+        return self.B.edgecount
+
+    def __contains__(self, t):
+        return len(t) == 2 and self.B.has_edge(t[0], t[1])
+
+    def __iter__(self):
+        for u in range(1, self.B.left_order() + 1):
+            yield from ((u, v) for v in self.B.right_neighbors(u))
+
+
+def has_bipartition(G):
+    """Return the bipartition of the vertices
+
+    Raises 'ValueError' if bipartition labels are missing"""
+    return isinstance(G, BaseBipartiteGraph)
+
+
+class BaseBipartiteGraph():
+    def __init__(self, L, R):
+        if L < 0 or R < 0:
+            raise ValueError(
+                "Left and right size of the bipartite graph must be non-negative"
+            )
+        self.lorder = L
+        self.rorder = R
+        self.name = 'Bipartite graph with ({},{}) vertices'.format(L, R)
+
+    def order(self):
+        return self.lorder + self.rorder
+
+    def size(self):
+        return len(self.edges())
+
+    def number_of_edges(self):
+        return self.size()
+
+    def left_order(self):
+        return self.lorder
+
+    def right_order(self):
+        return self.rorder
+
+    def left_degree(self, v):
+        return len(self.left_neighbors(v))
+
+    def right_degree(self, u):
+        return len(self.right_neighbors(u))
+
+    def left_neighbors(self, v):
+        raise NotImplementedError
+
+    def right_neighbors(self, u):
+        raise NotImplementedError
+
+    def parts(self):
+        return range(1, self.lorder + 1), range(1, self.rorder + 1)
+
+    def has_edge(self):
+        raise NotImplementedError
+
+    def add_edge(self):
+        raise NotImplementedError
+
+    def add_edges_from(self, edges):
+        for u, v in edges:
+            self.add_edge(u, v)
+
+    def edges(self):
+        return EdgeList(self)
+
+    def __len__(self):
+        return self.order()
+
+    @staticmethod
+    def from_networkx(G):
+        left = []
+        right = []
+        left_ids = {}
+        right_ids = {}
+        try:
+            for n in G.nodes():
+                color = G.nodes[n]['bipartite']
+                if color in [0, '0']:
+                    left.append(n)
+                elif color in [1, '1']:
+                    right.append(n)
+                else:
+                    raise KeyError
+        except KeyError:
+            raise ValueError(
+                "Full bipartition is missing, each vertex must have a 0,1 label."
+            )
+        B = BipartiteGraph(len(left), len(right))
+        left.sort()
+        right.sort()
+        left_ids = {u: i for (i, u) in enumerate(left, start=1)}
+        right_ids = {v: i for (i, v) in enumerate(right, start=1)}
+        for u, v in G.edges():
+            B.add_edge(left_ids[u], right_ids[v])
+        return B
+
+
+class BipartiteGraph(BaseBipartiteGraph):
+    def __init__(self, L, R):
+        BaseBipartiteGraph.__init__(self, L, R)
+        self.ladj = {}
+        self.radj = {}
+        self.edgecount = 0
+
+    def has_edge(self, u, v):
+        return u in self.ladj and v in self.ladj[u]
+
+    def add_edge(self, u, v):
+        """Add an edge to the graph.
+        
+        - allows multi-edges (i.e. multiple occurrences are allowed)
+        - neighbors of a vertex are kept in insertion order
+        """
+        if not (1 <= u <= self.lorder and 1 <= v <= self.rorder):
+            raise ValueError("Invalid choice of vertices")
+        if u not in self.ladj:
+            self.ladj[u] = []
+        if v not in self.radj:
+            self.radj[v] = []
+        self.ladj[u].append(v)
+        self.radj[v].append(u)
+        self.edgecount += 1
+
+    def right_neighbors(self, u):
+        if not (1 <= u <= self.lorder):
+            raise ValueError("Invalid choice of vertex")
+        return self.ladj.get(u, [])[:]
+
+    def left_neighbors(self, v):
+        if not (1 <= v <= self.rorder):
+            raise ValueError("Invalid choice of vertex")
+        return self.radj.get(v, [])[:]
+
+
+class CompleteBipartiteGraph(BaseBipartiteGraph):
+    def __init__(self, L, R):
+        BaseBipartiteGraph.__init__(self, L, R)
+        self.edgecount = L * R
+        self.name = 'Complete bipartite graph with ({},{}) vertices'.format(
+            L, R)
+
+    def has_edge(self, u, v):
+        return (1 <= u <= self.lorder and 1 <= v <= self.rorder)
+
+    def add_edge(self, u, v):
+        pass
+
+    def right_neighbors(self, u):
+        return range(1, self.rorder + 1)
+
+    def left_neighbors(self, v):
+        return range(1, self.lorder + 1)
 
 
 def has_dot_library():
@@ -134,14 +300,15 @@ def readGraph(input_file,
     added support for some more *hackish* formats that are useful
     in applications.
 
-    for the "simple" and "bipartite" types, the graph is actually
-    a (Multi)Graph object, while it is a (Multi)DiGraph in case of
-    "dag" or "digraph".
+    For the "simple" types, the graph is actually a (Multi)Graph
+    object, while it is a (Multi)DiGraph in case of "dag" or
+    "digraph".
 
     In the case of "dag" type, the graph is guaranteed to be acyclic
-    and to pass the ``is_dag`` test. In the case of "bipartite" type,
-    the graph is guaranteed to have the two parts labeled and to pass
-    the ``has_bipartition`` test.
+    and to pass the ``is_dag`` test. 
+
+    In the case of "bipartite" type, the graph is of
+    :py:class:`cnfgen.graphs.BaseBipartiteGraph`.
 
 
     Parameters
@@ -183,7 +350,7 @@ def readGraph(input_file,
 
     See Also
     --------
-    writeGraph, is_dag, has_bipartition
+    writeGraph, is_dag
 
     """
 
@@ -246,8 +413,7 @@ def readGraph(input_file,
         raise ValueError("[Input error] Graph must be acyclic")
 
     if graph_type == "bipartite" and not has_bipartition(G):
-        raise ValueError(
-            "[Input error] Graph vertices miss the 'bipartite' 0,1 label.")
+        raise ValueError("[Input error] Graph must be bipartite")
 
     return G
 
@@ -317,11 +483,13 @@ def writeGraph(G, output_file, graph_type, file_format='autodetect'):
         networkx.write_gml(G, tempbuffer)
         print(tempbuffer.getvalue().decode('ascii'), file=output_file)
 
-    elif file_format == 'kthlist':
+    elif file_format == 'kthlist' and graph_type != 'bipartite':
 
-        _write_graph_kthlist_format(G,
-                                    output_file,
-                                    bipartition=(graph_type == 'bipartite'))
+        _write_graph_kthlist_nonbipartite(G, output_file)
+
+    elif file_format == 'kthlist' and graph_type == 'bipartite':
+
+        _write_graph_kthlist_bipartite(G, output_file)
 
     elif file_format == 'dimacs':
 
@@ -362,44 +530,6 @@ def is_dag(digraph):
 
     else:
         return networkx.algorithms.is_directed_acyclic_graph(digraph)
-
-
-def has_bipartition(G):
-    """Check that the graph is labelled with a bipartition
-
-    NetworkX follows the convention that bipartite graphs have their
-    vertices labeled with the bipartition. In particular each vertex
-    has the 'bipartite' attribute with is either 0 or 1.
-
-    Parameters
-    ----------
-    G: networkx.Graph
-
-    """
-    try:
-        for n in G.nodes():
-            # Accept both string and int representation
-            if not G.nodes[n]['bipartite'] in [0, 1, '0', '1']:
-                return False
-    except KeyError:
-        return False
-
-    return True
-
-
-def bipartite_sets(G):
-    """Return the bipartition of the vertices
-
-    Raises 'ValueError' if bipartition labels are missing"""
-    try:
-        Left = sorted(
-            [v for v, d in G.nodes(data=True) if d['bipartite'] in [0, '0']])
-        Right = sorted(
-            [v for v, d in G.nodes(data=True) if d['bipartite'] in [1, '1']])
-    except KeyError:
-        raise ValueError("The encoded bipartition is missing")
-
-    return Left, Right
 
 
 #
@@ -594,7 +724,11 @@ def _read_graph_kthlist_format(inputfile,
     if nvertex != G.order():
         raise ValueError("{} vertices expected. Got {} instead.".format(
             nvertex, G.order()))
-    return G
+
+    if bipartition:
+        return BipartiteGraph.from_networkx(G)
+    else:
+        return G
 
 
 def _read_graph_dimacs_format(inputfile, graph_class=networkx.Graph):
@@ -684,12 +818,9 @@ def _read_graph_matrix_format(inputfile):
 
     Returns
     -------
-    G : networkx.Graph
+    G : BipartiteGraph
 
     """
-    G = networkx.Graph()
-    G.name = ''
-
     def scan_integer(inputfile):
 
         num_buffer = []
@@ -724,15 +855,12 @@ def _read_graph_matrix_format(inputfile):
         n = next(scanner)[0]
         m = next(scanner)[0]
 
-        # bipartition of vertices
-        for i in range(1, n + 1):
-            G.add_node(i, bipartite=0)
-        for i in range(n + 1, n + m + 1):
-            G.add_node(i, bipartite=1)
+        G = BipartiteGraph(n, m)
+        G.name = ''
 
         # read edges
         for i in range(1, n + 1):
-            for j in range(n + 1, n + m + 1):
+            for j in range(1, m + 1):
 
                 (b, l) = next(scanner)
                 if b == 1:
@@ -749,21 +877,19 @@ def _read_graph_matrix_format(inputfile):
     # check that there are is no more data
     try:
         (b, l) = next(scanner)
-        print(b, l)
         raise ValueError(
             "[Input error at line {}] There are more than {}x{} entries".
             format(l, n, m))
     except StopIteration:
         pass
 
-    assert has_bipartition(G)
     return G
 
 
 #
 # In-house graph writers
 #
-def _write_graph_kthlist_format(G, output_file, bipartition=False):
+def _write_graph_kthlist_nonbipartite(G, output_file):
     """Wrire a graph to a file, in the KTH reverse adjacency lists format.
 
     Parameters
@@ -772,12 +898,7 @@ def _write_graph_kthlist_format(G, output_file, bipartition=False):
 
     output_file : file object
         file handle of the output
-
-    bipartition : boolean
-        only write the left side adjacency lists. This will enforce
-        the bipartition where the file is read again
     """
-
     print("c {}".format(G.name), file=output_file)
     print("{}".format(G.order()), file=output_file)
 
@@ -785,10 +906,7 @@ def _write_graph_kthlist_format(G, output_file, bipartition=False):
     # adj list in the same order
     indices = {v: i for (i, v) in enumerate(enumerate_vertices(G), start=1)}
 
-    if bipartition:
-        V, _ = bipartite_sets(G)
-    else:
-        V = enumerate_vertices(G)
+    V = enumerate_vertices(G)
 
     from io import StringIO
     output = StringIO()
@@ -804,6 +922,35 @@ def _write_graph_kthlist_format(G, output_file, bipartition=False):
 
         output.write(str(indices[v]) + " : ")
         output.write(" ".join([str(i) for i in nbors]))
+        output.write(" 0\n")
+
+    print(output.getvalue(), file=output_file)
+
+
+def _write_graph_kthlist_bipartite(G, output_file):
+    """Wrire a bipartite graph to a file, 
+       in the KTH reverse adjacency lists format.
+
+    Parameters
+    ----------
+    G : graph object
+
+    output_file : file object
+        file handle of the output
+    """
+
+    print("c {}".format(G.name), file=output_file)
+    print("{}".format(G.order()), file=output_file)
+
+    from io import StringIO
+    output = StringIO()
+
+    U, _ = G.parts()
+    offset = len(U)
+
+    for u in U:
+        output.write(str(u) + " : ")
+        output.write(" ".join([str(v + offset) for v in G.right_neighbors(u)]))
         output.write(" 0\n")
 
     print(output.getvalue(), file=output_file)
@@ -840,14 +987,14 @@ def _write_graph_matrix_format(G, output_file):
         file handle of the output
     """
 
-    Left, Right = bipartite_sets(G)
-
-    print("{} {}".format(len(Left), len(Right)), file=output_file)
-    for u in Left:
+    print("{} {}".format(len(G.left_order()), len(G.right_order())),
+          file=output_file)
+    L, R = G.parts()
+    for u in L:
 
         adj_row = []
 
-        for v in Right:
+        for v in R:
             if G.has_edge(u, v):
                 adj_row.append("1")
             else:
@@ -857,10 +1004,9 @@ def _write_graph_matrix_format(G, output_file):
 
 
 #
-# Graph generator (missing from networkx)
+# Bipartite graph generator
+# (we do not want to use networkx)
 #
-
-
 def bipartite_random_left_regular(l, r, d, seed=None):
     """Returns a random bipartite graph with constant left degree.
 
@@ -900,23 +1046,119 @@ def bipartite_random_left_regular(l, r, d, seed=None):
         raise ValueError(
             "bipartite_random_left_regular(l,r,d) needs l,r,d >=0.")
 
-    G = networkx.Graph()
+    G = BipartiteGraph(l, r)
     G.name = "bipartite_random_left_regular({},{},{})".format(l, r, d)
-
-    L = list(range(0, l))
-    R = list(range(l, l + r))
     d = min(r, d)
 
-    for u in L:
-        G.add_node(u, bipartite=0)
-
-    for v in R:
-        G.add_node(v, bipartite=1)
-
+    L, R = G.parts()
     for u in L:
         for v in sorted(random.sample(R, d)):
             G.add_edge(u, v)
 
+    return G
+
+
+def bipartite_random_m_edges(L, R, m, seed=None):
+    """Returns a random bipartite graph with M edges
+
+    Build a random bipartite graph with :math:`L` left vertices,
+    :math:`R` right vertices and :math:`m` edges sampled at random
+    without repetition.
+
+    Parameters
+    ----------
+    L : int
+        vertices on the left side
+    R : int
+        vertices on the right side
+    m : int
+        number of edges.
+    seed : hashable object
+        seed the random generator
+
+    Returns
+    -------
+    BipartiteGraph
+
+    Raises
+    ------
+    ValueError
+        unless ``L``, ``R`` and ``m`` are non negative.
+
+    """
+    import random
+    if seed is not None:
+        random.seed(seed)
+
+    if L < 1 or R < 1 or m < 0 or m > L * R:
+        raise ValueError(
+            "bipartite_random_m_edges(L,R,m) needs L, R >= 1, 0<=m<=L*R")
+    G = BipartiteGraph(L, R)
+    G.name = "bipartite_random_m_edges({},{},{})".format(L, R, m)
+
+    U, V = G.parts()
+
+    if m > L * R // 3:
+        # Sampling strategy (dense)
+        E = ((u, v) for u in U for v in V)
+        for u, v in random.sample(E, m):
+            G.add_edge(u, v)
+    else:
+        # Sampling strategy (sparse)
+        count = 0
+        while count < m:
+            u = random.randint(1, L)
+            v = random.randint(1, R)
+            if not G.has_edge(u, v):
+                G.add_edge(u, v)
+                count += 1
+    assert G.size() == m
+    return G
+
+
+def bipartite_random(L, R, p, seed=None):
+    """Returns a random bipartite graph with independent edges
+
+    Build a random bipartite graph with :math:`L` left vertices,
+    :math:`R` right vertices, where each edge is sampled independently
+    with probability :math:`p`.
+
+    Parameters
+    ----------
+    L : int
+        vertices on the left side
+    R : int
+        vertices on the right side
+    p : float
+        probability to pick an edge
+    seed : hashable object
+        seed the random generator
+
+    Returns
+    -------
+    BipartiteGraph
+
+    Raises
+    ------
+    ValueError
+        unless ``L``, ``R`` are non negative and 0<=``p``<=1.
+    """
+    import random
+    if seed is not None:
+        random.seed(seed)
+
+    if L < 1 or R < 1 or p < 0 or p > 1:
+        raise ValueError(
+            "bipartite_random_graph(L,R,p) needs L, R >= 1, p in [0,1]")
+    G = BipartiteGraph(L, R)
+    G.name = "bipartite_random_graph({},{},{})".format(L, R, p)
+
+    U, V = G.parts()
+
+    for u in U:
+        for v in V:
+            if random.random() <= p:
+                G.add_edge(u, v)
     return G
 
 
@@ -927,12 +1169,13 @@ def bipartite_shift(N, M, pattern=[]):
     :math:`1` to :math:`N`), and :math:`M` vertices on the right
     (numbered from :math:`1` to :math:`M`),
 
+    Each vertex :math:`v` on the left side has edges to vertices
+    :math:`v+d_1`, :math:`v+d_2`, :math:`v+d_3`,... with vertex
+    indices on the right wrap around :wrap around over
+    :math:`[1..M]`).
 
-    The vertex :math:`1` on the left side has edges to vertices
-    :math:`v_1`, :math:`v_2`, :math:`v_3`,... (mod :math:`M`).
-    Each other vertex :math:`i>1` on the left side has edges
-    :math:`i+v_1`, :math:`i+v_2`, :math:`i+v_3`,... with wrap around
-    over :math:`[1..M]`.
+    Notice that this construction does not produces multiedges even if
+    two offsets end up on the same right vertex.
 
     Parameters
     ----------
@@ -945,7 +1188,7 @@ def bipartite_shift(N, M, pattern=[]):
 
     Returns
     -------
-    networkx.Graph
+    BipartiteGraph
 
     Raises
     ------
@@ -956,26 +1199,14 @@ def bipartite_shift(N, M, pattern=[]):
     if N < 1 or M < 1:
         raise ValueError("bipartite_shift(N,M,pattern) needs N,M >= 0.")
 
-    if any([x < 1 or x > M for x in pattern]):
-        raise ValueError(
-            "bipartite_shift(N,M,pattern) needs 1 <= pattern[i] <= M.")
-
-    G = networkx.Graph()
+    G = BipartiteGraph(N, M)
     G.name = "bipartite_shift_regular({},{},{})".format(N, M, pattern)
 
-    L = list(range(1, N + 1))
-    R = list(range(N + 1, N + M + 1))
-
-    for u in L:
-        G.add_node(u, bipartite=0)
-
-    for v in R:
-        G.add_node(v, bipartite=1)
-
+    L, R = G.parts()
     pattern.sort()
     for u in L:
-        for i in pattern:
-            G.add_edge(u, N + 1 + (i + u - 2) % M)
+        for offset in pattern:
+            G.add_edge(u, 1 + (u - 1 + offset) % M)
 
     return G
 
@@ -985,10 +1216,6 @@ def bipartite_random_regular(l, r, d, seed=None):
 
     The graph is d-regular on the left side and regular on the right
     size, so it must be that d*l / r is an integer number.
-
-    Each vertex in the graph has an attribute `bipartite` which is 0
-    for the vertices on the left side and 1 for the vertices on the
-    right side.
 
     Parameters
     ----------
@@ -1028,20 +1255,12 @@ def bipartite_random_regular(l, r, d, seed=None):
         raise ValueError(
             "bipartite_random_regular(l,r,d) needs r to divid l*d.")
 
-    G = networkx.Graph()
+    G = BipartiteGraph(l, r)
     G.name = "bipartite_random_regular({},{},{})".format(l, r, d)
 
-    L = list(range(0, l))
-    R = list(range(l, l + r))
-
-    for u in L:
-        G.add_node(u, bipartite=0)
-
-    for v in R:
-        G.add_node(v, bipartite=1)
-
-    A = L * d
-    B = R * (l * d // r)
+    L, R = G.parts()
+    A = list(L) * d
+    B = list(R) * (l * d // r)
     assert len(B) == l * d
 
     for i in range(l * d):
@@ -1202,7 +1421,7 @@ def sample_missing_edges(G, m, seed=None):
 
     if has_bipartition(G):
 
-        Left, Right = bipartite_sets(G)
+        Left, Right = G.parts()
         total_number_of_edges = len(Left) * len(Right)
 
         def edge_sampler():
