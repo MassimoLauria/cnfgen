@@ -11,6 +11,11 @@ env:
   - NETWORKX_VERSION=2.4
   - NETWORKX_VERSION=2.5
 
+jobs:
+  exclude:
+    - python: 3.9
+      env: NETWORKX_VERSION=2.3
+
 before_install:
   - sudo apt-get install minisat
 
