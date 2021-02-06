@@ -1,10 +1,10 @@
-dist: xenial       # required for python >=3.7
+dist: bionic 
 language: python
 python:
-  - "3.5"
   - "3.6"
   - "3.7"
   - "3.8"
+  - "3.9"
 # dependencies
 env:
   - NETWORKX_VERSION=2.0
