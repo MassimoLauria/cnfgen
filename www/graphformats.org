@@ -87,8 +87,7 @@
 
 * KTH adjacency list format<<kthformat>>
 
-  [[[file:KTHlistFormat.txt][Full specification]] by [[http://www.csc.kth.se/~jakobn/][Jakob Nordström]]]
-
+  [ [[file:KTHlistFormat.txt][Full specification]] by [[http://www.csc.kth.se/~jakobn/][Jakob Nordström]] ]
 
   The =kthlist=  adjacency list  graph format  has been  introduced by
   [[http://www.csc.kth.se/~jakobn/][Jakob Nordström]] of the Proof  Complexity [[http://www.csc.kth.se/~jakobn/project-proofcplx/][research group]] at KTH Royal
@@ -170,10 +169,15 @@ graph {
 
 ** KTH predecessors list format — =bipartite=
 
-   The interpretation  of a file  as a bipartite graph  is essentially
-   the same as  it is for undirected graphs, with  the difference that
-   the  bipartition is  made explicit  by listing  just the  adjacency
-   lists of the vertices on the left side.
+   The interpretation of a file as a bipartite graph is similar to the
+   one for undirected graphs, with the difference that the bipartition
+   is  made  explicit by  listing  just  the  adjacency lists  of  the
+   vertices on the left side. It  should be stressed that any isolated
+   vertex on  the left  side must  be listed  with its  zero neighbors
+   otherwise  its position  would be  ambiguous. =CNFgen=  expects all
+   vertices on the  left side to be listed in  order, without skipping
+   any of them. The neighborhood can  be specified in any order, which
+   will be preserved and taken in account.
 
    : c listing only left side vertices (bipartite graph)
    : 11
@@ -188,7 +192,7 @@ graph {
    example is  not a  correct =kthlist= file  for an  undirected graph
    because it  lacks the  adjacency lists of  the right  side vertices
    too.  The  following   is  the  same  graph,  but   encoded  as  an
-   undirected graph.
+   undirected graph. 
 
    : c listing left and right side vertices (undirected graph)
    : 11
@@ -229,7 +233,7 @@ graph {
 #+RESULTS:
 [[file:images/kthformatBI.png]]
 
-** Using =simple= files where =bipartite= files are expected (deprecated)
+** COMMENT Using =simple= files where =bipartite= files are expected (deprecated)
 
    CNFgen parser  is forgiving in  the sense that  when an edge  in an
    undirected  graph is  specified only  in one  of the  two adjacency
