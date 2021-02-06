@@ -581,6 +581,66 @@ def neighbors(graph, v):
 #
 # In-house parsers
 #
+def _kthlist_parse(inputfile):
+    """Read a graph from file, and produce the datas.
+
+    First yeild (#vertex,first comment line)
+    Then generates a sequence of (s,target,lineno)
+
+    Raises:
+        ValueError is parsing fails for some reason
+    """
+    # vertex number
+    size = -1
+    name = ""
+
+    for i, l in enumerate(inputfile.readlines()):
+
+        # first non empty comment line is the graph name
+        # must be before the graph size
+        if l[0] == 'c':
+            if size < 0 and len(name) == 0 and len(l[2:].strip() != 0):
+                name += l[2:]
+            continue
+
+        # empty line
+        if len(l.strip()) == 0:
+            continue
+
+        if ':' not in l:
+            # vertex number spec
+            if size >= 0:
+                raise ValueError(
+                    "Line {} contains a second spec directive.".format(i))
+            try:
+                size = int(l.strip())
+                if size < 0:
+                    raise ValueError
+            except ValueError:
+                raise ValueError(
+                    "Non negative number expected at line {}.".format(i))
+            yield (size, name)
+            continue
+
+        # Load edges from this line
+        left, right = l.split(':')
+        try:
+            left = int(left.strip())
+            right = [int(s) for s in right.split()]
+        except ValueError:
+            raise ValueError("Non integer vertex ID at line {}.".format(i))
+        if len(right) < 1 or right[-1] != 0:
+            raise ValueError("Line {} must end with 0.".format(i))
+
+        if left < 1 or left > size:
+            raise ValueError(
+                "Vertex ID out of range [1,{}] at line {}.".format(size, i))
+
+        right.pop()
+        if len([x for x in right if x < 1 or x > size]) > 0:
+            raise ValueError(
+                "Vertex ID out of range [1,{}] at line {}.".format(size, i))
+        yield left, right, i
 
 
 # kth graph format reader
@@ -589,16 +649,12 @@ def _read_graph_kthlist_format(inputfile,
                                bipartition=False):
     """Read a graph from file, in the KTH reverse adjacency lists format.
 
-    If the vertices are listed from to sources to the sinks, then the
-    graph is marked as topologically sorted, and any DAG test will be
-    answered without running any visit to the graph. Otherwise no
-    assumption is made.
-
-    If the file is supposed to represent a bipartite graph (i.e.
-    when `bipartition` parameters is true) then each target node of an
-    edge will be part of the left side and and each source node will
-    be on the right side. Vertices that are never named are considered
-    to be isolated vertices on the right side.
+    Assumes the adjacecy list is given in order.
+    - vertices are listed in increasing order
+    - if directed graph the adjacency list specifies incoming neighbous
+    - if DAG, the graph must be given in topological order source->sink
+    - if bipartite, only the adjiacency list of the lft side must be
+      given, no list for a vertex of the right side is allowed.
 
     Parameters
     ----------
@@ -610,12 +666,13 @@ def _read_graph_kthlist_format(inputfile,
         networkx.MultiDiGraph networkx.Graph networkx.MultiGraph
 
     bipartition : boolean
-        enforce that each edge (u,v) is such that u in in the left size
+        enforce reading a bipartite graph
 
     Raises
     ------
     ValueError
         Error parsing the file
+
     """
     if graph_class not in [
             networkx.DiGraph, networkx.MultiDiGraph, networkx.Graph,
@@ -633,97 +690,55 @@ def _read_graph_kthlist_format(inputfile,
     topologically_sorted_input = True
 
     # vertex number
-    nvertex = -1
-    vertex_cnt = -1
+    size = -1
 
-    for i, l in enumerate(inputfile.readlines()):
+    parser = _kthlist_parse(inputfile)
 
-        # add the comment to the header
-        if l[0] == 'c':
-            G.name += l[2:]
-            continue
+    size, name = next(parser)
+    G.add_nodes_from(range(1, size + 1))
+    G.ordered_vertices = range(1, size + 1)
 
-        # empty line
-        if len(l.strip()) == 0:
-            continue
+    bipartition_ambiguous = [1, size]
 
-        if ':' not in l:
-            # vertex number spec
-            if nvertex >= 0:
-                raise ValueError(
-                    "Line {} contains a second spec directive.".format(i))
-            try:
-                nvertex = int(l.strip())
-                if nvertex < 0:
-                    raise ValueError
-            except ValueError:
-                raise ValueError(
-                    "Non negative number expected at line {}.".format(i))
-            G.add_nodes_from(range(1, nvertex + 1))
-            G.ordered_vertices = range(1, nvertex + 1)
-            continue
-
-        # Load edges from this line
-        target, sources = l.split(':')
-        try:
-            target = int(target.strip())
-            sources = [int(s) for s in sources.split()]
-        except ValueError:
-            raise ValueError("Non integer vertex ID at line {}.".format(i))
-        if len(sources) < 1 or sources[-1] != 0:
-            raise ValueError("Line {} must end with 0.".format(i))
-
-        if target < 1 or target > nvertex:
-            raise ValueError(
-                "Vertex ID out of range [1,{}] at line {}.".format(nvertex, i))
-
-        sources.pop()
-        if len([x for x in sources if x < 1 or x > nvertex]) > 0:
-            raise ValueError(
-                "Vertex ID out of range [1,{}] at line {}.".format(nvertex, i))
+    for left, right, lineno in parser:
 
         # Vertices should appear in increasing order if the graph is topologically sorted
-        for s in sources:
-            if s <= target:
+        for v in right:
+            if v <= left:
                 topologically_sorted_input = False
 
         # Check the bi-coloring on both side
         if bipartition:
-            colors = [
-                G.nodes[s]['bipartite'] for s in sources
-                if 'bipartite' in G.nodes[s]
-            ]
-
-            if 'bipartite' in G.nodes[target]:
-                colors += [1 - G.nodes[target]['bipartite']]
-
-            if len(set(colors)) > 1:
+            if left > bipartition_ambiguous[1]:
                 raise ValueError(
-                    "Greedy bicoloring incompatible with edges in line {}.".
-                    format(i))
-
-            default_color = 0 if len(colors) == 0 else 1 - colors[0]
-            G.nodes[target]['bipartite'] = default_color
-            for s in sources:
-                G.nodes[s]['bipartite'] = 1 - default_color
+                    "Bipartition violation al line {}. Vertex {} cannot be on the left side."
+                    .format(lineno, left))
+            bipartition_ambiguous[0] = max(bipartition_ambiguous[0], left + 1)
+            for v in right:
+                if v < bipartition_ambiguous[0]:
+                    raise ValueError(
+                        "Bipartition violation. Invalid edge ({},{}) at line {}."
+                        .format(left, v, lineno))
+                bipartition_ambiguous[1] = min(bipartition_ambiguous[1], v - 1)
 
         # after vertices, add the edges
-        for s in sources:
-            G.add_edge(s, target)
+        for v in right:
+            G.add_edge(left, v)
 
     # label the bipartition on residual vertices
     if bipartition:
-        for v in G.ordered_vertices:
-            if 'bipartite' not in G.nodes[v]:
-                G.nodes[v]['bipartite'] = 1
+        for i in range(1, bipartition_ambiguous[0]):
+            G.nodes[i]['bipartite'] = 0
+        for i in range(bipartition_ambiguous[0], size + 1):
+            G.nodes[i]['bipartite'] = 1
 
     # cache the information that the graph is topologically sorted.
     if topologically_sorted_input:
         G.topologically_sorted = True
 
-    if nvertex != G.order():
+    if size != G.order():
         raise ValueError("{} vertices expected. Got {} instead.".format(
-            nvertex, G.order()))
+            size, G.order()))
 
     if bipartition:
         return BipartiteGraph.from_networkx(G)

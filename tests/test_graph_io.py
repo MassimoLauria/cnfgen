@@ -51,12 +51,18 @@ kthlist_non_dag = """
 2: 3 0
 3: 1 0
 """
-kthlist_bipartite = """
+kthlist_bipartite_non_strict = """
 5
 1: 2 0
 2: 1 0
 3: 0
 4: 1 0
+"""
+
+kthlist_bipartite_strict = """
+5
+1: 3 0
+2: 4 0
 """
 
 
@@ -183,9 +189,19 @@ def test_readGraph_kthlist_non_bipartite():
         G.parts()
 
 
-def test_readGraph_kthlist_bipartite():
+# Old version would accept non strict kthlists
+# I decided to drop that
+def test_readGraph_kthlist_bipartite_non_strict():
 
-    G = readGraph(sio(kthlist_bipartite),
+    with pytest.raises(ValueError):
+        readGraph(sio(kthlist_bipartite_non_strict),
+                  graph_type='bipartite',
+                  file_format='kthlist')
+
+
+def test_readGraph_kthlist_bipartite_strict():
+
+    G = readGraph(sio(kthlist_bipartite_strict),
                   graph_type='bipartite',
                   file_format='kthlist')
 
@@ -194,6 +210,12 @@ def test_readGraph_kthlist_bipartite():
     L, R = G.parts()
     assert len(L) == 2
     assert len(R) == 3
+    assert G.has_edge(1, 1)
+    assert not G.has_edge(1, 2)
+    assert not G.has_edge(1, 3)
+    assert not G.has_edge(2, 1)
+    assert G.has_edge(2, 2)
+    assert not G.has_edge(2, 3)
 
 
 def test_readGraph_dot_file_as_gml(shared_datadir):
