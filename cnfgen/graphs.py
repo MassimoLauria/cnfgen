@@ -381,10 +381,15 @@ def readGraph(input_file,
         # function is poorly written and does not like such buffers.
         # It turns out we can pass the data as a list of
         # encoded ascii lines.
-
+        #
+        # The 'id' field in the vertices are supposed to be an integer
+        # and will be used as identifiers for the vertices in Graph
+        # object too.
+        #
         try:
             G = grtype(
-                networkx.read_gml(line.encode('ascii') for line in input_file))
+                networkx.read_gml(
+                    (line.encode('ascii') for line in input_file), label='id'))
         except networkx.NetworkXError as errmsg:
             raise ValueError("[Parse error in GML input] {} ".format(errmsg))
         except UnicodeEncodeError as errmsg:
