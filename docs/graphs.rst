@@ -252,7 +252,7 @@ This is an example of GML file.
    >>> with open(tmpdir+"example_ascii.gml","w",encoding='ascii') as f:
    ...     print(gml_text,file=f)
    >>> G = readGraph(tmpdir+"example_ascii.gml",graph_type='simple')
-   >>> ('b','a') in G.edges()
+   >>> (0,1) in G.edges()
    True
 
 Recall that GML files are supposed to be ASCII encoded. 

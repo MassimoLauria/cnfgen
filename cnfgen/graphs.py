@@ -551,9 +551,13 @@ def enumerate_vertices(graph):
         assert graph.order() == len(graph.ordered_vertices)
         assert set(graph.nodes()) == set(graph.ordered_vertices)
         return graph.ordered_vertices
-    else:
+
+    try:
         setattr(graph, "ordered_vertices", sorted(graph.nodes()))
         return graph.ordered_vertices
+    except TypeError:
+        # cannot sort the vertices
+        return graph.nodes()
 
 
 def enumerate_edges(graph):
@@ -566,9 +570,13 @@ def enumerate_edges(graph):
     if hasattr(graph, "ordered_edges"):
         assert set(graph.edges()) == set(graph.ordered_edges)
         return graph.ordered_edges
-    else:
+
+    try:
         setattr(graph, "ordered_edges", sorted(graph.edges()))
         return graph.ordered_edges
+    except TypeError:
+        # could not sort the edges
+        return graph.edges()
 
 
 def neighbors(graph, v):
