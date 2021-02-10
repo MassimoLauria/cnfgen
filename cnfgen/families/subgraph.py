@@ -152,7 +152,7 @@ def SubgraphFormula(graph, templates, symmetric=False):
     return F
 
 
-def CliqueFormula(G, k, monotone=True):
+def CliqueFormula(G, k, symmetric=True):
     """Test whether a graph has a k-clique.
 
     Given a graph :math:`G` and a non negative value :math:`k`, the
@@ -164,15 +164,15 @@ def CliqueFormula(G, k, monotone=True):
         a simple graph
     k : a non negative integer
         clique size
-    monotone: bool
-        ordered mapping
+    symmetric: bool
+        symmetry breaking
 
     Returns
     -------
     a CNF object
 
     """
-    F = SubgraphFormula(G, [complete_graph(k)], symmetric=monotone)
+    F = SubgraphFormula(G, [complete_graph(k)], symmetric=symmetric)
     description = "{} does not contain any {}-clique.".format(G.name, k)
     F.header['description'] = description
     return F
