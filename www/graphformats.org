@@ -115,14 +115,15 @@
 
 ** KTH predecessors list format — =simple=
 
-   If a vertex $v$ has $u$ in  its adjacency list then the $v$ must be
-   explicitly listed in the adjacency  list of $u$, otherwise the file
-   is considered not well defined.  Nevertheless CNFgen is liberal and
-   does not expect that. For CNFgen an edge $\{u,v\}$ considered to be
-   in graph when either  $u$ is in the list of $v$, or  when $v$ is in
-   the list of  $u$, or both. Naturally all  =simple= graphs generated
-   by CNFgen  are correct =kthlist=  files according to  the strictest
-   interpretation of the format.
+   For the file to represent a simple graph, a vertex $v$ is listed in
+   the adjacency  list of  $u$ if  and only  if $u$  is listed  in the
+   adjacency  list of  $v$.  If that  is  not the  case,  the file  is
+   considered  invalid.  Nevertheless  CNFgen is  *more  liberal*  and
+   consider an edge $\{u,v\}$  to be in graph when: (1)  $u$ is in the
+   list of $v$,  or (2) when $v$ is  in the list of $u$,  or (3) both.
+   Naturally  all  =simple= graphs  generated  by  CNFgen are  correct
+   =kthlist=  files  according  to  the  strictest  interpretation  of
+   the format.
 
    Here’s an  example of how  a graph  with missing inverted  edges is
    interpreted as an undirected graph. The file
@@ -192,7 +193,8 @@ graph {
    example is  not a  correct =kthlist= file  for an  undirected graph
    because it  lacks the  adjacency lists of  the right  side vertices
    too.  The  following   is  the  same  graph,  but   encoded  as  an
-   undirected graph. 
+   undirected  graph  and  it  is  not  in  the  correct  format  when
+   a biparite graph is expected.
 
    : c listing left and right side vertices (undirected graph)
    : 11
