@@ -46,19 +46,25 @@ def obtain_gnd(parsed):
     return G
 
 
-def multipartite_tnp(t, n, p):
+def multipartite_tnp(t, n, p, shuffleblocks=False):
     """Build a t-partite graph with n vertex per partition, and p-biased edges"""
 
     G = networkx.empty_graph(t * n)
+
+    V = list(range(t * n))
+    if shuffleblocks:
+        random.shuffle(V)
 
     for i, j in combinations(range(t), 2):
         for a in range(n * i, n * (i + 1)):
             for b in range(n * j, n * (j + 1)):
                 if random.random() < p:
-                    G.add_edge(a, b)
+                    G.add_edge(V[a], V[b])
 
     G.name = 'Random {2}-biased {0}-partite graph with {1} vertices per part'.format(
         t, n, p)
+    if shuffleblocks:
+        G.name = G.name + " (shuffled)"
     return G
 
 
@@ -88,8 +94,6 @@ def obtain_gnp(parsed):
         G.name = 'Random {}-biased graph of {} vertices'.format(p, n)
     else:
         G = multipartite_tnp(t, n, p)
-        G.name = 'Random {2}-biased {0}-partite graph with {1} vertices per part'.format(
-            t, n, p)
     return G
 
 
