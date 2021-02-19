@@ -5,6 +5,7 @@ formulas that are graph based.
 """
 
 import copy
+from bisect import bisect_right
 __all__ = [
     "supported_formats", "readGraph", "writeGraph", "is_dag",
     "enumerate_vertices", "enumerate_edges", "neighbors",
@@ -165,17 +166,33 @@ class BipartiteGraph(BaseBipartiteGraph):
     def add_edge(self, u, v):
         """Add an edge to the graph.
         
-        - allows multi-edges (i.e. multiple occurrences are allowed)
-        - neighbors of a vertex are kept in insertion order
+        - multi-edges are not allowed
+        - neighbors of a vertex are kept in numberic order
+
+        Examples
+        --------
+        >>> G = BipartiteGraph(3,5)
+        >>> G.add_edge(2,3)
+        >>> G.add_edge(2,2)
+        >>> G.add_edge(2,3)
+        >>> G.right_neighbors(2)
+        [2, 3]
         """
         if not (1 <= u <= self.lorder and 1 <= v <= self.rorder):
             raise ValueError("Invalid choice of vertices")
+
+        if self.has_edge(u, v):
+            return
+
         if u not in self.ladj:
             self.ladj[u] = []
         if v not in self.radj:
             self.radj[v] = []
-        self.ladj[u].append(v)
-        self.radj[v].append(u)
+
+        pv = bisect_right(self.ladj[u], v)
+        pu = bisect_right(self.radj[v], u)
+        self.ladj[u].insert(pv, v)
+        self.radj[v].insert(pu, u)
         self.edgecount += 1
 
     def right_neighbors(self, u):

@@ -6,8 +6,7 @@ The module defines a variable manager, that formulas could either use
 of specialize. It allows to generates
 - single variables
 - variables for some tuples of indices
-- variables for the edges of a graph
-- variables for vertices of a graph
+- variables for the edges of a bipartite/direct/simple graph
 
 The module implements the :py:class:`VariablesManager` object, which
 is supposed to be inherited from the :py:class:`CNF` object.
@@ -21,10 +20,188 @@ from operator import mul
 from itertools import product
 from bisect import bisect_right
 
+from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph
+import networkx as nx
 
-class BlockOfVariables():
-    """Represents a group of variables indexed by a cartesian product
-of ranges.
+
+class BaseVariableGroup():
+    """Base object for variable groups
+
+    This object is meant to the base class for the actual variable
+    groups, all to be used internally by :py:class:`VariablesManager`.
+
+    In general a variable group is a mapping between some set of
+    indices and the corresponding sequential variable IDs (as seen in
+    a DIMACS file, for example).
+    """
+    def __init__(self, startID, endID, labelfmt=None):
+        """Creates a variables group object
+
+        Parameters
+        ----------
+        startID: integer
+            start variables IDs from this number
+        """
+        if startID < 1:
+            raise ValueError('Variables group must start at index >=1')
+        self.startID = startID
+        self.endID = endID
+        self.labelfmt = labelfmt
+
+    def __call__(self, *index):
+        """Convert the index of a variable into its ID.
+        
+        An `index` of length 0 or which contains None values will be
+        considered a projection pattern of the set of legal indices of
+        the variable group. In that case the return value will be
+        a generator that iterates through all variable IDs which
+        corresponds to indices that at compatible with that pattern.
+
+        Parameters
+        ----------
+        index : sequences(positive integers or None)
+            the index/pattern of the variable
+
+        Returns
+        -------
+            int / iterable(int)
+
+        Raises
+        ------
+        ValueError
+            when the index (or index pattern) is not compatible with
+            the index domain.
+
+        Examples
+        --------
+        >>> V = VariablesManager()
+        >>> m = V.new_block(2,5,label='m[{},{}]')
+        >>> isinstance(m,BaseVariableGroup)
+        True
+        >>> print(len(m))
+        10
+        >>> print(*m.indices(2,4))
+        (2, 4)
+        >>> print(list(m.indices()))
+        [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5)]
+        >>> print(list(m.indices(None,None)))
+        [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5)]
+        >>> print(list(m.indices(1,None)))
+        [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5)]
+        >>> print(list(m.indices(None, 3)))
+        [(1, 3), (2, 3)]
+        """
+        isProjection = len(index) == 0 or None in index
+        IDs = (self._unsafe_index_to_lit(t) for t in self.indices(*index))
+
+        if isProjection:
+            return IDs
+        else:
+            return next(IDs)
+
+    def __len__(self):
+        """The number of variables in the group"""
+        return self.endID - self.startID + 1
+
+    def firstID(self):
+        """The first ID of this variable group"""
+        return self.startID
+
+    def __contains__(self, ID):
+        """Check in the variable is in the group"""
+        return (self.startID <= ID <= self.endID)
+
+    def label(self, *pattern):
+        """Convert the index of a variable into its label.
+        
+        If the `pattern` is contains None values, these will be
+        considered as "don't care" values. The implementation should
+        return a generator enumerating all the IDs compatible with the
+        given pattern.
+        """
+        isProjection = len(pattern) == 0 or None in pattern
+
+        labels = (self.labelfmt.format(*t) for t in self.indices(*pattern))
+
+        if isProjection:
+            return labels
+        else:
+            return next(labels)
+
+    def indices(self, *pattern):
+        """Outputs all the indices matching the given pattern"""
+        raise NotImplementedError
+
+    def to_index(self, lit):
+        """Convert a literal of the index sequence corresponding to the variable"""
+        raise NotImplementedError
+
+    def _unsafe_index_to_lit(self, index):
+        """Convert a well formed index into a variable ID
+        
+        No sanity check is done on the arguments
+        """
+        raise NotImplementedError
+
+
+class SingletonVariableGroup(BaseVariableGroup):
+    """A group made by a single variable
+
+    Examples
+    --------
+    >>> X1 = SingletonVariableGroup(12,'X')
+    >>> X2 = SingletonVariableGroup(23,'Y')
+    >>> print(X1.label())
+    X
+    >>> print(*X1.indices())
+    ()
+    >>> X1()
+    12
+    >>> X2()
+    23
+    >>> print(X2.label())
+    Y
+    >>> print(X2.to_index(23))
+    ()
+    """
+    def __init__(self, varID, name):
+        """Creates a variables group object
+
+        Parameters
+        ----------
+        varID: integer
+            start variables IDs from this number
+        label: str
+            the name of the variable
+        """
+        if varID < 1:
+            raise ValueError('Variables group must start at index >=1')
+
+        self.varID = varID
+        self.name = name
+        BaseVariableGroup.__init__(self, varID, varID, labelfmt=name)
+
+    def __call__(self):
+        return self.varID
+
+    def label(self):
+        return self.name
+
+    def indices(self, *pattern):
+        """Outputs all the indices matching the given pattern"""
+        if len(pattern) > 0:
+            raise ValueError("Singleton variable groups have a 0-arity index")
+        return [()]
+
+    def to_index(self, lit):
+        """Convert a literal of the corresponding variable index"""
+        if abs(lit) != self.varID:
+            raise ValueError("Literal do not belong to this variable group")
+        return ()
+
+
+class BlockOfVariables(BaseVariableGroup):
+    """Group of variables, indexed by a cartesian product.
 
     This objects represents groups of variables that are indexed by
     some tuples of integers. For example we can have variables
@@ -62,7 +239,7 @@ of ranges.
     [(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2), (3, 3)]
     >>> print(p(2,3))
     8
-    >>> print(list( p(None,3) ))
+    >>> print(list(p(None,3)))
     [3, 8, 13, 18, 23, 28, 33, 38, 43, 48]
     >>> print(q(1,1))
     51
@@ -80,7 +257,6 @@ of ranges.
     [(3, 1), (3, 2), (3, 3), (3, 4), (3, 5)]
     >>> print(p.to_index(p(4,3)))
     [4, 3]
-
     """
     def __init__(self, startID, ranges, labelfmt=None):
         """Creates a variables group object
@@ -94,16 +270,6 @@ of ranges.
         labelfmt: str
             format string for the variable labels
         """
-        if startID < 1:
-            raise ValueError('Variables group must start at index >=1')
-        if len([x for x in ranges if x < 1]):
-            raise ValueError('Indices range must be all positive')
-
-        self.ranges = ranges
-        weights = [1]  # cumulative products
-        for r in ranges[::-1]:
-            weights.append(weights[-1] * r)
-
         if labelfmt is None:
             labelfmt = 'X(' + ','.join(['{}'] * len(ranges)) + ')'
         # Check if the format strings can get all parameters
@@ -113,74 +279,36 @@ of ranges.
             raise ValueError(
                 'label must be a valid format string for all indices')
 
+        if len(ranges) == 0:
+            raise ValueError(
+                'The index domain must have at least dimension one')
+
+        if len([x for x in ranges if x < 1]):
+            raise ValueError('Indices range must be all positive')
+
+        weights = [1]  # cumulative products
+        for r in ranges[::-1]:
+            weights.append(weights[-1] * r)
+
         self.ranges = ranges
         self.N = weights.pop()  # number of variables
         self.weights = weights[::-1]
-        self.labelfmt = labelfmt
-        self.startID = startID
+        self.offset = startID
+        BaseVariableGroup.__init__(self, startID, startID + self.N - 1,
+                                   labelfmt)
 
-    def __call__(self, *index):
-        """Convert the index of a variable into its ID.
-
-        A variable is identified by an integer ID, but if it is one of
-        the variables of a group, it has an associate tuple as index.
-        This function convert the indices into the corresponding ID.
+    def indices(self, *pattern):
+        """Implementation of :py:classmethod:`BaseVariableGroup.indices`
 
         Parameters
         ----------
-        index : sequences(positive integers)
-            the index of the variable
-       
+        pattern : sequences(positive integers or None)
+            the pattern of the indices
+   
         Returns
         -------
-            int
-
-        Raises
-        ------
-        ValueError
-            when the indices are not within the ranges
+        a tuple or an itertools.product object
         """
-        if len(index) != len(self.ranges):
-            raise ValueError("Index arity do not match the ranges {}".format(
-                self.ranges))
-
-        try:
-            offset = sum((i - 1) * w for i, w in zip(index, self.weights))
-            assert 0 <= offset < self.N
-            return offset + self.startID
-        except TypeError:
-            pass
-
-        def _gen():
-            for idxs in self.indices(*index):
-                offset = sum((i - 1) * w for i, w in zip(idxs, self.weights))
-                yield offset + self.startID
-
-        return _gen()
-
-    def __len__(self):
-        return self.N
-
-    def __contains__(self, ID):
-        return 0 <= (ID - self.startID) < self.N
-
-    def label(self, *pattern):
-        if len(pattern) > 0 and len(pattern) != len(self.ranges):
-            raise ValueError("Wrong number of indices in the pattern")
-
-        if len(pattern) == 0:
-            pattern = [None] * len(self.ranges)
-
-        if None not in pattern:
-            return self.labelfmt.format(*pattern)
-
-        def _gen():
-            for idxs in self.indices(*pattern):
-                yield self.labelfmt.format(*idxs)
-
-        return _gen()
-
-    def indices(self, *pattern):
         if len(pattern) > 0 and len(pattern) != len(self.ranges):
             raise ValueError("Wrong number of indices in the pattern")
 
@@ -195,12 +323,17 @@ of ranges.
             elif 1 <= i <= R:
                 x.append((i, ))
             else:
-                raise ValueError("Invalid index in the pattern")
+                raise ValueError("Index {} not withing range {}".format(
+                    pattern, self.ranges))
 
         return product(*x)
 
+    def _unsafe_index_to_lit(self, index):
+        relative = sum((i - 1) * w for i, w in zip(index, self.weights))
+        return self.offset + relative
+
     def to_index(self, lit):
-        """Convert a literal of the index sequence corresponding to the variable
+        """Convert a literal to the index sequence corresponding to the variable
 
         A variable is identified by an integer id, but an associate
         index in the variable group. This function convert the
@@ -209,8 +342,8 @@ of ranges.
 
         Parameters
         ----------
-        var : positive integer
-            the ID of the variable
+        lit : positive or negative literal
+            -ID or +ID for the ID of the variable
 
         Returns
         -------
@@ -219,14 +352,14 @@ of ranges.
         Raises
         ------
         ValueError
-            when `var` is not within the appropriate interval
+            when `lit` is not within the appropriate intervals
 
         Examples
         --------
         >>> VG = BlockOfVariables(1,[3,5,4,3])
         >>> VG.to_index(1)
         [1, 1, 1, 1]
-        >>> VG.to_index(5)
+        >>> VG.to_index(-5)
         [1, 1, 2, 2]
         >>> VG.to_index(179)
         [3, 5, 4, 2]
@@ -239,11 +372,354 @@ of ranges.
             raise ValueError('Index out of range')
 
         index = []
-        residue = var - self.startID
+        residue = var - self.offset
         for w in self.weights:
             index.append(residue // w + 1)
             residue = residue % w
         return index
+
+
+class BipartiteEdgesVariables(BaseVariableGroup):
+    """A group of variables matching the edges of a bipartite graph
+
+    This objects represents groups of variables corresponding to the
+    edges of a bipartite graph.
+
+    Given a bipartite graph :math:`G=(U,V,E)` represented by an object
+    of the class :py:class:`BaseBipartiteGraph`, we have variables
+    :math:`e_{u,v}` for :math:`u in U` and :math:`v in U`.
+    
+    Warning: if the object representing :math:`G` gets modified, the
+    behavior of this object may be inconsistent. 
+
+    Examples
+    --------
+    >>> G = BipartiteGraph(2,3)
+    >>> G.add_edge(2,1)
+    >>> G.add_edge(1,3)
+    >>> G.add_edge(2,2)
+    >>> V = BipartiteEdgesVariables(12, G, labelfmt='E[{},{}]')
+    >>> print(*[V.label(u,v) for u,v in V.indices()])
+    E[1,3] E[2,1] E[2,2]
+    >>> print(V(2,1))
+    13
+    >>> print(V(1,3))
+    12
+    >>> 14 in V
+    True
+    >>> 10 in V
+    False
+    >>> print(len(V))
+    3
+    >>> print(V.label(1,3))
+    E[1,3]
+    >>> print(*V.label(2,None))
+    E[2,1] E[2,2]
+    >>> V = BipartiteEdgesVariables(1, G, labelfmt='X[{},{}]')
+    >>> W = BipartiteEdgesVariables(1, G, labelfmt='W[{},{}]')
+    >>> print(V.label(2,1))
+    X[2,1]
+    >>> print(W.label(1,3))
+    W[1,3]
+    >>> [V.label(u,3) for u in G.left_neighbors(3)]
+    ['X[1,3]']
+    >>> print(*V.label(None,3))
+    X[1,3]
+    >>> print(*V.label(1,None))
+    X[1,3]
+    >>> print(*V.label(None,None))
+    X[1,3] X[2,1] X[2,2]
+    """
+    def __init__(self, startID, G, labelfmt=None):
+        """Creates a variables group for the edges of G
+
+        Parameters
+        ----------
+        startID: integer
+            start variables IDs from this number
+        G: BipartiteGraph
+            bipartite graph
+        labelfmt: str
+            format string for the variable labels
+        """
+        if not isinstance(G, BaseBipartiteGraph):
+            raise TypeError(
+                "Invalid bipartite graph G: a BaseBipartiteGraph object was expected"
+            )
+
+        if labelfmt is None:
+            labelfmt = 'e({},{})'
+        # Check if the format strings can get all parameters
+        try:
+            labelfmt.format(1, 1)
+        except IndexError:
+            raise ValueError(
+                'label must be a valid format string for two arguments')
+
+        # offsets
+        U, V = G.parts()
+        offset = [None, startID]
+        for u in U:
+            d = G.right_degree(u)
+            offset.append(offset[-1] + d)
+        assert offset[-1] == G.number_of_edges() + startID
+        offset.pop()
+
+        self.G = G
+        self.offset = offset
+        BaseVariableGroup.__init__(self, startID, startID + G.size() - 1,
+                                   labelfmt)
+
+    def _unsafe_index_to_lit(self, index):
+        """Convert an edge of the graph its variable ID.
+
+        Parameters
+        ----------
+        u : positive integer
+            left vertex
+        v : positive integer
+            right vertex
+
+        Returns
+        -------
+            int
+
+        Raises
+        ------
+        ValueError
+            when the indices are not within the ranges
+        """
+        vidx = self.G.right_neighbors(index[0]).index(index[1])
+        return self.offset[index[0]] + vidx
+
+    def indices(self, *pattern):
+        """Print the label of the edge
+
+        Examples
+        --------
+        >>> G = BipartiteGraph(2,3)
+        >>> G.add_edge(2,1)
+        >>> G.add_edge(1,3)
+        >>> G.add_edge(2,2)
+        >>> V = BipartiteEdgesVariables(1, G, labelfmt='X[{},{}]')
+        >>> print(*V.indices(None,1))
+        (2, 1)
+        >>> print(*V.indices(None,2))
+        (2, 2)
+        >>> print(*V.indices(None,3))
+        (1, 3)
+        >>> print(*V.indices(1,None))
+        (1, 3)
+        >>> print(*V.indices(2,None))
+        (2, 1) (2, 2)
+        >>> print(*V.indices(None,None))
+        (1, 3) (2, 1) (2, 2)
+        >>> print(*V.indices(2,1))
+        (2, 1)
+        """
+        if len(pattern) not in [0, 2]:
+            raise ValueError("Requires either none or two arguments.")
+
+        if len(pattern) == 0:
+            u, v = None, None
+        else:
+            u = pattern[0]
+            v = pattern[1]
+
+        if u is None and v is None:
+            return self.G.edges()
+
+        if v is None:
+            if not (1 <= u <= self.G.left_order()):
+                raise ValueError("Vertex u is not in the graph")
+            return ((u, v) for v in self.G.right_neighbors(u))
+        elif u is None:
+            if not (1 <= v <= self.G.right_order()):
+                raise ValueError("Vertex v is not in the graph")
+            return ((u, v) for u in self.G.left_neighbors(v))
+        elif not self.G.has_edge(u, v):
+            raise ValueError('({},{}) is not an edge of the graph.'.format(
+                u, v))
+        else:
+            return [(u, v)]
+
+    def to_index(self, lit):
+        """Convert a literal to the corresponding edge
+
+        Parameters
+        ----------
+        lit : positive or negative literal
+            -ID or +ID for the ID of the variable
+
+        Returns
+        -------
+            pair of positive integer
+
+        Raises
+        ------
+        ValueError
+            when `lit` is not within the appropriate intervals
+
+        Examples
+        --------
+        >>> G = BipartiteGraph(2,3)
+        >>> G.add_edge(2,1)
+        >>> G.add_edge(1,3)
+        >>> G.add_edge(2,2)
+        >>> V = BipartiteEdgesVariables(101, G, labelfmt='e[{},{}]')
+        >>> V.to_index(102)
+        (2, 1)
+        >>> V.to_index(101)
+        (1, 3)
+        >>> V.to_index(103)
+        (2, 2)
+        """
+        var = abs(lit)
+        if var not in self:
+            raise ValueError('Index out of range')
+        u = bisect_right(self.offset, var) - 1
+        vidx = var - self.offset[u]
+        v = self.G.right_neighbors(u)[vidx]
+        assert self.__call__(u, v) == var
+        return u, v
+
+
+class DiGraphEdgesVariables(BaseVariableGroup):
+    """A variable groups for the edges of a graph.
+
+    Examples
+    --------
+    >>> G = nx.DiGraph()
+    >>> G.add_edge(1,2)
+    >>> G.add_edge(2,3)
+    >>> G.add_edge(3,4)
+    >>> G.add_edge(4,5)
+    >>> G.add_edge(5,1)
+    >>> a = DiGraphEdgesVariables(101, G)
+    >>> a.to_index(101)
+    (1, 2)
+    >>> a.to_index(104)
+    (4, 5)
+    >>> a(5,1)
+    105
+    >>> print(*a(4,None))
+    104
+    >>> print(*a())
+    101 102 103 104 105
+    >>> print(*a.label())
+    a(1,2) a(2,3) a(3,4) a(4,5) a(5,1)
+    >>> H = nx.DiGraph()
+    >>> H.add_edge(1,2)
+    >>> H.add_edge(1,3)
+    >>> H.add_edge(2,3)
+    >>> H.add_edge(2,4)
+    >>> H.add_edge(5,1)
+    >>> b = DiGraphEdgesVariables(12,H,labelfmt='b({},{})',sortby='succ')
+    >>> b(1,3)
+    14
+    >>> b.to_index(12)
+    (5, 1)
+    >>> b.to_index(12)
+    (5, 1)
+    >>> print(*b.indices())
+    (5, 1) (1, 2) (1, 3) (2, 3) (2, 4)
+    >>> print(*b.label())
+    b(5,1) b(1,2) b(1,3) b(2,3) b(2,4)
+    >>> print(*b.indices(None,3))
+    (1, 3) (2, 3)
+    """
+    def __init__(self, startID, G, labelfmt='a({},{})', sortby='pred'):
+        """Creates a variables group object
+
+        Parameters
+        ----------
+        startID: integer
+            start variables IDs from this number
+        """
+        """Creates a variables group for the edges of G
+
+        Parameters
+        ----------
+        startID: integer
+            start variables IDs from this number
+        G: networkx.DiGraph
+            bipartite graph
+        labelfmt: str
+            format string for the variable labels
+        sortby: 'pred' or 'succ'
+            sort edges by either predecessors or successors (default: predecessors)
+        """
+        if not isinstance(G, nx.DiGraph):
+            raise TypeError(
+                "Invalid direct graph G: a networkx.DiGraph object was expected"
+            )
+
+        if sortby not in ['pred', 'succ']:
+            raise ValueError("'indexby' must be one among 'pred', 'succ'")
+
+        # Check if the format strings can get all parameters
+        try:
+            labelfmt.format(1, 1)
+        except IndexError:
+            raise ValueError(
+                'label must be a valid format string for two arguments')
+
+        # dictionary vertex name  <--> vertex numeric
+        name2num = {}
+        V = G.number_of_nodes()
+        for i, v in enumerate(G.nodes(), start=1):
+            name2num[v] = i
+
+        B = BipartiteGraph(V, V)
+
+        for u, v in G.edges():
+            if sortby == 'pred':
+                # successors represented in a bipartite graph
+                B.add_edge(name2num[u], name2num[v])
+            else:
+                # predecessors represented in a bipartite graph
+                B.add_edge(name2num[v], name2num[u])
+
+        self.sortby = sortby
+        self.VG = BipartiteEdgesVariables(startID, B)
+        BaseVariableGroup.__init__(self, startID,
+                                   startID + G.number_of_edges() - 1, labelfmt)
+
+    def to_index(self, lit):
+        u, v = self.VG.to_index(lit)
+        if self.sortby == 'pred':
+            return u, v
+        else:
+            return v, u
+
+    def indices(self, *pattern):
+        """
+        >>> H = nx.DiGraph()
+        >>> H.add_edge(1,2)
+        >>> H.add_edge(1,3)
+        >>> H.add_edge(2,3)
+        >>> H.add_edge(2,4)
+        >>> H.add_edge(5,1)
+        >>> b = DiGraphEdgesVariables(12,H,labelfmt='b({},{})',sortby='succ')
+        >>> print(*b.indices())
+        (5, 1) (1, 2) (1, 3) (2, 3) (2, 4)
+        >>> print(*b.label())
+        b(5,1) b(1,2) b(1,3) b(2,3) b(2,4)
+        >>> print(*b.indices(None,3))
+        (1, 3) (2, 3)
+        >>> print(*b.indices(2,None))
+        (2, 3) (2, 4)
+        """
+        if self.sortby == 'pred':
+            return self.VG.indices(*pattern)
+        else:
+            return ((v, u) for u, v in self.VG.indices(*pattern[::-1]))
+
+    def _unsafe_index_to_lit(self, index):
+        if self.sortby == 'pred':
+            return self.VG._unsafe_index_to_lit(index)
+        else:
+            return self.VG._unsafe_index_to_lit(index[::-1])
 
 
 class VariablesManager():
@@ -303,6 +779,10 @@ class VariablesManager():
         self.groups = []
         self.info = {}
 
+    def _add_newgroup(self, newgroup):
+        self.groups.append(len(self) + len(newgroup))
+        self.info[self.groups[-1]] = newgroup
+
     def new_variable(self, label=None):
         """
         Create a new variable
@@ -330,12 +810,9 @@ class VariablesManager():
         >>> len(V)
         3
         """
-        newvar = len(self) + 1
-        self.groups.append(newvar)
-        if label is None:
-            label = 'x{}'.format(newvar)
-        self.info[newvar] = label
-        return newvar
+        newgroup = SingletonVariableGroup(len(self) + 1, label)
+        self._add_newgroup(newgroup)
+        return newgroup()
 
     def new_block(self, *ranges, label=None):
         """
@@ -385,9 +862,56 @@ class VariablesManager():
         183
         """
         newgroup = BlockOfVariables(len(self) + 1, ranges, label)
-        self.groups.append(len(self) + len(newgroup))
-        self.info[self.groups[-1]] = newgroup
+        self._add_newgroup(newgroup)
+        return newgroup
 
+    def new_bipartite_edges(self, G, label='e({},{})'):
+        """
+        Create a new group variables from the edges of a bipartite graph
+
+        Parameters
+        ----------
+        G : BaseBipartiteGraph
+            a bipartite graph
+
+        label : str, optional
+            string representation of the variables
+
+        Returns
+        -------
+        BipartiteEdgesVariables, the new variable group
+
+        Examples
+        --------
+        >>> V=VariablesManager()
+        >>> V.new_variable(label='X')
+        1
+        >>> len(V)
+        1
+        >>> V.new_variable(label='Y')
+        2
+        >>> G = BipartiteGraph(5,3)
+        >>> G.add_edge(2,1)
+        >>> G.add_edge(1,3)
+        >>> G.add_edge(2,2)
+        >>> G.add_edge(3,3)
+        >>> G.add_edge(4,3)
+        >>> G.add_edge(4,2)
+        >>> G.add_edge(5,1)
+        >>> e = V.new_bipartite_edges(G,label='X[{},{}]')
+        >>> len(V)
+        9
+        >>> e.to_index(4)
+        (2, 1)
+        >>> e(3,3)
+        6
+        >>> e.to_index(8)
+        (4, 3)
+        >>> e(5,1)
+        9
+        """
+        newgroup = BipartiteEdgesVariables(len(self) + 1, G, label)
+        self._add_newgroup(newgroup)
         return newgroup
 
     def __len__(self):
@@ -403,7 +927,4 @@ class VariablesManager():
         """
         for x in self.groups:
             varinfo = self.info[x]
-            if isinstance(varinfo, str):
-                yield varinfo
-            else:
-                yield from varinfo.label()
+            yield from varinfo.label()
