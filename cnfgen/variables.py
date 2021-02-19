@@ -137,9 +137,19 @@ class BaseVariableGroup():
         raise NotImplementedError
 
     def _unsafe_index_to_lit(self, index):
-        """Convert a well formed index into a variable ID
+        """Converts a variable index into a variable ID
         
-        No sanity check is done on the arguments
+        Parameters
+        ----------
+        index: sequence of positive integers
+            the index of a variable
+
+        Returns
+        -------
+        int
+
+        Warning: only for internal use. It does not check of the
+        correctness of the arguments.
         """
         raise NotImplementedError
 
@@ -329,6 +339,20 @@ class BlockOfVariables(BaseVariableGroup):
         return product(*x)
 
     def _unsafe_index_to_lit(self, index):
+        """Converts a variable index into a variable ID
+
+        Parameters
+        ----------
+        index: sequence of positive integers
+            the index of a variable
+
+        Returns
+        -------
+        int
+
+        Warning: only for internal use. It does not check of the
+        correctness of the arguments.
+        """
         relative = sum((i - 1) * w for i, w in zip(index, self.weights))
         return self.offset + relative
 
@@ -430,7 +454,7 @@ class BipartiteEdgesVariables(BaseVariableGroup):
     >>> print(*V.label(None,None))
     X[1,3] X[2,1] X[2,2]
     """
-    def __init__(self, startID, G, labelfmt=None):
+    def __init__(self, startID, G, labelfmt='e_{{{},{}}}'):
         """Creates a variables group for the edges of G
 
         Parameters
@@ -447,8 +471,6 @@ class BipartiteEdgesVariables(BaseVariableGroup):
                 "Invalid bipartite graph G: a BaseBipartiteGraph object was expected"
             )
 
-        if labelfmt is None:
-            labelfmt = 'e({},{})'
         # Check if the format strings can get all parameters
         try:
             labelfmt.format(1, 1)
@@ -471,23 +493,19 @@ class BipartiteEdgesVariables(BaseVariableGroup):
                                    labelfmt)
 
     def _unsafe_index_to_lit(self, index):
-        """Convert an edge of the graph its variable ID.
+        """Converts an edge of the graph into a variable ID.
 
         Parameters
         ----------
-        u : positive integer
-            left vertex
-        v : positive integer
-            right vertex
+        index: a pair of positive integers
+            an edge of the graph
 
         Returns
         -------
-            int
+        int
 
-        Raises
-        ------
-        ValueError
-            when the indices are not within the ranges
+        Warning: only for internal use. It does not check of the
+        correctness of the arguments.
         """
         vidx = self.G.right_neighbors(index[0]).index(index[1])
         return self.offset[index[0]] + vidx
@@ -596,7 +614,7 @@ class DiGraphEdgesVariables(BaseVariableGroup):
     >>> G.add_edge(3,4)
     >>> G.add_edge(4,5)
     >>> G.add_edge(5,1)
-    >>> a = DiGraphEdgesVariables(101, G)
+    >>> a = DiGraphEdgesVariables(101, G, labelfmt='a({},{})')
     >>> a.to_index(101)
     (1, 2)
     >>> a.to_index(104)
@@ -630,7 +648,7 @@ class DiGraphEdgesVariables(BaseVariableGroup):
     >>> print(*b.indices(None,3))
     (1, 3) (2, 3)
     """
-    def __init__(self, startID, G, labelfmt='a({},{})', sortby='pred'):
+    def __init__(self, startID, G, labelfmt='e_{{{},{}}}', sortby='pred'):
         """Creates a variables group object
 
         Parameters
@@ -718,10 +736,210 @@ class DiGraphEdgesVariables(BaseVariableGroup):
             return ((v, u) for u, v in self.VG.indices(*pattern[::-1]))
 
     def _unsafe_index_to_lit(self, index):
+        """Converts an direct edge of the graph into a variable ID.
+
+        Parameters
+        ----------
+        index: a pair of positive integers
+            a direct edge of the graph
+
+        Returns
+        -------
+        int
+
+        Warning: only for internal use. It does not check of the
+        correctness of the arguments.
+        """
         if self.sortby == 'pred':
             return self.VG._unsafe_index_to_lit(index)
         else:
             return self.VG._unsafe_index_to_lit(index[::-1])
+
+
+class GraphEdgesVariables(BipartiteEdgesVariables):
+    """A group of variables matching the edges of a simple graph
+
+    This objects represents groups of variables corresponding to the
+    edges of a simple graph.
+
+    Given a simple graph :math:`G=(V,E)` represented by an object of
+    the class :py:class:`networkx.Graph`, we have variables
+    :math:`e_{u,v}` for :math:`\{u,v\} in E`.
+    
+    Warning: if the object representing :math:`G` gets modified, the
+    behavior of this object may be inconsistent. 
+
+    Examples
+    --------
+    >>> G = nx.Graph()
+    >>> G.add_nodes_from(range(1,5))
+    >>> G.add_edge(2,1)
+    >>> G.add_edge(3,2)
+    >>> G.add_edge(1,3)
+    >>> G.add_edge(2,2)
+    >>> G.add_edge(4,2)
+    >>> V = GraphEdgesVariables(12, G, labelfmt='E[{},{}]')
+    >>> print(*[V.label(u,v) for u,v in V.indices()])
+    E[1,2] E[1,3] E[2,2] E[2,3] E[2,4]
+    >>> print(V(2,1))
+    12
+    >>> print(V(1,3))
+    13
+    >>> 14 in V
+    True
+    >>> 10 in V
+    False
+    >>> print(len(V))
+    5
+    >>> print(V.label(3,1))
+    E[1,3]
+    >>> print(*V.label(2,None))
+    E[1,2] E[2,2] E[2,3] E[2,4]
+    >>> print(*V.label(None,2))
+    E[1,2] E[2,2] E[2,3] E[2,4]
+    >>> print(*V.label())
+    E[1,2] E[1,3] E[2,2] E[2,3] E[2,4]
+    >>> print(*V.indices(None,2))
+    (1, 2) (2, 2) (2, 3) (2, 4)
+    """
+    def __init__(self, startID, G, labelfmt='e_{{{}{}}}'):
+        """Creates a variables group for the edges of G
+
+        Parameters
+        ----------
+        startID: integer
+            start variables IDs from this number
+        G: networkx.Graph
+            a simple graph
+        labelfmt: str (optional)
+            format string for the variable labels
+        """
+        if not isinstance(G, nx.Graph):
+            raise TypeError(
+                "Invalid bipartite graph G: a networkx.Graph object was expected"
+            )
+
+        # offsets
+        # dictionary vertex name  <--> vertex numeric
+        name2num = {}
+        V = G.number_of_nodes()
+        for i, v in enumerate(G.nodes(), start=1):
+            name2num[v] = i
+
+        B = BipartiteGraph(V, V)
+
+        for u, v in G.edges():
+            iu = name2num[u]
+            iv = name2num[v]
+            iu, iv = min(iu, iv), max(iu, iv)
+            if not B.has_edge(iu, iv):
+                B.add_edge(name2num[u], name2num[v])
+        self.BG = BipartiteEdgesVariables(startID, B, labelfmt=labelfmt)
+        BaseVariableGroup.__init__(self, startID,
+                                   startID + B.number_of_edges() - 1, labelfmt)
+
+    def _unsafe_index_to_lit(self, index):
+        """Converts an edge of the graph into a variable ID.
+
+        Parameters
+        ----------
+        index: a pair of positive integers
+            an edge of the graph
+
+        Returns
+        -------
+        int
+
+        Warning: only for internal use. It does not check of the
+        correctness of the arguments.
+        """
+        return self.BG._unsafe_index_to_lit(sorted(index))
+
+    def indices(self, *pattern):
+        """Print the label of the edge
+
+        Examples
+        --------
+        >>> G = BipartiteGraph(2,3)
+        >>> G.add_edge(2,1)
+        >>> G.add_edge(1,3)
+        >>> G.add_edge(2,2)
+        >>> V = BipartiteEdgesVariables(1, G, labelfmt='X[{},{}]')
+        >>> print(*V.indices(None,1))
+        (2, 1)
+        >>> print(*V.indices(None,2))
+        (2, 2)
+        >>> print(*V.indices(None,3))
+        (1, 3)
+        >>> print(*V.indices(1,None))
+        (1, 3)
+        >>> print(*V.indices(2,None))
+        (2, 1) (2, 2)
+        >>> print(*V.indices(None,None))
+        (1, 3) (2, 1) (2, 2)
+        >>> print(*V.indices(2,1))
+        (2, 1)
+        """
+        if len(pattern) not in [0, 2]:
+            raise ValueError("Requires either none or two arguments.")
+
+        if len(pattern) == 0:
+            return self.BG.indices()
+
+        u = pattern[0]
+        v = pattern[1]
+        if u is not None and v is not None:
+            iu, iv = min(u, v), max(u, v)
+            return self.BG.indices(iu, iv)
+
+        # Only one vertex is set. Fix w to it
+        if u is not None:
+            w = u
+        else:
+            w = v
+
+        # Enumerates all neighbors of w
+        def _gen():
+            yield from ((u, w) for u, w in self.BG.indices(None, w))
+            yield from ((w, u) for w, u in self.BG.indices(w, None) if u != w)
+
+        return _gen()
+
+    def to_index(self, lit):
+        """Convert a literal to the corresponding edge
+
+        Parameters
+        ----------
+        lit : positive or negative literal
+            -ID or +ID for the ID of the variable
+
+        Returns
+        -------
+            pair of positive integer
+
+        Raises
+        ------
+        ValueError
+            when `lit` is not within the appropriate intervals
+
+        Examples
+        --------
+        >>> G = nx.Graph()
+        >>> G.add_nodes_from(range(1,5))
+        >>> G.add_edge(2,1)
+        >>> G.add_edge(3,2)
+        >>> G.add_edge(1,3)
+        >>> G.add_edge(2,2)
+        >>> G.add_edge(4,2)
+        >>> V = GraphEdgesVariables(101, G)
+        >>> V.to_index(102)
+        (1, 3)
+        >>> V.to_index(101)
+        (1, 2)
+        >>> V.to_index(105)
+        (2, 4)
+        """
+        return self.BG.to_index(lit)
 
 
 class VariablesManager():
