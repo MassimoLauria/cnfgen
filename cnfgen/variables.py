@@ -590,6 +590,7 @@ class DiGraphEdgesVariables(BaseVariableGroup):
     Examples
     --------
     >>> G = nx.DiGraph()
+    >>> G.add_nodes_from(range(1,6))
     >>> G.add_edge(1,2)
     >>> G.add_edge(2,3)
     >>> G.add_edge(3,4)
@@ -609,6 +610,7 @@ class DiGraphEdgesVariables(BaseVariableGroup):
     >>> print(*a.label())
     a(1,2) a(2,3) a(3,4) a(4,5) a(5,1)
     >>> H = nx.DiGraph()
+    >>> H.add_nodes_from(range(1,6))
     >>> H.add_edge(1,2)
     >>> H.add_edge(1,3)
     >>> H.add_edge(2,3)
@@ -910,7 +912,65 @@ class VariablesManager():
         >>> e(5,1)
         9
         """
-        newgroup = BipartiteEdgesVariables(len(self) + 1, G, label)
+        newgroup = BipartiteEdgesVariables(len(self) + 1, G, labelfmt=label)
+        self._add_newgroup(newgroup)
+        return newgroup
+
+    def new_digraph_edges(self, G, label='e({},{})', sortby='pred'):
+        """
+        Create a new group variables from the edges of a bipartite graph
+
+        Parameters
+        ----------
+        G : networkx.DiGraph
+            a directed graph
+
+        label : str, optional
+            string representation of the variables
+        sortby : 'pred' or 'succ'
+            sort the edge veriables either by predecessor (default) or by successor
+
+        Returns
+        -------
+        DiGraphEdgesVariables, the new variable group
+
+        Examples
+        --------
+        >>> V=VariablesManager()
+        >>> V.new_variable(label='X')
+        1
+        >>> len(V)
+        1
+        >>> V.new_variable(label='Y')
+        2
+        >>> G = nx.DiGraph()
+        >>> G.add_nodes_from(range(1,7))
+        >>> G.add_edge(2,1)
+        >>> G.add_edge(1,3)
+        >>> G.add_edge(2,6)
+        >>> G.add_edge(2,3)
+        >>> G.add_edge(4,3)
+        >>> G.add_edge(4,2)
+        >>> a = V.new_digraph_edges(G,sortby='succ')
+        >>> len(V)
+        8
+        >>> print(*a())
+        3 4 5 6 7 8
+        >>> print(*a.indices())
+        (2, 1) (4, 2) (1, 3) (2, 3) (4, 3) (2, 6)
+        >>> a.to_index(4)
+        (4, 2)
+        >>> a(2,6)
+        8
+        >>> a.to_index(7)
+        (4, 3)
+        >>> a(2,1)
+        3
+        """
+        newgroup = DiGraphEdgesVariables(len(self) + 1,
+                                         G,
+                                         labelfmt=label,
+                                         sortby=sortby)
         self._add_newgroup(newgroup)
         return newgroup
 
