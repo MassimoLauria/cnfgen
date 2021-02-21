@@ -29,7 +29,7 @@ _graphformats = {
     'dag': ['kthlist', 'gml', 'dot'],
     'digraph': ['kthlist', 'gml', 'dot', 'dimacs'],
     'simple': ['kthlist', 'gml', 'dot', 'dimacs'],
-    'bipartite': ['kthlist', 'matrix', 'gml', 'dot']
+    'bipartite': ['kthlist', 'matrix']
 }
 
 
@@ -1046,7 +1046,7 @@ def _write_graph_matrix_format(G, output_file):
         file handle of the output
     """
 
-    print("{} {}".format(len(G.left_order()), len(G.right_order())),
+    print("{} {}".format(G.left_order(), G.right_order()),
           file=output_file)
     L, R = G.parts()
     for u in L:
