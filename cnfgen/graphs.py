@@ -4,13 +4,10 @@
 formulas that are graph based.
 """
 
-from itertools import product
 import networkx
-import fileinput
 import os
 import io
-from io import StringIO, BytesIO
-import sys
+from io import StringIO
 import copy
 from bisect import bisect_right
 __all__ = [
@@ -29,7 +26,7 @@ _graphformats = {
     'dag': ['kthlist', 'gml', 'dot'],
     'digraph': ['kthlist', 'gml', 'dot', 'dimacs'],
     'simple': ['kthlist', 'gml', 'dot', 'dimacs'],
-    'bipartite': ['kthlist', 'matrix']
+    'bipartite': ['kthlist', 'matrix', 'gml', 'dot']
 }
 
 
@@ -76,6 +73,9 @@ class BaseBipartiteGraph():
         self.lorder = L
         self.rorder = R
         self.name = 'Bipartite graph with ({},{}) vertices'.format(L, R)
+
+    def is_multigraph(self):
+        return False
 
     def order(self):
         return self.lorder + self.rorder
@@ -143,13 +143,24 @@ class BaseBipartiteGraph():
                 "Full bipartition is missing, each vertex must have a 0,1 label."
             )
         B = BipartiteGraph(len(left), len(right))
-        left.sort()
-        right.sort()
+        try:
+            left.sort()
+            right.sort()
+        except TypeError:
+            pass
         left_ids = {u: i for (i, u) in enumerate(left, start=1)}
         right_ids = {v: i for (i, v) in enumerate(right, start=1)}
         for u, v in G.edges():
             B.add_edge(left_ids[u], right_ids[v])
         return B
+
+    def to_networkx(self):
+        G = networkx.Graph()
+        n, m = self.lorder, self.rorder
+        G.add_nodes_from(range(1, n+1), bipartite=0)
+        G.add_nodes_from(range(n+1, m+n+1), bipartite=1)
+        G.add_edges_from((u, v+n) for (u, v) in self.edges())
+        return G
 
 
 class BipartiteGraph(BaseBipartiteGraph):
@@ -449,7 +460,10 @@ def readGraph(input_file,
         raise ValueError("[Input error] Graph must be acyclic")
 
     if graph_type == "bipartite" and not has_bipartition(G):
-        raise ValueError("[Input error] Graph must be bipartite")
+        try:
+            G = BaseBipartiteGraph.from_networkx(G)
+        except ValueError:
+            raise ValueError("[Input error] Graph must be bipartite")
 
     return G
 
@@ -507,6 +521,9 @@ def writeGraph(G, output_file, graph_type, file_format='autodetect'):
 
     if file_format == 'dot':
 
+        if has_bipartition(G):
+            G = G.to_networkx()
+
         networkx.nx_pydot.write_dot(G, output_file)
 
     elif file_format == 'gml':
@@ -516,6 +533,8 @@ def writeGraph(G, output_file, graph_type, file_format='autodetect'):
         # a temporary binary ascii encoded buffer and then convert the
         # content before sending it to the output file.
         tempbuffer = io.BytesIO()
+        if has_bipartition(G):
+            G = G.to_networkx()
         networkx.write_gml(G, tempbuffer)
         print(tempbuffer.getvalue().decode('ascii'), file=output_file)
 
