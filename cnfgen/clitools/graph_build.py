@@ -22,6 +22,7 @@ from cnfgen.graphs import dag_pyramid
 from cnfgen.graphs import dag_path
 
 from cnfgen.graphs import sample_missing_edges
+from cnfgen.graphs import normalize_networkx_labels
 
 
 #
@@ -42,6 +43,7 @@ def obtain_gnd(parsed):
         raise ValueError('\'gnd\' expects arguments N d with even N * d')
 
     G = networkx.random_regular_graph(d, n)
+    G = normalize_networkx_labels(G)
     G.name = 'Random {}-regular graph of {} vertices'.format(d, n)
     return G
 
@@ -50,6 +52,7 @@ def multipartite_tnp(t, n, p, shuffleblocks=False):
     """Build a t-partite graph with n vertex per partition, and p-biased edges"""
 
     G = networkx.empty_graph(t * n)
+    G = normalize_networkx_labels(G)
 
     V = list(range(t * n))
     if shuffleblocks:
@@ -91,6 +94,7 @@ def obtain_gnp(parsed):
 
     if t == 1:
         G = networkx.gnp_random_graph(n, p)
+        G = normalize_networkx_labels(G)
         G.name = 'Random {}-biased graph of {} vertices'.format(p, n)
     else:
         G = multipartite_tnp(t, n, p)
@@ -111,6 +115,7 @@ def obtain_gnm(parsed):
             '\'gnm\' expects arguments N m with N>0 and 0 <= m <= N(N-1)/2')
 
     G = networkx.gnm_random_graph(n, m)
+    G = normalize_networkx_labels(G)
     G.name = 'Random graph of {} vertices with {} edges'.format(n, m)
     return G
 
@@ -136,10 +141,12 @@ def obtain_complete_simple(parsed):
 
     if b == 1:
         G = networkx.complete_graph(n)
+        G = normalize_networkx_labels(G)
         G.name = "Complete graphs of {} vertices".format(n)
     else:
         blocksizes = [n] * b
         G = networkx.complete_multipartite_graph(*blocksizes)
+        G = normalize_networkx_labels(G)
         G.name = "Complete multipartite graph with {} blocks of {} vertices".format(
             b, n)
     return G
@@ -156,6 +163,7 @@ def obtain_empty_simple(parsed):
         raise ValueError('\'complete\' expects argument N with N>0')
 
     G = networkx.empty_graph(n)
+    G = normalize_networkx_labels(G)
     G.name = "Empty graphs of {} vertices".format(n)
     return G
 
@@ -178,6 +186,7 @@ def obtain_grid_or_torus(parsed, periodic):
                 name))
 
     G = networkx.grid_graph(dimensions, periodic=periodic)
+    G = normalize_networkx_labels(G)
     G.name = "{} graph of dimension {}".format(name, dimensions)
     return G
 

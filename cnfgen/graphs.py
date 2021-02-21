@@ -4,6 +4,13 @@
 formulas that are graph based.
 """
 
+from itertools import product
+import networkx
+import fileinput
+import os
+import io
+from io import StringIO, BytesIO
+import sys
 import copy
 from bisect import bisect_right
 __all__ = [
@@ -35,18 +42,10 @@ def supported_formats():
 #          Import third party code
 #################################################################
 
-import sys
-from io import StringIO, BytesIO
-import io
-import os
-import fileinput
-import networkx
-
-from itertools import product
-
 
 class EdgeList():
     """Edge list for bipartite graphs"""
+
     def __init__(self, B):
         self.B = B
 
@@ -165,7 +164,7 @@ class BipartiteGraph(BaseBipartiteGraph):
 
     def add_edge(self, u, v):
         """Add an edge to the graph.
-        
+
         - multi-edges are not allowed
         - neighbors of a vertex are kept in numberic order
 
@@ -293,8 +292,8 @@ def _process_graph_io_arguments(iofile, graph_type, file_format, multi_edges):
                 "Cannot guess a file format from an IO stream with no name. Please specify the format manually."
             )
         if extension not in _graphformats[graph_type]:
-            raise ValueError("Cannot guess a file format for {} graphs from the extension of \"{}\". Please specify the format manually.".\
-                             format(graph_type,iofile.name))
+            raise ValueError("Cannot guess a file format for {} graphs from the extension of \"{}\". Please specify the format manually.".
+                             format(graph_type, iofile.name))
         else:
             file_format = extension
 
@@ -306,27 +305,41 @@ def _process_graph_io_arguments(iofile, graph_type, file_format, multi_edges):
     return (grtype, file_format)
 
 
+def normalize_networkx_labels(G):
+    """Relabel all vertices as integer starting from 1"""
+    # Normalize GML file. All nodes are integers starting from 1
+    try:
+        G = networkx.convert_node_labels_to_integers(
+            G, first_label=1, ordering='sorted')
+    except TypeError:
+        # Ids cannot be sorted natively
+        G = networkx.convert_node_labels_to_integers(
+            G, first_label=1, ordering='default')
+    return G
+
+
 def readGraph(input_file,
               graph_type,
               file_format='autodetect',
               multi_edges=False):
     """Read a Graph from file
 
-    The graph are managed using the NetworkX library, and most of the
-    input and output formats are the ones supported by it. Plus we
-    added support for some more *hackish* formats that are useful
-    in applications.
-
-    For the "simple" types, the graph is actually a (Multi)Graph
-    object, while it is a (Multi)DiGraph in case of "dag" or
-    "digraph".
-
-    In the case of "dag" type, the graph is guaranteed to be acyclic
-    and to pass the ``is_dag`` test. 
-
     In the case of "bipartite" type, the graph is of
     :py:class:`cnfgen.graphs.BaseBipartiteGraph`.
 
+    Otherwise the graph is managed using the
+    :pyclass:`networkx.Graph`. For the "simple" types, the graph is
+    actually a (Multi)Graph object, while it is a (Multi)DiGraph in
+    case of "dag" or "digraph".
+
+    The supported file formats are enumearated by
+    :py:func:`cnfgen.graph.supported_formats`
+
+    In the case of "dag" type, the graph is guaranteed to be acyclic
+    and to pass the ``is_dag`` test.
+
+    In the case of "bipartite" type, the graph is of
+    :py:class:`cnfgen.graphs.BaseBipartiteGraph`.
 
     Parameters
     -----------
@@ -352,8 +365,8 @@ def readGraph(input_file,
     Returns
     -------
     a graph object
-        one among networkx.DiGraph, networkx.MultiDiGraph,
-        networkx.Graph, networkx.MultiGraph object.
+        one type among networkx.DiGraph, networkx.MultiDiGraph,
+        networkx.Graph, networkx.MultiGraph, cnfgen.graphs.BipartiteGraph.
 
     Raises
     ------
@@ -367,8 +380,7 @@ def readGraph(input_file,
 
     See Also
     --------
-    writeGraph, is_dag
-
+    writeGraph, is_dag, has_bipartition
     """
 
     # file name instead of file object
@@ -387,6 +399,7 @@ def readGraph(input_file,
         #
         try:
             G = grtype(networkx.nx_pydot.read_dot(input_file))
+            G = normalize_networkx_labels(G)
         except TypeError:
             raise ValueError('Parse Error in dot file')
 
@@ -407,6 +420,7 @@ def readGraph(input_file,
             G = grtype(
                 networkx.read_gml(
                     (line.encode('ascii') for line in input_file), label='id'))
+            G = normalize_networkx_labels(G)
         except networkx.NetworkXError as errmsg:
             raise ValueError("[Parse error in GML input] {} ".format(errmsg))
         except UnicodeEncodeError as errmsg:
@@ -1338,33 +1352,45 @@ def bipartite_random_regular(l, r, d, seed=None):
 def dag_pyramid(height):
     """Generates the pyramid DAG
 
+    Vertices are indexed from the bottom layer, starting from index 1
+
     Parameters
     ----------
     height : int
-        the height of the tree
+        the height of the pyramid graph (>=0)
 
     Returns
     -------
     networkx.DiGraph
+
+    Raises
+    ------
+    ValueError
     """
+    if height < 0:
+        raise ValueError("The height of the tree must be >= 0")
+
     D = networkx.DiGraph()
     D.name = 'Pyramid of height {}'.format(height)
-    D.ordered_vertices = []
 
     # vertices
-    X=[ [('x_{{{},{}}}'.format(h,i),h,i) for i in range(height-h+1)] \
-        for h in range(height+1) ]
-
-    for layer in X:
-        for (name, h, i) in layer:
-            D.add_node(name, rank=(h, i))
-            D.ordered_vertices.append(name)
+    vidx = 1
+    for layer in range(height+1):
+        for i in range(1, height-layer+2):
+            D.add_node(vidx, rank=(layer, i),
+                       label="X[{},{}]".format(layer, 1))
+            vidx += 1
 
     # edges
-    for h in range(1, len(X)):
-        for i in range(len(X[h])):
-            D.add_edge(X[h - 1][i][0], X[h][i][0])
-            D.add_edge(X[h - 1][i + 1][0], X[h][i][0])
+    leftsrc = 1
+    dest = height+2
+    for layer in range(1, height+1):
+        for i in range(1, height-layer+2):
+            D.add_edge(leftsrc, dest)
+            D.add_edge(leftsrc+1, dest)
+            leftsrc += 1
+            dest += 1
+        leftsrc += 1
 
     return D
 
@@ -1372,6 +1398,8 @@ def dag_pyramid(height):
 def dag_complete_binary_tree(height):
     """Generates the complete binary tree DAG
 
+    Vertices are indexed from the bottom layer, starting from index 1
+
     Parameters
     ----------
     height : int
@@ -1380,26 +1408,35 @@ def dag_complete_binary_tree(height):
     Returns
     -------
     networkx.DiGraph
+
+    Raises
+    ------
+    ValueError
+
     """
+    if height < 0:
+        raise ValueError("The height of the tree must be >= 0")
+
     D = networkx.DiGraph()
     D.name = 'Complete binary tree of height {}'.format(height)
-    D.ordered_vertices = []
-    # vertices
-    vert = ['v_{}'.format(i) for i in range(1, 2 * (2**height))]
-    for w in vert:
-        D.add_node(w)
-        D.ordered_vertices.append(w)
+
+    # vertices plus 1
+    N = 2 * (2**height)
+    D.add_nodes_from(range(1, N))
     # edges
-    N = len(vert) - 1
-    for i in range(len(vert) // 2):
-        D.add_edge(vert[N - 2 * i - 1], vert[N - i])
-        D.add_edge(vert[N - 2 * i - 2], vert[N - i])
+    leftsrc = 1
+    for dest in range(N // 2 + 1, N):
+        D.add_edge(leftsrc, dest)
+        D.add_edge(leftsrc+1, dest)
+        leftsrc += 2
 
     return D
 
 
 def dag_path(length):
     """Generates a directed path DAG
+
+    Vertices are indexed from 1..length+1
 
     Parameters
     ----------
@@ -1409,18 +1446,21 @@ def dag_path(length):
     Returns
     -------
     networkx.DiGraph
+
+    Raises
+    ------
+    ValueError
     """
+    if length < 0:
+        raise ValueError("The lenght of the path must be >= 0")
+
     D = networkx.DiGraph()
     D.name = 'Directed path of length {}'.format(length)
-    D.ordered_vertices = []
     # vertices
-    V = ['v_{}'.format(i) for i in range(0, length + 1)]
-    for v in V:
-        D.add_node(v)
-        D.ordered_vertices.append(v)
+    D.add_nodes_from(range(1, length+2))
     # edges
-    for i in range(len(V) - 1):
-        D.add_edge(V[i], V[i + 1])
+    for i in range(1, length+1):
+        D.add_edge(i, i + 1)
 
     return D
 
@@ -1509,9 +1549,9 @@ def sample_missing_edges(G, m, seed=None):
                 break
 
             u, v = edge_sampler()
-            if (u,v) not in sampled_edges and \
-               (v,u) not in sampled_edges and \
-               not G.has_edge(u,v):
+            if (u, v) not in sampled_edges and \
+               (v, u) not in sampled_edges and \
+               not G.has_edge(u, v):
                 addition.append((u, v))
                 sampled_edges.add((u, v))
 

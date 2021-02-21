@@ -185,11 +185,11 @@ file-like objects such as
    >>> textbuffer = StringIO("graph X { 1 -- 2 -- 3 }")
    >>> G = readGraph(textbuffer, graph_type='simple', file_format='dot')
    >>> E = G.edges()
-   >>> ('1','2') in E
+   >>> (1, 2) in E
    True
-   >>> ('2','3') in E
+   >>> (2, 3) in E
    True
-   >>> ('1','3') in E
+   >>> (1, 3) in E
    False
    
 There are  several advantages with  using those functions,  instead of
@@ -213,7 +213,7 @@ choice of format  will be guessed by the file  extension.
    ...     print("digraph A {1->2->3}",file=f)
    >>> G = readGraph(tmpdir+"example_dag1.dot",graph_type='dag')
    >>> sorted(G.edges())
-   [('1', '2'), ('2', '3')]
+   [(1, 2), (2, 3)]
 
 is equivalent to
    
@@ -221,7 +221,7 @@ is equivalent to
    ...     print("digraph A {1->2->3}",file=f)
    >>> G = readGraph(tmpdir+"example_dag2.gml",graph_type='dag',file_format='dot')
    >>> sorted(G.edges())
-   [('1', '2'), ('2', '3')]
+   [(1, 2), (2, 3)]
 
 Instead, if we omit the format and the file extension is misleading we
 would get and error.
@@ -237,22 +237,22 @@ This is an example of GML file.
    
    >>> gml_text ="""graph [
    ...               node [
-   ...                 id 0
+   ...                 id 1
    ...                 label "a"
    ...               ]
    ...               node [
-   ...                 id 1
+   ...                 id 2
    ...                 label "b"
    ...               ]
    ...               edge [
-   ...                 source 0
-   ...                 target 1
+   ...                 source 1
+   ...                 target 2
    ...               ]
    ...             ]"""
    >>> with open(tmpdir+"example_ascii.gml","w",encoding='ascii') as f:
    ...     print(gml_text,file=f)
    >>> G = readGraph(tmpdir+"example_ascii.gml",graph_type='simple')
-   >>> (0,1) in G.edges()
+   >>> (1,2) in G.edges()
    True
 
 Recall that GML files are supposed to be ASCII encoded. 
