@@ -77,6 +77,9 @@ class BaseBipartiteGraph():
     def is_multigraph(self):
         return False
 
+    def is_bipartite(self):
+        return True
+
     def order(self):
         return self.lorder + self.rorder
 
@@ -122,37 +125,6 @@ class BaseBipartiteGraph():
 
     def __len__(self):
         return self.order()
-
-    @staticmethod
-    def from_networkx(G):
-        left = []
-        right = []
-        left_ids = {}
-        right_ids = {}
-        try:
-            for n in G.nodes():
-                color = G.nodes[n]['bipartite']
-                if color in [0, '0']:
-                    left.append(n)
-                elif color in [1, '1']:
-                    right.append(n)
-                else:
-                    raise KeyError
-        except KeyError:
-            raise ValueError(
-                "Full bipartition is missing, each vertex must have a 0,1 label."
-            )
-        B = BipartiteGraph(len(left), len(right))
-        try:
-            left.sort()
-            right.sort()
-        except TypeError:
-            pass
-        left_ids = {u: i for (i, u) in enumerate(left, start=1)}
-        right_ids = {v: i for (i, v) in enumerate(right, start=1)}
-        for u, v in G.edges():
-            B.add_edge(left_ids[u], right_ids[v])
-        return B
 
     def to_networkx(self):
         G = networkx.Graph()
@@ -214,6 +186,57 @@ class BipartiteGraph(BaseBipartiteGraph):
         if not (1 <= v <= self.rorder):
             raise ValueError("Invalid choice of vertex")
         return self.radj.get(v, [])[:]
+
+    @classmethod
+    def from_networkx(cls, G):
+        """Convert a :py:class:`networkx.Graph` into a :py:class:`cnfgen.graphs.BipartiteGraph`
+
+        In order to convert a :py:class:`networkx.Graph` object `G`,
+        it is necessary that all nodes in `G` have the property
+        `bipartite` set to either `0` or `1`.
+
+        If this is not the case, or if there are edges between the two
+        parts, :py:class:`ValueError` is raised.
+
+        Example
+        -------
+        >>> G = networkx.bipartite.complete_bipartite_graph(5,7)
+        >>> B = BipartiteGraph.from_networkx(G)
+        >>> print(B.order())
+        12
+        >>> print(B.left_order())
+        5
+        >>> print(B.has_edge(2,3))
+        True
+        """
+        side = [[], []]
+        index = [None, None]
+        for u in G.nodes():
+            try:
+                color = G.nodes[u]['bipartite']
+                assert color in ['0', 0, '1', 1]
+            except (KeyError, AssertionError):
+                raise ValueError(
+                    "Node {} lacks the 'bipartite' property set to 0 or 1".format(u))
+            side[int(color)].append(u)
+
+        B = cls(len(side[0]), len(side[1]))
+        index[0] = {u: i for (i, u) in enumerate(side[0], start=1)}
+        index[1] = {v: i for (i, v) in enumerate(side[1], start=1)}
+        for u, v in G.edges():
+            ucolor = 0 if u in index[0] else 1
+            vcolor = 1 if v in index[1] else 0
+
+            if ucolor == vcolor:
+                raise ValueError(
+                    "Edge ({},{}) across the bipartition".format(u, v))
+
+            iu, iv = index[ucolor][u], index[vcolor][v]
+            if ucolor == 0:
+                B.add_edge(iu, iv)
+            else:
+                B.add_edge(iv, iu)
+        return B
 
 
 class CompleteBipartiteGraph(BaseBipartiteGraph):
@@ -461,7 +484,7 @@ def readGraph(input_file,
 
     if graph_type == "bipartite" and not has_bipartition(G):
         try:
-            G = BaseBipartiteGraph.from_networkx(G)
+            G = BipartiteGraph.from_networkx(G)
         except ValueError:
             raise ValueError("[Input error] Graph must be bipartite")
 
@@ -662,7 +685,7 @@ def _kthlist_parse(inputfile):
         # first non empty comment line is the graph name
         # must be before the graph size
         if l[0] == 'c':
-            if size < 0 and len(name) == 0 and len(l[2:].strip() != 0):
+            if size < 0 and len(name) == 0 and len(l[2:].strip()) != 0:
                 name += l[2:]
             continue
 

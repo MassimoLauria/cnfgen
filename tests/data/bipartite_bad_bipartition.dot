@@ -1,0 +1,15 @@
+strict graph  {
+1 [bipartite=0];
+2 [bipartite=0];
+3 [bipartite=0];
+4 [bipartite=0];
+5;
+6 [bipartite=1];
+7 [bipartite=1];
+1 -- 7;
+2 -- 5;
+3 -- 7;
+4 -- 5;
+4 -- 6;
+4 -- 7;
+}

@@ -260,3 +260,94 @@ def test_cli_filenotfound():
     # assumes that 'does_not_exist.gml' does not exist in the working directory
     with pytest.raises(CLIError):
         cnfgen.cnfgen(['cnfgen', 'gop', 'does_not_exists.gml'], mode='string')
+
+
+def test_readGraph_bipartite_good_kthlist(shared_datadir):
+
+    filename = "bipartite_good.kthlist"
+    B = readGraph(str(shared_datadir / filename), graph_type='bipartite')
+    assert B.order() == 7
+    assert B.left_order() == 4
+    assert B.right_order() == 3
+    assert B.number_of_edges() == 7
+
+
+def test_readGraph_bipartite_good_matrix(shared_datadir):
+
+    filename = "bipartite_good.matrix"
+    B = readGraph(str(shared_datadir / filename), graph_type='bipartite')
+    assert B.order() == 7
+    assert B.left_order() == 4
+    assert B.right_order() == 3
+    assert B.number_of_edges() == 8
+
+
+def test_readGraph_bipartite_good_dot(shared_datadir):
+
+    filename = "bipartite_good.dot"
+    B = readGraph(str(shared_datadir / filename), graph_type='bipartite')
+    assert B.order() == 7
+    assert B.left_order() == 4
+    assert B.right_order() == 3
+    assert B.number_of_edges() == 6
+
+
+def test_readGraph_bipartite_good_gml(shared_datadir):
+
+    filename = "bipartite_good.gml"
+    B = readGraph(str(shared_datadir / filename), graph_type='bipartite')
+    assert B.order() == 7
+    assert B.left_order() == 4
+    assert B.right_order() == 3
+    assert B.number_of_edges() == 7
+
+
+def test_readGraph_bipartite_bad_monoedge_dot(shared_datadir):
+
+    if not has_dot_library():
+        pytest.skip("DOT library not installed. Can't test DOT I/O")
+
+    filename = "bipartite_bad_monoedge.dot"
+    with pytest.raises(ValueError):
+        readGraph(str(shared_datadir / filename), graph_type='bipartite')
+
+
+def test_readGraph_bipartite_bad_bipartition_dot(shared_datadir):
+
+    if not has_dot_library():
+        pytest.skip("DOT library not installed. Can't test DOT I/O")
+
+    filename = "bipartite_bad_bipartition.dot"
+    with pytest.raises(ValueError):
+        readGraph(str(shared_datadir / filename), graph_type='bipartite')
+
+
+def test_readGraph_bipartite_bad_bipartition2_dot(shared_datadir):
+
+    if not has_dot_library():
+        pytest.skip("DOT library not installed. Can't test DOT I/O")
+
+    filename = "bipartite_bad_bipartition2.dot"
+    with pytest.raises(ValueError):
+        readGraph(str(shared_datadir / filename), graph_type='bipartite')
+
+
+def test_readGraph_bipartite_bad_monoedge_gml(shared_datadir):
+
+    filename = "bipartite_bad_monoedge.gml"
+    with pytest.raises(ValueError):
+        readGraph(str(shared_datadir / filename), graph_type='bipartite')
+
+
+def test_readGraph_bipartite_bad_bipartition_gml(shared_datadir):
+
+    filename = "bipartite_bad_bipartition.gml"
+    with pytest.raises(ValueError):
+        readGraph(str(shared_datadir / filename), graph_type='bipartite')
+
+
+def test_readGraph_bipartite_bad_bipartition2_monoedge_gml(shared_datadir):
+
+    filename = "bipartite_bad_bipartition2.gml"
+    with pytest.raises(ValueError):
+        readGraph(str(shared_datadir / filename), graph_type='bipartite')
