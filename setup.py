@@ -27,7 +27,7 @@ setup(
         ],
     },
     install_requires=['networkx>=2.0', 'pydot>=1.2.3'],
-    python_requires='>=3.4',
+    python_requires='>=3.6',
 
     # Package long description in Markdown
     long_description=long_description,
