@@ -2,18 +2,19 @@
 # -*- coding:utf-8 -*-
 """Formula Helpers for reading dimacs
 
-Copyright (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012-2021 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
 import argparse
-from cnfgen.utils.parsedimacs import readCNF
+from cnfgen.utils.parsedimacs import from_dimacs_file
+from cnfgen.cnf import CNF
 
 from cnfgen.clitools import redirect_stdin
 from cnfgen.clitools import interactive_msg
 from cnfgen.clitools import msg_prefix
 
-from .formula_helpers import FormulaHelper
+from cnfgen.clihelpers.formula_helpers import FormulaHelper
 
 description_string = """This is not a proper formula construction. The formula is built by
 reading a DIMACS file. This command is particularly useful to apply
@@ -55,6 +56,6 @@ class DimacsCmdHelper(FormulaHelper):
             with msg_prefix("INPUT: "):
                 interactive_msg(msg)
 
-            F = readCNF()
+            F = from_dimacs_file(CNF)
 
         return F
