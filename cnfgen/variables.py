@@ -23,6 +23,7 @@ from bisect import bisect_right
 from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph
 import networkx as nx
 
+from cnfgen.basecnf import BaseCNF
 
 class BaseVariableGroup():
     """Base object for variable groups
@@ -34,18 +35,21 @@ class BaseVariableGroup():
     indices and the corresponding sequential variable IDs (as seen in
     a DIMACS file, for example).
     """
-    def __init__(self, startID, endID, labelfmt=None):
+    def __init__(self, formula, N, labelfmt=None):
         """Creates a variables group object
 
         Parameters
         ----------
-        startID: integer
-            start variables IDs from this number
+        formula: CNF
+            formula to which we add a variable group
+        N: integer
+            number of variables to add
+        labelfmt:
+            format string for the label of the variables
         """
-        if startID < 1:
-            raise ValueError('Variables group must start at index >=1')
-        self.startID = startID
-        self.endID = endID
+        self.formula = formula
+        self.ids = range(formula.number_of_variables() + 1,
+                         formula.number_of_variables() + N+1) # range excludes last element
         self.labelfmt = labelfmt
 
     def __call__(self, *index):
@@ -101,15 +105,15 @@ class BaseVariableGroup():
 
     def __len__(self):
         """The number of variables in the group"""
-        return self.endID - self.startID + 1
+        return self.ids[-1] - self.ids[0] + 1
 
-    def firstID(self):
-        """The first ID of this variable group"""
-        return self.startID
+    def range(self):
+        """The ID interval for this variable group"""
+        return self.ids
 
-    def __contains__(self, ID):
-        """Check in the variable is in the group"""
-        return (self.startID <= ID <= self.endID)
+    def __contains__(self, lit):
+        """Check in the literal is in the group"""
+        return abs(lit) in self.ids
 
     def label(self, *pattern):
         """Convert the index of a variable into its label.
@@ -159,8 +163,11 @@ class SingletonVariableGroup(BaseVariableGroup):
 
     Examples
     --------
-    >>> X1 = SingletonVariableGroup(12,'X')
-    >>> X2 = SingletonVariableGroup(23,'Y')
+    >>> c = BaseCNF()
+    >>> c.update_variable_number(11)
+    >>> X1 = SingletonVariableGroup(c,'X')
+    >>> c.update_variable_number(22)
+    >>> X2 = SingletonVariableGroup(c,'Y')
     >>> print(X1.label())
     X
     >>> print(*X1.indices())
@@ -174,25 +181,21 @@ class SingletonVariableGroup(BaseVariableGroup):
     >>> print(X2.to_index(23))
     ()
     """
-    def __init__(self, varID, name):
-        """Creates a variables group object
+    def __init__(self, formula, name):
+        """Variables group for a single variable
 
         Parameters
         ----------
-        varID: integer
-            start variables IDs from this number
-        label: str
+        formula: CNF
+            formula to which we add a variable group
+        name: str
             the name of the variable
         """
-        if varID < 1:
-            raise ValueError('Variables group must start at index >=1')
-
-        self.varID = varID
         self.name = name
-        BaseVariableGroup.__init__(self, varID, varID, labelfmt=name)
+        BaseVariableGroup.__init__(self, formula, 1, labelfmt=name)
 
     def __call__(self):
-        return self.varID
+        return self.range()[0]
 
     def label(self):
         return self.name
@@ -205,7 +208,7 @@ class SingletonVariableGroup(BaseVariableGroup):
 
     def to_index(self, lit):
         """Convert a literal of the corresponding variable index"""
-        if abs(lit) != self.varID:
+        if abs(lit) != self.range()[0]:
             raise ValueError("Literal do not belong to this variable group")
         return ()
 
@@ -225,13 +228,14 @@ class BlockOfVariables(BaseVariableGroup):
 
     Examples
     --------
-    >>> G = BlockOfVariables(21,[2,3],'G[{},{}]')
+    >>> F = VariablesManager()
+    >>> G = BlockOfVariables(F,[2,3],'G[{},{}]')
     >>> print(*G.label())
     G[1,1] G[1,2] G[1,3] G[2,1] G[2,2] G[2,3]
     >>> print(*G.indices())
     (1, 1) (1, 2) (1, 3) (2, 1) (2, 2) (2, 3)
     >>> G(2,1)
-    24
+    4
     >>> V = VariablesManager()
     >>> p = V.new_block(10,5,label='p({},{})')
     >>> q = V.new_block(3,3,label='q({},{})')
@@ -268,13 +272,13 @@ class BlockOfVariables(BaseVariableGroup):
     >>> print(p.to_index(p(4,3)))
     [4, 3]
     """
-    def __init__(self, startID, ranges, labelfmt=None):
+    def __init__(self, formula, ranges, labelfmt=None):
         """Creates a variables group object
 
         Parameters
         ----------
-        startID: integer
-            start variables IDs from this number
+        formula: CNF
+            formula to which we add a variable group
         ranges: list(integer)
             ranges of the indices
         labelfmt: str
@@ -303,9 +307,8 @@ class BlockOfVariables(BaseVariableGroup):
         self.ranges = ranges
         self.N = weights.pop()  # number of variables
         self.weights = weights[::-1]
-        self.offset = startID
-        BaseVariableGroup.__init__(self, startID, startID + self.N - 1,
-                                   labelfmt)
+        self.offset = formula.number_of_variables() + 1
+        BaseVariableGroup.__init__(self, formula, self.N, labelfmt)
 
     def indices(self, *pattern):
         """Implementation of :py:classmethod:`BaseVariableGroup.indices`
@@ -380,7 +383,8 @@ class BlockOfVariables(BaseVariableGroup):
 
         Examples
         --------
-        >>> VG = BlockOfVariables(1,[3,5,4,3])
+        >>> V = VariablesManager()
+        >>> VG = BlockOfVariables(V,[3,5,4,3])
         >>> VG.to_index(1)
         [1, 1, 1, 1]
         >>> VG.to_index(-5)
@@ -389,7 +393,6 @@ class BlockOfVariables(BaseVariableGroup):
         [3, 5, 4, 2]
         >>> VG.to_index(180)
         [3, 5, 4, 3]
-
         """
         var = abs(lit)
         if var not in self:
@@ -422,45 +425,47 @@ class BipartiteEdgesVariables(BaseVariableGroup):
     >>> G.add_edge(2,1)
     >>> G.add_edge(1,3)
     >>> G.add_edge(2,2)
-    >>> V = BipartiteEdgesVariables(12, G, labelfmt='E[{},{}]')
-    >>> print(*[V.label(u,v) for u,v in V.indices()])
+    >>> F = VariablesManager()
+    >>> F.update_variable_number(11)
+    >>> e = BipartiteEdgesVariables(F, G, labelfmt='E[{},{}]')
+    >>> print(*[e.label(u,v) for u,v in e.indices()])
     E[1,3] E[2,1] E[2,2]
-    >>> print(V(2,1))
+    >>> print(e(2,1))
     13
-    >>> print(V(1,3))
+    >>> print(e(1,3))
     12
-    >>> 14 in V
+    >>> 14 in e
     True
-    >>> 10 in V
+    >>> 10 in e
     False
-    >>> print(len(V))
+    >>> print(len(e))
     3
-    >>> print(V.label(1,3))
+    >>> print(e.label(1,3))
     E[1,3]
-    >>> print(*V.label(2,None))
+    >>> print(*e.label(2,None))
     E[2,1] E[2,2]
-    >>> V = BipartiteEdgesVariables(1, G, labelfmt='X[{},{}]')
-    >>> W = BipartiteEdgesVariables(1, G, labelfmt='W[{},{}]')
-    >>> print(V.label(2,1))
+    >>> X = BipartiteEdgesVariables(F, G, labelfmt='X[{},{}]')
+    >>> W = BipartiteEdgesVariables(F, G, labelfmt='W[{},{}]')
+    >>> print(X.label(2,1))
     X[2,1]
     >>> print(W.label(1,3))
     W[1,3]
-    >>> [V.label(u,3) for u in G.left_neighbors(3)]
+    >>> [X.label(u,3) for u in G.left_neighbors(3)]
     ['X[1,3]']
-    >>> print(*V.label(None,3))
+    >>> print(*X.label(None,3))
     X[1,3]
-    >>> print(*V.label(1,None))
+    >>> print(*X.label(1,None))
     X[1,3]
-    >>> print(*V.label(None,None))
+    >>> print(*X.label(None,None))
     X[1,3] X[2,1] X[2,2]
     """
-    def __init__(self, startID, G, labelfmt='e_{{{},{}}}'):
-        """Creates a variables group for the edges of G
+    def __init__(self, formula, G, labelfmt='e_{{{},{}}}'):
+        """Variables group for the edges of bipartite G
 
         Parameters
         ----------
-        startID: integer
-            start variables IDs from this number
+        formula: CNF
+            formula to which we add a variable group
         G: BipartiteGraph
             bipartite graph
         labelfmt: str
@@ -480,6 +485,7 @@ class BipartiteEdgesVariables(BaseVariableGroup):
 
         # offsets
         U, V = G.parts()
+        startID = formula.number_of_variables() + 1
         offset = [None, startID]
         for u in U:
             d = G.right_degree(u)
@@ -489,7 +495,7 @@ class BipartiteEdgesVariables(BaseVariableGroup):
 
         self.G = G
         self.offset = offset
-        BaseVariableGroup.__init__(self, startID, startID + G.size() - 1,
+        BaseVariableGroup.__init__(self, formula, G.number_of_edges(),
                                    labelfmt)
 
     def _unsafe_index_to_lit(self, index):
@@ -519,7 +525,8 @@ class BipartiteEdgesVariables(BaseVariableGroup):
         >>> G.add_edge(2,1)
         >>> G.add_edge(1,3)
         >>> G.add_edge(2,2)
-        >>> V = BipartiteEdgesVariables(1, G, labelfmt='X[{},{}]')
+        >>> F = VariablesManager()
+        >>> V = BipartiteEdgesVariables(F, G, labelfmt='X[{},{}]')
         >>> print(*V.indices(None,1))
         (2, 1)
         >>> print(*V.indices(None,2))
@@ -584,7 +591,9 @@ class BipartiteEdgesVariables(BaseVariableGroup):
         >>> G.add_edge(2,1)
         >>> G.add_edge(1,3)
         >>> G.add_edge(2,2)
-        >>> V = BipartiteEdgesVariables(101, G, labelfmt='e[{},{}]')
+        >>> F = VariablesManager()
+        >>> F.update_variable_number(100)
+        >>> V = BipartiteEdgesVariables(F, G, labelfmt='e[{},{}]')
         >>> V.to_index(102)
         (2, 1)
         >>> V.to_index(101)
@@ -614,7 +623,9 @@ class DiGraphEdgesVariables(BaseVariableGroup):
     >>> G.add_edge(3,4)
     >>> G.add_edge(4,5)
     >>> G.add_edge(5,1)
-    >>> a = DiGraphEdgesVariables(101, G, labelfmt='a({},{})')
+    >>> F = VariablesManager()
+    >>> F.update_variable_number(100)
+    >>> a = DiGraphEdgesVariables(F, G, labelfmt='a({},{})')
     >>> a.to_index(101)
     (1, 2)
     >>> a.to_index(104)
@@ -634,7 +645,9 @@ class DiGraphEdgesVariables(BaseVariableGroup):
     >>> H.add_edge(2,3)
     >>> H.add_edge(2,4)
     >>> H.add_edge(5,1)
-    >>> b = DiGraphEdgesVariables(12,H,labelfmt='b({},{})',sortby='succ')
+    >>> F = VariablesManager()
+    >>> F.update_variable_number(11)
+    >>> b = DiGraphEdgesVariables(F,H,labelfmt='b({},{})',sortby='succ')
     >>> b(1,3)
     14
     >>> b.to_index(12)
@@ -648,22 +661,15 @@ class DiGraphEdgesVariables(BaseVariableGroup):
     >>> print(*b.indices(None,3))
     (1, 3) (2, 3)
     """
-    def __init__(self, startID, G, labelfmt='e_{{{},{}}}', sortby='pred'):
+    def __init__(self, formula, G, labelfmt='e_{{{},{}}}', sortby='pred'):
         """Creates a variables group object
 
         Parameters
         ----------
-        startID: integer
-            start variables IDs from this number
-        """
-        """Creates a variables group for the edges of G
-
-        Parameters
-        ----------
-        startID: integer
-            start variables IDs from this number
+        formula: CNF
+            formula to which we add a variable group
         G: networkx.DiGraph
-            bipartite graph
+            directed graph
         labelfmt: str
             format string for the variable labels
         sortby: 'pred' or 'succ'
@@ -684,26 +690,20 @@ class DiGraphEdgesVariables(BaseVariableGroup):
             raise ValueError(
                 'label must be a valid format string for two arguments')
 
-        # dictionary vertex name  <--> vertex numeric
-        name2num = {}
         V = G.number_of_nodes()
-        for i, v in enumerate(G.nodes(), start=1):
-            name2num[v] = i
-
         B = BipartiteGraph(V, V)
 
         for u, v in G.edges():
             if sortby == 'pred':
                 # successors represented in a bipartite graph
-                B.add_edge(name2num[u], name2num[v])
+                B.add_edge(u, v)
             else:
                 # predecessors represented in a bipartite graph
-                B.add_edge(name2num[v], name2num[u])
+                B.add_edge(v, u)
 
         self.sortby = sortby
-        self.VG = BipartiteEdgesVariables(startID, B)
-        BaseVariableGroup.__init__(self, startID,
-                                   startID + G.number_of_edges() - 1, labelfmt)
+        self.VG = BipartiteEdgesVariables(formula, B)
+        BaseVariableGroup.__init__(self, formula, B.number_of_edges(), labelfmt)
 
     def to_index(self, lit):
         u, v = self.VG.to_index(lit)
@@ -720,7 +720,9 @@ class DiGraphEdgesVariables(BaseVariableGroup):
         >>> H.add_edge(2,3)
         >>> H.add_edge(2,4)
         >>> H.add_edge(5,1)
-        >>> b = DiGraphEdgesVariables(12,H,labelfmt='b({},{})',sortby='succ')
+        >>> F = VariablesManager()
+        >>> F.update_variable_number(11)
+        >>> b = DiGraphEdgesVariables(F,H,labelfmt='b({},{})',sortby='succ')
         >>> print(*b.indices())
         (5, 1) (1, 2) (1, 3) (2, 3) (2, 4)
         >>> print(*b.label())
@@ -778,14 +780,15 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
     >>> G.add_edge(1,3)
     >>> G.add_edge(2,2)
     >>> G.add_edge(4,2)
-    >>> V = GraphEdgesVariables(12, G, labelfmt='E[{},{}]')
+    >>> F = VariablesManager()
+    >>> V = GraphEdgesVariables(F, G, labelfmt='E[{},{}]')
     >>> print(*[V.label(u,v) for u,v in V.indices()])
     E[1,2] E[1,3] E[2,2] E[2,3] E[2,4]
     >>> print(V(2,1))
-    12
+    1
     >>> print(V(1,3))
-    13
-    >>> 14 in V
+    2
+    >>> 4 in V
     True
     >>> 10 in V
     False
@@ -802,16 +805,16 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
     >>> print(*V.indices(None,2))
     (1, 2) (2, 2) (2, 3) (2, 4)
     """
-    def __init__(self, startID, G, labelfmt='e_{{{}{}}}'):
+    def __init__(self, formula, G, labelfmt='e_{{{}{}}}'):
         """Creates a variables group for the edges of G
 
         Parameters
         ----------
-        startID: integer
-            start variables IDs from this number
-        G: networkx.Graph
-            a simple graph
-        labelfmt: str (optional)
+        formula: CNF
+            formula to which we add a variable group
+        G: BipartiteGraph
+            bipartite graph
+        labelfmt: str
             format string for the variable labels
         """
         if not isinstance(G, nx.Graph):
@@ -819,24 +822,15 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
                 "Invalid bipartite graph G: a networkx.Graph object was expected"
             )
 
-        # offsets
-        # dictionary vertex name  <--> vertex numeric
-        name2num = {}
         V = G.number_of_nodes()
-        for i, v in enumerate(G.nodes(), start=1):
-            name2num[v] = i
-
         B = BipartiteGraph(V, V)
 
         for u, v in G.edges():
-            iu = name2num[u]
-            iv = name2num[v]
-            iu, iv = min(iu, iv), max(iu, iv)
-            if not B.has_edge(iu, iv):
-                B.add_edge(name2num[u], name2num[v])
-        self.BG = BipartiteEdgesVariables(startID, B, labelfmt=labelfmt)
-        BaseVariableGroup.__init__(self, startID,
-                                   startID + B.number_of_edges() - 1, labelfmt)
+            u, v = min(u, v), max(u, v)
+            if not B.has_edge(u, v):
+                B.add_edge(u, v)
+        self.BG = BipartiteEdgesVariables(formula, B, labelfmt=labelfmt)
+        BaseVariableGroup.__init__(self, formula,B.number_of_edges(), labelfmt)
 
     def _unsafe_index_to_lit(self, index):
         """Converts an edge of the graph into a variable ID.
@@ -864,7 +858,8 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
         >>> G.add_edge(2,1)
         >>> G.add_edge(1,3)
         >>> G.add_edge(2,2)
-        >>> V = BipartiteEdgesVariables(1, G, labelfmt='X[{},{}]')
+        >>> F = VariablesManager()
+        >>> V = BipartiteEdgesVariables(F, G, labelfmt='X[{},{}]')
         >>> print(*V.indices(None,1))
         (2, 1)
         >>> print(*V.indices(None,2))
@@ -931,7 +926,9 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
         >>> G.add_edge(1,3)
         >>> G.add_edge(2,2)
         >>> G.add_edge(4,2)
-        >>> V = GraphEdgesVariables(101, G)
+        >>> F = VariablesManager()
+        >>> F.update_variable_number(100)
+        >>> V = GraphEdgesVariables(F, G)
         >>> V.to_index(102)
         (1, 3)
         >>> V.to_index(101)
@@ -941,24 +938,12 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
         """
         return self.BG.to_index(lit)
 
-
-class VariablesManager():
-    """Manager for some formula variables.
+class VariablesManager(BaseCNF):
+    """CNF with a variable manager
 
     A CNF formula needs to keep track on variables.
-    A :py:class:`VariableManager` object allows to do that, while
-    providing a nice interface that allows to focus on variable meaning.
-
-    Internally a variable is represented as an integer, as in DIMACS,
-    and all variables are indexed from 1 to :math:`N` which would be
-    the number of variables (i.e. no gaps). Literals will be
-    represented with the same number, multiplied by 1 and -1,
-    respectively, to indicate the positive and negative versions.
-
-    Implementation: instead of having info for each variables, we use
-    a sparse representation. Each list with info is essentially a list
-    containing the larger index of each group, searchable with
-    :py:func:`bisect_right` and moving one step left.
+    A :py:class:`VariableManager` allows to do that, while providing
+    a nice interface that allows to focus on variable meaning.
 
     Attributes
     ----------
@@ -973,35 +958,34 @@ class VariablesManager():
     new_block(*ranges,label=''):
         add variables with one or more indices
 
-    vars():
-        enumerates all variables
-
-    varnames():
-        enumerate the names of all variables
-
     Examples
     --------
     >>> V=VariablesManager()
     >>> X = V.new_variable(label="X")
     >>> Y = V.new_variable(label="Y")
     >>> Zs = V.new_block(2,3,label='z_{{{},{}}}')
-    >>> len(V)
+    >>> V.number_of_variables()
     8
     >>> len(Zs)
     6
-    >>> print(*V.varnames())
+    >>> print(*V.all_variable_labels())
     X Y z_{1,1} z_{1,2} z_{1,3} z_{2,1} z_{2,2} z_{2,3}
+
     """
-    def __init__(self):
+    def __init__(self, clauses=None, description=None):
         """Construct a variable manager object
         """
+        self._groups = []
+        BaseCNF.__init__(self, clauses=clauses, description=description)
 
-        self.groups = []
-        self.info = {}
-
-    def _add_newgroup(self, newgroup):
-        self.groups.append(len(self) + len(newgroup))
-        self.info[self.groups[-1]] = newgroup
+    def _add_variable_group(self, vg):
+        """Add a group of variables to the formula"""
+        begin,end = vg.range()[0],vg.range()[-1]
+        assert end>=begin
+        if begin <= self.number_of_clauses():
+            raise ValueError("The new variable group must not overlaps old variables")
+        self._groups.append(vg)
+        self.update_variable_number(end)
 
     def new_variable(self, label=None):
         """
@@ -1021,17 +1005,20 @@ class VariablesManager():
         >>> V=VariablesManager()
         >>> V.new_variable(label='X')
         1
-        >>> len(V)
+        >>> V.number_of_variables()
         1
         >>> V.new_variable(label='Y')
         2
         >>> V.new_variable(label='Z')
         3
-        >>> len(V)
+        >>> V.number_of_variables()
         3
+        >>> V.add_clause([1,3,-4])
+        >>> V.number_of_variables()
+        4
         """
-        newgroup = SingletonVariableGroup(len(self) + 1, label)
-        self._add_newgroup(newgroup)
+        newgroup = SingletonVariableGroup(self, label)
+        self._add_variable_group(newgroup)
         return newgroup()
 
     def new_block(self, *ranges, label=None):
@@ -1055,13 +1042,13 @@ class VariablesManager():
         >>> V=VariablesManager()
         >>> V.new_variable(label='X')
         1
-        >>> len(V)
+        >>> V.number_of_variables()
         1
         >>> V.new_variable(label='Y')
         2
         >>> V.new_variable(label='Z')
         3
-        >>> len(V)
+        >>> V.number_of_variables()
         3
         >>> v = V.new_block(3,5,4,3,label='v({},{},{},{})')
         >>> v.to_index(4)
@@ -1081,8 +1068,8 @@ class VariablesManager():
         >>> v(3,5,4,3)
         183
         """
-        newgroup = BlockOfVariables(len(self) + 1, ranges, label)
-        self._add_newgroup(newgroup)
+        newgroup = BlockOfVariables(self, ranges, label)
+        self._add_variable_group(newgroup)
         return newgroup
 
     def new_bipartite_edges(self, G, label='e({},{})'):
@@ -1106,7 +1093,7 @@ class VariablesManager():
         >>> V=VariablesManager()
         >>> V.new_variable(label='X')
         1
-        >>> len(V)
+        >>> V.number_of_variables()
         1
         >>> V.new_variable(label='Y')
         2
@@ -1119,7 +1106,7 @@ class VariablesManager():
         >>> G.add_edge(4,2)
         >>> G.add_edge(5,1)
         >>> e = V.new_bipartite_edges(G,label='X[{},{}]')
-        >>> len(V)
+        >>> V.number_of_variables()
         9
         >>> e.to_index(4)
         (2, 1)
@@ -1130,8 +1117,8 @@ class VariablesManager():
         >>> e(5,1)
         9
         """
-        newgroup = BipartiteEdgesVariables(len(self) + 1, G, labelfmt=label)
-        self._add_newgroup(newgroup)
+        newgroup = BipartiteEdgesVariables(self, G, labelfmt=label)
+        self._add_variable_group(newgroup)
         return newgroup
 
     def new_digraph_edges(self, G, label='e({},{})', sortby='pred'):
@@ -1142,7 +1129,6 @@ class VariablesManager():
         ----------
         G : networkx.DiGraph
             a directed graph
-
         label : str, optional
             string representation of the variables
         sortby : 'pred' or 'succ'
@@ -1157,7 +1143,7 @@ class VariablesManager():
         >>> V=VariablesManager()
         >>> V.new_variable(label='X')
         1
-        >>> len(V)
+        >>> V.number_of_variables()
         1
         >>> V.new_variable(label='Y')
         2
@@ -1170,8 +1156,8 @@ class VariablesManager():
         >>> G.add_edge(4,3)
         >>> G.add_edge(4,2)
         >>> a = V.new_digraph_edges(G,sortby='succ')
-        >>> len(V)
-        8
+        >>> V.new_variable(label='Y')
+        9
         >>> print(*a())
         3 4 5 6 7 8
         >>> print(*a.indices())
@@ -1185,23 +1171,32 @@ class VariablesManager():
         >>> a(2,1)
         3
         """
-        newgroup = DiGraphEdgesVariables(len(self) + 1,
+        newgroup = DiGraphEdgesVariables(self,
                                          G,
                                          labelfmt=label,
                                          sortby=sortby)
-        self._add_newgroup(newgroup)
+        self._add_variable_group(newgroup)
         return newgroup
 
-    def __len__(self):
-        return len(self.groups)
 
+    def all_variable_labels(self, default_label_format='x{}'):
+        """Produces the labels of all the variables
 
-
-    def varnames(self):
-        """Enumerate variable names
-
-        Generator enumerates all variables by name.
+Variable belonging to special variable groups are translated
+accordingly. The others get a standard variable name as defined by the
+argument `default_label_format` (e.g. 'x{}').
         """
-        for x in self.groups:
-            varinfo = self.info[x]
-            yield from varinfo.label()
+        # We cycle through all variables,
+        #
+        varid = 1
+        for vg in self._groups:
+            begin = vg.range()[0]
+            while varid < begin:
+                yield default_label_format.format(varid)
+                varid += 1
+            yield from vg.label()
+            varid += len(vg)
+        while varid <= self._numvar:
+            yield default_label_format.format(varid)
+            varid += 1
+        assert varid == self._numvar+1

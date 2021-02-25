@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Transformation Helpers for command line
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -31,8 +31,8 @@ from cnfgen.clitools import CLIParser, positive_int, compose_two_parsers
 
 class TransformationHelper:
     """Command line helper for a formula family"""
-    name = None
-    description = None
+    name = ""
+    description = ""
 
     @staticmethod
     def setup_command_line(parser):
@@ -48,7 +48,7 @@ class TransformationHelper:
 
 
 class ShuffleCmd(TransformationHelper):
-    """Shuffle 
+    """Shuffle
     """
     name = 'shuffle'
     description = 'Permute variables, clauses and polarity of literals at random'
@@ -291,7 +291,7 @@ class AnythingButKSubstitutionCmd(TransformationHelper):
 
 
 class FormulaLiftingCmd(TransformationHelper):
-    """Lifting 
+    """Lifting
     """
     name = 'lift'
     description = 'one dimensional lifting  x -->  x1 y1  OR ... OR xN yN, with y1+..+yN = 1'
