@@ -51,9 +51,7 @@ def obtain_gnd(parsed):
 def multipartite_tnp(t, n, p, shuffleblocks=False):
     """Build a t-partite graph with n vertex per partition, and p-biased edges"""
 
-    G = networkx.empty_graph(t * n)
-    G = normalize_networkx_labels(G)
-
+    G = networkx.empty_graph(range(1,t * n+1))
     V = list(range(1,t * n + 1))
     if shuffleblocks:
         random.shuffle(V)
@@ -140,8 +138,7 @@ def obtain_complete_simple(parsed):
             "with N vertices per block.")
 
     if b == 1:
-        G = networkx.complete_graph(n)
-        G = normalize_networkx_labels(G)
+        G = networkx.complete_graph(range(1,n+1))
         G.name = "Complete graphs of {} vertices".format(n)
     else:
         blocksizes = [n] * b
@@ -162,8 +159,7 @@ def obtain_empty_simple(parsed):
     except (TypeError, ValueError, AssertionError):
         raise ValueError('\'complete\' expects argument N with N>0')
 
-    G = networkx.empty_graph(n)
-    G = normalize_networkx_labels(G)
+    G = networkx.empty_graph(range(1, n+1))
     G.name = "Empty graphs of {} vertices".format(n)
     return G
 

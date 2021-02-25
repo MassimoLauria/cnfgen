@@ -10,6 +10,12 @@ def M(graphspec):
     parser = parse_graph_argument('simple', graphspec)
     return obtain_graph(parser)
 
+def test_empty():
+    G = M("empty 10")
+    assert G.order() == 10
+    assert list(G.nodes()) == list(range(1,11))
+
+
 
 def test_gnp():
     G = M("gnp  10 0.5")
