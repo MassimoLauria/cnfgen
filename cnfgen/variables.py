@@ -50,7 +50,7 @@ class BaseVariableGroup():
 
     def __call__(self, *index):
         """Convert the index of a variable into its ID.
-        
+
         An `index` of length 0 or which contains None values will be
         considered a projection pattern of the set of legal indices of
         the variable group. In that case the return value will be
@@ -113,7 +113,7 @@ class BaseVariableGroup():
 
     def label(self, *pattern):
         """Convert the index of a variable into its label.
-        
+
         If the `pattern` is contains None values, these will be
         considered as "don't care" values. The implementation should
         return a generator enumerating all the IDs compatible with the
@@ -138,7 +138,7 @@ class BaseVariableGroup():
 
     def _unsafe_index_to_lit(self, index):
         """Converts a variable index into a variable ID
-        
+
         Parameters
         ----------
         index: sequence of positive integers
@@ -314,7 +314,7 @@ class BlockOfVariables(BaseVariableGroup):
         ----------
         pattern : sequences(positive integers or None)
             the pattern of the indices
-   
+
         Returns
         -------
         a tuple or an itertools.product object
@@ -412,9 +412,9 @@ class BipartiteEdgesVariables(BaseVariableGroup):
     Given a bipartite graph :math:`G=(U,V,E)` represented by an object
     of the class :py:class:`BaseBipartiteGraph`, we have variables
     :math:`e_{u,v}` for :math:`u in U` and :math:`v in U`.
-    
+
     Warning: if the object representing :math:`G` gets modified, the
-    behavior of this object may be inconsistent. 
+    behavior of this object may be inconsistent.
 
     Examples
     --------
@@ -765,9 +765,9 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
     Given a simple graph :math:`G=(V,E)` represented by an object of
     the class :py:class:`networkx.Graph`, we have variables
     :math:`e_{u,v}` for :math:`\{u,v\} in E`.
-    
+
     Warning: if the object representing :math:`G` gets modified, the
-    behavior of this object may be inconsistent. 
+    behavior of this object may be inconsistent.
 
     Examples
     --------
@@ -1193,10 +1193,9 @@ class VariablesManager():
         return newgroup
 
     def __len__(self):
-        if len(self.groups) == 0:  # no variables
-            return 0
-        else:
-            return self.groups[-1]  # last set of variables
+        return len(self.groups)
+
+
 
     def varnames(self):
         """Enumerate variable names

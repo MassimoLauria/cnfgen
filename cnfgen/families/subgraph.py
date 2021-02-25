@@ -16,6 +16,7 @@ from networkx import complete_graph
 from networkx import empty_graph
 
 from textwrap import dedent
+from cnfgen.graphs import CompleteBipartiteGraph
 
 
 def SubgraphFormula(graph, templates, symmetric=False):
@@ -43,7 +44,7 @@ def SubgraphFormula(graph, templates, symmetric=False):
         vertices. This allows some optimization in the search space of
         the assignments.
 
-    induce: 
+    induce:
         force the subgraph to be induced (i.e. no additional edges are allowed)
 
 
@@ -55,15 +56,12 @@ def SubgraphFormula(graph, templates, symmetric=False):
     # One of the templates is chosen to be the subgraph
     if len(templates) == 0:
         return CNF(description="Empty formula")
-    elif len(templates) == 1:
-        selectors = []
-    elif len(templates) == 2:
-        selectors = ['c']
-    else:
-        selectors = ['c_{{{}}}'.format(i) for i in range(len(templates))]
+    selectors = len(templates)
+    if selectors <= 2:
+        selectors -= 1
 
     # comment the formula accordingly
-    if len(selectors) > 1:
+    if selectors > 1:
         description = "{} does not contains any of the {} possible subgraphs.".format(
             graph.name, len(templates))
     else:
@@ -71,39 +69,33 @@ def SubgraphFormula(graph, templates, symmetric=False):
             graph.name, templates[0].name)
     F = CNF(description=description)
 
-    for s in selectors:
-        F.add_variable(s)
-
-    if len(selectors) > 1:
+    if selectors > 1:
         for cls in F.equal_to_constraint(selectors, 1):
-            F.add_clause(cls, strict=True)
+            F.add_clause(cls)
 
     # A subgraph is chosen
     N = graph.order()
     k = max([s.order() for s in templates])
 
-    var_name = lambda i, j: "S_{{{0},{1}}}".format(i, j)
+    def var_name(i, j): return "S_{{{0},{1}}}".format(i, j)
 
+    B = CompleteBipartiteGraph(k, N)
+    VG = None
     if symmetric:
-        mapping = F.unary_mapping(list(range(k)),
-                                  list(range(N)),
-                                  var_name=var_name,
+        mapping = F.unary_mapping(selectors+1, B,
                                   functional=True,
                                   injective=True,
                                   nondecreasing=True)
     else:
-        mapping = F.unary_mapping(list(range(k)),
-                                  list(range(N)),
-                                  var_name=var_name,
+        mapping = F.unary_mapping(selectors+1, B,
                                   functional=True,
                                   injective=True,
                                   nondecreasing=False)
 
-    for v in mapping.variables():
-        F.add_variable(v)
+    m = mapping.variables()
 
     for cls in mapping.clauses():
-        F.add_clause(cls, strict=True)
+        F.add_clause(cls)
 
     # The selectors choose a template subgraph.  A mapping must map
     # edges to edges and non-edges to non-edges for the active
@@ -115,39 +107,35 @@ def SubgraphFormula(graph, templates, symmetric=False):
 
     elif len(templates) == 2:
 
-        activation_prefixes = [[(True, selectors[0])], [(False, selectors[0])]]
+        activation_prefixes = [[1], [-1]]
 
     else:
-        activation_prefixes = [[(True, v)] for v in selectors]
+        activation_prefixes = [[v] for v in range(1, selectors+1)]
 
     # maps must preserve the structure of the template graph
-    gV = enumerate_vertices(graph)
-
     for i in range(len(templates)):
 
         k = templates[i].order()
-        tV = enumerate_vertices(templates[i])
 
         if symmetric:
             # Using non-decreasing map to represent a subset
-            localmaps = product(combinations(list(range(k)), 2),
-                                combinations(list(range(N)), 2))
+            localmaps = product(combinations(list(range(1, k+1)), 2),
+                                combinations(list(range(1, N+1)), 2))
         else:
-            localmaps = product(combinations(list(range(k)), 2),
-                                permutations(list(range(N)), 2))
+            localmaps = product(combinations(list(range(1, k+1)), 2),
+                                permutations(list(range(1, N+1)), 2))
 
         for (i1, i2), (j1, j2) in localmaps:
 
             # check if this mapping is compatible
-            tedge = templates[i].has_edge(tV[i1], tV[i2])
-            gedge = graph.has_edge(gV[j1], gV[j2])
+            tedge = templates[i].has_edge(i1, i2)
+            gedge = graph.has_edge(j1, j2)
             if tedge == gedge:
                 continue
 
             # if it is not, add the corresponding
-            F.add_clause(activation_prefixes[i] + \
-                         [(False,var_name(i1,j1)),
-                          (False,var_name(i2,j2)) ],strict=True)
+            F.add_clause(
+                activation_prefixes[i] + [-m(i1, j1), -m(i2, j2)], update_variables=False)
 
     return F
 

@@ -4,7 +4,7 @@
 """
 
 from cnfgen.cnf import CNF
-from cnfgen.graphs import has_bipartition
+from cnfgen.graphs import has_bipartition, BipartiteGraph,CompleteBipartiteGraph
 from itertools import combinations, product
 
 
@@ -76,18 +76,14 @@ def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
         raise ValueError(
             "Number of pigeons and holes must both be non negative")
 
-    mapping = php.unary_mapping(range(1, pigeons + 1),
-                                range(1, holes + 1),
-                                var_name=var_name,
+    B = CompleteBipartiteGraph(pigeons,holes)
+    mapping = php.unary_mapping(1,B,
                                 injective=True,
                                 functional=functional,
                                 surjective=onto)
 
-    for v in mapping.variables():
-        php.add_variable(v)
-
     for c in mapping.clauses():
-        php.add_clause_unsafe(c)
+        php.add_clause(c)
 
     return php
 
@@ -212,7 +208,7 @@ def RelativizedPigeonholePrinciple(pigeons, resting_places, holes):
         number of pigeons
     resting_places: int
         number of resting places
-    holes: int 
+    holes: int
         number of holes
 
     References

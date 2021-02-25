@@ -473,7 +473,7 @@ def cli(argv=sys.argv, mode='output'):
         return output
 
     with paginate_or_redirect_stdout(args.output):
-        print(output)
+        print(output, end='\n')
 
 
 # command line entry point
