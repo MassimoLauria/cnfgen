@@ -40,7 +40,7 @@ def supported_formats():
 #################################################################
 
 
-class EdgeList():
+class BipartiteEdgeList():
     """Edge list for bipartite graphs"""
 
     def __init__(self, B):
@@ -64,7 +64,61 @@ def has_bipartition(G):
     return isinstance(G, BaseBipartiteGraph)
 
 
-class BaseBipartiteGraph():
+class BaseGraph():
+    """Base class for graphs"""
+
+    def is_dag(self):
+        """Test whether the graph is directed acyclic
+
+This is not a full test. It only checks that all directed edges (u,v)
+have that u < v."""
+        raise NotImplementedError
+
+    def is_directed(self):
+        "Test whether the graph is directed"
+        raise NotImplementedError
+
+    def is_multigraph(self):
+        "Test whether the graph can have multi-edges"
+        return False
+
+    def is_bipartite(self):
+        "Test whether the graph is a bipartite object"
+        return isinstance(self, BaseBipartiteGraph)
+
+    def order(self):
+        raise NotImplementedError
+
+    def size(self):
+        return len(self.edges())
+
+    def number_of_edges(self):
+        return self.size()
+
+    def has_edge(self, u, v):
+        raise NotImplementedError
+
+    def add_edge(self, u, v):
+        raise NotImplementedError
+
+    def add_edges_from(self, edges):
+        for u, v in edges:
+            self.add_edge(u, v)
+
+    def edges(self):
+        raise NotImplementedError
+
+    def __len__(self):
+        return self.order()
+
+    def to_networkx(self):
+        """Convert the graph TO a networkx object."""
+        raise NotImplementedError
+
+
+class BaseBipartiteGraph(BaseGraph):
+    """Base class for bipartite graphs"""
+
     def __init__(self, L, R):
         if L < 0 or R < 0:
             raise ValueError(
@@ -74,20 +128,14 @@ class BaseBipartiteGraph():
         self.rorder = R
         self.name = 'Bipartite graph with ({},{}) vertices'.format(L, R)
 
-    def is_multigraph(self):
-        return False
-
     def is_bipartite(self):
         return True
 
     def order(self):
         return self.lorder + self.rorder
 
-    def size(self):
-        return len(self.edges())
-
-    def number_of_edges(self):
-        return self.size()
+    def edges(self):
+        return BipartiteEdgeList(self)
 
     def left_order(self):
         return self.lorder
@@ -109,22 +157,6 @@ class BaseBipartiteGraph():
 
     def parts(self):
         return range(1, self.lorder + 1), range(1, self.rorder + 1)
-
-    def has_edge(self):
-        raise NotImplementedError
-
-    def add_edge(self):
-        raise NotImplementedError
-
-    def add_edges_from(self, edges):
-        for u, v in edges:
-            self.add_edge(u, v)
-
-    def edges(self):
-        return EdgeList(self)
-
-    def __len__(self):
-        return self.order()
 
     def to_networkx(self):
         G = networkx.Graph()
@@ -210,7 +242,7 @@ class BipartiteGraph(BaseBipartiteGraph):
         True
         """
         side = [[], []]
-        index = [None, None]
+        index = [{}, {}]
         for u in G.nodes():
             try:
                 color = G.nodes[u]['bipartite']
@@ -224,8 +256,8 @@ class BipartiteGraph(BaseBipartiteGraph):
         index[0] = {u: i for (i, u) in enumerate(side[0], start=1)}
         index[1] = {v: i for (i, v) in enumerate(side[1], start=1)}
         for u, v in G.edges():
-            ucolor = 0 if u in index[0] else 1
-            vcolor = 1 if v in index[1] else 0
+            ucolor = 0 if (u in index[0]) else 1
+            vcolor = 1 if (v in index[1]) else 0
 
             if ucolor == vcolor:
                 raise ValueError(
@@ -237,6 +269,48 @@ class BipartiteGraph(BaseBipartiteGraph):
             else:
                 B.add_edge(iv, iu)
         return B
+
+    @classmethod
+    def from_file(cls, fileorname, fileformat=None, multigraph=False):
+        """Load the graph from a file
+
+        The file format is either indicated in the `fileformat` variable or, if
+        that is `None`, or from the extension of the filename.
+
+        Parameters
+        -----------
+        fileorname: str or file-like object
+            the input file from which the graph is read. If it is a string
+            then the graph is read from a file with that string as
+            filename. Otherwise if the fileorname is a file object (or
+            a text stream), the graph is read from there.
+
+            Input files are assumed to be UTF-8 by default.
+
+        fileformat: string, optional
+            The file format that the parser should expect to receive.
+            See also :py:func:`cnfgen.graph.supported_formats`. By default
+            it tries to autodetect it from the file name extension (when applicable).
+
+        multi_edges: bool,optional
+            are multiple edge allowed in the graph? By default this is not allowed."""
+
+        # Reduce to the case of filestream
+        if isinstance(fileorname,str):
+            with open(fileorname, 'r', encoding='utf-8') as file_handle:
+                return cls.from_file(fileorname,fileformat,multigraph)
+
+        # Discover and test file format
+        fileformat = guess_fileformat(fileorname, fileformat)
+        if fileformat not in _graphformats['bipartite']:
+            raise ValueError(
+                "Invalid file type."
+                " For bipartite graphs we support {}".format(_graphformats['bipartite']))
+
+        # Read file
+        return readGraph(fileorname,'bipartite',fileformat)
+
+
 
 
 class CompleteBipartiteGraph(BaseBipartiteGraph):
@@ -285,6 +359,22 @@ if not has_dot_library():
 #################################################################
 #          Graph reader/writer
 #################################################################
+
+
+def guess_fileformat(fileorname, fileformat=None):
+    """Guess the file format for the file or filename """
+    if fileformat is not None:
+        return fileformat
+
+    try:
+        if isinstance(fileorname, str):
+            name = fileorname
+        else:
+            name = fileorname.name
+        return os.path.splitext(name)[-1][1:]
+    except (AttributeError, ValueError, IndexError):
+        raise ValueError(
+            "Cannot guess a file format from arguments. Please specify the format manually.")
 
 
 def _process_graph_io_arguments(iofile, graph_type, file_format, multi_edges):
@@ -1029,7 +1119,7 @@ def _write_graph_kthlist_nonbipartite(G, output_file):
 
 
 def _write_graph_kthlist_bipartite(G, output_file):
-    """Wrire a bipartite graph to a file, 
+    """Wrire a bipartite graph to a file,
        in the KTH reverse adjacency lists format.
 
     Parameters

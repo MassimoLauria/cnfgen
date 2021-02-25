@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Implementation of some graph formulas helpers
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 import argparse
@@ -22,7 +22,7 @@ from cnfgen.families.subgraph import SubgraphFormula
 from cnfgen.families.subgraph import RamseyWitnessFormula
 
 from cnfgen.clitools import ObtainSimpleGraph, positive_int, make_graph_doc
-from .formula_helpers import FormulaHelper
+from cnfgen.clihelpers.formula_helpers import FormulaHelper
 
 
 class KColorCmdHelper(FormulaHelper):
@@ -297,7 +297,7 @@ class RWCmdHelper(FormulaHelper):
         return RamseyWitnessFormula(args.G, args.k, args.s)
 
 
-subgraph_description = """The formula takes two graphs: a main <graph> 
+subgraph_description = """The formula takes two graphs: a main <graph>
 and a candidate <subgraph>, and claims that
 the latter is indeed a subgraph of the former.
 

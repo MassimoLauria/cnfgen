@@ -35,7 +35,7 @@ into a file. `save` must be followed either by
 - a filename which implies the graph format; or
 - a graph format followed by filename.
 
-Copyright (C) 2020  Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2020, 2021  Massimo Lauria <massimo.lauria@uniroma1.it>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -93,6 +93,7 @@ constructions = {
         'pyramid': obtain_pyramid
     },
     'digraph': {
+        'path': obtain_path,
         'tree': obtain_tree,
         'pyramid': obtain_pyramid
     },

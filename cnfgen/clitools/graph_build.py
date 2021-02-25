@@ -54,7 +54,7 @@ def multipartite_tnp(t, n, p, shuffleblocks=False):
     G = networkx.empty_graph(t * n)
     G = normalize_networkx_labels(G)
 
-    V = list(range(t * n))
+    V = list(range(1,t * n + 1))
     if shuffleblocks:
         random.shuffle(V)
 
