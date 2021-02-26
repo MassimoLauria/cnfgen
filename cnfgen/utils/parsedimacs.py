@@ -12,34 +12,7 @@ References
 """
 
 import sys
-
-
-def to_dimacs_string(formula, export_header=True, export_varnames=False):
-    """Transform a CNF formula into its DIMACS representation
-
-    Parameters
-    ----------
-    formula:
-        a cnf fomrula
-    export_header : bool
-        determines whether the formula header should be inserted as
-        a comment in the DIMACS output.
-    export_varnames : bool, optional
-        determines whether a map from variable indices to variable
-        names should be appended to the header.
-
-    Returns
-    -------
-    string
-        the string contains the Dimacs code
-    """
-    from io import StringIO
-    output = StringIO()
-    to_dimacs_file(formula,
-                   output,
-                   export_header=export_header,
-                   export_varnames=export_varnames)
-    return output.getvalue()
+from io import StringIO
 
 
 def to_dimacs_file(formula, fileorname=None, export_header=True, export_varnames=False):

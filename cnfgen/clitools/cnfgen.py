@@ -12,7 +12,7 @@ Create the CNFs:
 >>> from cnfgen.cnf import CNF
 >>> c=CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], \
           [(False,"x2"),(True,"x4")] ])
->>> print( c.dimacs(export_header=False) )
+>>> print( c.to_dimacs(export_header=False) )
 p cnf 4 2
 1 2 -3 0
 -2 4 0
@@ -20,7 +20,7 @@ p cnf 4 2
 You can add clauses later in the process:
 
 >>> c.add_clause( [(False,"x3"),(True,"x4"),(False,"x5")] )
->>> print( c.dimacs(export_header=False))
+>>> print( c.to_dimacs(export_header=False))
 p cnf 5 3
 1 2 -3 0
 -2 4 0

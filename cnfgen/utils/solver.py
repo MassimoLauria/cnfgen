@@ -10,6 +10,9 @@ solvers, see
 """
 
 import sys
+import subprocess
+import os
+import tempfile
 
 
 def _satsolve_filein_fileout(F, cmd='minisat', verbose=0):
@@ -21,7 +24,7 @@ def _satsolve_filein_fileout(F, cmd='minisat', verbose=0):
     Parameters
     ----------
     F  : a CNF formula
-    
+
     cmd : string
         the command line used to invoke the SAT solver.
 
@@ -53,11 +56,6 @@ def _satsolve_filein_fileout(F, cmd='minisat', verbose=0):
     but if it is satisfiable it contains the line "SAT" and on a new
     line the assignment, encoded as literal values, e.g., "-1 2 3 -4 -5 ..."
     """
-
-    import subprocess
-    import os
-    import tempfile
-
     # Minisat does not operate on stdin/stdout so we need temporary
     # files
     cnf = tempfile.NamedTemporaryFile(delete=False)
@@ -111,8 +109,8 @@ def _satsolve_filein_fileout(F, cmd='minisat', verbose=0):
         result = True
 
         witness = [int(v) for v in foutput[1:] if v != '0']
-
-        witness = {F._index2name[abs(v)]: v > 0 for v in witness}
+        # Sort the the witness by variable id
+        witness = sorted(witness, key=abs)
 
     elif foutput[0] == 'UNSAT':
 
@@ -136,10 +134,10 @@ def _satsolve_stdin_stdout(F, cmd='lingeling', verbose=0):
     Parameters
     ----------
     F  : a CNF formula
-    
+
     cmd : string
         the command line used to invoke the SAT solver.
-    
+
     verbose: int
        0 or less means no output. 1 shows the command line actually
        run. 2 outputs the solver output. (default: 0)
@@ -176,9 +174,6 @@ def _satsolve_stdin_stdout(F, cmd='lingeling', verbose=0):
       v -7 8 9 -10 0
       c concluding comments.
     """
-
-    import subprocess
-
     # call solver
     output = b''
     try:
@@ -230,11 +225,8 @@ def _satsolve_stdin_stdout(F, cmd='lingeling', verbose=0):
     if result is None:
         raise RuntimeError("Error during SAT solver call: {}.\n".format(cmd))
 
-    # Now witness is a list [v1,v2,...,vn] where vi is either -i or
-    # +i, to represent the assignment. We translate this to our
-    # desired output.
-    witness = {F._index2name[abs(v)]: v > 0 for v in witness}
-
+    # Sort the the witness by variable id
+    witness = sorted(witness, key=abs)
     return (result, result and witness or None)
 
 
@@ -248,10 +240,10 @@ def _satsolve_filein_stdout(F, cmd='sat4j', verbose=0):
     Parameters
     ----------
     F  : a CNF formula
-    
+
     cmd : string
         the command line used to invoke the SAT solver.
-    
+
     verbose: int
        0 or less means no output. 1 shows the command line actually
        run. 2 outputs the solver output. (default: 0)
@@ -269,10 +261,6 @@ def _satsolve_filein_stdout(F, cmd='sat4j', verbose=0):
     is None.
 
     """
-
-    import subprocess
-    import tempfile
-
     # Input formula must be on file.
     cnf = tempfile.NamedTemporaryFile(delete=False)
     cnf.write(F.dimacs().encode("ascii"))
@@ -331,11 +319,8 @@ def _satsolve_filein_stdout(F, cmd='sat4j', verbose=0):
         raise RuntimeError(
             "Error during SAT solver call: {}.\n".format(cmd + " " + cnf.name))
 
-    # Now witness is a list [v1,v2,...,vn] where vi is either -i or
-    # +i, to represent the assignment. We translate this to our
-    # desired output.
-    witness = {F._index2name[abs(v)]: v > 0 for v in witness}
-
+    # Sort the the witness by variable id
+    witness = sorted(witness,key=abs)
     return (result, result and witness or None)
 
 
@@ -379,8 +364,6 @@ def some_solver_installed(solvers=None):
     ------
     `TypeError` if `solvers` is not of the right type.
     """
-
-    import subprocess
 
     if solvers is None:
         solvers = supported_satsolvers()
@@ -445,11 +428,11 @@ def is_satisfiable(F, cmd=None, sameas=None, verbose=0):
     ------
     RuntimeError
        if it is not possible to correctly invoke the solver needed.
-    ValueError 
+    ValueError
        if `sameas` is set and does not match the name of a supported solver.
     TypeError
        if F is not a CNF object.
-    
+
     Supported solvers:
     ------------------
     See `cnfgen.utils.solver.supported_satsolvers`

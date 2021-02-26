@@ -7,7 +7,8 @@ import sys
 import random
 import argparse
 
-from cnfgen.utils.parsedimacs import readCNF
+from cnfgen.cnf import CNF
+from cnfgen.utils.parsedimacs import from_dimacs_file
 from cnfgen.transformations.shuffle import Shuffle
 
 from cnfgen.clitools.cmdline import paginate_or_redirect_stdout
@@ -123,7 +124,7 @@ def cli(argv=sys.argv, mode='output'):
         with msg_prefix("INPUT: "):
             interactive_msg(msg, filltext=70)
 
-        F = readCNF()
+        F = from_dimacs_file(CNF)
 
     # Default permutation
     if not args.no_variable_permutations:

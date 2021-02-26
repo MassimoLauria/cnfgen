@@ -11,7 +11,6 @@ transformations implemented, plus some IO functions.
 from cnfgen.cnf import CNF
 
 # IO functions
-from cnfgen.utils.parsedimacs import readCNF
 from cnfgen.graphs import readGraph, writeGraph
 from cnfgen.graphs import supported_formats as supported_graph_formats
 
