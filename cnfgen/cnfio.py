@@ -7,7 +7,7 @@ from io import StringIO
 
 from cnfgen.basecnf import BaseCNF
 
-from cnfgen.utils.parsedimacs import to_dimacs_file
+from cnfgen.utils.parsedimacs import to_dimacs_file, from_dimacs_file
 from cnfgen.utils.latexoutput import to_latex_string, to_latex_document
 from cnfgen.utils.solver import is_satisfiable
 
@@ -164,6 +164,17 @@ class CNFio(BaseCNF):
                            export_header=export_header,
                            export_varnames=export_varnames)
 
+    @classmethod
+    def from_file(cls, fileorname=None):
+        """Reads a DIMACS file into a CNF object
+
+        Parameters
+        ----------
+        cnfclass: subclass of cnfgen.basecnf.BaseCNF
+            the type of CNF object to produce
+        fileorname: file object or string (or stdin if None)
+            destination file given either as object or as filename"""
+        return from_dimacs_file(cls, fileorname)
 
     def is_satisfiable(self, cmd=None, sameas=None, verbose=0):
         """Determines whether a CNF is satisfiable or not.

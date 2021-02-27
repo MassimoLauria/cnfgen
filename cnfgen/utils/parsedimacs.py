@@ -111,7 +111,8 @@ def parse_dimacs(infile):
             continue
 
         if n is None:
-            raise ValueError("Non comment line {} before p cnf <n> <m>".format(line_counter))
+            raise ValueError(
+                "Non comment line {} before p cnf <n> <m>".format(line_counter))
 
         # parse literals
         try:
@@ -156,11 +157,14 @@ def from_dimacs_file(cnfclass, fileorname=None):
             return
     else:
         inputfile = fileorname
-        name = fileorname.name
+        try:
+            name = fileorname.name
+        except AttributeError:
+            name = '<unknown>'
 
-    description='Formula from DIMACS file {}'.format(name)
+    description = 'Formula from DIMACS file {}'.format(name)
     F = cnfclass(description=description)
-    dimacs=parse_dimacs(inputfile)
+    dimacs = parse_dimacs(inputfile)
     n = next(dimacs)
     F.update_variable_number(n)
     for c in dimacs:

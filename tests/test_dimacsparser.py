@@ -1,6 +1,5 @@
 from cnfgen import CNF
 from cnfgen import RandomKCNF
-from cnfgen import readCNF
 
 import io
 import pytest
@@ -9,6 +8,8 @@ from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
 from cnfgen.clitools import cnfgen
 from cnfgen.clitools import redirect_stdin, CLIError
 
+def readCNF(fileinput):
+    return CNF.from_file(fileinput)
 
 def test_empty_file():
     dimacs = io.StringIO()
