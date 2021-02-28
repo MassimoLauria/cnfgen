@@ -17,13 +17,12 @@ from itertools import combinations
 from itertools import product, islice
 from math import ceil, log
 
-from cnfgen.basecnf import BaseCNF
 from cnfgen.cnfio import CNFio
 from cnfgen.linear import CNFLinear
-from cnfgen.variables import VariablesManager
+from cnfgen.mapping import CNFMapping
 
 
-class CNF(VariablesManager, CNFio, CNFLinear):
+class CNF(CNFMapping, CNFio, CNFLinear):
     """Propositional formulas in conjunctive normal form.
 
     A CNF  formula is a  sequence of  clauses, which are  sequences of
@@ -73,115 +72,8 @@ class CNF(VariablesManager, CNFio, CNFLinear):
         description: string, optional
             a description of the formula
         """
-        VariablesManager.__init__(
+        CNFMapping.__init__(
             self, clauses=clauses, description=description)
-
-
-
-    def new_mapping(self, *args, labelfmt="f({})={}"):
-        """Build the CNF representation of a mapping between two sets.
-
-        Parameters
-        ----------
-
-        """
-
-        def __init__(self, startid, B, **kwargs):
-            r"""Generator for the clauses of a mapping between to sets
-
-            This generates of the constraints on variables :math:`v(i,j)`
-            where :math:`i \in D` and :math:`j in R`, so that they
-            represent a mapping (or a relation) between the two sets,
-            expressed in unary (i.e. :math:`v(i,j)` expresses whether
-            :math:`i` is mapped to :math:`j` or not).
-
-            Parameters
-            ----------
-            B : BaseBipartiteGraph
-                the domain of the mapping
-
-            R : int
-                the range of the mapping
-
-            sparsity_pattern : bipartite_graph, optional
-                each element of the domain is allowed to be mapped
-                only into certain range elements. The graph represents
-                which range elements are compatible with a specific
-                domain element.
-
-            var_name: function, optional
-                given :math:`i` and :math`j` the function must produce the
-                name of variable :math`v(i,j)`
-
-            complete: bool, optional
-                every element of :math:`D` must have an image (default: true)
-
-            functional: bool, optional
-                every element of :math:`D` must have at most one image (default: false)
-
-            surjective: bool, optional
-                every element of :math:`R` must have a pre-image (default: false)
-
-            injective: bool, optional
-                every element of :math:`R` must have at most one pre-image (default: false)
-
-            nondecreasing: bool, optional
-                the mapping is going to be non decresing, with respect to
-                the order of domain and range (default: false)
-
-            """
-            self.B = B
-
-            # optional parameters of the mapping
-            self.Complete = kwargs.pop('complete', True)
-            self.Functional = kwargs.pop('functional', False)
-            self.Surjective = kwargs.pop('surjective', False)
-            self.Injective = kwargs.pop('injective', False)
-
-            self.NonDecreasing = kwargs.pop('nondecreasing', False)
-
-            # variable name scheme
-            self.VG = BipartiteEdgesVariables(startid, B)
-
-        def variables(self):
-            return self.VG
-
-        def clauses(self):
-
-            U, V = self.B.parts()
-
-            m = self.VG
-
-            # Completeness axioms
-            if self.Complete:
-                for u in U:
-                    yield list(m(u, None))
-
-            # Surjectivity axioms
-            if self.Surjective:
-                for v in V:
-                    yield list(m(None, v))
-
-            # Injectivity axioms
-            if self.Injective:
-                for v in V:
-                    L = self.B.left_neighbors(v)
-                    for u1, u2 in combinations(L, 2):
-                        yield [-m(u1, v), -m(u2, v)]
-
-            # Functionality axioms
-            if self.Functional:
-                for u in U:
-                    R = self.B.right_neighbors(u)
-                    for v1, v2 in combinations(R, 2):
-                        yield [-m(u, v1), -m(u, v2)]
-
-            # Mapping is monotone non-decreasing
-            if self.NonDecreasing:
-                for (u1, u2) in combinations(U, 2):
-                    for (v1, v2) in product(self.B.right_neighbors(u1), self.B.right_neighbors(u2)):
-                        if v1 > v2:
-                            yield [-m(u1, v1), -m(u1, v2)]
 
     class binary_mapping(object):
         """Binary CNF representation of a mapping between two sets."""

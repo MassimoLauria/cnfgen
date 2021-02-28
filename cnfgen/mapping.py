@@ -14,6 +14,9 @@ Copyright (C) 2019-2021  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
+
+from itertools import combinations, product
+
 from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph
 from cnfgen.variables import BipartiteEdgesVariables, VariablesManager
 
@@ -32,14 +35,27 @@ class MappingVariables(BipartiteEdgesVariables):
     def __init__(self, formula, G, labelfmt):
         BipartiteEdgesVariables.__init__(self, formula, G, labelfmt=labelfmt)
 
-    def domain(self):
-        U,_ = self.G.parts()
-        return U
+    def domain(self, v=None):
+        """The domain of the mapping
 
-    def range(self):
-        _,V = self.G.parts()
-        return V
+        If `v` is None it returns the domain of the mapping.
+        Otherwise it returns the sequence of elements which is
+        possible to map to `v`."""
+        if v is None:
+            U, _ = self.G.parts()
+            return U
+        return self.G.left_neighbors(v)
 
+    def range(self, u=None):
+        """The range of the mapping
+
+        If `u` is None it returns the range of the mapping.
+        Otherwise it returns the sequence of all elements to which `u`
+        can be mapped."""
+        if u is None:
+            _, V = self.G.parts()
+            return V
+        return self.G.right_neighbors(u)
 
 class CNFMapping(VariablesManager):
     """CNF with a variable manager
@@ -173,7 +189,9 @@ class CNFMapping(VariablesManager):
         """
         if not B.is_bipartite():
             raise ValueError("B must be an instance of BipartiteGraph")
-        newgroup = BipartiteEdgesVariables(self, B, labelfmt=label)
+        if B.number_of_edges() == 0:
+            raise ValueError("B must contain edges")
+        newgroup = MappingVariables(self, B, labelfmt=label)
         self._add_variable_group(newgroup)
         return newgroup
 
@@ -255,7 +273,6 @@ class CNFMapping(VariablesManager):
         [2, 7, 12, 17, 22, 27, 32, 37, 42, 47]
         >>> len(C)
         5
-
         """
         if f.parent_formula() != self:
             raise ValueError("mapping f was created from a different formula")
@@ -276,11 +293,14 @@ class CNFMapping(VariablesManager):
         >>> C = CNFMapping()
         >>> f = C.new_mapping(10,5)
         >>> C.force_injective_mapping(f)
+        >>> C[0]
+        [-1, -6]
         >>> C[1]
-        [2, 7, 12, 17, 22, 27, 32, 37, 42, 47]
+        [-1, -11]
+        >>> C[45]
+        [-2, -7]
         >>> len(C)
-        5
-
+        225
         """
         if f.parent_formula() != self:
             raise ValueError("mapping f was created from a different formula")
@@ -299,18 +319,24 @@ class CNFMapping(VariablesManager):
         Examples
         --------
         >>> C = CNFMapping()
-        >>> f = C.new_mapping(10,5)
-        >>> C.force_surjective_mapping(f)
-        >>> C[1]
-        [2, 7, 12, 17, 22, 27, 32, 37, 42, 47]
+        >>> B = BipartiteGraph(2,3)
+        >>> B.add_edge(1,2)
+        >>> B.add_edge(1,3)
+        >>> B.add_edge(2,1)
+        >>> B.add_edge(2,3)
+        >>> f = C.new_sparse_mapping(B)
+        >>> C.force_nondecreasing_mapping(f)
         >>> len(C)
-        5
-
+        2
+        >>> C[0]
+        [-1, -3]
+        >>> C[1]
+        [-2, -3]
         """
         if f.parent_formula() != self:
             raise ValueError("mapping f was created from a different formula")
 
-        for y in f.range():
-            self.add_clause(f(None, y))
-
-    # self.NonDecreasing = kwargs.pop('nondecreasing', False)
+        for (u1, u2) in combinations(f.domain(), 2):
+            for (v1, v2) in product(f.range(u1), f.range(u2)):
+                if v1 > v2:
+                    self.add_clause([-f(u1, v1), -f(u2, v2)])
