@@ -205,12 +205,10 @@ not have any effect."""
             is added twice then it will occur twice in the
             formula too.
         """
-        if len(clause) == 0:
-            self._clauses.append([])
-            return
-        maxid = max([abs(literal) for literal in clause])
+        data = list(clause)
+        maxid = max([abs(literal) for literal in data])
         self._numvar = max(maxid, self._numvar)
-        self._clauses.append(list(clause))
+        self._clauses.append(data)
 
     def add_clauses_from(self, clauses):
         """Add a sequence of clauses to the CNF"""

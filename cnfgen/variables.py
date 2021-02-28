@@ -15,15 +15,15 @@ Copyright (C) 2019-2021  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
-from functools import reduce
-from operator import mul
 from itertools import product
 from bisect import bisect_right
 
-from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph
+from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph, CompleteBipartiteGraph
 import networkx as nx
 
 from cnfgen.basecnf import BaseCNF
+from cnfgen.linear import CNFLinear
+
 
 class BaseVariableGroup():
     """Base object for variable groups
@@ -35,6 +35,7 @@ class BaseVariableGroup():
     indices and the corresponding sequential variable IDs (as seen in
     a DIMACS file, for example).
     """
+
     def __init__(self, formula, N, labelfmt=None):
         """Creates a variables group object
 
@@ -49,8 +50,23 @@ class BaseVariableGroup():
         """
         self.formula = formula
         self.ids = range(formula.number_of_variables() + 1,
-                         formula.number_of_variables() + N+1) # range excludes last element
+                         formula.number_of_variables() + N+1)  # range excludes last element
         self.labelfmt = labelfmt
+
+    def parent_formula(self):
+        """The formula associated to the variable group
+
+        Examples
+        --------
+        >>> F1 = BaseCNF()
+        >>> F2 = BaseCNF()
+        >>> G = BaseVariableGroup(F1,10)
+        >>> G.parent_formula() == F1
+        True
+        >>> G.parent_formula() == F2
+        False
+        """
+        return self.formula
 
     def __call__(self, *index):
         """Convert the index of a variable into its ID.
@@ -107,7 +123,7 @@ class BaseVariableGroup():
         """The number of variables in the group"""
         return self.ids[-1] - self.ids[0] + 1
 
-    def range(self):
+    def variable_ids(self):
         """The ID interval for this variable group"""
         return self.ids
 
@@ -181,6 +197,7 @@ class SingletonVariableGroup(BaseVariableGroup):
     >>> print(X2.to_index(23))
     ()
     """
+
     def __init__(self, formula, name):
         """Variables group for a single variable
 
@@ -195,7 +212,7 @@ class SingletonVariableGroup(BaseVariableGroup):
         BaseVariableGroup.__init__(self, formula, 1, labelfmt=name)
 
     def __call__(self):
-        return self.range()[0]
+        return self.variable_ids()[0]
 
     def label(self):
         return self.name
@@ -208,7 +225,7 @@ class SingletonVariableGroup(BaseVariableGroup):
 
     def to_index(self, lit):
         """Convert a literal of the corresponding variable index"""
-        if abs(lit) != self.range()[0]:
+        if abs(lit) != self.variable_ids()[0]:
             raise ValueError("Literal do not belong to this variable group")
         return ()
 
@@ -272,6 +289,7 @@ class BlockOfVariables(BaseVariableGroup):
     >>> print(p.to_index(p(4,3)))
     [4, 3]
     """
+
     def __init__(self, formula, ranges, labelfmt=None):
         """Creates a variables group object
 
@@ -459,6 +477,7 @@ class BipartiteEdgesVariables(BaseVariableGroup):
     >>> print(*X.label(None,None))
     X[1,3] X[2,1] X[2,2]
     """
+
     def __init__(self, formula, G, labelfmt='e_{{{},{}}}'):
         """Variables group for the edges of bipartite G
 
@@ -661,6 +680,7 @@ class DiGraphEdgesVariables(BaseVariableGroup):
     >>> print(*b.indices(None,3))
     (1, 3) (2, 3)
     """
+
     def __init__(self, formula, G, labelfmt='e_{{{},{}}}', sortby='pred'):
         """Creates a variables group object
 
@@ -703,7 +723,8 @@ class DiGraphEdgesVariables(BaseVariableGroup):
 
         self.sortby = sortby
         self.VG = BipartiteEdgesVariables(formula, B)
-        BaseVariableGroup.__init__(self, formula, B.number_of_edges(), labelfmt)
+        BaseVariableGroup.__init__(
+            self, formula, B.number_of_edges(), labelfmt)
 
     def to_index(self, lit):
         u, v = self.VG.to_index(lit)
@@ -805,6 +826,7 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
     >>> print(*V.indices(None,2))
     (1, 2) (2, 2) (2, 3) (2, 4)
     """
+
     def __init__(self, formula, G, labelfmt='e_{{{}{}}}'):
         """Creates a variables group for the edges of G
 
@@ -830,7 +852,8 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
             if not B.has_edge(u, v):
                 B.add_edge(u, v)
         self.BG = BipartiteEdgesVariables(formula, B, labelfmt=labelfmt)
-        BaseVariableGroup.__init__(self, formula,B.number_of_edges(), labelfmt)
+        BaseVariableGroup.__init__(
+            self, formula, B.number_of_edges(), labelfmt)
 
     def _unsafe_index_to_lit(self, index):
         """Converts an edge of the graph into a variable ID.
@@ -938,7 +961,8 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
         """
         return self.BG.to_index(lit)
 
-class VariablesManager(BaseCNF):
+
+class VariablesManager(CNFLinear):
     """CNF with a variable manager
 
     A CNF formula needs to keep track on variables.
@@ -972,18 +996,21 @@ class VariablesManager(BaseCNF):
     X Y z_{1,1} z_{1,2} z_{1,3} z_{2,1} z_{2,2} z_{2,3}
 
     """
+
     def __init__(self, clauses=None, description=None):
         """Construct a variable manager object
         """
         self._groups = []
-        BaseCNF.__init__(self, clauses=clauses, description=description)
+        CNFLinear.__init__(self, clauses=clauses, description=description)
 
     def _add_variable_group(self, vg):
         """Add a group of variables to the formula"""
-        begin,end = vg.range()[0],vg.range()[-1]
-        assert end>=begin
+        ids = vg.variable_ids()
+        begin, end = ids[0], ids[-1]
+        assert end >= begin
         if begin <= self.number_of_clauses():
-            raise ValueError("The new variable group must not overlaps old variables")
+            raise ValueError(
+                "The new variable group must not overlaps old variables")
         self._groups.append(vg)
         self.update_variable_number(end)
 
@@ -1121,6 +1148,7 @@ class VariablesManager(BaseCNF):
         self._add_variable_group(newgroup)
         return newgroup
 
+
     def new_digraph_edges(self, G, label='e({},{})', sortby='pred'):
         """
         Create a new group variables from the edges of a bipartite graph
@@ -1178,7 +1206,6 @@ class VariablesManager(BaseCNF):
         self._add_variable_group(newgroup)
         return newgroup
 
-
     def all_variable_labels(self, default_label_format='x{}'):
         """Produces the labels of all the variables
 
@@ -1190,7 +1217,7 @@ argument `default_label_format` (e.g. 'x{}').
         #
         varid = 1
         for vg in self._groups:
-            begin = vg.range()[0]
+            begin = vg.variable_ids()[0]
             while varid < begin:
                 yield default_label_format.format(varid)
                 varid += 1
