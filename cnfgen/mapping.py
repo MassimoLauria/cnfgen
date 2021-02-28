@@ -180,7 +180,13 @@ class CNFMapping(VariablesManager):
     def force_complete_mapping(self, f):
         """Enforce the mapping `f` to be complete
 
-        Add to the formula the clauses that make the mapping `f` complete
+        Add the clauses that make the mapping `f` complete.
+        Namely that all elements in the domain are mapped to some
+        element in the range. These clauses do not exclude the
+        possibility that an element from the domain is mapped to
+        multiple elements in the range.
+
+        (See py:classmethod:`CNFMapping.force_functional_mapping`)
 
         Examples
         --------
@@ -191,6 +197,7 @@ class CNFMapping(VariablesManager):
         [11, 12, 13, 14, 15]
         >>> len(C)
         10
+
         """
         if f.parent_formula() != self:
             raise ValueError("mapping f was created from a different formula")
@@ -202,7 +209,13 @@ class CNFMapping(VariablesManager):
     def force_functional_mapping(self, f):
         """Enforce the mapping `f` to be functional
 
-        Add to the formula the clauses that make the mapping `f` complete
+        Add the clauses that enforce the mapping `f` to be a partial
+        function. Namely that every element in the domain can be
+        mapped to at most one element in the range.
+
+        Together with
+        :py:classmethod:`CNFMapping.force_complete_mapping`, this
+        enforces the mapping to be a total function.
 
         Examples
         --------
@@ -217,6 +230,7 @@ class CNFMapping(VariablesManager):
         [-3, -4]
         >>> len(C)
         100
+
         """
         if f.parent_formula() != self:
             raise ValueError("mapping f was created from a different formula")
@@ -228,17 +242,20 @@ class CNFMapping(VariablesManager):
     def force_surjective_mapping(self, f):
         """Enforce the mapping `f` to be surjective
 
-        Add to the formula the clauses that make the mapping `f` complete
+        Add the clauses that make the mapping `f` surjective.
+        Namely that all elements in the range have at least one
+        element in the domain mapped to it.
 
         Examples
         --------
         >>> C = CNFMapping()
         >>> f = C.new_mapping(10,5)
-        >>> C.force_complete_mapping(f)
-        >>> C[2]
-        [11, 12, 13, 14, 15]
+        >>> C.force_surjective_mapping(f)
+        >>> C[1]
+        [2, 7, 12, 17, 22, 27, 32, 37, 42, 47]
         >>> len(C)
-        10
+        5
+
         """
         if f.parent_formula() != self:
             raise ValueError("mapping f was created from a different formula")
@@ -247,8 +264,53 @@ class CNFMapping(VariablesManager):
             self.add_clause(f(None, y))
 
 
-    # self.Functional = kwargs.pop('functional', False)
-    # self.Surjective = kwargs.pop('surjective', False)
-    # self.Injective = kwargs.pop('injective', False)
+    def force_injective_mapping(self, f):
+        """Enforce the mapping `f` to be injective
+
+        Add the clauses that make the mapping `f` injective.
+        Namely that all elements in the range have at most one element
+        in the domain mapped to it.
+
+        Examples
+        --------
+        >>> C = CNFMapping()
+        >>> f = C.new_mapping(10,5)
+        >>> C.force_injective_mapping(f)
+        >>> C[1]
+        [2, 7, 12, 17, 22, 27, 32, 37, 42, 47]
+        >>> len(C)
+        5
+
+        """
+        if f.parent_formula() != self:
+            raise ValueError("mapping f was created from a different formula")
+
+        for y in f.range():
+            self.add_linear(list(f(None, y)), '<=', 1)
+
+
+    def force_nondecreasing_mapping(self, f):
+        """Enforce the mapping `f` to be non decreasing
+
+        Add the clauses that make the mapping `f` injective.
+        Namely that all elements in the range have at most one element
+        in the domain mapped to it.
+
+        Examples
+        --------
+        >>> C = CNFMapping()
+        >>> f = C.new_mapping(10,5)
+        >>> C.force_surjective_mapping(f)
+        >>> C[1]
+        [2, 7, 12, 17, 22, 27, 32, 37, 42, 47]
+        >>> len(C)
+        5
+
+        """
+        if f.parent_formula() != self:
+            raise ValueError("mapping f was created from a different formula")
+
+        for y in f.range():
+            self.add_clause(f(None, y))
 
     # self.NonDecreasing = kwargs.pop('nondecreasing', False)
