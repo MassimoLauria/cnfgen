@@ -1,6 +1,6 @@
 import pytest
 
-from cnfgen.cnf import CNF
+from cnfgen import CNF
 from cnfgen import RandomKCNF
 
 from tests.utils import assertCnfEqual
