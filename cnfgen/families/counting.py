@@ -3,7 +3,7 @@
 """Implementation of counting/matching formulas
 """
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import enumerate_vertices
 from cnfgen.graphs import neighbors
 
@@ -12,7 +12,7 @@ from itertools import combinations
 
 def CountingPrinciple(M, p):
     """Generates the clauses for the counting matching principle.
-    
+
     The principle claims that there is a way to partition M in sets of
     size p each.
 
@@ -50,7 +50,7 @@ def CountingPrinciple(M, p):
 
 def PerfectMatchingPrinciple(G):
     """Generates the clauses for the graph perfect matching principle.
-    
+
     The principle claims that there is a way to select edges to such
     that all vertices have exactly one incident edge set to 1.
 

@@ -2,7 +2,7 @@
 """CNF Formulas for Ramsey-like statements
 """
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 
 from textwrap import dedent
 from itertools import combinations
@@ -10,10 +10,10 @@ from math import sqrt
 
 
 def PythagoreanTriples(N):
-    """There is a Pythagorean triples free coloring on N 
-    
+    """There is a Pythagorean triples free coloring on N
+
     The formula claims that it is possible to bicolor the numbers from
-    1 to :math:`N` so that there  is no monochromatic triplet 
+    1 to :math:`N` so that there  is no monochromatic triplet
     :math:`(x,y,z)` so that :math:`x^2+y^2=z^2`.
 
     Parameters
@@ -31,11 +31,11 @@ def PythagoreanTriples(N):
        Parameters are not positive
     TypeError
        Parameters are not integers
-   
+
     References
     ----------
-    .. [1] M. J. Heule, O. Kullmann, and V. W. Marek. 
-           Solving and verifying the boolean pythagorean triples problem via cube-and-conquer. 
+    .. [1] M. J. Heule, O. Kullmann, and V. W. Marek.
+           Solving and verifying the boolean pythagorean triples problem via cube-and-conquer.
            arXiv preprint arXiv:1605.00723, 2016.
     """
 
@@ -71,7 +71,7 @@ def RamseyNumber(s, k, N):
     This formula, given :math:`s`, :math:`k`, and :math:`N`, claims
     that there is some graph with :math:`N` vertices which has neither
     independent sets of size :math:`s` nor cliques of size :math:`k`.
-    
+
     It turns out that there is a number :math:`r(s,k)` so that every
     graph with at least :math:`r(s,k)` vertices must contain either
     one or the other. Hence the generated formula is satisfiable if

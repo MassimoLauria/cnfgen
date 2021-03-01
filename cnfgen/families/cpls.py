@@ -5,7 +5,7 @@
 
 from itertools import product
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 
 
 def CPLSFormula(a, b, c):

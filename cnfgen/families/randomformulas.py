@@ -6,7 +6,7 @@
 import itertools
 import random
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 
 
 def clause_satisfied(cls, assignments):
@@ -29,7 +29,7 @@ list assignments.
 def sample_clauses(k, indices, m, planted_assignments):
     """Sample m random k-clauses on a set of variables
 
-First it tries sparse sampling: 
+First it tries sparse sampling:
 - samples with repetition which is fast
 - filters bad samples
 
@@ -96,8 +96,8 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
     seed : hashable object
        seed of the random generator
 
-    planted_assignments : iterable(dict), optional 
-       a set of total/partial assigments such that all clauses in the formula 
+    planted_assignments : iterable(dict), optional
+       a set of total/partial assigments such that all clauses in the formula
        will be satisfied by all of them.
 
     Returns

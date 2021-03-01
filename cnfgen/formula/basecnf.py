@@ -206,6 +206,10 @@ not have any effect."""
             formula too.
         """
         data = list(clause)
+        if len(data)==0:
+            self._clauses.append([])
+            return
+
         maxid = max([abs(literal) for literal in data])
         self._numvar = max(maxid, self._numvar)
         self._clauses.append(data)

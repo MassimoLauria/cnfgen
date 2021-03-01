@@ -3,7 +3,7 @@
 """Implementation of formulas that check for subgraphs
 """
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 
 from itertools import combinations
 from itertools import product

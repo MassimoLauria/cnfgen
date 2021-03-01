@@ -44,7 +44,7 @@ def to_latex_string(F):
 
     Parameters
     ----------
-    F : cnfgen.cnf.CNF
+    F : cnfgen.formula.cnf.CNF
         cnf formula
 
     Returns
@@ -111,7 +111,7 @@ def to_latex_document(F, fileorname, export_header=True, extra_text=""):
 
     Parameters
     ----------
-    F : cnfgen.cnf.CNF
+    F : cnfgen.formula.cnf.CNF
         cnf formula
 
     fileorname: file object or string (or stdout if None)

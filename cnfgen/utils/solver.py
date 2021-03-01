@@ -14,6 +14,7 @@ import subprocess
 import os
 import tempfile
 
+from cnfgen.formula.basecnf import BaseCNF
 
 def _satsolve_filein_fileout(F, cmd='minisat', verbose=0):
     """Test CNF satisfiability using a minisat-style solver.
@@ -455,8 +456,7 @@ def is_satisfiable(F, cmd=None, sameas=None, verbose=0):
     """
 
     # Public API. Check the arguments
-    import cnfgen
-    if not isinstance(F, cnfgen.CNF):
+    if not isinstance(F, BaseCNF):
         raise TypeError("'F' is not a CNF formula object.")
 
     if (sameas is not None) and (sameas not in supported_satsolvers()):

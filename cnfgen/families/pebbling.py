@@ -3,7 +3,7 @@
 """Implementation of the pigeonhole principle formulas
 """
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import is_dag, enumerate_vertices
 
 from itertools import product
@@ -15,7 +15,7 @@ import sys
 def _uniqify_list(seq):
     """Remove duplicates while maintaining the order.
 
-    (due to Dave Kirby) 
+    (due to Dave Kirby)
 
     Seen on https://www.peterbe.com/plog/uniqifiers-benchmark
     """
@@ -179,7 +179,7 @@ def StoneFormula(D, nstones):
     ------
     ValueError
        if :math:`D` is not a directed acyclic graph
-    
+
     ValueError
        if the number of stones is negative
 
@@ -265,7 +265,7 @@ def SparseStoneFormula(D, B):
     vertex. In particular which stones are allowed on each vertex is
     specified by a bipartite graph :math:`B` on which the left
     vertices represent the vertices of DAG :math:`D` and the right
-    vertices are the stones. 
+    vertices are the stones.
 
     If a vertex of :math:`D` correspond to the left vertex :math:`v`
     in :math:`B`, then its neighbors describe which stones are allowed
@@ -295,7 +295,7 @@ def SparseStoneFormula(D, B):
     ------
     ValueError
        if :math:`D` is not a directed acyclic graph
-    
+
     ValueError
        if :math:`B` is not a bipartite graph
 

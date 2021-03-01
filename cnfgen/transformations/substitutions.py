@@ -4,7 +4,7 @@
 from itertools import combinations, product, permutations
 from copy import copy
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 # from cnfgen.graphs import bipartite_sets, neighbors
 
 ###
@@ -650,8 +650,8 @@ class FlipPolarity(BaseSubstitution):
 
 
 class VariableCompression(BaseSubstitution):
-    """Vabiable compression transformation 
-    
+    """Vabiable compression transformation
+
     The original variable are substituted with the XOR (or MAJ) of
     a subset of a new set of variables (usually smaller).
     """
@@ -671,8 +671,8 @@ class VariableCompression(BaseSubstitution):
         B : cnfgen.graphs.BipartiteGraph
             a bipartite graph. The left side must have the number of
             vertices equal to the number of original variables
-        
-        function: string 
+
+        function: string
             Select which faction is used for the compression. It must
             be one among 'xor' or 'maj'.
 

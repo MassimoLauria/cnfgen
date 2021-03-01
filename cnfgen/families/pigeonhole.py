@@ -3,7 +3,7 @@
 """Implementation of the pigeonhole principle formulas
 """
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import has_bipartition, BipartiteGraph,CompleteBipartiteGraph
 from itertools import combinations, product
 

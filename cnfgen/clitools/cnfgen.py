@@ -9,7 +9,7 @@ both a library of CNF generators and a command line utility.
 
 Create the CNFs:
 
->>> from cnfgen.cnf import CNF
+>>> from cnfgen.formula.cnf import CNF
 >>> c=CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], \
           [(False,"x2"),(True,"x4")] ])
 >>> print( c.to_dimacs(export_header=False) )

@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Implementation of subset cardinality formulas
 """
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import has_bipartition
 
 
@@ -25,24 +25,24 @@ def SubsetCardinalityFormula(B, equalities=False):
     For every left vertex i with neighborhood :math:`\Gamma(i)`
 
     .. math::
-         
+
          \sum_{j \in \Gamma(i)} x_{i,j} \geq \frac{|\Gamma(i)|}{2}
 
     For every right vertex j with neighborhood :math:`\Gamma(j)`
 
     .. math::
-         
+
          \sum_{i \in \Gamma(j)} x_{i,j} \leq \frac{|\Gamma(j)|}{2}.
 
     If the ``equalities`` flag is true, the constraints are instead
     represented by equations.
-    
+
     .. math::
-         
+
          \sum_{j \in \Gamma(i)} x_{i,j} = \left\lceil \frac{|\Gamma(i)|}{2} \right\rceil
 
     .. math::
-         
+
          \sum_{i \in \Gamma(j)} x_{i,j} = \left\lfloor \frac{|\Gamma(j)|}{2} \right\rfloor .
 
     Parameters
@@ -54,7 +54,7 @@ def SubsetCardinalityFormula(B, equalities=False):
 
     equalities : boolean
         use equations instead of inequalities to express the
-        cardinality constraints.  (default: False) 
+        cardinality constraints.  (default: False)
 
     Returns
     -------

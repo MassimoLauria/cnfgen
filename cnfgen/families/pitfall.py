@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 
 import cnfgen.families
 
@@ -35,7 +35,7 @@ def PitfallFormula(v, d, ny, nz, k):
     v : positive integer
         number of vertices of the Tseitin graph
     d : positive integer
-        degree of the Tseitin graph  
+        degree of the Tseitin graph
     ny : positive integer
          number of pitfall variables
     nz : positive integer

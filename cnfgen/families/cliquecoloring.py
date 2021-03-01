@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-"""Implementation of the clique-coloring formula 
+"""Implementation of the clique-coloring formula
 """
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 from itertools import combinations, permutations
 
 
 def CliqueColoring(n, k, c):
-    r"""Clique-coloring CNF formula 
+    r"""Clique-coloring CNF formula
 
     The formula claims that a graph :math:`G` with :math:`n` vertices
     simultaneously contains a clique of size :math:`k` and a coloring
@@ -19,13 +19,13 @@ def CliqueColoring(n, k, c):
     planes proof system. [1]_
 
     Variables :math:`e_{u,v}` to encode the edges of the graph.
-    
+
     Variables :math:`q_{i,v}` encode a function from :math:`[k]` to
     :math:`[n]` that represents a clique.
-    
+
     Variables :math:`r_{v,\ell}` encode a function from :math:`[n]` to
     :math:`[c]` that represents a coloring.
-     
+
     Parameters
     ----------
     n : number of vertices in the graph

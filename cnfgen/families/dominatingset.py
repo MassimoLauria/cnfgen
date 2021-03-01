@@ -3,7 +3,7 @@
 """Formulas that encode dominating set problems
 """
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 
 from cnfgen.graphs import enumerate_vertices, enumerate_edges, neighbors
 from itertools import combinations, combinations_with_replacement, product
@@ -24,7 +24,7 @@ def DominatingSet(G, d, alternative=False):
     d : a positive int
         the size limit for the dominating set
     alternative : bool
-        use an alternative construction that 
+        use an alternative construction that
         is provably hard from resolution proofs.
 
     Returns

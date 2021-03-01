@@ -3,7 +3,7 @@
 """Implementation of Tseitin formulas
 """
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import enumerate_vertices, neighbors
 
 

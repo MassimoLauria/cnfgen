@@ -3,7 +3,7 @@
 import random
 from copy import copy
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 
 
 def Shuffle(cnf,

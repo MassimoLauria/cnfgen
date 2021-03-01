@@ -3,7 +3,7 @@
 """Graph isomorphimsm/automorphism formulas
 """
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 
 from cnfgen.graphs import enumerate_vertices
 from itertools import combinations, product

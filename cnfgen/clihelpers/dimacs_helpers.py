@@ -8,7 +8,7 @@ https://massimolauria.net/cnfgen/
 
 import argparse
 from cnfgen.utils.parsedimacs import from_dimacs_file
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 
 from cnfgen.clitools import redirect_stdin
 from cnfgen.clitools import interactive_msg

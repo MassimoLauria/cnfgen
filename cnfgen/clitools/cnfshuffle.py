@@ -7,7 +7,7 @@ import sys
 import random
 import argparse
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 from cnfgen.utils.parsedimacs import from_dimacs_file
 from cnfgen.transformations.shuffle import Shuffle
 

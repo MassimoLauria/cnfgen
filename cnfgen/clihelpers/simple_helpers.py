@@ -2,11 +2,11 @@
 # -*- coding:utf-8 -*-
 """Formula Helpers for simple and random formulas
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 from cnfgen.families.randomformulas import RandomKCNF
 
 from .formula_helpers import FormulaHelper
@@ -102,18 +102,18 @@ class EMPTY(FormulaHelper):
 
     @staticmethod
     def build_cnf(args):
-        """Build an empty CNF formula 
+        """Build an empty CNF formula
 
         Parameters
         ----------
-        args : ignored 
+        args : ignored
              command line options
         """
         return CNF()
 
 
 class EMPTY_CLAUSE(FormulaHelper):
-    """Command line helper for the contradiction (one empty clause)  
+    """Command line helper for the contradiction (one empty clause)
     """
 
     name = 'emptyclause'
@@ -125,11 +125,11 @@ class EMPTY_CLAUSE(FormulaHelper):
 
     @staticmethod
     def build_cnf(args):
-        """Build a CNF formula with an empty clause 
+        """Build a CNF formula with an empty clause
 
         Parameters
         ----------
-        args : ignored 
+        args : ignored
              command line options
         """
         return CNF([[]])

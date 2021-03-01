@@ -3,7 +3,7 @@
 """Formulas that encode coloring related problems
 """
 
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import enumerate_vertices
 from cnfgen.graphs import enumerate_edges
 from cnfgen.graphs import neighbors
@@ -87,7 +87,7 @@ def EvenColoringFormula(G):
 
     Arguments
     ---------
-    G : networkx.Graph 
+    G : networkx.Graph
        a simple undirected graph where all vertices have even degree
 
     Raises
