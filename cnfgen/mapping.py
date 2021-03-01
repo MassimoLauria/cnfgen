@@ -14,15 +14,16 @@ Copyright (C) 2019-2021  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
-
-from itertools import combinations, product
+from math import ceil, log
+from itertools import combinations, product, islice
 
 from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph
-from cnfgen.variables import BipartiteEdgesVariables, VariablesManager
+from cnfgen.variables import BipartiteEdgesVariables, BaseVariableGroup
+from cnfgen.variables import VariablesManager
 
 
-class MappingVariables(BipartiteEdgesVariables):
-    """A group of variables representing a matching.
+class UnaryMappingVariables(BipartiteEdgesVariables):
+    """A group of variables representing a mapping
 
     The mapping is represented in unary, where variables
     :math:`f_{i,j}` represent atoms :math:`f(i)=j`.
@@ -56,6 +57,234 @@ class MappingVariables(BipartiteEdgesVariables):
             _, V = self.G.parts()
             return V
         return self.G.right_neighbors(u)
+
+
+class BinaryMappingVariables(BaseVariableGroup):
+    """A group of variables representing a mapping to bitstrings
+
+    Given a domain :math:`[n]` and a range :math:`[m]`, this group
+    of variables represent a mapping.
+
+    Variables are :math:`v(i,k-1)...v(i,0)` for :math:`i \\in D`.
+    Each :math:`v(i,k-1)...v(i,0)` is a string of :math:`k` bits, and
+    represents the image of :math:`i \\in [m]`. The value :math:`k` is
+    set so that
+    """
+    def __init__(self, formula, n, m, labelfmt='v({},{})'):
+        """Group of variables represeting the mapping
+
+        Variables representing the mapping from `n` elements to
+        `m` elements, represented as strings of bits.
+
+        Notice that domain is indexed from 1, the range is indexed (in
+        binary) from zero.
+
+        Parameters
+        ----------
+        formula: CNF
+            formula to which we add a variable group
+        n : int
+            size of the domain ( must be > 0)
+        m : int
+            size of the range ( must be > 0)
+        labelfmt: str
+            format string for the variable labels
+
+        Examples
+        --------
+        >>> F = CNFMapping()
+        >>> f = BinaryMappingVariables(F,4,6,labelfmt='f({},{})')
+        >>> len(f)
+        12
+        >>> print(*f.label())
+        f(1,2) f(1,1) f(1,0) f(2,2) f(2,1) f(2,0) f(3,2) f(3,1) f(3,0) f(4,2) f(4,1) f(4,0)
+        >>> print(f(3,2))
+        7
+        >>> print(*f(2,None))
+        4 5 6
+        """
+        if (m < 1 or n < 1):
+            raise ValueError("n and m must be positive")
+        self.domain_size = n
+        self.range_size = m
+        self.bitlength = int(ceil(log(m, 2)))
+        nvar = n * self.bitlength
+        BaseVariableGroup.__init__(self, formula, nvar, labelfmt=labelfmt)
+        self.flips = []
+        for flip in product([-1, 1], repeat=self.bitlength):
+            self.flips.append(flip)
+
+
+    def domain(self):
+        """The domain of the mapping
+
+        If `v` is None it returns the domain of the mapping.
+        Otherwise it returns the sequence of elements which is
+        possible to map to `v`.
+
+        Examples
+        --------
+        >>> F = CNFMapping()
+        >>> f = BinaryMappingVariables(F,4,6)
+        >>> f.domain() == range(1,5)
+        True
+        >>> F = CNFMapping()
+        >>> f = BinaryMappingVariables(F,20,6)
+        >>> f.domain() == range(1,21)
+        True
+        """
+        return range(1, self.domain_size+1)
+
+    def range(self):
+        """The range of the mapping
+
+        If `u` is None it returns the range of the mapping.
+        Otherwise it returns the sequence of all elements to which `u`
+        can be mapped.
+
+        Examples
+        --------
+        >>> F = CNFMapping()
+        >>> f = BinaryMappingVariables(F,5,12)
+        >>> f.range() == range(0,12)
+        True
+        >>> len(f)
+        20
+        >>> F = CNFMapping()
+        >>> f = BinaryMappingVariables(F,5,15)
+        >>> f.range() == range(0,15)
+        True
+        >>> len(f)
+        20
+        """
+        return range(self.range_size)
+
+    def indices(self, *pattern):
+        """Implementation of :py:classmethod:`BaseVariableGroup.indices`
+
+        Parameters
+        ----------
+        pattern : sequences(positive integers or None)
+            the pattern of the indices
+
+        Returns
+        -------
+        a tuple or an itertools.product object
+
+        Examples
+        --------
+        >>> F = CNFMapping()
+        >>> f = BinaryMappingVariables(F,5,12)
+        >>> print(*f.indices(3,None))
+        (3, 3) (3, 2) (3, 1) (3, 0)
+        >>> print(*f.indices(None,1))
+        (1, 1) (2, 1) (3, 1) (4, 1) (5, 1)
+        """
+        if len(pattern) not in [0, 2]:
+            raise ValueError("Requires either none or two arguments.")
+
+        I = self.domain()
+        B = range(self.bitlength-1, -1, -1)
+
+        if len(pattern) == 0:
+            i = None
+            b = None
+        else:
+            i = pattern[0]
+            b = pattern[1]
+
+        if i is not None:
+            if not (1 <= i <= self.domain_size):
+                raise ValueError("Preimage is not in the domain")
+            I = [i]
+
+        if b is not None:
+            if not (0 <= b < self.bitlength):
+                raise ValueError("Bit position is not in the domain")
+            B = [b]
+
+        return ((i, b) for i in I for b in B)
+
+    def _unsafe_index_to_lit(self, index):
+        """Converts (i,b) into a variable ID.
+
+        Parameters
+        ----------
+        index: a pair of positive integers
+            an edge of the graph
+
+        Returns
+        -------
+        int
+
+        Warning: only for internal use. It does not check of the
+        correctness of the arguments.
+        """
+        i, b = index
+        return i * self.bitlength - b
+
+    def to_index(self, lit):
+        """Convert a literal to the corresponding pair (i,b)
+
+        Parameters
+        ----------
+        lit : positive or negative literal
+            -ID or +ID for the ID of the variable
+
+        Returns
+        -------
+            pair of integers
+
+        Raises
+        ------
+        ValueError
+            when `lit` is not within the appropriate intervals
+
+        Examples
+        --------
+        >>> F = CNFMapping()
+        >>> V = BinaryMappingVariables(F,10, 13, labelfmt='v({},{})')
+        >>> len(V)
+        40
+        >>> V.to_index(1)
+        (1, 3)
+        >>> V.to_index(6)
+        (2, 2)
+        >>> V.to_index(-8)
+        (2, 0)
+        >>> V.to_index(38)
+        (10, 2)
+        """
+        var = abs(lit)
+        if var not in self:
+            raise ValueError('Index out of range')
+        preimage = (var - 1) // self.bitlength + 1
+        bitpos = self.bitlength - 1 - (var - 1) % self.bitlength
+        return preimage, bitpos
+
+    def bits(self):
+        return self.bitlength
+
+    def forbid(self, i, j):
+        '''The clause that forbids i-->j
+
+        Create the unique clause that is false if and only if i is
+        mapped to the bit string corresponding to j
+
+        Examples
+        --------
+        >>> F = CNFMapping()
+        >>> V = BinaryMappingVariables(F,4,6)
+        >>> V.forbid(2,0)
+        [4, 5, 6]
+        >>> V.forbid(2,7)
+        [-4, -5, -6]
+        >>> V.forbid(4,3)
+        [10, -11, -12]
+        '''
+        pairs = zip(self.flips[j], self(i, None))
+        return [ -s*v for s,v in pairs ]
+
 
 class CNFMapping(VariablesManager):
     """CNF with a variable manager
@@ -113,16 +342,16 @@ class CNFMapping(VariablesManager):
         Parameters
         ----------
         n : int
-            size of the domain (when needed)
+            size of the domain
         m : int
-            size of the range (when needed)
+            size of the range
 
         label : str, optional
             string representation of the variables
 
         Returns
         -------
-        MappingVariables, the new variable group
+        UnaryMappingVariables, the new variable group
 
         Examples
         --------
@@ -140,7 +369,7 @@ class CNFMapping(VariablesManager):
         if n < 0 or m < 0:
             raise ValueError("n and m must be non negative integers")
         B = CompleteBipartiteGraph(n, m)
-        newgroup = MappingVariables(self, B, labelfmt=label)
+        newgroup = UnaryMappingVariables(self, B, labelfmt=label)
         self._add_variable_group(newgroup)
         return newgroup
 
@@ -164,7 +393,7 @@ class CNFMapping(VariablesManager):
 
         Returns
         -------
-        MappingVariables, the new variable group
+        UnaryMappingVariables, the new variable group
 
         Examples
         --------
@@ -191,9 +420,66 @@ class CNFMapping(VariablesManager):
             raise ValueError("B must be an instance of BipartiteGraph")
         if B.number_of_edges() == 0:
             raise ValueError("B must contain edges")
-        newgroup = MappingVariables(self, B, labelfmt=label)
+        newgroup = UnaryMappingVariables(self, B, labelfmt=label)
         self._add_variable_group(newgroup)
         return newgroup
+
+
+    def new_binary_mapping(self, n, m, label='v({},{})'):
+        """Adds variables for a mapping from `n` to `m` encoded in binary
+
+        Creates a group of variables representing a mapping from
+        :math:`\\{1,\\ldots,n}` to :math:`\\{0,\\ldots,m-1\\}`.
+
+        The mapping is represented as a sequence of :math:`n` binary
+        strings of length :math:`k`, where :math:`k` is the smallest
+        integer so that :math:`m \\leq 2^k`.
+
+        The element mapped to :math:`i` is represented using :math:`k`
+        boolean variables :math:`v(i,k-1) \\ldots v(i,0)`.
+
+        *Note*: When needed, clauses are added to the formula in order
+        to forbid range values between :math:`m` and :math:`2^k-1`
+
+
+        Parameters
+        ----------
+        n : int
+            size of the domain
+        m : int
+            size of the range
+
+        label : str, optional
+            string representation of the variables
+
+        Returns
+        -------
+        BinaryMappingVariables, the new variable group
+
+        Examples
+        --------
+        >>> F = CNFMapping()
+        >>> f = F.new_binary_mapping(4,14)
+        >>> F.number_of_variables()
+        16
+        >>> F.number_of_clauses()
+        8
+        >>> F[0]
+        [-1, -2, -3, 4]
+        >>> F[1]
+        [-1, -2, -3, -4]
+        >>> f(2,3)
+        5
+        >>> f(4,0)
+        16
+        """
+        if n < 0 or m < 0:
+            raise ValueError("n and m must be non negative integers")
+        newgroup = BinaryMappingVariables(self, n, m, labelfmt=label)
+        self._add_variable_group(newgroup)
+        return newgroup
+
+
 
     def force_complete_mapping(self, f):
         """Enforce the mapping `f` to be complete
@@ -202,7 +488,8 @@ class CNFMapping(VariablesManager):
         Namely that all elements in the domain are mapped to some
         element in the range. These clauses do not exclude the
         possibility that an element from the domain is mapped to
-        multiple elements in the range.
+        multiple elements in the range (indeed that may be the case
+        for unary representation).
 
         (See py:classmethod:`CNFMapping.force_functional_mapping`)
 
@@ -215,14 +502,30 @@ class CNFMapping(VariablesManager):
         [11, 12, 13, 14, 15]
         >>> len(C)
         10
+        >>> g = C.new_binary_mapping(5,3)
+        >>> C.force_complete_mapping(g)
+        >>> len(C)
+        15
 
         """
+        if not isinstance(f,
+                          (UnaryMappingVariables,BinaryMappingVariables)):
+            ValueError('f must be either UnaryMappingVariables or BinaryMappingVariables')
+
         if f.parent_formula() != self:
             raise ValueError("mapping f was created from a different formula")
 
-        for x in f.domain():
-            self.add_clause(f(x, None))
+        if isinstance(f, BinaryMappingVariables):
+            m = len(f.range())
+            k = f.bits()
+            for i in f.domain():
+                for j in range(m, 2**k):
+                    self.add_clause(f.forbid(i, j))
+            return
 
+        if isinstance(f, UnaryMappingVariables):
+            for x in f.domain():
+                self.add_clause(f(x, None))
 
     def force_functional_mapping(self, f):
         """Enforce the mapping `f` to be functional
@@ -248,14 +551,22 @@ class CNFMapping(VariablesManager):
         [-3, -4]
         >>> len(C)
         100
-
+        >>> g = C.new_binary_mapping(5,4)
+        >>> C.force_functional_mapping(g)
+        >>> len(C)
+        100
         """
+        if not isinstance(f,
+                          (UnaryMappingVariables,BinaryMappingVariables)):
+            ValueError('f must be either UnaryMappingVariables or BinaryMappingVariables')
+
         if f.parent_formula() != self:
             raise ValueError("mapping f was created from a different formula")
-
-        for x in f.domain():
-            self.add_linear(list(f(x, None)), '<=', 1)
-
+        if isinstance(f, BinaryMappingVariables):
+            return
+        if isinstance(f, UnaryMappingVariables):
+            for x in f.domain():
+                self.add_linear(list(f(x, None)), '<=', 1)
 
     def force_surjective_mapping(self, f):
         """Enforce the mapping `f` to be surjective
@@ -263,6 +574,8 @@ class CNFMapping(VariablesManager):
         Add the clauses that make the mapping `f` surjective.
         Namely that all elements in the range have at least one
         element in the domain mapped to it.
+
+        This method works only for mapping represented in unary.
 
         Examples
         --------
@@ -274,6 +587,9 @@ class CNFMapping(VariablesManager):
         >>> len(C)
         5
         """
+        if not isinstance(f, UnaryMappingVariables):
+            ValueError('f must be a UnaryMappingVariables')
+
         if f.parent_formula() != self:
             raise ValueError("mapping f was created from a different formula")
 
@@ -302,11 +618,21 @@ class CNFMapping(VariablesManager):
         >>> len(C)
         225
         """
+        if not isinstance(f,
+                          (UnaryMappingVariables,BinaryMappingVariables)):
+            ValueError('f must be either UnaryMappingVariables or BinaryMappingVariables')
+
         if f.parent_formula() != self:
             raise ValueError("mapping f was created from a different formula")
 
-        for y in f.range():
-            self.add_linear(list(f(None, y)), '<=', 1)
+        if isinstance(f, UnaryMappingVariables):
+            for y in f.range():
+                self.add_linear(list(f(None, y)), '<=', 1)
+
+        if isinstance(f, BinaryMappingVariables):
+            for y in f.range():
+                for x1, x2 in combinations(f.domain(), 2):
+                    self.add_clause(f.forbid(x1, y) + f.forbid(x2, y))
 
 
     def force_nondecreasing_mapping(self, f):
@@ -333,10 +659,20 @@ class CNFMapping(VariablesManager):
         >>> C[1]
         [-2, -3]
         """
+        if not isinstance(f,
+                          (UnaryMappingVariables,BinaryMappingVariables)):
+            ValueError('f must be either UnaryMappingVariables or BinaryMappingVariables')
+
         if f.parent_formula() != self:
             raise ValueError("mapping f was created from a different formula")
 
-        for (u1, u2) in combinations(f.domain(), 2):
-            for (v1, v2) in product(f.range(u1), f.range(u2)):
-                if v1 > v2:
-                    self.add_clause([-f(u1, v1), -f(u2, v2)])
+        if isinstance(f, UnaryMappingVariables):
+            for (u1, u2) in combinations(f.domain(), 2):
+                for (v1, v2) in product(f.range(u1), f.range(u2)):
+                    if v1 > v2:
+                        self.add_clause([-f(u1, v1), -f(u2, v2)])
+
+        if isinstance(f, BinaryMappingVariables):
+            for (u1, u2) in combinations(f.domain(), 2):
+                for (v1, v2) in combinations(f.range(), 2):
+                    self.add_clause(f.forbid(u1, v2) + f.forbid(u2, v1))
