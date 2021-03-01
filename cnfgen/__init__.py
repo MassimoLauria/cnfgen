@@ -8,7 +8,7 @@ transformations implemented, plus some IO functions.
 """
 
 # Basic CNF object
-from cnfgen.cnf import CNF
+from cnfgen.formula.cnf import CNF
 
 # IO functions
 from cnfgen.graphs import readGraph, writeGraph

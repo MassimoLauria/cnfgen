@@ -18,8 +18,8 @@ from math import ceil, log
 from itertools import combinations, product, islice
 
 from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph
-from cnfgen.variables import BipartiteEdgesVariables, BaseVariableGroup
-from cnfgen.variables import VariablesManager
+from cnfgen.formula.variables import BipartiteEdgesVariables, BaseVariableGroup
+from cnfgen.formula.variables import VariablesManager
 
 
 class UnaryMappingVariables(BipartiteEdgesVariables):

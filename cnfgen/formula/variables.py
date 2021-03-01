@@ -21,8 +21,8 @@ from bisect import bisect_right
 from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph, CompleteBipartiteGraph
 import networkx as nx
 
-from cnfgen.basecnf import BaseCNF
-from cnfgen.linear import CNFLinear
+from cnfgen.formula.basecnf import BaseCNF
+from cnfgen.formula.linear import CNFLinear
 
 
 class BaseVariableGroup():

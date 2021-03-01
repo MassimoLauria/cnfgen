@@ -5,7 +5,7 @@
 import os
 from io import StringIO
 
-from cnfgen.basecnf import BaseCNF
+from cnfgen.formula.basecnf import BaseCNF
 
 from cnfgen.utils.parsedimacs import to_dimacs_file, from_dimacs_file
 from cnfgen.utils.latexoutput import to_latex_string, to_latex_document

@@ -17,7 +17,7 @@ from operator import mul
 from itertools import combinations
 from itertools import product
 
-from cnfgen.basecnf import BaseCNF
+from cnfgen.formula.basecnf import BaseCNF
 
 
 class CNFLinear(BaseCNF):

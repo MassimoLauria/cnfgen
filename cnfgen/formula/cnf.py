@@ -17,9 +17,9 @@ from itertools import combinations
 from itertools import product, islice
 from math import ceil, log
 
-from cnfgen.cnfio import CNFio
-from cnfgen.linear import CNFLinear
-from cnfgen.mapping import CNFMapping
+from cnfgen.formula.cnfio import CNFio
+from cnfgen.formula.linear import CNFLinear
+from cnfgen.formula.mapping import CNFMapping
 
 
 class CNF(CNFMapping, CNFio, CNFLinear):
