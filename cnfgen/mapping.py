@@ -107,11 +107,12 @@ class BinaryMappingVariables(BaseVariableGroup):
             raise ValueError("n and m must be positive")
         self.domain_size = n
         self.range_size = m
+        self.id_offset = formula.number_of_variables()
         self.bitlength = int(ceil(log(m, 2)))
         nvar = n * self.bitlength
         BaseVariableGroup.__init__(self, formula, nvar, labelfmt=labelfmt)
         self.flips = []
-        for flip in product([-1, 1], repeat=self.bitlength):
+        for flip in product([1, -1], repeat=self.bitlength):
             self.flips.append(flip)
 
 
@@ -221,7 +222,7 @@ class BinaryMappingVariables(BaseVariableGroup):
         correctness of the arguments.
         """
         i, b = index
-        return i * self.bitlength - b
+        return i * self.bitlength - b + self.id_offset
 
     def to_index(self, lit):
         """Convert a literal to the corresponding pair (i,b)
@@ -243,21 +244,23 @@ class BinaryMappingVariables(BaseVariableGroup):
         Examples
         --------
         >>> F = CNFMapping()
+        >>> F.update_variable_number(10)
         >>> V = BinaryMappingVariables(F,10, 13, labelfmt='v({},{})')
         >>> len(V)
         40
-        >>> V.to_index(1)
+        >>> V.to_index(11)
         (1, 3)
-        >>> V.to_index(6)
+        >>> V.to_index(16)
         (2, 2)
-        >>> V.to_index(-8)
+        >>> V.to_index(-18)
         (2, 0)
-        >>> V.to_index(38)
+        >>> V.to_index(48)
         (10, 2)
         """
         var = abs(lit)
         if var not in self:
             raise ValueError('Index out of range')
+        var = var - self.id_offset
         preimage = (var - 1) // self.bitlength + 1
         bitpos = self.bitlength - 1 - (var - 1) % self.bitlength
         return preimage, bitpos
@@ -283,7 +286,7 @@ class BinaryMappingVariables(BaseVariableGroup):
         [10, -11, -12]
         '''
         pairs = zip(self.flips[j], self(i, None))
-        return [ -s*v for s,v in pairs ]
+        return [ s*v for s,v in pairs ]
 
 
 class CNFMapping(VariablesManager):
@@ -438,10 +441,6 @@ class CNFMapping(VariablesManager):
         The element mapped to :math:`i` is represented using :math:`k`
         boolean variables :math:`v(i,k-1) \\ldots v(i,0)`.
 
-        *Note*: When needed, clauses are added to the formula in order
-        to forbid range values between :math:`m` and :math:`2^k-1`
-
-
         Parameters
         ----------
         n : int
@@ -462,12 +461,6 @@ class CNFMapping(VariablesManager):
         >>> f = F.new_binary_mapping(4,14)
         >>> F.number_of_variables()
         16
-        >>> F.number_of_clauses()
-        8
-        >>> F[0]
-        [-1, -2, -3, 4]
-        >>> F[1]
-        [-1, -2, -3, -4]
         >>> f(2,3)
         5
         >>> f(4,0)
@@ -478,7 +471,6 @@ class CNFMapping(VariablesManager):
         newgroup = BinaryMappingVariables(self, n, m, labelfmt=label)
         self._add_variable_group(newgroup)
         return newgroup
-
 
 
     def force_complete_mapping(self, f):
@@ -502,11 +494,14 @@ class CNFMapping(VariablesManager):
         [11, 12, 13, 14, 15]
         >>> len(C)
         10
-        >>> g = C.new_binary_mapping(5,3)
+        >>> g = C.new_binary_mapping(4,14)
         >>> C.force_complete_mapping(g)
         >>> len(C)
-        15
-
+        18
+        >>> C[10]
+        [-51, -52, -53, 54]
+        >>> C[11]
+        [-51, -52, -53, -54]
         """
         if not isinstance(f,
                           (UnaryMappingVariables,BinaryMappingVariables)):
@@ -545,14 +540,12 @@ class CNFMapping(VariablesManager):
         >>> C.force_functional_mapping(f)
         >>> len(C)
         100
+        >>> C.number_of_variables()
+        50
         >>> max(len(cls) for cls in C)
         2
         >>> C[7]
         [-3, -4]
-        >>> len(C)
-        100
-        >>> g = C.new_binary_mapping(5,4)
-        >>> C.force_functional_mapping(g)
         >>> len(C)
         100
         """
@@ -658,6 +651,10 @@ class CNFMapping(VariablesManager):
         [-1, -3]
         >>> C[1]
         [-2, -3]
+        >>> g = C.new_binary_mapping(2,4)
+        >>> C.force_nondecreasing_mapping(g)
+        >>> len(C)
+        8
         """
         if not isinstance(f,
                           (UnaryMappingVariables,BinaryMappingVariables)):
