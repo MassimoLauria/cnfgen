@@ -421,8 +421,6 @@ class CNFMapping(VariablesManager):
         """
         if not B.is_bipartite():
             raise ValueError("B must be an instance of BipartiteGraph")
-        if B.number_of_edges() == 0:
-            raise ValueError("B must contain edges")
         newgroup = UnaryMappingVariables(self, B, labelfmt=label)
         self._add_variable_group(newgroup)
         return newgroup

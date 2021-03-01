@@ -16,11 +16,11 @@ __all__ = [
 
 def assertCnfEqual(cnf1, cnf2):
     # test whether variable sets are the same
-    vars1 = set(cnf1.variables())
-    vars2 = set(cnf2.variables())
+    vars1 = set(cnf1.all_variable_labels())
+    vars2 = set(cnf2.all_variable_labels())
 
-    Delta1 = list(str(x) for x in vars1 - vars2)
-    Delta2 = list(str(x) for x in vars2 - vars1)
+    Delta1 = list(x for x in vars1 - vars2)
+    Delta2 = list(x for x in vars2 - vars1)
     if len(Delta1) + len(Delta2) > 0:
         raise AssertionError("The two CNFs have different variable sets.\n"
                              " - In first and not in second: {}\n"
@@ -43,14 +43,15 @@ def assertCnfEqual(cnf1, cnf2):
 def assertCnfEqualsDimacs(cnf, dimacs):
     dimacs = textwrap.dedent(dimacs)
     dimacs = dimacs.strip()
-    output = cnf.dimacs(export_header=False)
-    output = output.strip()
+    output = cnf.to_dimacs().strip()
     assert output == dimacs
 
 
 def assertCnfEqualsIgnoreVariables(cnf1, cnf2):
-    assert len(list(cnf1.variables())) == len(list(cnf2.variables()))
-    assert set(cnf1._clauses) == set(cnf2._clauses)
+    assert cnf1.number_of_variables() == cnf2.number_of_variables()
+    clauses1 = set(frozenset(x) for x in cnf1.clauses())
+    clauses2 = set(frozenset(x) for x in cnf2.clauses())
+    assert clauses1 == clauses2
 
 
 def assertSAT(formula):

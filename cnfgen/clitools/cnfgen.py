@@ -449,31 +449,24 @@ def cli(argv=sys.argv, mode='output'):
             cnf.header['random seed'] = args.seed
         cnf.header['command line'] = "cnfgen " + " ".join(argv[1:])
 
+
         if mode == 'formula':
             return cnf
 
-        # Output
-        if args.output_format == 'latex':
+        if mode == 'string':
+            if args.output_format == 'latex':
+                return cnf.to_latex()
+            elif args.output_format == 'dimacs':
+                return cnf.to_dimacs()
+            else:
+                raise InternalBug("Unknown output format")
 
-            extra_text = build_latex_cmdline_description(argv, args, t_args)
-
-            output = cnf.latex(export_header=args.verbose,
-                               extra_text=extra_text,
-                               full_document=True)
-
-        elif args.output_format == 'dimacs':
-
-            output = cnf.dimacs(export_header=args.verbose,
-                                export_varnames=args.varnames)
-
-        else:
-            raise InternalBug("Unknown output format")
-
-    if mode == 'string':
-        return output
-
-    with paginate_or_redirect_stdout(args.output):
-        print(output, end='\n')
+        extra_text = build_latex_cmdline_description(argv, args, t_args)
+        cnf.to_file(args.output,
+                    fileformat=args.output_format,
+                    export_header=args.verbose,
+                    export_varnames=args.varnames,
+                    extra_text=extra_text)
 
 
 # command line entry point

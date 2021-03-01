@@ -29,7 +29,7 @@ def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
     - `functional`: add clauses to enforce at most one hole per pigeon
     - `onto`: add clauses to enforce that any hole must have a pigeon
 
-    >>> print(PigeonholePrinciple(4,3).dimacs(export_header=False))
+    >>> print(PigeonholePrinciple(4,3).to_dimacs())
     p cnf 12 22
     1 2 3 0
     4 5 6 0
@@ -54,9 +54,6 @@ def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
     -6 -12 0
     -9 -12 0
     """
-    def var_name(p, h):
-        return 'p_{{{0},{1}}}'.format(p, h)
-
     if functional:
         if onto:
             formula_name = "Matching"
@@ -70,25 +67,27 @@ def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
 
     description = "{0} formula for {1} pigeons and {2} holes".format(
         formula_name, pigeons, holes)
-    php = CNF(description=description)
+    F = CNF(description=description)
 
     if pigeons < 0 or holes < 0:
         raise ValueError(
             "Number of pigeons and holes must both be non negative")
 
-    B = CompleteBipartiteGraph(pigeons,holes)
-    mapping = php.unary_mapping(1,B,
-                                injective=True,
-                                functional=functional,
-                                surjective=onto)
+    p = F.new_mapping(pigeons, holes, label='p_{{{},{}}}')
+    F.force_complete_mapping(p)
 
-    for c in mapping.clauses():
-        php.add_clause(c)
+    if onto:
+        F.force_surjective_mapping(p)
 
-    return php
+    F.force_injective_mapping(p)
+
+    if functional:
+        F.force_functional_mapping(p)
+
+    return F
 
 
-def GraphPigeonholePrinciple(graph, functional=False, onto=False):
+def GraphPigeonholePrinciple(G, functional=False, onto=False):
     """Graph Pigeonhole Principle CNF formula
 
     The graph pigeonhole principle CNF formula, defined on a bipartite
@@ -106,20 +105,15 @@ def GraphPigeonholePrinciple(graph, functional=False, onto=False):
     - onto-PHP: all right vertices must be incident to some vertex
     - matching: E' must be a perfect matching between L and R
 
-    Arguments:
-    - `graph` : bipartite graph
-    - `functional`: add clauses to enforce at most one edge per left vertex
-    - `onto`: add clauses to enforce that any right vertex has one incident edge
-
-
-    Remark: the graph vertices must have the 'bipartite' attribute
-    set. Left vertices must have it set to 0 and the right ones to
-    1. A KeyException is raised otherwise.
-
+    Parameters
+    ----------
+    G : cnfgen.graphs.BipartiteGraph
+        the underlying bipartite
+    functional: bool
+        add clauses to enforce at most one edge per left vertex
+    onto: bool
+        add clauses to enforce that any right vertex has one incident edge
     """
-    def var_name(p, h):
-        return 'p_{{{0},{1}}}'.format(p, h)
-
     if functional:
         if onto:
             formula_name = "Graph matching"
@@ -131,29 +125,24 @@ def GraphPigeonholePrinciple(graph, functional=False, onto=False):
         else:
             formula_name = "Graph pigeonhole principle"
 
-    description = "{0} formula on {1}".format(formula_name, graph.name)
-    gphp = CNF(description=description)
+    description = "{0} formula on {1}".format(formula_name, G.name)
+    F = CNF(description=description)
 
-    if not has_bipartition(graph):
+    if not G.is_bipartite():
         raise ValueError("The pattern graph must be bipartite")
 
-    Left, Right = graph.parts()
+    p = F.new_sparse_mapping(G, label='p_{{{},{}}}')
+    F.force_complete_mapping(p)
 
-    mapping = gphp.unary_mapping(Left,
-                                 Right,
-                                 sparsity_pattern=graph,
-                                 var_name=var_name,
-                                 injective=True,
-                                 functional=functional,
-                                 surjective=onto)
+    if onto:
+        F.force_surjective_mapping(p)
 
-    for v in mapping.variables():
-        gphp.add_variable(v)
+    F.force_injective_mapping(p)
 
-    for c in mapping.clauses():
-        gphp.add_clause_unsafe(c)
+    if functional:
+        F.force_functional_mapping(p)
 
-    return gphp
+    return F
 
 
 def BinaryPigeonholePrinciple(pigeons, holes):
@@ -173,23 +162,16 @@ def BinaryPigeonholePrinciple(pigeons, holes):
 
     description = "Binary Pigeonhole Principle for {0} pigeons and {1} holes".format(
         pigeons, holes)
-    bphp = CNF(description=description)
+    F = CNF(description=description)
 
     if pigeons < 0 or holes < 0:
         raise ValueError(
             "Number of pigeons and holes must both be non negative")
 
-    bphpgen = bphp.binary_mapping(range(1, pigeons + 1),
-                                  range(1, holes + 1),
-                                  injective=True)
-
-    for v in bphpgen.variables():
-        bphp.add_variable(v)
-
-    for c in bphpgen.clauses():
-        bphp.add_clause_unsafe(c)
-
-    return bphp
+    p = F.new_binary_mapping(pigeons,holes)
+    F.force_complete_mapping(p)
+    F.force_injective_mapping(p)
+    return F
 
 
 def RelativizedPigeonholePrinciple(pigeons, resting_places, holes):

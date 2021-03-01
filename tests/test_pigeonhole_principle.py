@@ -226,7 +226,7 @@ def test_gphp_lib_vs_cli():
                 parameters.append("--onto")
             graph = CompleteBipartiteGraph(5, 4)
             F = GraphPigeonholePrinciple(graph, functional, onto)
-            lib = F.dimacs(export_header=False)
+            lib = F.to_dimacs()
             cli = cnfgen(parameters, mode='string')
             assert cli == lib
 

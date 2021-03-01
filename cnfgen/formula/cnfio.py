@@ -160,7 +160,7 @@ class CNFio(BaseCNF):
                               extra_text=extra_text)
         else:
             to_dimacs_file(self,
-                           fileformat,
+                           fileorname,
                            export_header=export_header,
                            export_varnames=export_varnames)
 

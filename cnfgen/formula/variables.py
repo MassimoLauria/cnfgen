@@ -121,7 +121,7 @@ class BaseVariableGroup():
 
     def __len__(self):
         """The number of variables in the group"""
-        return self.ids[-1] - self.ids[0] + 1
+        return len(self.ids)
 
     def variable_ids(self):
         """The ID interval for this variable group"""
@@ -1006,6 +1006,11 @@ class VariablesManager(CNFLinear):
     def _add_variable_group(self, vg):
         """Add a group of variables to the formula"""
         ids = vg.variable_ids()
+        if len(ids) == 0:
+            # variable groups of length 0
+            self._groups.append(vg)
+            return
+
         begin, end = ids[0], ids[-1]
         assert end >= begin
         if begin <= self.number_of_clauses():
@@ -1217,6 +1222,8 @@ argument `default_label_format` (e.g. 'x{}').
         #
         varid = 1
         for vg in self._groups:
+            if len(vg.variable_ids()) == 0:
+                continue
             begin = vg.variable_ids()[0]
             while varid < begin:
                 yield default_label_format.format(varid)
