@@ -346,7 +346,7 @@ def build_latex_cmdline_description(argv, args, t_args):
         data = iter(vars(namespace).items())
         data = [v for k, v in data if not k.startswith("_")]
         data = [f for f in data if isinstance(f, io.IOBase)]
-        data = [f for f in data if (f != sys.stdin) and f.mode == 'r']
+        data = [f for f in data if not isinstance(f, io.IOBase) and f.mode == 'r']
         input_files.extend(data)
 
     # Add them all to the latex document
