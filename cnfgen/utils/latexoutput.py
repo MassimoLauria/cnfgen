@@ -167,9 +167,6 @@ def to_latex_document(F, fileorname, export_header=True, extra_text=""):
     # Extra text
     output.write(extra_text)
 
-    # Write the formula
-    _print_latex(F,output,split_every=clauses_per_page,compact=False)
-
     # Output the clauses
     output.write("\\noindent\\textbf{{CNF with {} variables and and {} clauses:}}\n".
                  format(F.number_of_variables(), F.number_of_clauses()))

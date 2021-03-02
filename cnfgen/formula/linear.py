@@ -130,7 +130,8 @@ class CNFLinear(BaseCNF):
             self.add_linear(lits, '>=', constant+1)
             return
         elif op == "<=":
-            self.add_linear([-lit for lit in lits], '>=', len(lits) - constant)
+            negated = [-lit for lit in lits]
+            self.add_linear(negated, '>=', len(negated) - constant)
             return
 
         # Tautologies and invalid inequalities

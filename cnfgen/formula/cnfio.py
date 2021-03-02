@@ -12,6 +12,35 @@ from cnfgen.utils.latexoutput import to_latex_string, to_latex_document
 from cnfgen.utils.solver import is_satisfiable
 
 
+def guess_output_format(fileorname, fileformat_request):
+    """Try to guess the appropriate file format
+
+    If `fileformat` is either `dimacs` or `tex` then the output is
+    saved in the corresponding format.
+
+    If `fileformat` is `None`, then DIMACS format is the default
+    output format unless the file name ends with '.tex'.
+    """
+    if fileformat_request in ['latex', 'dimacs']:
+        return fileformat_request
+
+    if fileformat_request is None:
+        # try to discover the appropriate fileformat
+        ext = None
+        try:
+            if isinstance(fileorname, str):
+                name = fileorname
+            else:
+                name = fileorname.name
+            ext = os.path.splitext(name)[-1][1:]
+        except (AttributeError, ValueError, IndexError):
+            pass
+
+        return 'latex' if ext == 'tex' else 'dimacs'
+
+    raise ValueError("fileformat_request can be either None, 'latex' or 'dimacs'")
+
+
 class CNFio(BaseCNF):
     """CNF class with I/O capabilities
 
@@ -141,19 +170,9 @@ class CNFio(BaseCNF):
         extra_text: str
             additional text to be included in the LaTeX output document
         """
-        if fileformat is None:
-            # try to discover the appropriate fileformat
-            try:
-                if isinstance(fileorname, str):
-                    name = fileorname
-                else:
-                    name = fileorname.name
-                ext = os.path.splitext(name)[-1][1:]
-                fileformat = ext
-            except (AttributeError, ValueError, IndexError):
-                fileformat = 'dimacs'
+        fileformat = guess_output_format(fileorname,fileformat)
 
-        if fileformat == 'tex':
+        if fileformat in 'latex':
             to_latex_document(self,
                               fileorname,
                               export_header=export_header,

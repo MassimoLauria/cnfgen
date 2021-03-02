@@ -35,6 +35,7 @@ import io
 import argparse
 
 from cnfgen.info import info
+from cnfgen.formula.cnfio import guess_output_format
 
 from cnfgen.clitools.cmdline import paginate_or_redirect_stdout
 from cnfgen.clitools.cmdline import setup_SIGINT
@@ -215,7 +216,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     ofgroup.add_argument('--output-format',
                          '-of',
                          choices=['latex', 'dimacs'],
-                         default='dimacs',
+                         default=None,
                          help="""
                         Output format of the formulas. 'latex' is
                         convenient to insert formulas into papers, and
@@ -405,11 +406,16 @@ def cli(argv=sys.argv, mode='output'):
     with msg_prefix('c '):
         args, t_args = parse_command_line(argv, parser, t_parser)
 
+    #
+    #  Determine output format
+    output_format = guess_output_format(args.output, args.output_format)
+
+
     # Correctly infer the comment character, useful to shield
     # the output.
     comment_char = {'dimacs': 'c ', 'latex': '% '}
     try:
-        cprefix = comment_char[args.output_format]
+        cprefix = comment_char[output_format]
     except KeyError:
         raise InternalBug("Unknown output format")
 
@@ -454,16 +460,16 @@ def cli(argv=sys.argv, mode='output'):
             return cnf
 
         if mode == 'string':
-            if args.output_format == 'latex':
+            if output_format == 'latex':
                 return cnf.to_latex()
-            elif args.output_format == 'dimacs':
+            elif output_format == 'dimacs':
                 return cnf.to_dimacs()
             else:
                 raise InternalBug("Unknown output format")
 
         extra_text = build_latex_cmdline_description(argv, args, t_args)
         cnf.to_file(args.output,
-                    fileformat=args.output_format,
+                    fileformat=output_format,
                     export_header=args.verbose,
                     export_varnames=args.varnames,
                     extra_text=extra_text)
