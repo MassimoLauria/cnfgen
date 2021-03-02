@@ -221,40 +221,34 @@ def RelativizedPigeonholePrinciple(pigeons, resting_places, holes):
     def r(v):
         return 'r_{{{0}}}'.format(v)
 
-    U = range(1, 1 + pigeons)
-    V = range(1, 1 + resting_places)
-    W = range(1, 1 + holes)
-    for u, v in product(U, V):
-        rphp.add_variable(p(u, v))
-    for v, w in product(V, W):
-        rphp.add_variable(q(v, w))
-    for v in V:
-        rphp.add_variable(r(v))
+    U = pigeons
+    V = resting_places
+    W = holes
+    p = rphp.new_mapping(U, V, label='p_{{{0},{1}}}')
+    q = rphp.new_mapping(V, W, label='q_{{{0},{1}}}')
+    r = rphp.new_block(V, label='r_{{{0}}}')
 
     # NOTE: the order of ranges in the products are chosen such that related clauses appear after each other
 
     # (3.1a) p[u,1] v p[u,2] v ... v p[u,n] for all u \in [k]
     # Each pigeon goes into a resting place
-    for u in U:
-        rphp.add_clause([(True, p(u, v)) for v in V], strict=True)
+    for u in p.domain():
+        rphp.add_clause(p(u,None))
     # (3.1b) ~p[u,v] v ~p[u',v] for all u, u' \in [k], u != u', v \in [n]
     # no conflict on any resting place
-    for (v, (u, u_)) in product(V, combinations(U, 2)):
-        rphp.add_clause([(False, p(u, v)), (False, p(u_, v))], strict=True)
+    for v in p.range():
+        rphp.add_linear(p(None,v), '<=', 1)
     # (3.1c) ~p[u,v] v r[v] for all u \in [k], v \in [n]
     # resting place activation
-    for (v, u) in product(V, U):
-        rphp.add_clause([(False, p(u, v)), (True, r(v))], strict=True)
+    for (v, u) in product(p.range(), p.domain()):
+        rphp.add_clause([-p(u, v), r(v)])
     # (3.1d) ~r[v] v q[v,1] v ... v q[v,k-1] for all v \in [n]
     # pigeons leave the resting place
-    for v in V:
-        rphp.add_clause([(False, r(v))] + [(True, q(v, w)) for w in W],
-                        strict=True)
+    for v in q.domain():
+        rphp.add_clause([-r(v)] + list(q(v, None)))
     # (3.1e) ~r[v] v ~r[v'] v ~q[v,w] v ~q[v',w] for all v, v' \in [n], v != v', w \in [k-1]
     # no conflict on any hole, for two pigeons coming from two resting places
-    for (w, (v, v_)) in product(W, combinations(V, 2)):
-        rphp.add_clause([(False, r(v)), (False, r(v_)), (False, q(v, w)),
-                         (False, q(v_, w))],
-                        strict=True)
+    for (w, (v1, v2)) in product(q.range(), combinations(q.domain(), 2)):
+        rphp.add_clause([-r(v1), -r(v2), -q(v1, w), -q(v2, w)])
 
     return rphp
