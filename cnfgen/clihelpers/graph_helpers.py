@@ -16,9 +16,9 @@ from cnfgen.families.dominatingset import Tiling
 from cnfgen.families.graphisomorphism import GraphIsomorphism
 from cnfgen.families.graphisomorphism import GraphAutomorphism
 
+from cnfgen.families.subgraph import SubgraphFormula
 from cnfgen.families.subgraph import CliqueFormula
 from cnfgen.families.subgraph import BinaryCliqueFormula
-from cnfgen.families.subgraph import SubgraphFormula
 from cnfgen.families.subgraph import RamseyWitnessFormula
 
 from cnfgen.clitools import ObtainSimpleGraph, positive_int, make_graph_doc
@@ -165,11 +165,11 @@ class GIsoCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.usage = '{} [-h] G1 [-e G2]'.format(parser.prog)
+        parser.usage = '{} [-h] G [-e G2]'.format(parser.prog)
         parser.description = iso_description.format(parser.prog)
 
         parser.add_argument(
-            'G1',
+            'G',
             help='a simple undirected graph (see \'cnfgen --help-graph\')',
             action=ObtainSimpleGraph)
         parser.add_argument(
@@ -182,8 +182,8 @@ class GIsoCmdHelper(FormulaHelper):
     @staticmethod
     def build_cnf(args):
         G = args.G
-        if hasattr(args, 'equiv'):
-            G2 = args.equiv
+        if hasattr(args, 'G2'):
+            G2 = args.G2
             return GraphIsomorphism(G, G2)
         else:
             return GraphAutomorphism(G)
@@ -212,6 +212,7 @@ class KCliqueCmdHelper(FormulaHelper):
             action=ObtainSimpleGraph)
         parser.add_argument('--no-symmetry-breaking',
                             action='store_false',
+                            default=True,
                             dest='symmetrybreaking',
                             help="Do not break symmetries by enforcing the solution to be in increasing order")
 
@@ -346,4 +347,4 @@ class SubGraphCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        return SubgraphFormula(args.G, [args.H], symmetric=False)
+        return SubgraphFormula(args.G, args.H, induced=False, symbreak=False)

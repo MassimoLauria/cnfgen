@@ -3,144 +3,72 @@
 """Implementation of formulas that check for subgraphs
 """
 
-from cnfgen.formula.cnf import CNF
 
 from itertools import combinations
 from itertools import product
-from itertools import permutations
-from cnfgen.graphs import enumerate_vertices
-
-from math import log, ceil
-
-from networkx import complete_graph
-from networkx import empty_graph
-
-from textwrap import dedent
-from cnfgen.graphs import CompleteBipartiteGraph
+from cnfgen.formula.cnf import CNF
 
 
-def SubgraphFormula(graph, templates, symmetric=False):
-    """Test whether a graph contains one of the templates.
+def SubgraphFormula(G, H, induced=False, symbreak=False):
+    """Test whether a graph has a k-clique.
 
-    Given a graph :math:`G` and a sequence of template graphs
-    :math:`H_1`, :math:`H_2`, ..., :math:`H_t`, the CNF formula claims
-    that :math:`G` contains an isomorphic copy of at least one of the
-    template graphs.
-
-    E.g. when :math:`H_1` is the complete graph of :math:`k` vertices
-    and it is the only template, the formula claims that :math:`G`
-    contains a :math:`k`-clique.
+    Given two graphs :math:`H` and :math:`G`, the
+    CNF formula claims that :math:`H` is an (induced) subgraph of :math:`G`.
 
     Parameters
     ----------
-    graph : networkx.Graph
+    G : networkx.Graph
         a simple graph
-
-    templates : list-like object
-        a sequence of graphs.
-
-    symmetric:
-        all template graphs are symmetric wrt permutations of
-        vertices. This allows some optimization in the search space of
-        the assignments.
-
-    induce:
-        force the subgraph to be induced (i.e. no additional edges are allowed)
-
+    H : networkx.Graph
+        the candidate subgraph
+    induced: bool
+        test for induced containment
+    symbreak: bool
+        force mapping to be non decreasing
+        (this makes sense only if :math:`T` is symmetric)
 
     Returns
     -------
     a CNF object
 
     """
-    # One of the templates is chosen to be the subgraph
-    if len(templates) == 0:
-        return CNF(description="Empty formula")
-    selectors = len(templates)
-    if selectors <= 2:
-        selectors -= 1
-
-    # comment the formula accordingly
-    if selectors > 1:
-        description = "{} does not contains any of the {} possible subgraphs.".format(
-            graph.name, len(templates))
+    F = CNF()
+    if induced:
+        description = "{} is not an induced subgraph of {}".format(H.name, G.name)
     else:
-        description = "{} does not contain any copy of {}.".format(
-            graph.name, templates[0].name)
-    F = CNF(description=description)
+        description = "{} is not a subgraph of {}".format(H.name, G.name)
+    F.header['description'] = description
 
-    if selectors > 1:
-        for cls in F.equal_to_constraint(selectors, 1):
-            F.add_clause(cls)
+    N = G.order()
+    k = H.order()
+    s = F.new_mapping(k, N, label='s_{{{},{}}}')
+    F.force_complete_mapping(s)
+    F.force_functional_mapping(s)
+    F.force_injective_mapping(s)
 
-    # A subgraph is chosen
-    N = graph.order()
-    k = max([s.order() for s in templates])
+    # Local consistency
+    localmaps = product(combinations(list(range(1, k+1)), 2),
+                        combinations(list(range(1, N+1)), 2))
 
-    def var_name(i, j): return "S_{{{0},{1}}}".format(i, j)
+    for (i1, i2), (j1, j2) in localmaps:
 
-    B = CompleteBipartiteGraph(k, N)
-    VG = None
-    if symmetric:
-        mapping = F.unary_mapping(selectors+1, B,
-                                  functional=True,
-                                  injective=True,
-                                  nondecreasing=True)
-    else:
-        mapping = F.unary_mapping(selectors+1, B,
-                                  functional=True,
-                                  injective=True,
-                                  nondecreasing=False)
+        # check if this mapping is compatible
+        gedge = G.has_edge(j1, j2)
+        tedge = H.has_edge(i1, i2)
 
-    m = mapping.variables()
+        consistent = (gedge == tedge) or (gedge and not induced)
 
-    for cls in mapping.clauses():
-        F.add_clause(cls)
-
-    # The selectors choose a template subgraph.  A mapping must map
-    # edges to edges and non-edges to non-edges for the active
-    # template.
-
-    if len(templates) == 1:
-
-        activation_prefixes = [[]]
-
-    elif len(templates) == 2:
-
-        activation_prefixes = [[1], [-1]]
-
-    else:
-        activation_prefixes = [[v] for v in range(1, selectors+1)]
-
-    # maps must preserve the structure of the template graph
-    for i in range(len(templates)):
-
-        k = templates[i].order()
-
-        if symmetric:
-            # Using non-decreasing map to represent a subset
-            localmaps = product(combinations(list(range(1, k+1)), 2),
-                                combinations(list(range(1, N+1)), 2))
-        else:
-            localmaps = product(combinations(list(range(1, k+1)), 2),
-                                permutations(list(range(1, N+1)), 2))
-
-        for (i1, i2), (j1, j2) in localmaps:
-
-            # check if this mapping is compatible
-            tedge = templates[i].has_edge(i1, i2)
-            gedge = graph.has_edge(j1, j2)
-            if tedge == gedge:
-                continue
-
-            # if it is not, add the corresponding
-            F.add_clause(
-                activation_prefixes[i] + [-m(i1, j1), -m(i2, j2)], update_variables=False)
-
+        if not consistent:
+            print('Forbid',s.label(i1,j1),s.label(i2,j2))
+            print('Forbid',s.label(i1,j2),s.label(i2,j1))
+            F.add_clause([-s(i1, j1), -s(i2, j2)])
+            F.add_clause([-s(i1, j2), -s(i2, j1)])
+        elif symbreak:
+            F.add_clause([-s(i1, j2), -s(i2, j1)])
     return F
 
 
-def CliqueFormula(G, k, symmetric=True):
+def CliqueFormula(G, k, symbreak=True):
     """Test whether a graph has a k-clique.
 
     Given a graph :math:`G` and a non negative value :math:`k`, the
@@ -152,21 +80,41 @@ def CliqueFormula(G, k, symmetric=True):
         a simple graph
     k : a non negative integer
         clique size
-    symmetric: bool
-        symmetry breaking
+    symbreak: bool
+        force mapping to be non decreasing
 
     Returns
     -------
     a CNF object
 
     """
-    F = SubgraphFormula(G, [complete_graph(k)], symmetric=symmetric)
+    F = CNF()
     description = "{} does not contain any {}-clique.".format(G.name, k)
     F.header['description'] = description
+
+    N = G.order()
+    s = F.new_mapping(k, N, label='s_{{{},{}}}')
+    F.force_complete_mapping(s)
+    F.force_functional_mapping(s)
+    F.force_injective_mapping(s)
+
+    # Local consistency
+    localmaps = product(combinations(list(range(1, k+1)), 2),
+                        combinations(list(range(1, N+1)), 2))
+
+    for (i1, i2), (j1, j2) in localmaps:
+
+        # check if this mapping is compatible
+        edge = G.has_edge(j1, j2)
+        if not edge:
+            F.add_clause([-s(i1, j1), -s(i2, j2)])
+            F.add_clause([-s(i1, j2), -s(i2, j1)])
+        elif symbreak:
+            F.add_clause([-s(i1, j2), -s(i2, j1)])
     return F
 
 
-def BinaryCliqueFormula(G, k):
+def BinaryCliqueFormula(G, k, symbreak=True):
     """Test whether a graph has a k-clique (binary encoding)
 
     Given a graph :math:`G` and a non negative value :math:`k`, the
@@ -180,38 +128,40 @@ def BinaryCliqueFormula(G, k):
         a simple graph
     k : a non negative integer
         clique size
+    symbreak: bool
+        force mapping to be non decreasing
 
     Returns
     -------
     a CNF object
 
     """
-    description = "Binary {0}-clique formula".format(k)
-    F = CNF(description=description)
+    F = CNF()
+    description = "{} does not contain any {}-clique (Binary encoding).".format(G.name, k)
+    F.header['description'] = description
 
-    clauses_gen = F.binary_mapping(range(1, k + 1),
-                                   G.nodes(),
-                                   injective=True,
-                                   nondecreasing=True)
+    N = G.order()
+    m = F.new_binary_mapping(k, N, label='y_{{{},{}}}')
+    F.force_complete_mapping(m)
+    F.force_injective_mapping(m)
 
-    for v in clauses_gen.variables():
-        F.add_variable(v)
+    # Local consistency
+    localmaps = product(combinations(list(range(1, k+1)), 2),
+                        combinations(range(N), 2))
 
-    for c in clauses_gen.clauses():
-        F.add_clause(c, strict=True)
+    for (i1, i2), (j1, j2) in localmaps:
 
-    for (i1, i2), (v1, v2) in product(combinations(range(1, k + 1), 2),
-                                      combinations(G.nodes(), 2)):
-
-        if not G.has_edge(v1, v2):
-            F.add_clause(clauses_gen.forbid_image(i1, v1) +
-                         clauses_gen.forbid_image(i2, v2),
-                         strict=True)
-
+        # check if this mapping is compatible
+        edge = G.has_edge(j1, j2)
+        if not edge:
+            F.add_clause(m.forbid(i1, j1) + m.forbid(i2, j2))
+            F.add_clause(m.forbid(i1, j2) + m.forbid(i2, j1))
+        elif symbreak:
+            F.add_clause(m.forbid(i1, j2) + m.forbid(i2, j1))
     return F
 
 
-def RamseyWitnessFormula(G, k, s):
+def RamseyWitnessFormula(G, k, s, symbreak=True):
     """True if graph contains either k-clique or and s independent set
 
     Given a graph :math:`G` and a non negative values :math:`k` and
@@ -227,14 +177,43 @@ def RamseyWitnessFormula(G, k, s):
         clique size
     s : a non negative integer
         independet set size
+    symbreak: bool
+        force mapping to be non decreasing
 
     Returns
     -------
     a CNF object
-
     """
-    F = SubgraphFormula(G, [complete_graph(k), empty_graph(s)], symmetric=True)
+    F = CNF()
     description = "{} does not contain {}-cliques nor {}-independent sets.".format(
         G.name, k, s)
     F.header['description'] = description
+    maybeclique = F.new_variable('C')
+
+    N = G.order()
+    s = F.new_mapping(k, N, label='s_{{{},{}}}')
+    F.force_complete_mapping(s)
+    F.force_functional_mapping(s)
+    F.force_injective_mapping(s)
+
+    # Local consistency
+    localmaps = product(combinations(range(1,k+1), 2),
+                        combinations(range(1,N+1), 2))
+
+    for (i1, i2), (j1, j2) in localmaps:
+
+        # check if this mapping is compatible
+        edge = G.has_edge(j1, j2)
+        # increasing map
+        if not edge:
+            F.add_clause([-maybeclique, -s(i1, j1), -s(i2, j2)])
+        else:
+            F.add_clause([maybeclique, -s(i1, j1), -s(i2, j2)])
+        # decreasing map
+        if symbreak:
+            F.add_clause([-s(i1, j2), -s(i2, j1)])
+        elif not edge:
+            F.add_clause([-maybeclique, -s(i1, j2), -s(i2, j1)])
+        else:
+            F.add_clause([maybeclique, -s(i1, j2), -s(i2, j1)])
     return F

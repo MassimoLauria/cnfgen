@@ -15,7 +15,7 @@ Copyright (C) 2019-2021  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
-from itertools import product
+from itertools import product,combinations, combinations_with_replacement
 from bisect import bisect_right
 
 from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph, CompleteBipartiteGraph
@@ -422,6 +422,184 @@ class BlockOfVariables(BaseVariableGroup):
             index.append(residue // w + 1)
             residue = residue % w
         return index
+
+class CombinationVariables(BaseVariableGroup):
+    """Group of variables corrisponding to sets (or multisets) of indices
+
+    This objects represents groups of variables that are indexed by
+    some sets of integers from a ground set :math:`[n]`. For example we
+    can have variables :math:`p_{S}` for :math:`S in
+    \\binom{[n]}{k}[10]` for a fixed :math:`k`.
+
+    Each set is identified by an index, which is just the sequence of
+    it's elements, sorted.
+
+    Examples
+    --------
+    >>> F = VariablesManager()
+    >>> G = CombinationVariables(F,4,2,'[{}]')
+    >>> print(*G.label())
+    [1,2] [1,3] [1,4] [2,3] [2,4] [3,4]
+    >>> print(*G.indices())
+    (1, 2) (1, 3) (1, 4) (2, 3) (2, 4) (3, 4)
+    >>> G(2,3)
+    4
+    >>> V = VariablesManager()
+    >>> p = V.new_combinations(5,3,label='p({})')
+    >>> q = V.new_combinations(3,3,label='q({})')
+    >>> print(len(p))
+    10
+    >>> print(len(q))
+    1
+    >>> print(p.to_index(4))
+    (1, 3, 4)
+    >>> print(q.to_index(11))
+    (1, 2, 3)
+    >>> print(list(p.indices()))
+    [(1, 2, 3), (1, 2, 4), (1, 2, 5), (1, 3, 4), (1, 3, 5), (1, 4, 5), (2, 3, 4), (2, 3, 5), (2, 4, 5), (3, 4, 5)]
+    >>> print(p(2,3,4))
+    7
+    >>> print(list(p()))
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    >>> print(q(1,1))
+    11
+    >>> 11 in q
+    True
+    >>> 12 in q
+    False
+    >>> print(q.label(1,2,3))
+    q(1,2,3)
+    >>> print(*q.label())
+    q(1,2,3)
+    >>> print(p.label(1,2,5))
+    p(1,2,5)
+    """
+
+    def __init__(self, formula, n, k, labelfmt=None, replacement=False):
+        """Creates a variables group object
+
+        Parameters
+        ----------
+        formula: CNF
+            formula to which we add a variable group
+        ranges: list(integer)
+            ranges of the indices
+        labelfmt: str
+            format string for the variable labels
+        replacements: bool
+            include combinations with replacement
+        """
+        if labelfmt is None:
+            labelfmt = 'p_{{{}}}'
+        # Check if the format strings can get all parameters
+        try:
+            labelfmt.format(2)
+        except IndexError:
+            raise ValueError(
+                'label must be a valid format string one index')
+
+        if n<0 or k<0 or n<k:
+            raise ValueError(
+                'It must be that 0<= k <= n')
+
+        self.n = n
+        self.k = k
+        self.replacement = replacement
+        self.offset = formula.number_of_variables()
+        self.vid2seq=[]
+        self.seq2vid={}
+        if not self.replacement:
+            gen = combinations(range(1,n+1),k)
+        else:
+            gen = combinations_with_replacement(range(1,n+1),k)
+
+        vid = self.offset
+        for c in gen:
+            vid += 1
+            self.vid2seq.append(c)
+            self.seq2vid[c] = vid
+
+        BaseVariableGroup.__init__(self, formula, len(self.vid2seq), labelfmt)
+
+    def label(self,*pattern):
+        isProjection = len(pattern) == 0 or None in pattern
+        assert pattern in self.seq2vid
+
+        labels = (self.labelfmt.format(','.join(str(x) for x in t)) for t in self.indices(*pattern))
+
+        if isProjection:
+            return (self.labelfmt.format(*t) for t in self.indices(*pattern))
+        else:
+            return next(labels)
+
+    def indices(self,*pattern):
+        """Implementation of :py:classmethod:`BaseVariableGroup.indices`
+
+        Returns
+        -------
+        all the variable indices
+        """
+        if pattern in self.seq2vid:
+            return [pattern]
+        return iter(self.vid2seq)
+
+    def _unsafe_index_to_lit(self, index):
+        """Converts a variable index into a variable ID
+
+        Parameters
+        ----------
+        index: sequence of positive integers
+            the index of a variable
+
+        Returns
+        -------
+        int
+
+        Warning: only for internal use. It does not check of the
+        correctness of the arguments.
+        """
+        return self.seq2vid[index]
+
+    def to_index(self, lit):
+        """Convert a literal to the index sequence corresponding to the variable
+
+        A variable is identified by an integer id, but an associate
+        index in the variable group. This function convert the
+        variable id into such index. If a negative literal is given,
+        the function returns the index of the corresponding variable.
+
+        Parameters
+        ----------
+        lit : positive or negative literal
+            -ID or +ID for the ID of the variable
+
+        Returns
+        -------
+            sequence(positive integers)
+
+        Raises
+        ------
+        ValueError
+            when `lit` is not within the appropriate intervals
+
+        Examples
+        --------
+        >>> V = VariablesManager()
+        >>> VG = BlockOfVariables(V,[3,5,4,3])
+        >>> VG.to_index(1)
+        [1, 1, 1, 1]
+        >>> VG.to_index(-5)
+        [1, 1, 2, 2]
+        >>> VG.to_index(179)
+        [3, 5, 4, 2]
+        >>> VG.to_index(180)
+        [3, 5, 4, 3]
+        """
+        var = abs(lit)
+        if var not in self:
+            raise ValueError('Index out of range')
+
+        return self.vid2seq[var-self.offset-1]
 
 
 class BipartiteEdgesVariables(BaseVariableGroup):
@@ -1101,6 +1279,20 @@ class VariablesManager(CNFLinear):
         183
         """
         newgroup = BlockOfVariables(self, ranges, label)
+        self._add_variable_group(newgroup)
+        return newgroup
+
+    def new_combinations(self, n, k, label='p_{{{}}}'):
+        """Create a new group of variables indexed by k-subsets of [n]"""
+
+        newgroup = CombinationVariables(self, n, k, labelfmt=label)
+        self._add_variable_group(newgroup)
+        return newgroup
+
+    def new_combinations_with_replacement(self, n, k, label='p_{{{}}}'):
+        """Create a new group of variables indexed by k-subsets of [n]"""
+
+        newgroup = CombinationVariables(self, n, k, labelfmt=label, replacement=True)
         self._add_variable_group(newgroup)
         return newgroup
 

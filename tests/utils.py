@@ -66,8 +66,10 @@ def assertSAT(formula):
 
 def assertUNSAT(formula):
     if some_solver_installed():
-        result, _ = formula.is_satisfiable()
+        result, ass = formula.is_satisfiable()
         if result:
+            print(formula.to_latex())
+            print(result,ass)
             raise AssertionError(
                 "Formula {} is unexpectedly SAT".format(formula))
     else:
