@@ -62,9 +62,7 @@ def CliqueColoring(n, k, c):
     F = CNF(description=description)
 
     # Variables
-    G = complete_graph(n)
-    G = normalize_networkx_labels(G)
-    e = F.new_graph_edges(G,label='e_{{{0},{1}}}')
+    e = F.new_combinations(n,2,label='e_{{{}}}')
     q = F.new_mapping(k,n,label='q_{{{0},{1}}}')
     r = F.new_mapping(n,c,label='r_{{{0},{1}}}')
 

@@ -461,7 +461,7 @@ class CombinationVariables(BaseVariableGroup):
     7
     >>> print(list(p()))
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    >>> print(q(1,1))
+    >>> print(q(1,2,3))
     11
     >>> 11 in q
     True
@@ -490,7 +490,7 @@ class CombinationVariables(BaseVariableGroup):
             include combinations with replacement
         """
         if labelfmt is None:
-            labelfmt = 'p_{{{}}}'
+            labelfmt = 'p_{}'
         # Check if the format strings can get all parameters
         try:
             labelfmt.format(2)
@@ -522,15 +522,17 @@ class CombinationVariables(BaseVariableGroup):
         BaseVariableGroup.__init__(self, formula, len(self.vid2seq), labelfmt)
 
     def label(self,*pattern):
-        isProjection = len(pattern) == 0 or None in pattern
-        assert pattern in self.seq2vid
 
-        labels = (self.labelfmt.format(','.join(str(x) for x in t)) for t in self.indices(*pattern))
+        def text(idx):
+            return ",".join(str(x) for x in idx)
 
-        if isProjection:
-            return (self.labelfmt.format(*t) for t in self.indices(*pattern))
+        if len(pattern)==0:
+            return iter(self.labelfmt.format(text(x)) for x in self.vid2seq)
+        elif pattern in self.seq2vid:
+            return self.labelfmt.format(text(pattern))
         else:
-            return next(labels)
+            raise ValueError("Pattern does not match the indices in this variable group")
+
 
     def indices(self,*pattern):
         """Implementation of :py:classmethod:`BaseVariableGroup.indices`
@@ -539,9 +541,20 @@ class CombinationVariables(BaseVariableGroup):
         -------
         all the variable indices
         """
-        if pattern in self.seq2vid:
+        if len(pattern)==0:
+            return iter(self.vid2seq)
+        elif pattern in self.seq2vid:
             return [pattern]
-        return iter(self.vid2seq)
+        else:
+            raise ValueError("Pattern does not match the indices in this variable group")
+
+    def __call__(self,*pattern):
+        if len(pattern) == 0:
+            return (self._unsafe_index_to_lit(t) for t in self.indices(*pattern))
+        elif pattern in self.seq2vid:
+            return self._unsafe_index_to_lit(pattern)
+        else:
+            raise ValueError("Pattern does not match the indices in this variable group")
 
     def _unsafe_index_to_lit(self, index):
         """Converts a variable index into a variable ID
@@ -965,7 +978,7 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
 
     Given a simple graph :math:`G=(V,E)` represented by an object of
     the class :py:class:`networkx.Graph`, we have variables
-    :math:`e_{u,v}` for :math:`\{u,v\} in E`.
+    :math:`e_{u,v}` for :math:`\\{u,v\\} in E`.
 
     Warning: if the object representing :math:`G` gets modified, the
     behavior of this object may be inconsistent.
@@ -1345,6 +1358,59 @@ class VariablesManager(CNFLinear):
         self._add_variable_group(newgroup)
         return newgroup
 
+    def new_graph_edges(self, G, label='e({},{})'):
+        """
+        Create a new group variables from the edges of a bipartite graph
+
+        Parameters
+        ----------
+        G : networkx.Graph
+            a directed graph
+        label : str, optional
+            string representation of the variables
+
+        Returns
+        -------
+        GraphEdgesVariables, the new variable group
+
+        Examples
+        --------
+        >>> V=VariablesManager()
+        >>> V.new_variable(label='X')
+        1
+        >>> V.number_of_variables()
+        1
+        >>> V.new_variable(label='Y')
+        2
+        >>> G = nx.Graph()
+        >>> G.add_nodes_from(range(1,7))
+        >>> G.add_edge(2,1)
+        >>> G.add_edge(1,3)
+        >>> G.add_edge(2,6)
+        >>> G.add_edge(2,3)
+        >>> G.add_edge(4,3)
+        >>> G.add_edge(4,2)
+        >>> a = V.new_graph_edges(G)
+        >>> V.new_variable(label='Y')
+        9
+        >>> print(*a())
+        3 4 5 6 7 8
+        >>> print(*a.indices())
+        (1, 2) (1, 3) (2, 3) (2, 4) (2, 6) (3, 4)
+        >>> a.to_index(4)
+        (1, 3)
+        >>> a(2,6)
+        7
+        >>> a.to_index(8)
+        (3, 4)
+        >>> a(2,1)
+        3
+        """
+        newgroup = GraphEdgesVariables(self,
+                                         G,
+                                         labelfmt=label)
+        self._add_variable_group(newgroup)
+        return newgroup
 
     def new_digraph_edges(self, G, label='e({},{})', sortby='pred'):
         """
