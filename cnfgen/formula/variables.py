@@ -549,10 +549,12 @@ class CombinationVariables(BaseVariableGroup):
             raise ValueError("Pattern does not match the indices in this variable group")
 
     def __call__(self,*pattern):
+        try:
+            return self.seq2vid[pattern]
+        except KeyError:
+            pass
         if len(pattern) == 0:
             return (self._unsafe_index_to_lit(t) for t in self.indices(*pattern))
-        elif pattern in self.seq2vid:
-            return self._unsafe_index_to_lit(pattern)
         else:
             raise ValueError("Pattern does not match the indices in this variable group")
 
