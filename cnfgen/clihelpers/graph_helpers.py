@@ -54,7 +54,7 @@ class KColorCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        return GraphColoringFormula(args.G, list(range(1, args.k + 1)))
+        return GraphColoringFormula(args.G, args.k)
 
 
 class ECCmdHelper(FormulaHelper):

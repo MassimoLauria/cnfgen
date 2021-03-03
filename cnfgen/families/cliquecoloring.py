@@ -45,17 +45,8 @@ def CliqueColoring(n, k, c):
            Journal of Symbolic Logic (1997)
 
     """
-    def E(u, v):
-        "Name of an edge variable"
-        return 'e_{{{0},{1}}}'.format(min(u, v), max(u, v))
-
-    def Q(i, v):
-        "Name of an edge variable"
-        return 'q_{{{0},{1}}}'.format(i, v)
-
-    def R(v, ell):
-        "Name of an coloring variable"
-        return 'r_{{{0},{1}}}'.format(v, ell)
+    if n<0 or k<0 or c<0:
+        raise ValueError("Parameters n, k, c must be non negative")
 
     description = "There is a graph of {0} vertices with a {1}-clique and a {2}-coloring".format(
         n, k, c)

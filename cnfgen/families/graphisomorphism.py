@@ -3,18 +3,13 @@
 """Graph isomorphimsm/automorphism formulas
 """
 
+import networkx as nx
 from cnfgen.formula.cnf import CNF
 
-from cnfgen.graphs import enumerate_vertices
+from cnfgen.graphs import Graph
 from itertools import combinations, product
 
-
-def _graph_isomorphism_var(u, v):
-    """Standard variable name"""
-    return "x_{{{0},{1}}}".format(u, v)
-
-
-def GraphIsomorphism(G1, G2):
+def GraphIsomorphism(G1, G2, nontrivial=False):
     """Graph Isomorphism formula
 
     The formula is the CNF encoding of the statement that two simple
@@ -26,6 +21,8 @@ def GraphIsomorphism(G1, G2):
         an undirected graph object
     G2 : networkx.Graph
         an undirected graph object
+    nontrivial: bool
+        forbid identical mapping
 
     Returns
     -------
@@ -38,39 +35,27 @@ def GraphIsomorphism(G1, G2):
 
     F = CNF(description=description)
 
-    U = enumerate_vertices(G1)
-    V = enumerate_vertices(G2)
-    var = _graph_isomorphism_var
+    if isinstance(G1, nx.Graph) and not isinstance(G1, Graph):
+        G1 = Graph.from_networkx(G1)
+    if isinstance(G2, nx.Graph) and not isinstance(G2, Graph):
+        G2 = Graph.from_networkx(G2)
 
-    for (u, v) in product(U, V):
-        F.add_variable(var(u, v))
+    f = F.new_mapping(G1.order(), G2.order(),
+                      label='x_{{{},{}}}')
 
-    # Defined on both side
-    for u in U:
-        F.add_clause([(True, var(u, v)) for v in V], strict=True)
-
-    for v in V:
-        F.add_clause([(True, var(u, v)) for u in U], strict=True)
-
-    # Injective on both sides
-    for u in U:
-        for v1, v2 in combinations(V, 2):
-            F.add_clause([(False, var(u, v1)), (False, var(u, v2))],
-                         strict=True)
-    for v in V:
-        for u1, u2 in combinations(U, 2):
-            F.add_clause([(False, var(u1, v)), (False, var(u2, v))],
-                         strict=True)
+    F.force_complete_mapping(f)
+    F.force_surjective_mapping(f)
+    F.force_functional_mapping(f)
+    F.force_injective_mapping(f)
 
     # Edge consistency
-    for u1, u2 in combinations(U, 2):
-        for v1, v2 in combinations(V, 2):
+    for u1, u2 in combinations(f.domain(), 2):
+        for v1, v2 in combinations(f.range(), 2):
             if G1.has_edge(u1, u2) != G2.has_edge(v1, v2):
-                F.add_clause([(False, var(u1, v1)), (False, var(u2, v2))],
-                             strict=True)
-                F.add_clause([(False, var(u1, v2)), (False, var(u2, v1))],
-                             strict=True)
+                F.add_clause([-f(u1, v1), -f(u2,v2)])
+                F.add_clause([-f(u1, v2), -f(u2,v1)])
 
+    F._mapping = f
     return F
 
 
@@ -94,9 +79,7 @@ def GraphAutomorphism(G):
     F = GraphIsomorphism(G, G)
     F.header['description'] = description
 
-    var = _graph_isomorphism_var
-
-    F.add_clause([(False, var(u, u)) for u in enumerate_vertices(G)],
-                 strict=True)
+    f = F._mapping
+    F.add_clause([-f(u, u) for u in f.domain()])
 
     return F

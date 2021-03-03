@@ -10,22 +10,20 @@ both a library of CNF generators and a command line utility.
 Create the CNFs:
 
 >>> from cnfgen.formula.cnf import CNF
->>> c=CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], \
-          [(False,"x2"),(True,"x4")] ])
->>> print( c.to_dimacs(export_header=False) )
+>>> c=CNF([ [1, 2, -3], [-2, 4] ])
+>>> print( c.to_dimacs() )
 p cnf 4 2
 1 2 -3 0
 -2 4 0
 
 You can add clauses later in the process:
 
->>> c.add_clause( [(False,"x3"),(True,"x4"),(False,"x5")] )
->>> print( c.to_dimacs(export_header=False))
+>>> c.add_clause( [-3, 4, -5)] )
+>>> print( c.to_dimacs())
 p cnf 5 3
 1 2 -3 0
 -2 4 0
 -3 4 -5 0
-
 """
 
 import os

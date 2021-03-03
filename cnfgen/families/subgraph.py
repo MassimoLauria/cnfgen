@@ -3,11 +3,12 @@
 """Implementation of formulas that check for subgraphs
 """
 
+import networkx as nx
 
 from itertools import combinations
 from itertools import product
 from cnfgen.formula.cnf import CNF
-
+from cnfgen.graphs import Graph
 
 def SubgraphFormula(G, H, induced=False, symbreak=False):
     """Test whether a graph has a k-clique.
@@ -39,6 +40,12 @@ def SubgraphFormula(G, H, induced=False, symbreak=False):
         description = "{} is not a subgraph of {}".format(H.name, G.name)
     F.header['description'] = description
 
+    if isinstance(G, nx.Graph) and not isinstance(G, Graph):
+        G = Graph.from_networkx(G)
+
+    if isinstance(H, nx.Graph) and not isinstance(H, Graph):
+        H = Graph.from_networkx(H)
+
     N = G.order()
     k = H.order()
     s = F.new_mapping(k, N, label='s_{{{},{}}}')
@@ -59,8 +66,6 @@ def SubgraphFormula(G, H, induced=False, symbreak=False):
         consistent = (gedge == tedge) or (gedge and not induced)
 
         if not consistent:
-            print('Forbid',s.label(i1,j1),s.label(i2,j2))
-            print('Forbid',s.label(i1,j2),s.label(i2,j1))
             F.add_clause([-s(i1, j1), -s(i2, j2)])
             F.add_clause([-s(i1, j2), -s(i2, j1)])
         elif symbreak:
@@ -91,6 +96,9 @@ def CliqueFormula(G, k, symbreak=True):
     F = CNF()
     description = "{} does not contain any {}-clique.".format(G.name, k)
     F.header['description'] = description
+
+    if isinstance(G, nx.Graph) and not isinstance(G, Graph):
+        G = Graph.from_networkx(G)
 
     N = G.order()
     s = F.new_mapping(k, N, label='s_{{{},{}}}')
@@ -140,6 +148,8 @@ def BinaryCliqueFormula(G, k, symbreak=True):
     description = "{} does not contain any {}-clique (Binary encoding).".format(G.name, k)
     F.header['description'] = description
 
+    if isinstance(G, nx.Graph) and not isinstance(G, Graph):
+        G = Graph.from_networkx(G)
     N = G.order()
     m = F.new_binary_mapping(k, N, label='y_{{{},{}}}')
     F.force_complete_mapping(m)
@@ -190,6 +200,8 @@ def RamseyWitnessFormula(G, k, s, symbreak=True):
     F.header['description'] = description
     maybeclique = F.new_variable('C')
 
+    if isinstance(G, nx.Graph) and not isinstance(G, Graph):
+        G = Graph.from_networkx(G)
     N = G.order()
     s = F.new_mapping(k, N, label='s_{{{},{}}}')
     F.force_complete_mapping(s)

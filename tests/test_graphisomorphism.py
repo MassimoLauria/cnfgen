@@ -6,7 +6,7 @@ import networkx as nx
 from cnfgen import CNF
 from cnfgen import GraphAutomorphism, GraphIsomorphism
 
-from tests.utils import assertSAT, assertUNSAT, assertCnfEqual
+from tests.utils import assertSAT, assertUNSAT, assertCnfEqual,assertCnfEqualsIgnoreVariables
 
 
 def test_empty_vs_non_empty():
@@ -38,13 +38,10 @@ def test_empty_graph():
 def test_single_vertex_graph():
     """Singleton graph has no nontrivial automorphism."""
     G1 = nx.Graph()
-    G1.add_node(0)
+    G1.add_node(1)
     cnf1 = GraphAutomorphism(G1)
-    v = list(cnf1.variables())[0]
-    cnf2 = CNF()
-    cnf2.add_clause([(True, v)])
-    cnf2.add_clause([(False, v)])
-    assertCnfEqual(cnf1, cnf2)
+    cnf2 = CNF([[1],[-1]])
+    assertCnfEqualsIgnoreVariables(cnf1, cnf2)
 
 
 def test_example_graph_noauto():

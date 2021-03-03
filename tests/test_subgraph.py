@@ -148,6 +148,8 @@ def test_parameters(base, template):
     ]
     G = nx.complete_graph(base)
     H = nx.empty_graph(template)
+    G = normalize_networkx_labels(G)
+    H = normalize_networkx_labels(H)
     F = SubgraphFormula(G, H)
     lib = F.to_dimacs()
     cli = cnfgen(parameters, mode='string')

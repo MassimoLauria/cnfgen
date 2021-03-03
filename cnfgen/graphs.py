@@ -15,7 +15,7 @@ __all__ = [
     "enumerate_vertices", "enumerate_edges", "neighbors",
     "bipartite_random_left_regular", "bipartite_random_regular",
     "bipartite_random_m_edges", "bipartite_random", "dag_complete_binary_tree",
-    "dag_pyramid"
+    "dag_pyramid",'BipartiteGraph', 'Graph'
 ]
 
 #################################################################
@@ -115,6 +115,63 @@ have that u < v."""
         """Convert the graph TO a networkx object."""
         raise NotImplementedError
 
+class Graph(networkx.Graph, BaseGraph):
+
+    def is_dag(self):
+        return False
+    def is_directed(self):
+        return False
+
+    def __init__(self,n):
+        if n<0:
+            raise ValueError("n must be non negative")
+        networkx.Graph.__init__(self)
+        self.n = n
+        if n>0:
+            self.add_nodes_from(range(1,n+1))
+
+    def add_edge(self,u,v):
+        if not (1 <= u <= self.n and 1 <= v <= self.n and u!=v):
+            raise ValueError("u,v must be distinct, between 1 and the number of nodes")
+        networkx.Graph.add_edge(self,u,v)
+
+    def has_edge(self,u,v):
+        return networkx.Graph.has_edge(self,u,v)
+
+    def to_networkx(self):
+        return self
+
+    @classmethod
+    def from_networkx(cls, G):
+        G = normalize_networkx_labels(G)
+        C = cls(G.order())
+        C.add_edges_from(G.edges())
+        try:
+            C.name= G.name
+        except AttributeError:
+            pass
+        return G
+
+    @classmethod
+    def null_graph(cls):
+        G = cls(0)
+        G.name = 'null graph'
+        return G
+
+    @classmethod
+    def empty_graph(cls,n):
+        G = cls(n)
+        G.name = 'empty graph of order '+str(n)
+        return G
+
+    @classmethod
+    def complete_graph(cls,n):
+        G = cls(n)
+        for u in range(1,n):
+            for v in range(u+1,n+1):
+                G.add_edge(u,v)
+        G.name = 'complete graph of order '+str(n)
+        return G
 
 class BaseBipartiteGraph(BaseGraph):
     """Base class for bipartite graphs"""

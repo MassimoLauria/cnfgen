@@ -18,7 +18,7 @@ https://github.com/MassimoLauria/cnfgen.git
 from itertools import product,combinations, combinations_with_replacement
 from bisect import bisect_right
 
-from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph, CompleteBipartiteGraph
+from cnfgen.graphs import Graph, BaseBipartiteGraph, BipartiteGraph, CompleteBipartiteGraph
 import networkx as nx
 
 from cnfgen.formula.basecnf import BaseCNF
@@ -498,7 +498,7 @@ class CombinationVariables(BaseVariableGroup):
             raise ValueError(
                 'label must be a valid format string one index')
 
-        if n<0 or k<0 or n<k:
+        if n<0 or k<0:
             raise ValueError(
                 'It must be that 0<= k <= n')
 
@@ -987,17 +987,15 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
 
     Examples
     --------
-    >>> G = nx.Graph()
-    >>> G.add_nodes_from(range(1,5))
+    >>> G = Graph(4)
     >>> G.add_edge(2,1)
     >>> G.add_edge(3,2)
     >>> G.add_edge(1,3)
-    >>> G.add_edge(2,2)
     >>> G.add_edge(4,2)
     >>> F = VariablesManager()
     >>> V = GraphEdgesVariables(F, G, labelfmt='E[{},{}]')
     >>> print(*[V.label(u,v) for u,v in V.indices()])
-    E[1,2] E[1,3] E[2,2] E[2,3] E[2,4]
+    E[1,2] E[1,3] E[2,3] E[2,4]
     >>> print(V(2,1))
     1
     >>> print(V(1,3))
@@ -1007,17 +1005,17 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
     >>> 10 in V
     False
     >>> print(len(V))
-    5
+    4
     >>> print(V.label(3,1))
     E[1,3]
     >>> print(*V.label(2,None))
-    E[1,2] E[2,2] E[2,3] E[2,4]
+    E[1,2] E[2,3] E[2,4]
     >>> print(*V.label(None,2))
-    E[1,2] E[2,2] E[2,3] E[2,4]
+    E[1,2] E[2,3] E[2,4]
     >>> print(*V.label())
-    E[1,2] E[1,3] E[2,2] E[2,3] E[2,4]
+    E[1,2] E[1,3] E[2,3] E[2,4]
     >>> print(*V.indices(None,2))
-    (1, 2) (2, 2) (2, 3) (2, 4)
+    (1, 2) (2, 3) (2, 4)
     """
 
     def __init__(self, formula, G, labelfmt='e_{{{}{}}}'):
@@ -1027,19 +1025,18 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
         ----------
         formula: CNF
             formula to which we add a variable group
-        G: BipartiteGraph
-            bipartite graph
+        G: cnfgen.graphs.Graph
+            graph
         labelfmt: str
             format string for the variable labels
         """
-        if not isinstance(G, nx.Graph):
+        if not isinstance(G, Graph):
             raise TypeError(
-                "Invalid bipartite graph G: a networkx.Graph object was expected"
+                "Invalid graph G: a cnfgen.graphs.Graph object was expected"
             )
 
         V = G.number_of_nodes()
         B = BipartiteGraph(V, V)
-
         for u, v in G.edges():
             u, v = min(u, v), max(u, v)
             if not B.has_edge(u, v):
@@ -1070,51 +1067,56 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
 
         Examples
         --------
-        >>> G = BipartiteGraph(2,3)
+        >>> G = Graph(3)
         >>> G.add_edge(2,1)
         >>> G.add_edge(1,3)
-        >>> G.add_edge(2,2)
         >>> F = VariablesManager()
-        >>> V = BipartiteEdgesVariables(F, G, labelfmt='X[{},{}]')
+        >>> V = GraphEdgesVariables(F, G, labelfmt='X[{},{}]')
         >>> print(*V.indices(None,1))
-        (2, 1)
+        (1, 2) (1, 3)
         >>> print(*V.indices(None,2))
-        (2, 2)
+        (1, 2)
         >>> print(*V.indices(None,3))
         (1, 3)
         >>> print(*V.indices(1,None))
-        (1, 3)
+        (1, 2) (1, 3)
         >>> print(*V.indices(2,None))
-        (2, 1) (2, 2)
+        (1, 2)
         >>> print(*V.indices(None,None))
-        (1, 3) (2, 1) (2, 2)
+        (1, 2) (1, 3)
         >>> print(*V.indices(2,1))
-        (2, 1)
+        (1, 2)
         """
         if len(pattern) not in [0, 2]:
             raise ValueError("Requires either none or two arguments.")
 
         if len(pattern) == 0:
+            u = None
+            v = None
+        else:
+            u = pattern[0]
+            v = pattern[1]
+
+        # Zero vertices specified
+        if u is None and v is None:
             return self.BG.indices()
 
-        u = pattern[0]
-        v = pattern[1]
+        # Two vertices specified
         if u is not None and v is not None:
             iu, iv = min(u, v), max(u, v)
             return self.BG.indices(iu, iv)
 
-        # Only one vertex is set. Fix w to it
+        # One vertex specified
         if u is not None:
             w = u
         else:
             w = v
 
-        # Enumerates all neighbors of w
-        def _gen():
-            yield from ((u, w) for u, w in self.BG.indices(None, w))
-            yield from ((w, u) for w, u in self.BG.indices(w, None) if u != w)
+        def _gen(vertex):
+            yield from ((u, v) for u, v in self.BG.indices(None, vertex))
+            yield from ((v, u) for v, u in self.BG.indices(vertex, None) if u != w)
 
-        return _gen()
+        return _gen(w)
 
     def to_index(self, lit):
         """Convert a literal to the corresponding edge
@@ -1135,12 +1137,11 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
 
         Examples
         --------
-        >>> G = nx.Graph()
+        >>> G = Graph(4)
         >>> G.add_nodes_from(range(1,5))
         >>> G.add_edge(2,1)
         >>> G.add_edge(3,2)
         >>> G.add_edge(1,3)
-        >>> G.add_edge(2,2)
         >>> G.add_edge(4,2)
         >>> F = VariablesManager()
         >>> F.update_variable_number(100)
@@ -1149,7 +1150,7 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
         (1, 3)
         >>> V.to_index(101)
         (1, 2)
-        >>> V.to_index(105)
+        >>> V.to_index(104)
         (2, 4)
         """
         return self.BG.to_index(lit)
@@ -1317,7 +1318,7 @@ class VariablesManager(CNFLinear):
 
         Parameters
         ----------
-        G : BaseBipartiteGraph
+        G : cnfgen.graphs.BaseBipartiteGraph
             a bipartite graph
 
         label : str, optional
@@ -1366,7 +1367,7 @@ class VariablesManager(CNFLinear):
 
         Parameters
         ----------
-        G : networkx.Graph
+        G : cnfgen.graphs.Graph
             a directed graph
         label : str, optional
             string representation of the variables
@@ -1384,8 +1385,7 @@ class VariablesManager(CNFLinear):
         1
         >>> V.new_variable(label='Y')
         2
-        >>> G = nx.Graph()
-        >>> G.add_nodes_from(range(1,7))
+        >>> G = Graph(6)
         >>> G.add_edge(2,1)
         >>> G.add_edge(1,3)
         >>> G.add_edge(2,6)
@@ -1408,6 +1408,8 @@ class VariablesManager(CNFLinear):
         >>> a(2,1)
         3
         """
+        if isinstance(G,nx.Graph) and not isinstance(G, Graph):
+            G = Graph.from_networkx(G)
         newgroup = GraphEdgesVariables(self,
                                          G,
                                          labelfmt=label)
