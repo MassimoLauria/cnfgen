@@ -58,13 +58,13 @@ def test_multi_edge():
 def test_star():
     graph = nx.star_graph(10)
     F = TseitinFormula(graph)
-    assert len(list(F.variables())) == 10
-    assert len(list(F.clauses())) == 2**9 + 10
+    assert F.number_of_variables() == 10
+    assert F.number_of_clauses() == 2**9 + 10
     assert len([C for C in F.clauses() if len(C) == 10]) == 2**9
     assert len([C for C in F.clauses() if len(C) == 1]) == 10
     for C in F.clauses():
         if len(C) == 1:
-            assert not C[0][0]
+            assert C[0]<0
 
 
 def test_charge_even():
@@ -72,7 +72,7 @@ def test_charge_even():
     F = TseitinFormula(graph, [0] * 11)
     for C in F.clauses():
         if len(C) == 1:
-            assert not C[0][0]
+            assert C[0]<0
 
 
 def test_charge_odd():
@@ -80,7 +80,7 @@ def test_charge_odd():
     F = TseitinFormula(graph, [1] * 11)
     for C in F.clauses():
         if len(C) == 1:
-            assert C[0][0]
+            assert C[0]>0
 
 
 def test_charge_first():
@@ -95,7 +95,7 @@ def test_parameters():
         parameters = ["cnfgen", "-q", "tseitin", "first", "complete", sz]
         graph = nx.complete_graph(sz)
         F = TseitinFormula(graph)
-        lib = F.dimacs(export_header=False)
+        lib = F.to_dimacs()
         cli = cnfgen(parameters, mode='string')
         assert lib == cli
 

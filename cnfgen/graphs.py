@@ -141,6 +141,9 @@ class Graph(networkx.Graph, BaseGraph):
     def to_networkx(self):
         return self
 
+    def neighbors(self,v):
+        yield from networkx.Graph.neighbors(self,v)
+
     @classmethod
     def from_networkx(cls, G):
         G = normalize_networkx_labels(G)
@@ -150,7 +153,7 @@ class Graph(networkx.Graph, BaseGraph):
             C.name= G.name
         except AttributeError:
             pass
-        return G
+        return C
 
     @classmethod
     def null_graph(cls):

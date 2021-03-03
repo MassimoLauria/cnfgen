@@ -63,7 +63,7 @@ class CNFLinear(BaseCNF):
         desired_sign = 1 if constant == 1 else -1
         for signs in product([1, -1], repeat=len(lits)):
             # Save only the clauses with the right polarity
-            parity = reduce(mul, signs)
+            parity = reduce(mul, signs, 1)
             if parity == desired_sign:
                 self.add_clause([lit*sign for lit, sign in zip(lits, signs)])
 
