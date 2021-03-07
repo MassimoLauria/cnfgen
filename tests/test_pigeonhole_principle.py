@@ -5,6 +5,7 @@ from cnfgen import CNF
 from cnfgen import PigeonholePrinciple
 from cnfgen import GraphPigeonholePrinciple
 from cnfgen import BinaryPigeonholePrinciple
+from cnfgen import RelativizedPigeonholePrinciple
 from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph
 
 import networkx as nx
@@ -166,7 +167,7 @@ without the comments.
             if onto:
                 parameters.append("--onto")
             F = PigeonholePrinciple(5, 4, functional, onto)
-            lib = F.dimacs(export_header=False)
+            lib = F.to_dimacs()
             cli = cnfgen(parameters, mode='string')
             assert lib == cli
 
@@ -197,7 +198,7 @@ def test_php_lib_params():
 # Binary PHP
 def test_bphp_lib_vs_cli():
     F = BinaryPigeonholePrinciple(5, 8)
-    lib = F.dimacs(export_header=False)
+    lib = F.to_dimacs()
     cli = cnfgen(["cnfgen", "-q", "bphp", '5', '8'], mode='string')
     assert lib == cli
 
@@ -205,8 +206,8 @@ def test_bphp_lib_vs_cli():
 def test_bphp_example():
 
     F = BinaryPigeonholePrinciple(4, 2)
-    assert len(list(F.variables())) == 4
-    assert len(list(F.clauses())) == 12
+    assert F.number_of_variables() == 4
+    assert F.number_of_clauses() == 12
     for c in F.clauses():
         assert len(c) == 2
 
@@ -234,3 +235,34 @@ def test_gphp_lib_vs_cli():
 def test_not_bipartite():
     with pytest.raises(CLIError):
         cnfgen(["cnfgen", "php", "complete", "3"])
+
+# Relativized PHP
+def test_rphp_lib_vs_cli():
+    F = RelativizedPigeonholePrinciple(5, 8, 3)
+    lib = F.to_dimacs()
+    cli = cnfgen(["cnfgen", "-q", "rphp", '5', '8', '3'], mode='string')
+    assert lib == cli
+
+def test_rphp_vars():
+    F = RelativizedPigeonholePrinciple(3, 4, 2)
+    assert F.number_of_variables() == 3*4 + 4 + 4*2
+
+def test_rphp_clauses():
+    F = RelativizedPigeonholePrinciple(3, 4, 2)
+    assert F.number_of_clauses() == 3 + 4*6 + 4 + 4*3//2 * 2
+
+def test_rphp_sat():
+    F = RelativizedPigeonholePrinciple(3, 4, 3)
+    assert F.is_satisfiable()[0]
+
+def test_rphp_unsat1():
+    F = RelativizedPigeonholePrinciple(4, 3, 5)
+    assert not F.is_satisfiable()[0]
+
+def test_rphp_unsat2():
+    F = RelativizedPigeonholePrinciple(3, 4, 2)
+    assert not F.is_satisfiable()[0]
+
+def test_rphp_args():
+    with pytest.raises(CLIError):
+        cnfgen(["cnfgen", "rphp", 3])

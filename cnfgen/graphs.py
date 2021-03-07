@@ -84,7 +84,7 @@ have that u < v."""
 
     def is_bipartite(self):
         "Test whether the graph is a bipartite object"
-        return isinstance(self, BaseBipartiteGraph)
+        return False
 
     def order(self):
         raise NotImplementedError

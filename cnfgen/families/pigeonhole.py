@@ -4,7 +4,7 @@
 """
 
 from cnfgen.formula.cnf import CNF
-from cnfgen.graphs import has_bipartition, BipartiteGraph,CompleteBipartiteGraph
+from cnfgen.graphs import BaseBipartiteGraph,BipartiteGraph, CompleteBipartiteGraph
 from itertools import combinations, product
 
 
@@ -53,6 +53,7 @@ def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
     -6 -9 0
     -6 -12 0
     -9 -12 0
+    <BLANKLINE>
     """
     if functional:
         if onto:
@@ -127,6 +128,10 @@ def GraphPigeonholePrinciple(G, functional=False, onto=False):
 
     description = "{0} formula on {1}".format(formula_name, G.name)
     F = CNF(description=description)
+
+    if not isinstance(G, BaseBipartiteGraph):
+        G = BipartiteGraph.from_networkx(G)
+
 
     if not G.is_bipartite():
         raise ValueError("The pattern graph must be bipartite")
@@ -211,15 +216,6 @@ def RelativizedPigeonholePrinciple(pigeons, resting_places, holes):
         raise ValueError('The number of resting places must be non-negative')
     if holes < 0:
         raise ValueError('The number of holes must be non-negative')
-
-    def p(u, v):
-        return 'p_{{{0},{1}}}'.format(u, v)
-
-    def q(v, w):
-        return 'q_{{{0},{1}}}'.format(v, w)
-
-    def r(v):
-        return 'r_{{{0}}}'.format(v)
 
     U = pigeons
     V = resting_places

@@ -15,15 +15,17 @@ Create the CNFs:
 p cnf 4 2
 1 2 -3 0
 -2 4 0
+<BLANKLINE>
 
 You can add clauses later in the process:
 
->>> c.add_clause( [-3, 4, -5)] )
+>>> c.add_clause( [-3, 4, -5] )
 >>> print( c.to_dimacs())
 p cnf 5 3
 1 2 -3 0
 -2 4 0
 -3 4 -5 0
+<BLANKLINE>
 """
 
 import os
