@@ -263,6 +263,29 @@ def test_rphp_unsat2():
     F = RelativizedPigeonholePrinciple(3, 4, 2)
     assert not F.is_satisfiable()[0]
 
-def test_rphp_args():
+def test_rphp_args_just_one():
     with pytest.raises(CLIError):
         cnfgen(["cnfgen", "rphp", 3])
+
+def test_rphp_args_just_two():
+    with pytest.raises(CLIError):
+        cnfgen(["cnfgen", "rphp", 3, 4])
+
+def test_rphp_args_four():
+    with pytest.raises(CLIError):
+        cnfgen(["cnfgen", "rphp", 3, 4, 4, 3])
+
+def test_rphp_args_negative():
+    with pytest.raises(CLIError):
+        cnfgen(["cnfgen", "rphp", 3, -3, 1])
+
+def test_rphp_args_zero1():
+    F=cnfgen(["cnfgen", "rphp", 3, 0, 1], mode='formula')
+    assert F.number_of_variables() == 0
+    assert not F.is_satisfiable()[0]
+
+
+def test_rphp_args_zero2():
+    F=cnfgen(["cnfgen", "rphp", 0, 3, 3], mode='formula')
+    assert F.number_of_variables() == 3 + 9
+    assert F.is_satisfiable()[0]

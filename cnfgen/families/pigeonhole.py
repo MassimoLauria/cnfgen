@@ -222,7 +222,8 @@ def RelativizedPigeonholePrinciple(pigeons, resting_places, holes):
     W = holes
     p = rphp.new_mapping(U, V, label='p_{{{0},{1}}}')
     q = rphp.new_mapping(V, W, label='q_{{{0},{1}}}')
-    r = rphp.new_block(V, label='r_{{{0}}}')
+    if V>0:
+        r = rphp.new_block(V, label='r_{{{0}}}')
 
     # NOTE: the order of ranges in the products are chosen such that related clauses appear after each other
 
