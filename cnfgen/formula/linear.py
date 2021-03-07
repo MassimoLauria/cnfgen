@@ -16,6 +16,7 @@ from functools import reduce
 from operator import mul
 from itertools import combinations
 from itertools import product
+from inspect import isgenerator
 
 from cnfgen.formula.basecnf import BaseCNF
 
@@ -114,6 +115,9 @@ class CNFLinear(BaseCNF):
             raise ValueError('Invalid operator, only {} allowed'.
                              format(", ".join(operators)))
 
+        if isgenerator(lits) and op != '<=':
+            lits = list(lits)
+
         # We reduce to the case of >=
         if op == "==":
             self.add_linear(lits, '<=', constant)
@@ -138,16 +142,11 @@ class CNFLinear(BaseCNF):
         if constant <= 0:
             return
 
-        try:
-            w = len(lits)
-        except TypeError:
-            w = len(list(lits))
-
-        if constant > w:
+        if constant > len(lits):
             self.add_clause([])
             return
 
-        k = w - constant + 1
+        k = len(lits) - constant + 1
         for clause in combinations(lits, k):
             self.add_clause(clause)
 
