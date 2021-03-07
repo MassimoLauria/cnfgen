@@ -69,10 +69,11 @@ def _print_latex(F, outputfile, split_every=-1, compact=True):
             start=1):
         littext[varid] = "           {" + name + "}"
         split_points = [name.find("_"), name.find("^")]
-        split_point = min([x for x in split_points if x > 0])
-        if split_point < 1:
+        split_points = [x for x in split_points if x > 0]
+        if len(split_points)==0:
             littext[-varid] = "  \\overline{" + name + "}"
         else:
+            split_point = min(split_points)
             littext[-varid] = "{\\overline{" + \
                 name[:split_point] + "}" + name[split_point:] + "}"
 
@@ -136,7 +137,7 @@ def to_latex_document(F, fileorname, export_header=True, extra_text=""):
     else:
         output = fileorname
 
-    clauses_per_page = 40
+    clauses_per_page = 35
 
     latex_preamble = r"""%
 \documentclass[10pt,a4paper]{article}

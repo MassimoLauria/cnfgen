@@ -315,8 +315,8 @@ class BlockOfVariables(BaseVariableGroup):
             raise ValueError(
                 'The index domain must have at least dimension one')
 
-        if len([x for x in ranges if x < 1]):
-            raise ValueError('Indices range must be all positive')
+        if len([x for x in ranges if x < 0]):
+            raise ValueError('Indices range must be all non negative')
 
         weights = [1]  # cumulative products
         for r in ranges[::-1]:
@@ -1485,6 +1485,10 @@ argument `default_label_format` (e.g. 'x{}').
         varid = 1
         for vg in self._groups:
             if len(vg.variable_ids()) == 0:
+                continue
+            if isinstance(vg, SingletonVariableGroup):
+                yield vg.name
+                varid += 1
                 continue
             begin = vg.variable_ids()[0]
             while varid < begin:

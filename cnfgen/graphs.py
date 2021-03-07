@@ -127,6 +127,7 @@ class Graph(networkx.Graph, BaseGraph):
             raise ValueError("n must be non negative")
         networkx.Graph.__init__(self)
         self.n = n
+        self.name = 'a simple graph'
         if n>0:
             self.add_nodes_from(range(1,n+1))
 
@@ -146,25 +147,27 @@ class Graph(networkx.Graph, BaseGraph):
 
     @classmethod
     def from_networkx(cls, G):
+        if not isinstance(G, networkx.Graph):
+            raise ValueError('G is expected to be of type networkx.Graph')
         G = normalize_networkx_labels(G)
         C = cls(G.order())
         C.add_edges_from(G.edges())
         try:
             C.name= G.name
         except AttributeError:
-            pass
+            C.name='<unknown graph>'
         return C
 
     @classmethod
     def null_graph(cls):
         G = cls(0)
-        G.name = 'null graph'
+        G.name = 'the null graph'
         return G
 
     @classmethod
     def empty_graph(cls,n):
         G = cls(n)
-        G.name = 'empty graph of order '+str(n)
+        G.name = 'the empty graph of order '+str(n)
         return G
 
     @classmethod
@@ -173,7 +176,7 @@ class Graph(networkx.Graph, BaseGraph):
         for u in range(1,n):
             for v in range(u+1,n+1):
                 G.add_edge(u,v)
-        G.name = 'complete graph of order '+str(n)
+        G.name = 'the complete graph of order '+str(n)
         return G
 
 class BaseBipartiteGraph(BaseGraph):
@@ -224,6 +227,7 @@ class BaseBipartiteGraph(BaseGraph):
         G.add_nodes_from(range(1, n+1), bipartite=0)
         G.add_nodes_from(range(n+1, m+n+1), bipartite=1)
         G.add_edges_from((u, v+n) for (u, v) in self.edges())
+        G.name = self.name
         return G
 
 
@@ -301,6 +305,8 @@ class BipartiteGraph(BaseBipartiteGraph):
         >>> print(B.has_edge(2,3))
         True
         """
+        if not isinstance(G, networkx.Graph):
+            raise ValueError('G is expected to be of type networkx.Graph')
         side = [[], []]
         index = [{}, {}]
         for u in G.nodes():
@@ -328,6 +334,10 @@ class BipartiteGraph(BaseBipartiteGraph):
                 B.add_edge(iu, iv)
             else:
                 B.add_edge(iv, iu)
+        try:
+            B.name= G.name
+        except AttributeError:
+            B.name='<unknown graph>'
         return B
 
     @classmethod

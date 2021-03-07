@@ -42,16 +42,16 @@ def test_bad_args_holes():
 def test_empty_pigeons():
     dimacs = cnfgen(['cnfgen', '-q', 'rphp', 0, 10, 4], mode='string')
     F = RelativizedPigeonholePrinciple(0, 10, 4)
-    assert F.dimacs(export_header=False) == dimacs
+    assert F.to_dimacs() == dimacs
 
 
 def test_empty_holes():
     dimacs = cnfgen(['cnfgen', '-q', 'rphp', 5, 10, 0], mode='string')
     F = RelativizedPigeonholePrinciple(5, 10, 0)
-    assert F.dimacs(export_header=False) == dimacs
+    assert F.to_dimacs() == dimacs
 
 
 def test_empty_resting_places():
     dimacs = cnfgen(['cnfgen', '-q', 'rphp', 5, 0, 4], mode='string')
     F = RelativizedPigeonholePrinciple(5, 0, 4)
-    assert F.dimacs(export_header=False) == dimacs
+    assert F.to_dimacs() == dimacs

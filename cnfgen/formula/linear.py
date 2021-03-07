@@ -138,11 +138,16 @@ class CNFLinear(BaseCNF):
         if constant <= 0:
             return
 
-        if constant > len(lits):
+        try:
+            w = len(lits)
+        except TypeError:
+            w = len(list(lits))
+
+        if constant > w:
             self.add_clause([])
             return
 
-        k = len(lits) - constant + 1
+        k = w - constant + 1
         for clause in combinations(lits, k):
             self.add_clause(clause)
 
