@@ -14,10 +14,11 @@ def unique_neighborhoods(G):
 List sets of vertices, each of them representing a neighborhood in the
 graph. Each neighborhood is listed just one. Each one is sorted and
 they are enumerated in a sorted fashion."""
-    if G.number_of_nodes()==0:
+    n = G.number_of_vertices()
+    if n == 0:
         return []
     neighborhoods = []
-    for v in G.nodes():
+    for v in range(1, n+1):
         neighborhoods.append(sorted([v] + list(G.neighbors(v))))
     neighborhoods.sort()
     unique = [neighborhoods[0]]
@@ -54,8 +55,7 @@ def DominatingSet(G, d, alternative=False):
     """
     # Describe the formula
 
-    if not isinstance(G, Graph):
-        G = Graph.from_networkx(G)
+    G = Graph.normalize(G)
     description = "{}-dominating set on {}".format(d,G.name)
 
     F = CNF(description=description)
@@ -120,12 +120,11 @@ def Tiling(G):
 
     """
     # Describe the formula
-    if not isinstance(G, Graph):
-        G = Graph.from_networkx(G)
+    G = Graph.normalize(G)
     description = "tiling of {}".format(G.name)
 
     F = CNF(description=description)
-    x = F.new_block(G.number_of_nodes() , label='x_{{{0}}}')
+    x = F.new_block(G.number_of_vertices() , label='x_{{{0}}}')
     # Every neighborhood must have exactly one variable
     for N in unique_neighborhoods(G):
         F.add_linear([x(v) for v in N],'==',1)

@@ -40,11 +40,8 @@ def SubgraphFormula(G, H, induced=False, symbreak=False):
         description = "{} is not a subgraph of {}".format(H.name, G.name)
     F.header['description'] = description
 
-    if isinstance(G, nx.Graph) and not isinstance(G, Graph):
-        G = Graph.from_networkx(G)
-
-    if isinstance(H, nx.Graph) and not isinstance(H, Graph):
-        H = Graph.from_networkx(H)
+    G = Graph.normalize(G)
+    H = Graph.normalize(H)
 
     N = G.order()
     k = H.order()

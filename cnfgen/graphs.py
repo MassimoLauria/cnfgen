@@ -581,7 +581,6 @@ class BipartiteGraph(BaseBipartiteGraph):
 class CompleteBipartiteGraph(BaseBipartiteGraph):
     def __init__(self, L, R):
         BaseBipartiteGraph.__init__(self, L, R)
-        self.edgecount = L * R
         self.name = 'Complete bipartite graph with ({},{}) vertices'.format(
             L, R)
 
@@ -590,6 +589,9 @@ class CompleteBipartiteGraph(BaseBipartiteGraph):
 
     def add_edge(self, u, v):
         pass
+
+    def number_of_edges(self):
+        return self.lorder * self.rorder
 
     def right_neighbors(self, u):
         return range(1, self.rorder + 1)
