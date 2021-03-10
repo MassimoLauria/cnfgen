@@ -7,10 +7,8 @@ https://massimolauria.net/cnfgen/
 """
 
 import argparse
-from cnfgen.utils.parsedimacs import from_dimacs_file
 from cnfgen.formula.cnf import CNF
 
-from cnfgen.clitools import redirect_stdin
 from cnfgen.clitools import interactive_msg
 from cnfgen.clitools import msg_prefix
 
@@ -52,10 +50,8 @@ class DimacsCmdHelper(FormulaHelper):
 
         msg = """Waiting for a DIMACS formula on <stdin>."""
 
-        with redirect_stdin(args.input):
-            with msg_prefix("INPUT: "):
-                interactive_msg(msg)
-
-            F = from_dimacs_file(CNF)
+        with msg_prefix("INPUT: "):
+            interactive_msg(msg)
+        F = CNF.from_file(args.input)
 
         return F

@@ -8,11 +8,8 @@ import random
 import argparse
 
 from cnfgen.formula.cnf import CNF
-from cnfgen.utils.parsedimacs import from_dimacs_file
 from cnfgen.transformations.shuffle import Shuffle
 
-from cnfgen.clitools.cmdline import paginate_or_redirect_stdout
-from cnfgen.clitools.cmdline import redirect_stdin
 from cnfgen.clitools.cmdline import setup_SIGINT
 from cnfgen.clitools.cmdline import CLIParser, CLIError
 
@@ -120,11 +117,9 @@ def cli(argv=sys.argv, mode='output'):
              Alternatively you can feed a formula to <stdin>
              with piping or using '-i' command line argument."""
 
-    with redirect_stdin(args.input), msg_prefix('c '):
-        with msg_prefix("INPUT: "):
-            interactive_msg(msg, filltext=70)
-
-        F = from_dimacs_file(CNF)
+    with msg_prefix("c INPUT: "):
+        interactive_msg(msg, filltext=70)
+    F = CNF.from_file(args.input)
 
     # Default permutation
     polarity_flips='fixed' if args.no_polarity_flips else 'shuffle'
@@ -138,7 +133,7 @@ def cli(argv=sys.argv, mode='output'):
     elif mode == 'string':
         return G.to_dimacs()
     else:
-        G.to_file(args.output,fileformat='dimacs')
+        G.to_file(args.output, fileformat='dimacs')
 
 
 # Launcher

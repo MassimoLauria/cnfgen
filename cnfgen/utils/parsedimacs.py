@@ -12,10 +12,10 @@ References
 """
 
 import sys
-from io import StringIO
 
-
-def to_dimacs_file(formula, fileorname=None, export_header=True, export_varnames=False):
+def to_dimacs_file(formula, fileorname=None,
+                   export_header=True,
+                   export_varnames=False):
     """Save the DIMACS encoding of a formula to a file
 
     Parameters
@@ -69,16 +69,31 @@ def to_dimacs_file(formula, fileorname=None, export_header=True, export_varnames
 
 
 def parse_dimacs(infile):
-    """
-    Parse a dimacs cnf file into a list of
-    compressed clauses.
+    """Parse a dimacs cnf in file object
 
-    return: (n,c) where
+    Given a file object, this function extracts the number of
+    variables and clauses, and the sequence of clauses in the file.
 
-    n is the number of variables
-    c is the list of compressed clauses.
-    """
-    n = None  # negative signal that spec line has not been read
+    The generator emits
+    - n : the number of variables
+    - m : the number of clauses
+    - c1, c2, c3, ...  : a sequence of m clauses
+
+    Parameters
+    ----------
+    infile: file object
+        the file containing the dimacs text
+
+    Returns
+    -------
+    a generator object
+
+
+    Raises
+    ------
+    ValueError : in case there are mistakes in the file content"""
+
+    n = None   # None unless a spec line is met
     m = None
     clauses_count = 0
 
@@ -103,10 +118,13 @@ def parse_dimacs(infile):
                 _, _, nstr, mstr = line.split()
                 n = int(nstr)
                 m = int(mstr)
+                if n < 0 or m < 0:
+                    raise ValueError
             except ValueError:
                 raise ValueError("Spec at line {} should have "
-                                 "format 'p cnf <n> <m>'".format(line_counter))
+                                 "format 'p cnf <n> <m>' with n>=0, m>=0".format(line_counter))
             yield n
+            yield m
             continue
 
         if n is None:
@@ -166,6 +184,7 @@ def from_dimacs_file(cnfclass, fileorname=None):
     F = cnfclass(description=description)
     dimacs = parse_dimacs(inputfile)
     n = next(dimacs)
+    m = next(dimacs)
     F.update_variable_number(n)
     for c in dimacs:
         F.add_clause(c)
