@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+
 """Output a LaTeX version of the CNF formula
 
 The CNF formula is translated into the LaTeX markup language
@@ -16,15 +17,16 @@ it does not include neither a preamble nor is nested inside
 
 Examples
 --------
+>>> from cnfgen.formula.cnf import CNF
 >>> F=CNF([[-1, 2, -3], [-2, -4], [2, 3, -4]])
->>> print(to_latex_string(F, export_header=False))
+>>> print(to_latex_string(F))
 \\begin{align}
 &       \\left( {\\overline{x}_1} \\lor            {x_2} \\lor {\\overline{x}_3} \\right) \\\\
 & \\land \\left( {\\overline{x}_2} \\lor {\\overline{x}_4} \\right) \\\\
 & \\land \\left(            {x_2} \\lor            {x_3} \\lor {\\overline{x}_4} \\right)
 \\end{align}
 >>> F=CNF()
->>> print(to_latex_string(F, export_header=False))
+>>> print(to_latex_string(F))
 \\begin{align}
    \\top
 \\end{align}
