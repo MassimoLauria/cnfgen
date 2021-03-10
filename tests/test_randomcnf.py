@@ -2,25 +2,36 @@ import pytest
 
 from cnfgen import RandomKCNF
 from cnfgen.clitools import cnfgen, CLIError
+from cnfgen.families.randomformulas import clause_satisfied
 
+
+data=[
+    [[-2,-4], [1,2,4], False],
+    [[-2,-4], [1,3,-4], True],
+    [[], [1,3,-4], False],
+    [[1,-1], [1,2], True],
+    [[1,3,-2], [], False]
+]
+
+@pytest.mark.parametrize('cls,assign, issat',data)
+def test_clause_sat(cls,assign,issat):
+    assert clause_satisfied(cls,[assign]) == issat
 
 def test_empty_cnf():
     F = RandomKCNF(0, 0, 0)
-    assert list(F.variables()) == []
+    assert F.number_of_variables() == 0
     assert len(F) == 0
 
 
 def test_empty_cnf_with_vars():
     F = RandomKCNF(0, 6, 0)
-    assert list(F.variables()) == ["x_1", "x_2", "x_3", "x_4", "x_5", "x_6"]
+    assert F.number_of_variables() == 6
     assert len(F) == 0
 
 
 def test_random_cnf_medium():
     F = RandomKCNF(3, 10, 50)
-    assert list(F.variables()) == [
-        "x_1", "x_2", "x_3", "x_4", "x_5", "x_6", "x_7", "x_8", "x_9", "x_10"
-    ]
+    assert F.number_of_variables() == 10
     assert len(F) == 50
     for c in F:
         assert len(c) == 3
@@ -59,21 +70,14 @@ def test_negative_clauses():
 
 
 def test_random_cnf_planted():
-    planted = [{"x_1": True, "x_2": False, "x_3": True}]
+    planted = [[1,-2,3]]
     F = RandomKCNF(3, 3, 7, planted_assignments=planted)
     for c in F:
         assert len(c) == 3
 
 
 def test_random_cnf_planted_2():
-    planted = [{
-        "x_1": True,
-        "x_2": False,
-        "x_3": True,
-        "x_4": False,
-        "x_5": True,
-        "x_6": True
-    }]
+    planted = [[1, -2, 3, -4, 5, 6]]
     F = RandomKCNF(3, 6, 10, planted_assignments=planted)
     for c in F:
         assert len(c) == 3

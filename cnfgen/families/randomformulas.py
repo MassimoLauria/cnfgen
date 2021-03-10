@@ -16,10 +16,12 @@ Test if clauses `cls` is satisfied by all assigment in the
 list assignments.
 """
     for assignment in assignments:
+        issat = False
         for lit in cls:
             if lit in assignment:
-                continue
-        return False
+                issat = True
+        if not issat:
+            return False
 
     return True
 

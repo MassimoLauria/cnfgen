@@ -172,11 +172,7 @@ class RandCmdHelper(FormulaHelper):
         """
         n = args.n
         if args.plant:
-            planted = {}
-
-            for i in range(n):
-                planted["x_{0}".format(i + 1)] = random.choice([True, False])
-
+            planted = [random.choice([-1,1])*v for v in range(1,n+1)]
             return RandomKCNF(args.k,
                               args.n,
                               args.m,
