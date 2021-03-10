@@ -364,12 +364,12 @@ edges can be added and not removed."""
             raise ValueError("vertex u not in the graph")
         yield from self.succ[u]
 
-    def indegree(self,u):
+    def in_degree(self,u):
         if not( 1<= u <= self.n):
             raise ValueError("vertex u not in the graph")
         return len(self.pred[u])
 
-    def outdegree(self,v):
+    def out_degree(self,v):
         if not( 1<= v <= self.n):
             raise ValueError("vertex v not in the graph")
         return len(self.succ[v])

@@ -20,10 +20,10 @@ def test_single_vertex():
     assert peb.debug()
 
     F = CNF()
-    F.add_variable('x')
-    F.add_clause([(True, 'x')])
-    F.add_clause([(False, 'x')])
-    assertCnfEqual(F, peb)
+    x = F.new_variable('x(1)')
+    F.add_clause([x])
+    F.add_clause([-x])
+    assertCnfEqual(peb,F)
 
 
 def test_path():
@@ -33,32 +33,29 @@ def test_path():
     assert peb.debug()
 
     F = CNF()
-    for i in range(10):
-        F.add_variable(i)
-    F.add_clause([(True, 0)])
+    x = F.new_block(10, label='x({})')
+    F.add_clause([x(1)])
     for i in range(1, 10):
-        F.add_clause([(False, i - 1), (True, i)])
-    F.add_clause([(False, 9)])
-
-    assertCnfEqual(F, peb)
+        F.add_clause([-x(i), x(i+1)])
+    F.add_clause([-x(10)])
+    assertCnfEqual(peb,F)
 
 
 def test_star():
     G = nx.DiGraph()
     G.add_node(10)
-    for i in range(0, 10):
+    for i in range(1, 10):
         G.add_node(i)
         G.add_edge(i, 10)
     peb = PebblingFormula(G)
     assert peb.debug()
 
     F = CNF()
-    for i in range(10):
-        F.add_variable(i)
-    for i in range(10):
-        F.add_clause([(True, i)])
-    F.add_clause([(False, i) for i in range(10)] + [(True, 10)])
-    F.add_clause([(False, 10)])
+    x = F.new_block(10, label='x({})')
+    for i in range(1,10):
+        F.add_clause([x(i)])
+    F.add_clause([-x(i) for i in range(1,10)] + [x(10)])
+    F.add_clause([-x(10)])
     assertCnfEqual(F, peb)
 
 
@@ -76,7 +73,7 @@ def test_tree():
         G.name = 'Complete binary tree of height {}'.format(sz)
 
         F = PebblingFormula(G)
-        lib = F.dimacs(export_header=False)
+        lib = F.to_dimacs()
         cli = cnfgen(["cnfgen", "-q", "peb", "tree", sz], mode='string')
         assert lib == cli
 
@@ -86,7 +83,7 @@ def test_pyramid():
     G.add_edges_from([(1, 4), (2, 4), (2, 5), (3, 5), (4, 6), (5, 6)])
     G.name = 'Pyramid of height 2'
     F = PebblingFormula(G)
-    lib = F.dimacs(export_header=False)
+    lib = F.to_dimacs()
     cli = cnfgen(["cnfgen", "-q", "peb", "pyramid", 2], mode='string')
     assert lib == cli
 

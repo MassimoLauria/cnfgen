@@ -4,12 +4,10 @@
 """
 
 from cnfgen.formula.cnf import CNF
-from cnfgen.graphs import is_dag, enumerate_vertices
+from cnfgen.graphs import CompleteBipartiteGraph, DirectedGraph
 
 from itertools import product
-from collections import OrderedDict
 
-import sys
 
 
 def _uniqify_list(seq):
@@ -33,109 +31,26 @@ def PebblingFormula(digraph):
     Arguments:
     - `digraph`: directed acyclic graph.
     """
-    if not is_dag(digraph):
+    digraph = DirectedGraph.normalize(digraph)
+    if not digraph.is_dag():
         raise ValueError(
             "Pebbling formula is defined only for directed acyclic graphs")
 
     description = 'Pebbling formula'
-    if hasattr(digraph, 'name'):
-        description += " for " + digraph.name
+    description += " for " + digraph.name
 
     peb = CNF(description=description)
+    x = peb.new_block(digraph.number_of_vertices(), label='x({})')
 
-    # add variables in the appropriate order
-    vertices = enumerate_vertices(digraph)
-    position = dict((v, i) for (i, v) in enumerate(vertices))
-
-    for v in vertices:
-        peb.add_variable(
-            v, description="There is a pebble on vertex ${}$".format(v))
-
-    # add the clauses
-    for v in vertices:
-
+    for v in digraph.vertices():
         # If predecessors are pebbled the vertex must be pebbled
-        pred = sorted(digraph.predecessors(v), key=lambda x: position[x])
-        peb.add_clause_unsafe([(False, p) for p in pred] + [(True, v)])
+        peb.add_clause([-x(p) for p in digraph.predecessors(v)] + [x(v)])
 
         if digraph.out_degree(v) == 0:  #the sink
-            peb.add_clause_unsafe([(False, v)])
+            peb.add_clause([-x(v)])
 
     return peb
 
-
-def stone_formula_helper(F, D, mapping):
-    """Stones formulas helper
-
-    Builds the clauses of a stone formula given the mapping object
-    between stones and vertices of the DAG. THis is not supposed to be
-    called by user code, and indeed this function assumes the following facts.
-
-    - :math:`D` is equal to `mapping.domain()`
-    - :math:`D` is a DAG
-
-    Parameters
-    ----------
-    F : CNF
-        the CNF which will contain the clauses of the stone formula
-
-    D : a directed acyclic graph
-        it should be a directed acyclic graph.
-
-    mapping : unary_mapping object
-       mapping between stones and graph vertices
-
-
-    See Also
-    --------
-    StoneFormula : the classic stone formula
-    SparseStoneFormula : stone formula with sparse mapping
-    """
-
-    # add variables in the appropriate order
-    vertices = enumerate_vertices(D)
-
-    # caching variable names
-    color_vn = {}
-    stone_vn = {}
-
-    # Stones->Vertices variables
-    for v in mapping.variables():
-        F.add_variable(v)
-    for v in vertices:
-        for j in mapping.images(v):
-            stone_vn[(v, j)] = mapping.var_name(v, j)
-
-    # Color variables
-    for stone in mapping.range():
-        color_vn[stone] = "R_{{{0}}}".format(stone)
-        F.add_variable(color_vn[stone],
-                       description="Stone ${}$ is red".format(stone))
-
-    # Each vertex has some stone
-    for cls in mapping.clauses():
-        F.add_clause_unsafe(cls)
-
-    # If predecessors have red stones, the sink must have a red stone
-    for v in vertices:
-        for j in mapping.images(v):
-            pred = sorted(D.predecessors(v),
-                          key=lambda x: mapping.RankDomain[x])
-            for stones_tuple in product(*tuple(
-                [s for s in mapping.images(v) if s != j] for v in pred)):
-                F.add_clause_unsafe([(False, stone_vn[(p, s)])
-                                     for (p, s) in zip(pred, stones_tuple)] +
-                                    [(False, stone_vn[(v, j)])] +
-                                    [(False, color_vn[s])
-                                     for s in _uniqify_list(stones_tuple)] +
-                                    [(True, color_vn[j])])
-
-        if D.out_degree(v) == 0:  #the sink
-            for j in mapping.images(v):
-                F.add_clause_unsafe([(False, stone_vn[(v, j)]),
-                                     (False, color_vn[j])])
-
-    return F
 
 
 def StoneFormula(D, nstones):
@@ -164,10 +79,6 @@ def StoneFormula(D, nstones):
     The formula furthermore enforces that the stones on the sinks
     (i.e. vertices with no outgoing edges) are blue.
 
-    .. note:: The exact formula structure depends by the graph and on
-              its topological order, which is determined by the
-              ``enumerate_vertices(D)``.
-
     Parameters
     ----------
     D : a directed acyclic graph
@@ -193,68 +104,19 @@ def StoneFormula(D, nstones):
            Combinatorica (1999)
 
     """
-    if not is_dag(D):
+    D = DirectedGraph.normalize(D)
+    if not D.is_dag():
         raise ValueError(
             "Stone formulas are defined only for directed acyclic graphs.")
 
     if nstones < 0:
         raise ValueError("There must be at least one stone.")
 
-    if hasattr(D, 'name'):
-        description = "Stone formula of {} with {} stones".format(
-            D.name, nstones)
-    else:
-        description = "Stone formula with {} stones".format(nstones)
-
-    cnf = CNF(description=description)
-
-    # Add variables in the appropriate order
-    vertices = enumerate_vertices(D)
-    position = dict((v, i) for (i, v) in enumerate(vertices))
-    stones = list(range(1, nstones + 1))
-
-    # Caching variable names
-    color_vn = {}
-    stone_vn = {}
-
-    # Stones->Vertices variables
-    for v in vertices:
-        for j in stones:
-            stone_vn[(v, j)] = "P_{{{0},{1}}}".format(v, j)
-            cnf.add_variable(stone_vn[(v, j)],
-                             description="Stone ${1}$ on vertex ${0}$".format(
-                                 v, j))
-
-    # Color variables
-    for j in stones:
-        color_vn[j] = "R_{{{0}}}".format(j)
-        cnf.add_variable(color_vn[j],
-                         description="Stone ${}$ is red".format(j))
-
-    # Each vertex has some stone
-    for v in vertices:
-        cnf.add_clause_unsafe([(True, stone_vn[(v, j)]) for j in stones])
-
-    # If predecessors have red stones, the sink must have a red stone
-    for v in vertices:
-        for j in stones:
-            pred = sorted(D.predecessors(v), key=lambda x: position[x])
-            for stones_tuple in product([s for s in stones if s != j],
-                                        repeat=len(pred)):
-                cnf.add_clause_unsafe([(False, stone_vn[(p, s)])
-                                       for (p, s) in zip(pred, stones_tuple)] +
-                                      [(False, stone_vn[(v, j)])] +
-                                      [(False, color_vn[s])
-                                       for s in _uniqify_list(stones_tuple)] +
-                                      [(True, color_vn[j])])
-
-        if D.out_degree(v) == 0:  #the sink
-            for j in stones:
-                cnf.add_clause_unsafe([(False, stone_vn[(v, j)]),
-                                       (False, color_vn[j])])
-
-    return cnf
-
+    description = "Stone formula of {} with {} stones".format(D.name, nstones)
+    B = CompleteBipartiteGraph(D.number_of_vertices(),nstones)
+    F = SparseStoneFormula(D, B)
+    F.header['description'] = description
+    return F
 
 def SparseStoneFormula(D, B):
     """Sparse Stone formulas
@@ -308,28 +170,42 @@ def SparseStoneFormula(D, B):
     StoneFormula
 
     """
-    if not is_dag(D):
+    D = DirectedGraph.normalize(D)
+    if not D.is_dag():
         raise ValueError(
             "Stone formulas are defined only for directed acyclic graphs.")
 
     Left, stones = B.parts()
 
-    if len(Left) != D.order():
+    if len(Left) != D.number_of_vertices():
         raise ValueError(
             "Formula requires the bipartite left side to match #vertices of the DAG."
         )
 
-    if hasattr(D, 'name'):
-        description = "Sparse stone formula of {} with {} stones".format(
-            D.name, len(stones))
-    else:
-        description = "Sparse stone formula with {} stones".format(nstones)
+    description = "Sparse stone formula of {} with {} stones".format(D.name, len(stones))
+    F = CNF(description=description)
 
-    cnf = CNF(description=description)
+    # Add variables in the appropriate order
+    R = F.new_block(len(stones), label='R_{{{0}}}')  # a stone j is red
 
-    # add variables in the appropriate order
-    vertices = enumerate_vertices(D)
-    mapping = cnf.unary_mapping(vertices, stones, sparsity_pattern=B)
+    # mapping from vertices to stones
+    P = F.new_sparse_mapping(B, label='P_{{{0},{1}}}')
+    F.force_complete_mapping(P)
 
-    stone_formula_helper(cnf, D, mapping)
-    return cnf
+    # If predecessors have red stones, the sink must have a red stone
+    for v in D.vertices():
+        for j in B.right_neighbors(v):
+            pred = list(D.predecessors(v))
+            stone_patterns = product(*tuple([s for s in
+                                             B.right_neighbors(p) if s != j] for p in pred))
+            for pattern in stone_patterns:
+                F.add_clause([-P(p, s) for (p, s) in zip(pred, pattern)] +
+                             [-P(v, j)] +
+                             [-R(s) for s in _uniqify_list(pattern)] +
+                             [R(j)])
+
+        if D.out_degree(v) == 0:  #the sink
+            for j in B.right_neighbors(v):
+                F.add_clause([-P(v, j), -R(j)])
+
+    return F
