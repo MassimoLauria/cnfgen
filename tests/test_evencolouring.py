@@ -2,6 +2,7 @@ import networkx as nx
 from cnfgen import CNF
 from cnfgen import EvenColoringFormula, TseitinFormula
 from cnfgen.clitools import cnfgen, CLIError
+from cnfgen.graphs import Graph
 
 import pytest
 from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
@@ -31,9 +32,9 @@ def test_cycle():
 def test_even_degree_complete():
     for n in range(3, 8, 2):
         parameters = ["cnfgen", "-q", "ec", "complete", n]
-        graph = nx.complete_graph(n)
+        graph = Graph.complete_graph(n)
         F = EvenColoringFormula(graph)
-        lib = F.dimacs(export_header=False)
+        lib = F.to_dimacs()
         cli = cnfgen(parameters, mode='string')
         assert cli == lib
 

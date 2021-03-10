@@ -137,6 +137,9 @@ have that u < v."""
     def order(self):
         return self.number_of_vertices()
 
+    def vertices(self):
+        return range(1,self.number_of_vertices()+1)
+
     def number_of_vertices(self):
         raise NotImplementedError
 
@@ -247,6 +250,11 @@ class Graph(BaseGraph):
             raise ValueError("vertex u not in the graph")
         yield from self.adjlist[u]
 
+    def degree(self,u):
+        if not( 1<= u <= self.n):
+            raise ValueError("vertex u not in the graph")
+        return len(self.adjlist[u])
+
     @classmethod
     def from_networkx(cls, G):
         if not isinstance(G, networkx.Graph):
@@ -356,6 +364,15 @@ edges can be added and not removed."""
             raise ValueError("vertex u not in the graph")
         yield from self.succ[u]
 
+    def indegree(self,u):
+        if not( 1<= u <= self.n):
+            raise ValueError("vertex u not in the graph")
+        return len(self.pred[u])
+
+    def outdegree(self,v):
+        if not( 1<= v <= self.n):
+            raise ValueError("vertex v not in the graph")
+        return len(self.succ[v])
 
     @classmethod
     def from_networkx(cls, G):

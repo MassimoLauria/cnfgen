@@ -36,8 +36,7 @@ def GraphColoringFormula(G, colors, functional=True):
         ValueError(
             "Parameter \"colors\" is expected to be a non negative")
 
-    if isinstance(G, nx.Graph) and not isinstance(G, Graph):
-        G = Graph.from_networkx(G)
+    G = Graph.normalize(G)
 
     # Describe the formula
     description = "Graph {}-Colorability of {}".format(colors,G)
@@ -88,8 +87,7 @@ def EvenColoringFormula(G):
        Journal on Satisfiability, Boolean Modeling and Computation 2 (2006) 221-228
 
     """
-    if isinstance(G, nx.Graph) and not isinstance(G, Graph):
-        G = Graph.from_networkx(G)
+    G = Graph.normalize(G)
 
     description = "Even coloring formula on " + G.name
     F = CNF(description=description)
@@ -97,7 +95,7 @@ def EvenColoringFormula(G):
     e = F.new_graph_edges(G)
 
     # Defined on both side
-    for v in G.nodes():
+    for v in G.vertices():
 
         if G.degree(v) % 2 == 1:
             raise ValueError(

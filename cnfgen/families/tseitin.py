@@ -17,8 +17,7 @@ def TseitinFormula(G, charges=None):
     - G: cnfgen.graphs.Graph
     - `charges': odd or even charge for each vertex
     """
-    if isinstance(G, nx.Graph) and not isinstance(G, Graph):
-        G = Graph.from_networkx(G)
+    G = Graph.normalize(G)
 
     n = G.order()
     parity = None
@@ -40,7 +39,7 @@ def TseitinFormula(G, charges=None):
     e = tse.new_graph_edges(G,label="E_{{{0},{1}}}")
 
     # add constraints
-    for v, c in zip(G.nodes(), charges):
+    for v, c in zip(G.vertices(), charges):
         tse.add_parity([e(u, v) for u in G.neighbors(v)], c)
 
     return tse
