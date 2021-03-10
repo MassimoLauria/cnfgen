@@ -18,8 +18,8 @@ https://github.com/MassimoLauria/cnfgen.git
 from itertools import product,combinations, combinations_with_replacement
 from bisect import bisect_right
 
-from cnfgen.graphs import Graph, BaseBipartiteGraph, BipartiteGraph, CompleteBipartiteGraph
-import networkx as nx
+from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph, CompleteBipartiteGraph
+from cnfgen.graphs import Graph, DirectedGraph
 
 from cnfgen.formula.basecnf import BaseCNF
 from cnfgen.formula.linear import CNFLinear
@@ -828,8 +828,7 @@ class DiGraphEdgesVariables(BaseVariableGroup):
 
     Examples
     --------
-    >>> G = nx.DiGraph()
-    >>> G.add_nodes_from(range(1,6))
+    >>> G = DirectedGraph(5)
     >>> G.add_edge(1,2)
     >>> G.add_edge(2,3)
     >>> G.add_edge(3,4)
@@ -850,8 +849,7 @@ class DiGraphEdgesVariables(BaseVariableGroup):
     101 102 103 104 105
     >>> print(*a.label())
     a(1,2) a(2,3) a(3,4) a(4,5) a(5,1)
-    >>> H = nx.DiGraph()
-    >>> H.add_nodes_from(range(1,6))
+    >>> H = DirectedGraph(5)
     >>> H.add_edge(1,2)
     >>> H.add_edge(1,3)
     >>> H.add_edge(2,3)
@@ -874,23 +872,23 @@ class DiGraphEdgesVariables(BaseVariableGroup):
     (1, 3) (2, 3)
     """
 
-    def __init__(self, formula, G, labelfmt='e_{{{},{}}}', sortby='pred'):
+    def __init__(self, formula, D, labelfmt='e_{{{},{}}}', sortby='pred'):
         """Creates a variables group object
 
         Parameters
         ----------
         formula: CNF
             formula to which we add a variable group
-        G: networkx.DiGraph
+        D: DirectedGraph
             directed graph
         labelfmt: str
             format string for the variable labels
         sortby: 'pred' or 'succ'
             sort edges by either predecessors or successors (default: predecessors)
         """
-        if not isinstance(G, nx.DiGraph):
+        if not isinstance(D, DirectedGraph):
             raise TypeError(
-                "Invalid direct graph G: a networkx.DiGraph object was expected"
+                "Invalid direct graph G: a cnfgen.DirectedGraph object was expected"
             )
 
         if sortby not in ['pred', 'succ']:
@@ -903,10 +901,10 @@ class DiGraphEdgesVariables(BaseVariableGroup):
             raise ValueError(
                 'label must be a valid format string for two arguments')
 
-        V = G.number_of_nodes()
+        V = D.number_of_vertices()
         B = BipartiteGraph(V, V)
 
-        for u, v in G.edges():
+        for u, v in D.edges():
             if sortby == 'pred':
                 # successors represented in a bipartite graph
                 B.add_edge(u, v)
@@ -928,7 +926,7 @@ class DiGraphEdgesVariables(BaseVariableGroup):
 
     def indices(self, *pattern):
         """
-        >>> H = nx.DiGraph()
+        >>> H = DirectedGraph(5)
         >>> H.add_edge(1,2)
         >>> H.add_edge(1,3)
         >>> H.add_edge(2,3)
@@ -979,7 +977,7 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
     edges of a simple graph.
 
     Given a simple graph :math:`G=(V,E)` represented by an object of
-    the class :py:class:`networkx.Graph`, we have variables
+    the class :py:class:`cnfgen.graphs.Graph`, we have variables
     :math:`e_{u,v}` for :math:`\\{u,v\\} in E`.
 
     Warning: if the object representing :math:`G` gets modified, the
@@ -1035,7 +1033,7 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
                 "Invalid graph G: a cnfgen.graphs.Graph object was expected"
             )
 
-        V = G.number_of_nodes()
+        V = G.number_of_vertices()
         B = BipartiteGraph(V, V)
         for u, v in G.edges():
             u, v = min(u, v), max(u, v)
@@ -1138,7 +1136,6 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
         Examples
         --------
         >>> G = Graph(4)
-        >>> G.add_nodes_from(range(1,5))
         >>> G.add_edge(2,1)
         >>> G.add_edge(3,2)
         >>> G.add_edge(1,3)
@@ -1408,8 +1405,7 @@ class VariablesManager(CNFLinear):
         >>> a(2,1)
         3
         """
-        if isinstance(G,nx.Graph) and not isinstance(G, Graph):
-            G = Graph.from_networkx(G)
+        G = Graph.normalize(G)
         newgroup = GraphEdgesVariables(self,
                                          G,
                                          labelfmt=label)
@@ -1422,7 +1418,7 @@ class VariablesManager(CNFLinear):
 
         Parameters
         ----------
-        G : networkx.DiGraph
+        G : DirectedGraph
             a directed graph
         label : str, optional
             string representation of the variables
@@ -1442,8 +1438,7 @@ class VariablesManager(CNFLinear):
         1
         >>> V.new_variable(label='Y')
         2
-        >>> G = nx.DiGraph()
-        >>> G.add_nodes_from(range(1,7))
+        >>> G = DirectedGraph(6)
         >>> G.add_edge(2,1)
         >>> G.add_edge(1,3)
         >>> G.add_edge(2,6)

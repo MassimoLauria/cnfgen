@@ -9,7 +9,7 @@ import os
 import io
 from io import StringIO
 import copy
-from bisect import bisect_right
+from bisect import bisect_right, bisect_left
 __all__ = [
     "supported_formats", "readGraph", "writeGraph", "is_dag",
     "enumerate_vertices", "enumerate_edges", "neighbors",
@@ -47,7 +47,7 @@ class BipartiteEdgeList():
         self.B = B
 
     def __len__(self):
-        return self.B.edgecount
+        return self.B.number_of_edges()
 
     def __contains__(self, t):
         return len(t) == 2 and self.B.has_edge(t[0], t[1])
@@ -55,6 +55,54 @@ class BipartiteEdgeList():
     def __iter__(self):
         for u in range(1, self.B.left_order() + 1):
             yield from ((u, v) for v in self.B.right_neighbors(u))
+
+class GraphEdgeList():
+    """Edge list for bipartite graphs"""
+
+    def __init__(self, G):
+        self.G = G
+
+    def __len__(self):
+        return self.G.number_of_edges()
+
+    def __contains__(self, t):
+        return len(t) == 2 and self.G.has_edge(t[0], t[1])
+
+    def __iter__(self):
+        n = self.G.number_of_vertices()
+        G = self.G
+        for u in range(1, n):
+            pos = bisect_right(G.adjlist[u], u)
+            while pos < len(G.adjlist[u]):
+                v = G.adjlist[u][pos]
+                yield (u, v)
+                pos += 1
+
+class DirectedEdgeList():
+    """Edge list for bipartite graphs"""
+
+    def __init__(self, D, sort_by_predecessors = True):
+        self.D = D
+        self.sort_by_pred = sort_by_predecessors
+
+    def __len__(self):
+        return self.D.number_of_edges()
+
+    def __contains__(self, t):
+        return len(t) == 2 and self.D.has_edge(t[0], t[1])
+
+    def __iter__(self):
+        n = self.D.number_of_vertices()
+        if self.sort_by_pred:
+            successors = self.D.succ
+            for src in range(1, n+1):
+                for dest in successors[src]:
+                    yield (src, dest)
+        else:
+            predecessors = self.D.pred
+            for dest in range(1, n+1):
+                for src in predecessors[dest]:
+                    yield (src, dest)
 
 
 def has_bipartition(G):
@@ -87,13 +135,13 @@ have that u < v."""
         return False
 
     def order(self):
+        return self.number_of_vertices()
+
+    def number_of_vertices(self):
         raise NotImplementedError
 
-    def size(self):
-        return len(self.edges())
-
     def number_of_edges(self):
-        return self.size()
+        raise NotImplementedError
 
     def has_edge(self, u, v):
         raise NotImplementedError
@@ -109,41 +157,95 @@ have that u < v."""
         raise NotImplementedError
 
     def __len__(self):
-        return self.order()
+        return self.number_of_vertices()
 
     def to_networkx(self):
         """Convert the graph TO a networkx object."""
         raise NotImplementedError
 
-class Graph(networkx.Graph, BaseGraph):
+    @classmethod
+    def from_networkx(cls, G):
+        """Create a graph object from a networkx graph"""
+        raise NotImplementedError
+
+    @classmethod
+    def normalize(cls, G):
+        """Guarantees a cnfgen graph object
+
+If the given graph `G` is a networkx graph object, this method
+produces a CNFgen graph object, relabeling vertices so that vertices
+are labeled as numbers from 1 to `n`, where `n` is the number of
+vertices in `G`. If the vertices in the original graph have some kind
+of order, the order is preserved.
+
+If `G` is already a `cnfgen.graphs.Graph` object, nothing is done."""
+        if isinstance(G, BaseGraph):
+            return G
+        try:
+            G2 = cls.from_networkx(G)
+            return G2
+        except AttributeError:
+            raise ValueError("G cannot be converted into a cnfgen graph object")
+
+
+class Graph(BaseGraph):
 
     def is_dag(self):
         return False
     def is_directed(self):
         return False
 
-    def __init__(self,n):
+    def __init__(self, n, name=None):
         if n<0:
             raise ValueError("n must be non negative")
-        networkx.Graph.__init__(self)
         self.n = n
-        self.name = 'a simple graph'
-        if n>0:
-            self.add_nodes_from(range(1,n+1))
+        self.m = 0
+        self.adjlist = [[] for i in range(n+1)]
+        if name is None:
+            self.name = "a simple graph with {} vertices".format(n)
+        else:
+            self.name = name
 
-    def add_edge(self,u,v):
-        if not (1 <= u <= self.n and 1 <= v <= self.n and u!=v):
-            raise ValueError("u,v must be distinct, between 1 and the number of nodes")
-        networkx.Graph.add_edge(self,u,v)
+    def add_edge(self, u, v):
+        if not (1 <= u <= self.n and 1 <= v <= self.n and u != v):
+            raise ValueError(
+                "u,v must be distinct, between 1 and the number of nodes")
+        if self.has_edge(u, v):
+            return
+        u, v = min(u, v), max(u, v)
+        pos = bisect_right(self.adjlist[u], v)
+        self.adjlist[u].insert(pos, v)
+        pos = bisect_right(self.adjlist[v], u)
+        self.adjlist[v].insert(pos, u)
+        self.m += 1
 
-    def has_edge(self,u,v):
-        return networkx.Graph.has_edge(self,u,v)
+    def has_edge(self, u, v):
+        if not (1 <= u <= self.n and 1 <= v <= self.n and u != v):
+            return False
+
+        pos = bisect_left(self.adjlist[u], v)
+        return pos < len(self.adjlist[u]) and self.adjlist[u][pos] == v
+
+    def edges(self):
+        """Outputs all edges in the graph"""
+        return GraphEdgeList(self)
+
+    def number_of_vertices(self):
+        return self.n
+
+    def number_of_edges(self):
+        return self.m
 
     def to_networkx(self):
-        return self
+        G = networkx.Graph()
+        G.add_nodes_from(range(1, self.n+1))
+        G.add_edges_from(self.edges())
+        return G
 
-    def neighbors(self,v):
-        yield from networkx.Graph.neighbors(self,v)
+    def neighbors(self, u):
+        if not( 1<= u <= self.n):
+            raise ValueError("vertex u not in the graph")
+        yield from self.adjlist[u]
 
     @classmethod
     def from_networkx(cls, G):
@@ -160,41 +262,134 @@ class Graph(networkx.Graph, BaseGraph):
 
     @classmethod
     def null_graph(cls):
-        G = cls(0)
-        G.name = 'the null graph'
-        return G
+        return cls(0,'the null graph')
 
     @classmethod
     def empty_graph(cls,n):
-        G = cls(n)
-        G.name = 'the empty graph of order '+str(n)
-        return G
+        return cls(n,'the empty graph of order '+str(n))
 
     @classmethod
     def complete_graph(cls,n):
-        G = cls(n)
+        G = cls(n,'the complete graph of order '+str(n))
         for u in range(1,n):
             for v in range(u+1,n+1):
                 G.add_edge(u,v)
-        G.name = 'the complete graph of order '+str(n)
         return G
+
+
+class DirectedGraph(BaseGraph):
+
+    def is_dag(self):
+        """Is the graph acyclic?
+
+The vertices in the graph are assumed to be topologically sorted,
+therefore this function just determines whether there are edges going
+backward with respect to this order, which can be done in O(1) because
+edges can be added and not removed."""
+        return self.still_a_dag
+
+    def is_directed(self):
+        return True
+
+    def __init__(self, n, name='a simple directed graph'):
+        if n<0:
+            raise ValueError("n must be non negative")
+        self.n = n
+        self.m = 0
+        self.still_a_dag = True
+        self.pred = [[] for i in range(n+1)]
+        self.succ = [[] for i in range(n+1)]
+        if name is None:
+            self.name = "a directed graph with {} vertices".format(n)
+        else:
+            self.name = name
+
+    def add_edge(self, src, dest):
+        if not (1 <= src <= self.n and 1 <= dest <= self.n):
+            raise ValueError(
+                "u,v must be distinct, between 1 and the number of nodes")
+        if self.has_edge(src, dest):
+            return
+        if src >= dest:
+            self.still_a_dag = False
+
+        pos = bisect_right(self.pred[dest], src)
+        self.pred[dest].insert(pos, src)
+
+        pos = bisect_right(self.succ[src], dest)
+        self.succ[src].insert(pos, dest)
+
+        self.m += 1
+
+    def has_edge(self, src, dest):
+        """True if graph contains directed edge (src,dest)"""
+        if not (1 <= src <= self.n and 1 <= dest <= self.n):
+            return False
+        pos = bisect_left(self.succ[src], dest)
+        return pos < len(self.succ[src]) and self.succ[src][pos] == dest
+
+    def edges(self):
+        return DirectedEdgeList(self)
+
+    def edges_ordered_by_successors(self):
+        return DirectedEdgeList(self,sort_by_predecessors=False)
+
+    def number_of_vertices(self):
+        return self.n
+
+    def number_of_edges(self):
+        return self.m
+
+    def to_networkx(self):
+        G = networkx.DiGraph()
+        G.add_nodes_from(range(1, self.n+1))
+        G.add_edges_from(self.edges())
+        return G
+
+    def predecessors(self, u):
+        if not( 1<= u <= self.n):
+            raise ValueError("vertex u not in the graph")
+        yield from self.pred[u]
+
+    def successors(self, u):
+        if not( 1<= u <= self.n):
+            raise ValueError("vertex u not in the graph")
+        yield from self.succ[u]
+
+
+    @classmethod
+    def from_networkx(cls, G):
+        if not isinstance(G, networkx.DiGraph):
+            raise ValueError('G is expected to be of type networkx.DiGraph')
+        G = normalize_networkx_labels(G)
+        C = cls(G.order())
+        C.add_edges_from(G.edges())
+        try:
+            C.name= G.name
+        except AttributeError:
+            C.name='<unknown graph>'
+        return C
+
 
 class BaseBipartiteGraph(BaseGraph):
     """Base class for bipartite graphs"""
 
-    def __init__(self, L, R):
+    def __init__(self, L, R, name=None):
         if L < 0 or R < 0:
             raise ValueError(
                 "Left and right size of the bipartite graph must be non-negative"
             )
         self.lorder = L
         self.rorder = R
-        self.name = 'Bipartite graph with ({},{}) vertices'.format(L, R)
+        if name is None:
+            self.name = 'a bipartite graph with ({},{}) vertices'.format(L, R)
+        else:
+            self.name = name
 
     def is_bipartite(self):
         return True
 
-    def order(self):
+    def number_of_vertices(self):
         return self.lorder + self.rorder
 
     def edges(self):
@@ -232,8 +427,8 @@ class BaseBipartiteGraph(BaseGraph):
 
 
 class BipartiteGraph(BaseBipartiteGraph):
-    def __init__(self, L, R):
-        BaseBipartiteGraph.__init__(self, L, R)
+    def __init__(self, L, R, name=None):
+        BaseBipartiteGraph.__init__(self, L, R, name)
         self.ladj = {}
         self.radj = {}
         self.edgecount = 0
@@ -272,6 +467,9 @@ class BipartiteGraph(BaseBipartiteGraph):
         self.ladj[u].insert(pv, v)
         self.radj[v].insert(pu, u)
         self.edgecount += 1
+
+    def number_of_edges(self):
+        return self.edgecount
 
     def right_neighbors(self, u):
         if not (1 <= u <= self.lorder):
@@ -341,7 +539,7 @@ class BipartiteGraph(BaseBipartiteGraph):
         return B
 
     @classmethod
-    def from_file(cls, fileorname, fileformat=None, multigraph=False):
+    def from_file(cls, fileorname, fileformat=None):
         """Load the graph from a file
 
         The file format is either indicated in the `fileformat` variable or, if
@@ -360,15 +558,12 @@ class BipartiteGraph(BaseBipartiteGraph):
         fileformat: string, optional
             The file format that the parser should expect to receive.
             See also :py:func:`cnfgen.graph.supported_formats`. By default
-            it tries to autodetect it from the file name extension (when applicable).
-
-        multi_edges: bool,optional
-            are multiple edge allowed in the graph? By default this is not allowed."""
+            it tries to autodetect it from the file name extension (when applicable)."""
 
         # Reduce to the case of filestream
         if isinstance(fileorname,str):
             with open(fileorname, 'r', encoding='utf-8') as file_handle:
-                return cls.from_file(fileorname,fileformat,multigraph)
+                return cls.from_file(file_handle,fileformat)
 
         # Discover and test file format
         fileformat = guess_fileformat(fileorname, fileformat)
@@ -1373,7 +1568,7 @@ def bipartite_random_m_edges(L, R, m, seed=None):
             if not G.has_edge(u, v):
                 G.add_edge(u, v)
                 count += 1
-    assert G.size() == m
+    assert G.number_of_edges() == m
     return G
 
 
@@ -1563,7 +1758,7 @@ def dag_pyramid(height):
 
     Returns
     -------
-    networkx.DiGraph
+    cnfgen.graphs.DirectedGraph
 
     Raises
     ------
@@ -1572,16 +1767,8 @@ def dag_pyramid(height):
     if height < 0:
         raise ValueError("The height of the tree must be >= 0")
 
-    D = networkx.DiGraph()
-    D.name = 'Pyramid of height {}'.format(height)
-
-    # vertices
-    vidx = 1
-    for layer in range(height+1):
-        for i in range(1, height-layer+2):
-            D.add_node(vidx, rank=(layer, i),
-                       label="X[{},{}]".format(layer, 1))
-            vidx += 1
+    n = (height+1)*(height+2) // 2 # number of vertices
+    D = DirectedGraph(n, 'Pyramid of height {}'.format(height))
 
     # edges
     leftsrc = 1
@@ -1609,7 +1796,7 @@ def dag_complete_binary_tree(height):
 
     Returns
     -------
-    networkx.DiGraph
+    cnfgen.graphs.DirectedGraph
 
     Raises
     ------
@@ -1619,12 +1806,11 @@ def dag_complete_binary_tree(height):
     if height < 0:
         raise ValueError("The height of the tree must be >= 0")
 
-    D = networkx.DiGraph()
-    D.name = 'Complete binary tree of height {}'.format(height)
-
     # vertices plus 1
     N = 2 * (2**height)
-    D.add_nodes_from(range(1, N))
+    name = 'Complete binary tree of height {}'.format(height)
+    D = DirectedGraph(N-1,name)
+
     # edges
     leftsrc = 1
     for dest in range(N // 2 + 1, N):
@@ -1647,7 +1833,7 @@ def dag_path(length):
 
     Returns
     -------
-    networkx.DiGraph
+    cnfgen.graphs.DirectedGraph
 
     Raises
     ------
@@ -1656,10 +1842,8 @@ def dag_path(length):
     if length < 0:
         raise ValueError("The lenght of the path must be >= 0")
 
-    D = networkx.DiGraph()
-    D.name = 'Directed path of length {}'.format(length)
-    # vertices
-    D.add_nodes_from(range(1, length+2))
+    name = 'Directed path of length {}'.format(length)
+    D = DirectedGraph(length+1,name)
     # edges
     for i in range(1, length+1):
         D.add_edge(i, i + 1)
