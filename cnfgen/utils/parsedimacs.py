@@ -80,8 +80,7 @@ def parse_dimacs(infile):
     """
     n = None  # negative signal that spec line has not been read
     m = None
-
-    my_clauses = []
+    clauses_count = 0
 
     line_counter = 0
     literal_buffer = []
@@ -118,6 +117,7 @@ def parse_dimacs(infile):
         try:
             for lv in [int(lit) for lit in line.split()]:
                 if lv == 0:
+                    clauses_count += 1
                     yield tuple(literal_buffer)
                     literal_buffer = []
                 elif 1 <= abs(lv) <= n:
@@ -134,9 +134,9 @@ def parse_dimacs(infile):
     if n is None:
         raise ValueError("Missing spec line 'p cnf <n> <m>")
 
-    if m != len(my_clauses):
+    if m != clauses_count:
         raise ValueError("Formula contains {} clauses "
-                         "but {} were expected.".format(len(my_clauses), m))
+                         "but {} were expected.".format(clauses_count, m))
 
 
 def from_dimacs_file(cnfclass, fileorname=None):

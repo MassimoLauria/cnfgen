@@ -28,8 +28,8 @@ def assertCnfEqual(cnf1, cnf2):
                                  " ".join(Delta1), " ".join(Delta2)))
 
     # test whether clause sets are the same
-    clauses1 = set(frozenset(x) for x in cnf1.clauses())
-    clauses2 = set(frozenset(x) for x in cnf2.clauses())
+    clauses1 = set(tuple(x) for x in cnf1.clauses())
+    clauses2 = set(tuple(x) for x in cnf2.clauses())
 
     Delta1 = list(str(list(x)) for x in clauses1 - clauses2)
     Delta2 = list(str(list(x)) for x in clauses2 - clauses1)

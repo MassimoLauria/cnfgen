@@ -92,12 +92,12 @@ def cli(argv=sys.argv, mode='output'):
     parser.add_argument('--no-variables-permutation',
                         '-v',
                         action='store_true',
-                        dest='no_variable_permutations',
+                        dest='no_variables_permutation',
                         help="No permutation of variables")
     parser.add_argument('--no-clauses-permutation',
                         '-c',
                         action='store_true',
-                        dest='no_clause_permutations',
+                        dest='no_clauses_permutation',
                         help="No permutation of clauses")
     parser.add_argument('--quiet',
                         '-q',
@@ -127,31 +127,18 @@ def cli(argv=sys.argv, mode='output'):
         F = from_dimacs_file(CNF)
 
     # Default permutation
-    if not args.no_variable_permutations:
-        variable_permutation = None
-    else:
-        variable_permutation = list(F.variables())
+    polarity_flips='fixed' if args.no_polarity_flips else 'shuffle'
+    variables_permutation='fixed' if args.no_variables_permutation else 'shuffle'
+    clauses_permutation='fixed' if args.no_clauses_permutation else 'shuffle'
 
-    if not args.no_clause_permutations:
-        clause_permutation = None
-    else:
-        clause_permutation = list(range(len(F)))
-
-    if not args.no_polarity_flips:
-        polarity_flip = None
-    else:
-        polarity_flip = [1] * len(list(F.variables()))
-
-    G = Shuffle(F, variable_permutation, clause_permutation, polarity_flip)
+    G = Shuffle(F, polarity_flips, variables_permutation, clauses_permutation)
 
     if mode == 'formula':
         return G
     elif mode == 'string':
-        return G.dimacs(export_header=args.verbose)
+        return G.to_dimacs()
     else:
-        with paginate_or_redirect_stdout(args.output):
-            G._dimacs_dump_clauses(output=sys.stdout,
-                                   export_header=args.verbose)
+        G.to_file(args.output,fileformat='dimacs')
 
 
 # Launcher

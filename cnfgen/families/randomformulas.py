@@ -16,18 +16,16 @@ Test if clauses `cls` is satisfied by all assigment in the
 list assignments.
 """
     for assignment in assignments:
-        if any(var in assignment and polarity == assignment[var]
-               for (polarity, var) in cls):
-            continue
-
-        else:
-            return False
+        for lit in cls:
+            if lit in assignment:
+                continue
+        return False
 
     return True
 
 
-def sample_clauses(k, indices, m, planted_assignments):
-    """Sample m random k-clauses on a set of variables
+def sample_clauses(k, n, m, planted_assignments):
+    """Sample m random k-clauses on a set of n variables
 
 First it tries sparse sampling:
 - samples with repetition which is fast
@@ -38,39 +36,43 @@ sampling, namely we generare all possible clauses and pick at random
 m of them. This approach always succeeds, but is quite slower and
 wasteful for just few samples."""
     sampled = set()
-    clauses = []
+    variables = range(1,n+1)
     t = 0
-    while len(clauses) < m and t < 10 * m:
+    clauses = 0
+    while clauses < m and t < 10 * m:
         t += 1
 
-        cls = tuple((random.choice([True, False]), 'x_{0}'.format(i))
-                    for i in sorted(random.sample(indices, k)))
+        selection =  sorted(random.sample(variables, k))
+        cls = [v*random.choice([-1,1]) for v in selection]
+        tcls = tuple(cls)
 
-        if cls in sampled:
+        if tcls in sampled:
             continue
 
         if not clause_satisfied(cls, planted_assignments):
             continue
 
-        sampled.add(cls)
-        clauses.append(cls)
+        sampled.add(tcls)
 
-    if len(clauses) < m:
-        return sample_clauses_dense(k, indices, m, planted_assignments)
+        clauses += 1
+        yield cls
+
+    if clauses < m:
+        return sample_clauses_dense(k, n, m, planted_assignments)
     return clauses
 
 
-def all_clauses(k, indices, planted_assignments):
-    for domain in itertools.combinations(indices, k):
-        for polarity in itertools.product([True, False], repeat=k):
+def all_clauses(k, n, planted_assignments):
+    for domain in itertools.combinations(range(1, n+1), k):
+        for polarity in itertools.product([-1, 1], repeat=k):
 
-            cls = list(zip(polarity, ('x_{0}'.format(i) for i in domain)))
+            cls = [p*v for p,v in zip(polarity,domain)]
             if clause_satisfied(cls, planted_assignments):
                 yield cls
 
 
-def sample_clauses_dense(k, indices, m, planted_assignments):
-    return random.sample(list(all_clauses(k, indices, planted_assignments)), m)
+def sample_clauses_dense(k, n, m, planted_assignments):
+    return random.sample(list(all_clauses(k, n, planted_assignments)), m)
 
 
 def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
@@ -96,9 +98,10 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
     seed : hashable object
        seed of the random generator
 
-    planted_assignments : iterable(dict), optional
+    planted_assignments : iterable(lists), optional
        a set of total/partial assigments such that all clauses in the formula
-       will be satisfied by all of them.
+       will be satisfied by all of them. Each partial assignment is a sequence of literals.
+       Undefined behaviour if some assignment contains opposite literals.
 
     Returns
     -------
@@ -122,12 +125,10 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
     descr = "Random {}-CNF over {} variables and {} clauses".format(k, n, m)
     F = CNF(description=descr)
 
-    indices = range(1, n + 1)
-    for i in indices:
-        F.add_variable('x_{0}'.format(i))
+    F.update_variable_number(n)
     try:
-        for clause in sample_clauses(k, indices, m, planted_assignments):
-            F.add_clause(list(clause), strict=True)
+        for clause in sample_clauses(k, n, m, planted_assignments):
+            F.add_clause(clause)
     except ValueError:
         raise ValueError(
             "There are fewer clauses available than the number requested")

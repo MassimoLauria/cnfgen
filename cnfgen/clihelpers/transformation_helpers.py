@@ -78,12 +78,11 @@ class ShuffleCmd(TransformationHelper):
     def transform_cnf(F, args):
         return Shuffle(
             F,
-            variables_permutation=None
-            if not args.no_variables_permutation else list(F.variables()),
-            clauses_permutation=None
-            if not args.no_clauses_permutation else list(range(len(F))),
-            polarity_flips=None if not args.no_polarity_flips else [1] *
-            len(list(F.variables())))
+            polarity_flips='fixed' if args.no_polarity_flips else 'shuffle',
+            variables_permutation='fixed'
+            if args.no_variables_permutation else 'shuffle',
+            clauses_permutation='fixed'
+            if args.no_clauses_permutation else 'shuffle')
 
 
 #
