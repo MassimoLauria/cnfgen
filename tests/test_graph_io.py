@@ -9,6 +9,7 @@ import cnfgen
 from cnfgen.clitools import CLIError
 from cnfgen.graphs import readGraph, writeGraph, supported_formats
 from cnfgen.graphs import has_dot_library
+from cnfgen.graphs import Graph, BipartiteGraph,DirectedGraph
 
 dot_path2 = 'graph G { 0 -- 1 -- 2}'
 gml_path2 = """
@@ -108,8 +109,9 @@ def test_low_level_gml_broken_NetworkXError():
 
 def test_low_level_dimacs_read_path2():
 
-    G = cnfgen.graphs._read_graph_dimacs_format(sio(dimacs_path2))
+    G = cnfgen.graphs._read_graph_dimacs_format(sio(dimacs_path2),Graph)
 
+    assert isinstance(G,Graph)
     assert G.order() == 3
     assert len(G.edges()) == 2
     assert G.has_edge(1, 2)
@@ -126,6 +128,7 @@ def test_readGraph_dot_path2():
         readGraph(sio(dot_path2), graph_type='simple')
 
     G = readGraph(sio(dot_path2), graph_type='simple', file_format='dot')
+    assert isinstance(G, Graph)
     assert G.order() == 3
     assert len(G.edges()) == 2
 
@@ -136,6 +139,7 @@ def test_readGraph_gml_path2():
         readGraph(sio(gml_path2), graph_type='simple')
 
     G = readGraph(sio(gml_path2), graph_type='simple', file_format='gml')
+    assert isinstance(G, Graph)
     assert G.order() == 3
     assert len(G.edges()) == 2
 
@@ -146,6 +150,7 @@ def test_readGraph_dimacs_path2():
         readGraph(sio(dimacs_path2), graph_type='simple')
 
     G = readGraph(sio(dimacs_path2), graph_type='simple', file_format='dimacs')
+    assert isinstance(G, Graph)
     assert G.order() == 3
     assert len(G.edges()) == 2
 
@@ -163,7 +168,7 @@ def test_readGraph_kthlist_non_dag():
     G = readGraph(sio(kthlist_non_dag),
                   graph_type='digraph',
                   file_format='kthlist')
-
+    assert isinstance(G, DirectedGraph)
     assert G.order() == 3
     assert len(G.edges()) == 3
 
@@ -181,7 +186,7 @@ def test_readGraph_kthlist_non_bipartite():
     G = readGraph(sio(kthlist_non_bipartite),
                   graph_type='simple',
                   file_format='kthlist')
-
+    assert isinstance(G, Graph)
     assert G.order() == 5
     assert len(G.edges()) == 5
 
@@ -205,6 +210,7 @@ def test_readGraph_kthlist_bipartite_strict():
                   graph_type='bipartite',
                   file_format='kthlist')
 
+    assert isinstance(G, BipartiteGraph)
     assert G.order() == 5
 
     L, R = G.parts()
@@ -240,9 +246,15 @@ the original file name so we can guess the format."""
     with open(fname) as ifile:
         # Parser should guess that it is a dot file
         G = readGraph(ifile, graph_type='simple')
+        assert isinstance(G, Graph)
         assert G.order() == 3
         assert len(G.edges()) == 2
 
+
+def test_write_graph_typecheck():
+    with pytest.raises(TypeError):
+        G = nx.Graph()
+        writeGraph(G, "/does_not_exist.gml", graph_type='simple')
 
 def test_undoable_io():
 
@@ -252,7 +264,8 @@ def test_undoable_io():
 
     # assumes that '/does_not_exist.gml' is not writable
     with pytest.raises(IOError):
-        writeGraph(nx.Graph(), "/does_not_exist.gml", graph_type='simple')
+        G = Graph(4)
+        writeGraph(G, "/does_not_exist.gml", graph_type='simple')
 
 
 def test_cli_filenotfound():

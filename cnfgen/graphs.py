@@ -4,12 +4,15 @@
 formulas that are graph based.
 """
 
-import networkx
 import os
 import io
+import random
 from io import StringIO
 import copy
 from bisect import bisect_right, bisect_left
+
+import networkx
+
 __all__ = [
     "supported_formats", "readGraph", "writeGraph",
     "bipartite_random_left_regular", "bipartite_random_regular",
@@ -22,10 +25,10 @@ __all__ = [
 #################################################################
 
 _graphformats = {
-    'dag': ['kthlist', 'gml', 'dot'],
+    'dag': ['kthlist', 'gml', 'dot', 'dimacs'],
     'digraph': ['kthlist', 'gml', 'dot', 'dimacs'],
     'simple': ['kthlist', 'gml', 'dot', 'dimacs'],
-    'bipartite': ['kthlist', 'matrix', 'gml', 'dot']
+    'bipartite': ['kthlist', 'gml', 'dot', 'matrix']
 }
 
 
@@ -102,13 +105,6 @@ class DirectedEdgeList():
             for dest in range(1, n+1):
                 for src in predecessors[dest]:
                     yield (src, dest)
-
-
-def has_bipartition(G):
-    """Return the bipartition of the vertices
-
-    Raises 'ValueError' if bipartition labels are missing"""
-    return isinstance(G, BaseBipartiteGraph)
 
 
 class BaseGraph():
@@ -213,6 +209,9 @@ class Graph(BaseGraph):
         pos = bisect_left(self.adjlist[u], v)
         return pos < len(self.adjlist[u]) and self.adjlist[u][pos] == v
 
+    def vertices(self):
+        return range(1, self.n+1)
+
     def edges(self):
         """Outputs all edges in the graph"""
         return GraphEdgeList(self)
@@ -230,6 +229,10 @@ class Graph(BaseGraph):
         return G
 
     def neighbors(self, u):
+        """Outputs the neighbors of vertex `u`
+
+The sequence of neighbors is guaranteed to be sorted.
+"""
         if not( 1<= u <= self.n):
             raise ValueError("vertex u not in the graph")
         yield from self.adjlist[u]
@@ -342,6 +345,9 @@ edges can be added and not removed."""
         pos = bisect_left(self.succ[src], dest)
         return pos < len(self.succ[src]) and self.succ[src][pos] == dest
 
+    def vertices(self):
+        return range(1, self.n+1)
+
     def edges(self):
         return DirectedEdgeList(self)
 
@@ -361,11 +367,17 @@ edges can be added and not removed."""
         return G
 
     def predecessors(self, u):
+        """Outputs the predecessors of vertex `u`
+
+The sequence of predecessors is guaranteed to be sorted."""
         if not( 1<= u <= self.n):
             raise ValueError("vertex u not in the graph")
         yield from self.pred[u]
 
     def successors(self, u):
+        """Outputs the successors of vertex `u`
+
+The sequence of successors is guaranteed to be sorted."""
         if not( 1<= u <= self.n):
             raise ValueError("vertex u not in the graph")
         yield from self.succ[u]
@@ -519,11 +531,17 @@ class BipartiteGraph(BaseBipartiteGraph):
         return self.edgecount
 
     def right_neighbors(self, u):
+        """Outputs the neighbors of a left vertex `u`
+
+The sequence of neighbors is guaranteed to be sorted."""
         if not (1 <= u <= self.lorder):
             raise ValueError("Invalid choice of vertex")
         return self.ladj.get(u, [])[:]
 
     def left_neighbors(self, v):
+        """Outputs the neighbors of right vertex `u`
+
+The sequence of neighbors is guaranteed to be sorted."""
         if not (1 <= v <= self.rorder):
             raise ValueError("Invalid choice of vertex")
         return self.radj.get(v, [])[:]
@@ -731,19 +749,18 @@ def _process_graph_io_arguments(iofile, graph_type, file_format, multi_edges):
         raise ValueError("The graph type must be one of " +
                          list(_graphformats.keys()))
 
-    elif graph_type in {"dag", "digraph"}:
-        if multi_edges:
-            grtype = networkx.MultiDiGraph
-        else:
-            grtype = networkx.DiGraph
-    elif graph_type in {"simple", 'bipartite'}:
-        if multi_edges:
-            grtype = networkx.MultiGraph
-        else:
-            grtype = networkx.Graph
+    if multi_edges:
+        raise NotImplementedError("Multi edges not supported yet")
+
+    elif graph_type in ["dag", "digraph"]:
+        grtype = DirectedGraph
+    elif graph_type == "simple":
+        grtype = Graph
+    elif graph_type == "bipartite":
+        grtype = BipartiteGraph
     else:
         raise RuntimeError(
-            "Unchecked graph type argument: {}".format(graph_type))
+            "Unknown graph type argument: {}".format(graph_type))
 
     # Check/discover file format specification
     if file_format == 'autodetect':
@@ -786,22 +803,23 @@ def readGraph(input_file,
               multi_edges=False):
     """Read a Graph from file
 
-    In the case of "bipartite" type, the graph is of
-    :py:class:`cnfgen.graphs.BaseBipartiteGraph`.
+    In the case of "bipartite" type, the graph obtained is of
+    :py:class:`cnfgen.graphs.BipartiteGraph`.
 
-    Otherwise the graph is managed using the
-    :pyclass:`networkx.Graph`. For the "simple" types, the graph is
-    actually a (Multi)Graph object, while it is a (Multi)DiGraph in
-    case of "dag" or "digraph".
+    In the case of "simple" type, the graph is obtained of
+    :py:class:`cnfgen.graphs.Graph`.
+
+    In the case of "dag" or "directed" type, the graph obtained is of
+    :py:class:`cnfgen.graphs.DirectedGraph`.
 
     The supported file formats are enumearated by
     :py:func:`cnfgen.graph.supported_formats`
 
-    In the case of "dag" type, the graph is guaranteed to be acyclic
-    and to pass the ``is_dag`` test.
-
-    In the case of "bipartite" type, the graph is of
-    :py:class:`cnfgen.graphs.BaseBipartiteGraph`.
+    In the case of "dag" type, the graph read in input must have
+    increasing edges, in the sense that all edges must be such that
+    the source has lower identifier than the sink. (I.e. the numeric
+    identifiers of the vertices are a topological order for the
+    graph)
 
     Parameters
     -----------
@@ -843,15 +861,20 @@ def readGraph(input_file,
     See Also
     --------
     writeGraph, is_dag, has_bipartition
+
     """
+    if multi_edges:
+        raise NotImplementedError("Multi edges not supported yet")
 
     # file name instead of file object
     if isinstance(input_file, str):
         with open(input_file, 'r', encoding='utf-8') as file_handle:
             return readGraph(file_handle, graph_type, file_format, multi_edges)
 
-    grtype, file_format = _process_graph_io_arguments(input_file, graph_type,
-                                                      file_format, multi_edges)
+    graph_class, file_format = _process_graph_io_arguments(input_file,
+                                                           graph_type,
+                                                           file_format,
+                                                           multi_edges)
 
     if file_format == 'dot':
 
@@ -860,8 +883,8 @@ def readGraph(input_file,
         # networkx seems to mismanage that and to cause a TypeError
         #
         try:
-            G = grtype(networkx.nx_pydot.read_dot(input_file))
-            G = normalize_networkx_labels(G)
+            G = networkx.nx_pydot.read_dot(input_file)
+            G = graph_class.normalize(G)
         except TypeError:
             raise ValueError('Parse Error in dot file')
 
@@ -879,25 +902,25 @@ def readGraph(input_file,
         # object too.
         #
         try:
-            G = grtype(
-                networkx.read_gml(
-                    (line.encode('ascii') for line in input_file), label='id'))
-            G = normalize_networkx_labels(G)
+            G = networkx.read_gml((line.encode('ascii') for line in input_file), label='id')
+            G = graph_class.normalize(G)
         except networkx.NetworkXError as errmsg:
             raise ValueError("[Parse error in GML input] {} ".format(errmsg))
         except UnicodeEncodeError as errmsg:
             raise ValueError(
                 "[Non-ascii chars in GML file] {} ".format(errmsg))
 
-    elif file_format == 'kthlist':
+    elif file_format == 'kthlist' and graph_type == 'bipartite':
 
-        G = _read_graph_kthlist_format(input_file,
-                                       grtype,
-                                       bipartition=(graph_type == 'bipartite'))
+        G = _read_bipartite_kthlist(input_file)
+
+    elif file_format == 'kthlist' and graph_type != 'bipartite':
+
+        G = _read_nonbipartite_kthlist(input_file,graph_class)
 
     elif file_format == 'dimacs':
 
-        G = _read_graph_dimacs_format(input_file, grtype)
+        G = _read_graph_dimacs_format(input_file, graph_class)
 
     elif file_format == 'matrix':
 
@@ -907,14 +930,8 @@ def readGraph(input_file,
         raise RuntimeError(
             "[Internal error] Format {} not implemented".format(file_format))
 
-    if graph_type == "dag" and not is_dag(G):
-        raise ValueError("[Input error] Graph must be acyclic")
-
-    if graph_type == "bipartite" and not has_bipartition(G):
-        try:
-            G = BipartiteGraph.from_networkx(G)
-        except ValueError:
-            raise ValueError("[Input error] Graph must be bipartite")
+    if graph_type == "dag" and not G.is_dag():
+        raise ValueError("[Input error] Graph must be explicitly acyclic (src->dest edges where src<dest)")
 
     return G
 
@@ -924,7 +941,7 @@ def writeGraph(G, output_file, graph_type, file_format='autodetect'):
 
     Parameters
     -----------
-    G : networkx.Graph (or similar)
+    G : BaseGraph
 
     output_file: file object
         the output file to which the graph is written. If it is a string
@@ -961,6 +978,8 @@ def writeGraph(G, output_file, graph_type, file_format='autodetect'):
     readGraph
 
     """
+    if not isinstance(G, BaseGraph):
+        raise TypeError("G must be a cnfgen.graphs.BaseGraph")
 
     # file name instead of file object
     if isinstance(output_file, str):
@@ -972,9 +991,7 @@ def writeGraph(G, output_file, graph_type, file_format='autodetect'):
 
     if file_format == 'dot':
 
-        if has_bipartition(G):
-            G = G.to_networkx()
-
+        G = G.to_networkx()
         networkx.nx_pydot.write_dot(G, output_file)
 
     elif file_format == 'gml':
@@ -984,8 +1001,7 @@ def writeGraph(G, output_file, graph_type, file_format='autodetect'):
         # a temporary binary ascii encoded buffer and then convert the
         # content before sending it to the output file.
         tempbuffer = io.BytesIO()
-        if has_bipartition(G):
-            G = G.to_networkx()
+        G = G.to_networkx()
         networkx.write_gml(G, tempbuffer)
         print(tempbuffer.getvalue().decode('ascii'), file=output_file)
 
@@ -1008,88 +1024,6 @@ def writeGraph(G, output_file, graph_type, file_format='autodetect'):
     else:
         raise RuntimeError(
             "[Internal error] Format {} not implemented".format(file_format))
-
-
-#
-# test for dag / with caching
-#
-def is_dag(digraph):
-    """Test is a directed graph is acyclic
-
-    if the input graph has a member `topologically_sorted' then assumed that
-    there is a member `ordered_vertices' and that it is a topological order.
-
-    Arguments:
-    - `digraph`: input graph
-    """
-
-    if not isinstance(digraph, (networkx.MultiDiGraph, networkx.DiGraph)):
-        return False
-
-    elif hasattr(digraph, "topologically_sorted"):
-
-        assert hasattr(digraph, "ordered_vertices")
-        assert digraph.order() == len(digraph.ordered_vertices)
-        assert set(digraph.nodes()) == set(digraph.ordered_vertices)
-        assert networkx.algorithms.is_directed_acyclic_graph(digraph)
-        return True
-
-    else:
-        return networkx.algorithms.is_directed_acyclic_graph(digraph)
-
-
-#
-# Use, when possible, a fixed vertex order
-#
-def enumerate_vertices(graph):
-    """Return the ordered list of vertices of `graph`
-
-    Parameters
-    ----------
-    graph : input graph
-    """
-    if hasattr(graph, "ordered_vertices"):
-        assert graph.order() == len(graph.ordered_vertices)
-        assert set(graph.nodes()) == set(graph.ordered_vertices)
-        return graph.ordered_vertices
-
-    try:
-        setattr(graph, "ordered_vertices", sorted(graph.nodes()))
-        return graph.ordered_vertices
-    except TypeError:
-        # cannot sort the vertices
-        return graph.nodes()
-
-
-def enumerate_edges(graph):
-    """Return the ordered list of edges of `graph`
-
-    Parameters
-    ----------
-    graph : input graph
-    """
-    if hasattr(graph, "ordered_edges"):
-        assert set(graph.edges()) == set(graph.ordered_edges)
-        return graph.ordered_edges
-
-    try:
-        setattr(graph, "ordered_edges", sorted(graph.edges()))
-        return graph.ordered_edges
-    except TypeError:
-        # could not sort the edges
-        return graph.edges()
-
-
-def neighbors(graph, v):
-    """Return the ordered list of neighbors ov a vertex
-
-    Parameters
-    ----------
-    graph : input graph
-
-    v : vertex
-    """
-    return sorted(graph.neighbors(v))
 
 
 #
@@ -1157,17 +1091,12 @@ def _kthlist_parse(inputfile):
         yield left, right, i
 
 
-# kth graph format reader
-def _read_graph_kthlist_format(inputfile,
-                               graph_class=networkx.DiGraph,
-                               bipartition=False):
-    """Read a graph from file, in the KTH reverse adjacency lists format.
+def _read_bipartite_kthlist(inputfile):
+    """Read a bipartite graph from file, in the KTH reverse adjacency lists format.
 
     Assumes the adjacecy list is given in order.
     - vertices are listed in increasing order
-    - if directed graph the adjacency list specifies incoming neighbous
-    - if DAG, the graph must be given in topological order source->sink
-    - if bipartite, only the adjiacency list of the lft side must be
+    - if bipartite, only the adjiacency list of the left side must be
       given, no list for a vertex of the right side is allowed.
 
     Parameters
@@ -1175,12 +1104,73 @@ def _read_graph_kthlist_format(inputfile,
     inputfile : file object
         file handle of the input
 
-    graph_class: class object
-        the graph class to read, one of networkx.DiGraph (default)
-        networkx.MultiDiGraph networkx.Graph networkx.MultiGraph
+    Raises
+    ------
+    ValueError
+        Error parsing the file
 
-    bipartition : boolean
-        enforce reading a bipartite graph
+    """
+    # vertex number
+    parser = _kthlist_parse(inputfile)
+    size, name = next(parser)
+    bipartition_ambiguous = [1, size]
+    edges = {}
+
+    previous = 0
+    for left, right, lineno in parser:
+
+        if left <= previous:
+            raise ValueError("Vertex at line {} is smaller than the previous one.".format(lineno))
+
+        # Check the bi-coloring on both side
+        if left > bipartition_ambiguous[1]:
+            raise ValueError(
+                "Bipartition violation al line {}. Vertex {} cannot be on the left side."
+                .format(lineno, left))
+        bipartition_ambiguous[0] = max(bipartition_ambiguous[0], left + 1)
+        for v in right:
+            if v < bipartition_ambiguous[0]:
+                raise ValueError(
+                    "Bipartition violation. Invalid edge ({},{}) at line {}."
+                    .format(left, v, lineno))
+            bipartition_ambiguous[1] = min(bipartition_ambiguous[1], v - 1)
+
+        # after vertices, add the edges
+        edges[left] = right
+
+    # fix the bipartition
+    # unsassigned vertices go to the right size
+    L = bipartition_ambiguous[0]-1
+    R = size - bipartition_ambiguous[0]+1
+    G = BipartiteGraph(L, R, name)
+
+    for u in edges:
+        for v in edges[u]:
+            G.add_edge(u, v - L )
+
+    if size != G.number_of_vertices():
+        raise ValueError("{} vertices expected. Got {} instead.".format(
+            size, G.number_of_vertices()))
+    return G
+
+
+def _read_nonbipartite_kthlist(inputfile, graph_class):
+    """Read a graph from file, in the KTH reverse adjacency lists format.
+
+    Only for simple and directed graph
+
+    Assumes the adjacecy list is given in order.
+    - vertices are listed in increasing order
+    - if directed graph the adjacency list specifies incoming neighbous
+    - if DAG, the graph must be given in topological order source->sink
+
+    Parameters
+    ----------
+    inputfile : file object
+        file handle of the input
+
+    graph_class: class
+        either Graph or DirectedGraph
 
     Raises
     ------
@@ -1188,79 +1178,31 @@ def _read_graph_kthlist_format(inputfile,
         Error parsing the file
 
     """
-    if graph_class not in [
-            networkx.DiGraph, networkx.MultiDiGraph, networkx.Graph,
-            networkx.MultiGraph
-    ]:
-        raise RuntimeError(
-            "[Internal error] Attempt to use an unsupported class for graph representation."
-        )
-
-    G = graph_class()
-    G.name = ''
-    G.ordered_vertices = []
-
-    # is the input topologically sorted?
-    topologically_sorted_input = True
+    assert graph_class in [Graph, DirectedGraph]
 
     # vertex number
-    size = -1
-
     parser = _kthlist_parse(inputfile)
-
     size, name = next(parser)
-    G.add_nodes_from(range(1, size + 1))
-    G.ordered_vertices = range(1, size + 1)
+    G = graph_class(size, name)
 
-    bipartition_ambiguous = [1, size]
-
+    previous = 0
     for left, right, lineno in parser:
 
-        # Vertices should appear in increasing order if the graph is topologically sorted
-        for v in right:
-            if v <= left:
-                topologically_sorted_input = False
-
-        # Check the bi-coloring on both side
-        if bipartition:
-            if left > bipartition_ambiguous[1]:
-                raise ValueError(
-                    "Bipartition violation al line {}. Vertex {} cannot be on the left side."
-                    .format(lineno, left))
-            bipartition_ambiguous[0] = max(bipartition_ambiguous[0], left + 1)
-            for v in right:
-                if v < bipartition_ambiguous[0]:
-                    raise ValueError(
-                        "Bipartition violation. Invalid edge ({},{}) at line {}."
-                        .format(left, v, lineno))
-                bipartition_ambiguous[1] = min(bipartition_ambiguous[1], v - 1)
+        if left <= previous:
+            raise ValueError("Vertex at line {} is smaller than the previous one.".format(lineno))
 
         # after vertices, add the edges
         for v in right:
             G.add_edge(left, v)
 
-    # label the bipartition on residual vertices
-    if bipartition:
-        for i in range(1, bipartition_ambiguous[0]):
-            G.nodes[i]['bipartite'] = 0
-        for i in range(bipartition_ambiguous[0], size + 1):
-            G.nodes[i]['bipartite'] = 1
-
-    # cache the information that the graph is topologically sorted.
-    if topologically_sorted_input:
-        G.topologically_sorted = True
-
     if size != G.order():
         raise ValueError("{} vertices expected. Got {} instead.".format(
             size, G.order()))
 
-    if bipartition:
-        return BipartiteGraph.from_networkx(G)
-    else:
-        return G
+    return G
 
 
-def _read_graph_dimacs_format(inputfile, graph_class=networkx.Graph):
+def _read_graph_dimacs_format(inputfile, graph_class):
     """Read a graph simple from file, in the DIMACS edge format.
 
     Parameters
@@ -1269,20 +1211,12 @@ def _read_graph_dimacs_format(inputfile, graph_class=networkx.Graph):
         file handle of the input
 
     graph_class: class object
-        the graph class to read, one of networkx.DiGraph (default)
-        networkx.MultiDiGraph networkx.Graph networkx.MultiGraph
+        either Graph or DirectedGraph
     """
-    if not graph_class in [
-            networkx.Graph, networkx.MultiGraph, networkx.DiGraph,
-            networkx.MultiDiGraph
-    ]:
-        raise ValueError(
-            "[Internal error] Attempt to use an unsupported class for graph representation."
-        )
+    assert graph_class in [Graph, DirectedGraph]
 
-    G = graph_class()
-    G.name = ''
-
+    G = None
+    name = ''
     n = -1
     m = -1
     m_cnt = 0
@@ -1290,31 +1224,40 @@ def _read_graph_dimacs_format(inputfile, graph_class=networkx.Graph):
     # is the input topologically sorted?
     for i, l in enumerate(inputfile.readlines()):
 
+        l = l.strip()
+
         # add the comment to the header
         if l[0] == 'c':
-            G.name += l[2:]
+            name += l[2:]
             continue
 
         # parse spec line
         if l[0] == 'p':
-            if n >= 0:
+            if G is not None:
                 raise ValueError(
                     "[Syntax error] " +
-                    "Line {} contains a second spec line.".format(i))
+                    "Line {} contains a second spec line.".format(i+1))
             _, fmt, nstr, mstr = l.split()
             if fmt != 'edge':
                 raise ValueError("[Input error] " +
-                                 "Dimacs \'edge\' format expected.")
+                                 "Dimacs \'edge\' format expected at line {}.".format(i+1))
             n = int(nstr)
             m = int(mstr)
-            G.add_nodes_from(range(1, n + 1))
+            G = graph_class(n, name)
             continue
 
         # parse spec line
         if l[0] == 'e':
+            if G is None:
+                raise ValueError("[Input error] " +
+                                 "Edge before preamble at line".format(i))
             m_cnt += 1
             _, v, w = l.split()
-            G.add_edge(int(v), int(w))
+            try:
+                G.add_edge(int(v), int(w))
+            except ValueError:
+                raise ValueError("[Syntax error] " +
+                                 "Line {} syntax error: edge must be 'e u v' where u, v are vertices".format(i))
 
     if m != m_cnt:
         raise ValueError("[Syntax error] " +
@@ -1423,34 +1366,29 @@ def _write_graph_kthlist_nonbipartite(G, output_file):
 
     Parameters
     ----------
-    G : graph object
+    G : Graph or DirectGraph
+        the graph to write on file
 
     output_file : file object
         file handle of the output
     """
+    assert isinstance(G, (Graph, DirectedGraph))
+
     print("c {}".format(G.name), file=output_file)
     print("{}".format(G.order()), file=output_file)
-
-    # we need numerical indices for the vertices
-    # adj list in the same order
-    indices = {v: i for (i, v) in enumerate(enumerate_vertices(G), start=1)}
-
-    V = enumerate_vertices(G)
 
     from io import StringIO
     output = StringIO()
 
-    for v in V:
+    for v in G.vertices():
 
         if G.is_directed():
-            nbors = [indices[w] for w in G.predecessors(v)]
+            nbors = G.predecessors(v)
         else:
-            nbors = [indices[w] for w in G.adj[v].keys()]
+            nbors = G.neighbors(v)
 
-        nbors.sort()
-
-        output.write(str(indices[v]) + " : ")
-        output.write(" ".join([str(i) for i in nbors]))
+        output.write(str(v) + " :")
+        output.write("".join([' '+str(i) for i in nbors]))
         output.write(" 0\n")
 
     print(output.getvalue(), file=output_file)
@@ -1462,12 +1400,13 @@ def _write_graph_kthlist_bipartite(G, output_file):
 
     Parameters
     ----------
-    G : graph object
+    G : BipartiteGraph
+        the graph to write on file
 
     output_file : file object
         file handle of the output
     """
-
+    assert isinstance(G, BipartiteGraph)
     print("c {}".format(G.name), file=output_file)
     print("{}".format(G.order()), file=output_file)
 
@@ -1478,8 +1417,8 @@ def _write_graph_kthlist_bipartite(G, output_file):
     offset = len(U)
 
     for u in U:
-        output.write(str(u) + " : ")
-        output.write(" ".join([str(v + offset) for v in G.right_neighbors(u)]))
+        output.write(str(u) + " :")
+        output.write("".join([' '+str(v + offset) for v in G.right_neighbors(u)]))
         output.write(" 0\n")
 
     print(output.getvalue(), file=output_file)
@@ -1490,19 +1429,20 @@ def _write_graph_dimacs_format(G, output_file):
 
     Parameters
     ----------
-    G : graph object
+    G : Graph or DirectGraph
+        the graph to write on file
 
     output_file : file object
         file handle of the output
     """
-
+    assert isinstance(G, (Graph, DirectedGraph))
     print("c {}".format(G.name).strip(), file=output_file)
-    vertices = dict((name, index) for index, name in enumerate(G.nodes(), 1))
-    edges = G.edges()
-    print("p edge {} {}".format(len(vertices), len(edges)), file=output_file)
+    n = G.number_of_vertices()
+    m = G.number_of_edges()
+    print("p edge {} {}".format(n,m), file=output_file)
 
-    for v, w in edges:
-        print("e {} {}".format(vertices[v], vertices[w]), file=output_file)
+    for v, w in G.edges():
+        print("e {} {}".format(v, w), file=output_file)
 
 
 def _write_graph_matrix_format(G, output_file):
@@ -1510,12 +1450,13 @@ def _write_graph_matrix_format(G, output_file):
 
     Parameters
     ----------
-    G : graph object
+    G : BipartiteGraph
+        the graph to write in output
 
     output_file : file object
         file handle of the output
     """
-
+    assert isinstance(G, BipartiteGraph)
     print("{} {}".format(G.left_order(), G.right_order()),
           file=output_file)
     L, R = G.parts()
@@ -1559,7 +1500,7 @@ def bipartite_random_left_regular(l, r, d, seed=None):
 
     Returns
     -------
-    networkx.Graph
+    BipartiteGraph
 
     Raises
     ------
@@ -1759,7 +1700,7 @@ def bipartite_random_regular(l, r, d, seed=None):
 
     Returns
     -------
-    networkx.Graph
+    BipartiteGraph
 
     Raises
     ------
@@ -1924,23 +1865,20 @@ def dag_path(length):
     return D
 
 
-def sample_missing_edges(G, m, seed=None):
-    """Sample m pairs of missing edges in G
+def add_random_missing_edges(G, m, seed=None):
+    """Add m random missing edges to G
 
-    If :math:`G` is not complete and has at least :math:`m` missing edges, :math:`m` of them are sampled.
+    If :math:`G` is not complete and has at least :math:`m` missing
+    edges, :math:`m` of them are sampled and added to the graph.
 
     Parameters
     ----------
-    G : networkx.Graph
+    G : Graph
         a graph with at least :math:`m` missing edges
     m : int
        the number of missing edges to sample
     seed : hashable object
        seed of random generator
-
-    Returns
-    -------
-    list of edges
 
     Raises
     ------
@@ -1949,21 +1887,16 @@ def sample_missing_edges(G, m, seed=None):
     RuntimeError
         Sampling failure in the sparse case
 
-
     """
-
-    import random
     if seed is not None:
         random.seed(seed)
-
-    from networkx import non_edges
 
     if m < 0:
         raise ValueError("You can only sample a non negative number of edges.")
 
     total_number_of_edges = None
 
-    if has_bipartition(G):
+    if G.is_bipartite():
 
         Left, Right = G.parts()
         total_number_of_edges = len(Left) * len(Right)
@@ -1974,49 +1907,46 @@ def sample_missing_edges(G, m, seed=None):
             return (u, v)
 
         def available_edges():
-            return [(u, v) for u in Left for v in Right
-                    if not G.has_edge(u, v)]
+            return [(u, v) for u in Left for v in Right if not G.has_edge(u, v)]
 
     else:
 
-        total_number_of_edges = G.order() * (G.order() - 1) / 2
+        V = G.number_of_vertices()
+        total_number_of_edges = V * (V - 1) / 2
 
         def edge_sampler():
-            return random.sample(G.nodes(), 2)
+            return random.sample(range(1, V+1), 2)
 
         def available_edges():
-            return list(non_edges(G))
+            result = []
+            for u in range(1, V):
+                for v in range(u+1, V+1):
+                    if not G.has_edge(u, v):
+                        result.append((u, v))
+            return result
 
-    number_avaiable_edges = total_number_of_edges - G.number_of_edges()
+    # How many edges we want in the end?
+    goal = G.number_of_edges() + m
 
-    if number_avaiable_edges < m:
+    if goal > total_number_of_edges:
         raise ValueError(
             "The graph does not have {} missing edges to sample.".format(m))
 
-    if G.number_of_edges() + m >= total_number_of_edges / 2:
-        # Large density case: enumerate missing edges and sample.
-        return random.sample(available_edges(), m)
+    # Sparse case: sample and retry
+    for _ in range(10 * m):
 
-    else:
-        # Sparse case: sample and retry
-        sampled_edges = set()
-        addition = []
+        if G.number_of_edges() >= goal:
+            break
 
-        for _ in range(100 * m):
+        u, v = edge_sampler()
+        if not G.has_edge(u, v):
+            G.add_edge(u, v)
 
-            if len(addition) >= m:
-                break
-
-            u, v = edge_sampler()
-            if (u, v) not in sampled_edges and \
-               (v, u) not in sampled_edges and \
-               not G.has_edge(u, v):
-                addition.append((u, v))
-                sampled_edges.add((u, v))
-
-        if len(addition) >= m:
-            return addition
-        else:
-            raise RuntimeError(
-                "Improbable failure at sampling missing edges in a sparse graph."
-            )
+    if G.number_of_edges() < goal:
+        # Very unlikely case: sampling process failed and the solution
+        # is to use the sampling process tailored for denser graph, so
+        # that a correct result is guaranteed. This requires
+        # generating all available edges
+        for u, v in random.sample(available_edges(),
+                                  goal - G.number_of_edges()):
+            G.add_edge(u, v)

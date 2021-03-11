@@ -4,9 +4,6 @@
 """
 
 from cnfgen.formula.cnf import CNF
-from cnfgen.graphs import enumerate_vertices
-from cnfgen.graphs import neighbors
-
 from itertools import combinations
 
 

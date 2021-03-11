@@ -1,6 +1,5 @@
 import pytest
 
-from cnfgen.graphs import has_bipartition
 from cnfgen.graphs import CompleteBipartiteGraph
 from cnfgen.graphs import BipartiteGraph
 
@@ -20,7 +19,7 @@ def test_build_bipartite():
     assert (1, 2) in G.edges()
     assert (3, 4) in G.edges()
     assert (2, 1) not in G.edges()
-    assert has_bipartition(G)
+    assert G.is_bipartite()
 
 
 def test_complete_bipartite():
@@ -34,7 +33,7 @@ def test_complete_bipartite():
     assert (1, 2) in G.edges()
     assert (3, 4) in G.edges()
     assert (5, 5) in G.edges()
-    assert has_bipartition(G)
+    assert G.is_bipartite()
 
 
 def test_empty_bipartite():

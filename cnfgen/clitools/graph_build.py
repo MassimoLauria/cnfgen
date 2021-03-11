@@ -22,7 +22,7 @@ from cnfgen.graphs import dag_complete_binary_tree
 from cnfgen.graphs import dag_pyramid
 from cnfgen.graphs import dag_path
 
-from cnfgen.graphs import sample_missing_edges
+from cnfgen.graphs import add_random_missing_edges
 from cnfgen.graphs import normalize_networkx_labels
 
 
@@ -223,7 +223,7 @@ def modify_graph_addedges(parsed, G):
     except (TypeError, ValueError, AssertionError):
         raise ValueError('\'addedges\' expects argument m with m>=0')
 
-    G.add_edges_from(sample_missing_edges(G, k))
+    add_random_missing_edges(G, k)
     G.name += " + {} random edges".format(k)
     return G
 

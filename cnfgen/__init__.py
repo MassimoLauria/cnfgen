@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-"""Init code of the cnfgen pacakge
+"""Init code of the cnfgen package
 
 Essentially it makes visible the names of the formulas and
 transformations implemented, plus some IO functions.

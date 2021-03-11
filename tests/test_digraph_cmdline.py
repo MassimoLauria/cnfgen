@@ -3,29 +3,23 @@ import pytest
 
 from cnfgen.clitools.graph_args import parse_graph_argument
 from cnfgen.clitools.graph_args import obtain_graph
-from cnfgen.graphs import is_dag
 
 def DI(graphspec):
     "Quickly makes a graph from the specs"
     parser = parse_graph_argument('digraph', graphspec)
     return obtain_graph(parser)
 
-def DAG(graphspec):
-    "Quickly makes a graph from the specs"
-    parser = parse_graph_argument('dag', graphspec)
-    return obtain_graph(parser)
-
 def test_tree0():
     G = DI("tree 0")
     assert list(G.nodes()) == [1]
     assert G.number_of_edges() == 0
-    assert is_dag(G)
+    assert G.is_dag()
 
 def test_tree1():
     G = DI("tree 1")
     assert list(G.nodes()) == [1, 2, 3]
     assert G.number_of_edges() == 2
-    assert is_dag(G)
+    assert G.is_dag()
     assert G.has_edge(1, 3)
     assert G.has_edge(2, 3)
 
@@ -34,7 +28,7 @@ def test_tree4():
     assert G.order() == 31
     assert list(G.nodes()) == list(range(1, 32))
     assert G.number_of_edges() == 30
-    assert is_dag(G)
+    assert G.is_dag()
 
 
 def test_path0():
@@ -42,31 +36,31 @@ def test_path0():
     assert G.order() == 1
     assert list(G.nodes()) == [1]
     assert G.number_of_edges() == 0
-    assert is_dag(G)
+    assert G.is_dag()
 
 def test_path1():
     G = DI("path 1")
     assert list(G.nodes()) == [1,2]
     assert G.number_of_edges() == 1
-    assert is_dag(G)
+    assert G.is_dag()
 
 def test_path4():
     G = DI("path 4")
     assert list(G.nodes()) == [1,2,3,4,5]
     assert G.number_of_edges() == 4
-    assert is_dag(G)
+    assert G.is_dag()
 
 def test_pyramid0():
     G = DI("pyramid 0")
     assert list(G.nodes()) == [1]
     assert G.number_of_edges() == 0
-    assert is_dag(G)
+    assert G.is_dag()
 
 def test_pyramid1():
     G = DI("pyramid 1")
     assert list(G.nodes()) == [1,2,3]
     assert G.number_of_edges() == 2
-    assert is_dag(G)
+    assert G.is_dag()
     assert G.has_edge(1, 3)
     assert G.has_edge(2, 3)
 
@@ -74,7 +68,7 @@ def test_pyramid5():
     G = DI("pyramid 5")
     assert list(G.nodes()) == list(range(1,22))
     assert G.number_of_edges() == (21 - 6)* 2
-    assert is_dag(G)
+    assert G.is_dag()
     assert G.has_edge(1, 7)
     assert G.has_edge(2, 7)
     assert G.has_edge(2, 8)
