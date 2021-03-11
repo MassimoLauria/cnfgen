@@ -25,7 +25,7 @@ def test_glrm():
     G = get_bipartite("glrm  10  9 15")
 
     assert G.order() == 19
-    assert G.size() == 15
+    assert G.number_of_edges() == 15
 
     left, right = G.parts()
 
@@ -37,7 +37,7 @@ def test_glrd():
     G = get_bipartite("glrd 20 13 3")
 
     assert G.order() == 33
-    assert G.size() == 60
+    assert G.number_of_edges() == 60
 
     left, right = G.parts()
 
@@ -52,7 +52,7 @@ def test_regular():
     G = get_bipartite("regular 10 8 4")
 
     assert G.order() == 18
-    assert G.size() == 40
+    assert G.number_of_edges() == 40
 
     left, right = G.parts()
 
@@ -75,7 +75,7 @@ def test_shift_empty():
 
     G = get_bipartite("shift 10 9")
     assert G.order() == 19
-    assert G.size() == 0
+    assert G.number_of_edges() == 0
 
     left, right = G.parts()
 
@@ -93,7 +93,7 @@ def test_bshift_1248():
 
     G = get_bipartite("shift 10 10 1 2 4 8")
     assert G.order() == 20
-    assert G.size() == 40
+    assert G.number_of_edges() == 40
 
     left, right = G.parts()
 
@@ -111,7 +111,7 @@ def test_bshift_1248bis():
 
     G = get_bipartite("shift 13 10 1 2 4 8")
     assert G.order() == 23
-    assert G.size() == 52
+    assert G.number_of_edges() == 52
 
     left, right = G.parts()
 
@@ -129,7 +129,7 @@ def test_complete():
     G = get_bipartite("complete 10 9")
 
     assert G.order() == 19
-    assert G.size() == 90
+    assert G.number_of_edges() == 90
 
     left, right = G.parts()
 
@@ -152,7 +152,7 @@ def test_empty_to_complete():
     G = get_bipartite("glrp  10  9 0 addedges 90")
 
     assert G.order() == 19
-    assert G.size() == 90
+    assert G.number_of_edges() == 90
 
     left, right = G.parts()
 
@@ -170,7 +170,7 @@ def test_addedges():
     G = get_bipartite("glrm 10 9 15 addedges 10")
 
     assert G.order() == 19
-    assert G.size() == 25
+    assert G.number_of_edges() == 25
 
 
 def test_too_large_left():
@@ -187,18 +187,18 @@ def test_already_complete_plant():
     G = get_bipartite("complete 10 9 plantbiclique 5 4")
 
     assert G.order() == 19
-    assert G.size() == 90
+    assert G.number_of_edges() == 90
 
 
 def test_plant_complete():
     G = get_bipartite("glrp 10 9 0 plantbiclique 10 9")
 
     assert G.order() == 19
-    assert G.size() == 90
+    assert G.number_of_edges() == 90
 
 
 def test_add_plant():
     G = get_bipartite("glrm 10 9 15 plantbiclique 5 4")
 
     assert G.order() == 19
-    assert 20 <= G.size() <= 35
+    assert 20 <= G.number_of_edges() <= 35

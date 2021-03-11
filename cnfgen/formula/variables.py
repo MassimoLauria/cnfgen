@@ -15,7 +15,7 @@ Copyright (C) 2019-2021  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
-from itertools import product,combinations, combinations_with_replacement
+from itertools import product,combinations, combinations_with_replacement,permutations
 from bisect import bisect_right
 
 from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph, CompleteBipartiteGraph
@@ -423,21 +423,33 @@ class BlockOfVariables(BaseVariableGroup):
             residue = residue % w
         return index
 
-class CombinationVariables(BaseVariableGroup):
-    """Group of variables corrisponding to sets (or multisets) of indices
+class WordOfIndicesVariables(BaseVariableGroup):
+    """Group of variables corrisponding to fixed sequences of indices
 
     This objects represents groups of variables that are indexed by
-    some sets of integers from a ground set :math:`[n]`. For example we
+    some sequences of integers from a ground set :math:`[n]`. For example we
     can have variables :math:`p_{S}` for :math:`S in
     \\binom{[n]}{k}[10]` for a fixed :math:`k`.
 
     Each set is identified by an index, which is just the sequence of
     it's elements, sorted.
 
+    Three types of indices are supported:
+    - combinations:
+          sorted tuples of length :math:`k` with no repetitions
+    - combinations_with_replacement:
+          sorted tuples of length :math:`k` with repetitions
+    - permutation:
+          tuples of length :math:`k` with no repetitions
+    - words:
+          tuples of length :math:`k` with repetitions
+
+    The latter is very similar to cartesian product variable group.
+
     Examples
     --------
     >>> F = VariablesManager()
-    >>> G = CombinationVariables(F,4,2,'[{}]')
+    >>> G = WordOfIndicesVariables(F,4,2,'[{}]')
     >>> print(*G.label())
     [1,2] [1,3] [1,4] [2,3] [2,4] [3,4]
     >>> print(*G.indices())
@@ -473,10 +485,15 @@ class CombinationVariables(BaseVariableGroup):
     q(1,2,3)
     >>> print(p.label(1,2,5))
     p(1,2,5)
+
     """
 
-    def __init__(self, formula, n, k, labelfmt=None, replacement=False):
+    def __init__(self, formula, n, k,
+                 labelfmt=None,
+                 wordtype='combinations'):
         """Creates a variables group object
+
+
 
         Parameters
         ----------
@@ -486,8 +503,8 @@ class CombinationVariables(BaseVariableGroup):
             ranges of the indices
         labelfmt: str
             format string for the variable labels
-        replacements: bool
-            include combinations with replacement
+        wordtype: {'combinations', 'permutations','combinations_with_replacement', 'words'}
+            the type of indices we want. (default: 'combinations')
         """
         if labelfmt is None:
             labelfmt = 'p_{}'
@@ -504,14 +521,18 @@ class CombinationVariables(BaseVariableGroup):
 
         self.n = n
         self.k = k
-        self.replacement = replacement
+        self.wordtype = wordtype
         self.offset = formula.number_of_variables()
         self.vid2seq=[]
         self.seq2vid={}
-        if not self.replacement:
-            gen = combinations(range(1,n+1),k)
-        else:
+        if wordtype == 'combinations':
+            gen = combinations(range(1, n+1), k)
+        elif wordtype == 'combinations_with_replacements':
             gen = combinations_with_replacement(range(1,n+1),k)
+        elif wordtype == 'permutations':
+            gen = permutations(range(1, n+1), k)
+        elif wordtype == 'words':
+            gen = product(range(1, n+1), repeat=k)
 
         vid = self.offset
         for c in gen:
@@ -1298,14 +1319,34 @@ class VariablesManager(CNFLinear):
     def new_combinations(self, n, k, label='p_{{{}}}'):
         """Create a new group of variables indexed by k-subsets of [n]"""
 
-        newgroup = CombinationVariables(self, n, k, labelfmt=label)
+        newgroup = WordOfIndicesVariables(self, n, k, labelfmt=label,
+                                          wordtype='combinations')
         self._add_variable_group(newgroup)
         return newgroup
 
     def new_combinations_with_replacement(self, n, k, label='p_{{{}}}'):
         """Create a new group of variables indexed by k-subsets of [n]"""
 
-        newgroup = CombinationVariables(self, n, k, labelfmt=label, replacement=True)
+        newgroup = WordOfIndicesVariables(self, n, k, labelfmt=label,
+                                          wordtype='combinations_with_replacement')
+        self._add_variable_group(newgroup)
+        return newgroup
+
+    def new_permutations(self, n, k=None, label='p_{{{}}}'):
+        """Create a new group of variables indexed by k-permutations of [n]"""
+
+        if k is None:
+            k = n
+        newgroup = WordOfIndicesVariables(self, n, k, labelfmt=label,
+                                          wordtype='permutations')
+        self._add_variable_group(newgroup)
+        return newgroup
+
+    def new_words(self, n, k, label='p_{{{}}}'):
+        """Create a new group of variables indexed by sequences [n]^k"""
+
+        newgroup = WordOfIndicesVariables(self, n, k, labelfmt=label,
+                                          wordtype='words')
         self._add_variable_group(newgroup)
         return newgroup
 

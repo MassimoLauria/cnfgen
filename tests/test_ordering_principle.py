@@ -4,6 +4,7 @@ import sys
 
 from cnfgen import CNF
 from cnfgen import OrderingPrinciple, GraphOrderingPrinciple
+from cnfgen.graphs import Graph
 from cnfgen.clitools import cnfgen, CLIError
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs, assertCnfEqualsIgnoreVariables
 
@@ -29,7 +30,7 @@ def test_op_one_element():
 
 def test_gop_empty():
     G = CNF()
-    graph = nx.Graph()
+    graph = Graph(0)
     F = GraphOrderingPrinciple(graph)
     assertCnfEqual(F, G)
 
@@ -39,7 +40,7 @@ def test_gop_complete():
         for smart in (True, False):
             for plant in (True, False):
                 for knuth in (0, 2, 3):
-                    graph = nx.complete_graph(4)
+                    graph = Graph.complete_graph(4)
                     F = GraphOrderingPrinciple(graph, total, smart, plant,
                                                knuth)
                     G = OrderingPrinciple(4, total, smart, plant, knuth)
@@ -84,7 +85,7 @@ def test_cli_gop():
             with pytest.raises(CLIError):
                 cnfgen(parameters)
         else:
-            graph = nx.complete_graph(5)
+            graph = Graph.complete_graph(5)
             F = GraphOrderingPrinciple(graph, total, smart, plant, knuth)
             assertCnfEqualsDimacs(F, cnfgen(parameters, mode='string'))
 

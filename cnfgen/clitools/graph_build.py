@@ -44,7 +44,7 @@ def obtain_gnd(parsed):
         raise ValueError('\'gnd\' expects arguments N d with even N * d')
 
     G = networkx.random_regular_graph(d, n)
-    G = normalize_networkx_labels(G)
+    G = Graph.normalize(G)
     G.name = 'Random {}-regular graph of {} vertices'.format(d, n)
     return G
 
@@ -93,7 +93,7 @@ def obtain_gnp(parsed):
 
     if t == 1:
         G = networkx.gnp_random_graph(n, p)
-        G = Graph.from_networkx(G)
+        G = Graph.normalize(G)
         G.name = 'Random {}-biased graph of {} vertices'.format(p, n)
     else:
         G = multipartite_tnp(t, n, p)
