@@ -2,8 +2,10 @@
 # -*- coding:utf-8 -*-
 """Implementation of subset cardinality formulas
 """
+from math import ceil, floor
+
 from cnfgen.formula.cnf import CNF
-from cnfgen.graphs import has_bipartition
+from cnfgen.graphs import BipartiteGraph
 
 
 def SubsetCardinalityFormula(B, equalities=False):
@@ -73,39 +75,29 @@ def SubsetCardinalityFormula(B, equalities=False):
            Theory and Applications of Satisfiability Testing--SAT 2010(2010)
 
     """
-    if not has_bipartition(B):
-        raise ValueError("Argument B is not a bipartite graph")
+    B = BipartiteGraph.normalize(B)
 
     Left, Right = B.parts()
 
     description = "Subset cardinality formula for {0}".format(B.name)
-    ssc = CNF(description=description)
+    F = CNF(description=description)
 
-    def var_name(u, v):
-        """Compute the variable names."""
-        return 'x_{{{0},{1}}}'.format(u, v)
-
-    for u, v in B.edges():
-        ssc.add_variable(var_name(u, v))
+    e = F.new_bipartite_edges(B, label='x_{{{0},{1}}}')
 
     for u in Left:
-        edge_vars = [var_name(u, v) for v in B.right_neighbors(u)]
 
+        hceil = (B.right_degree(u)+1) // 2
         if equalities:
-            for cls in CNF.exactly_half_ceil(edge_vars):
-                ssc.add_clause(cls, strict=True)
+            F.add_linear(e(u, None), '==', hceil)
         else:
-            for cls in CNF.loose_majority_constraint(edge_vars):
-                ssc.add_clause(cls, strict=True)
+            F.add_loose_majority(e(u, None))
 
     for v in Right:
-        edge_vars = [var_name(u, v) for u in B.left_neighbors(v)]
 
+        hfloor = B.left_degree(v) // 2
         if equalities:
-            for cls in CNF.exactly_half_floor(edge_vars):
-                ssc.add_clause(cls, strict=True)
+            F.add_linear(e(None, v), '==', hfloor)
         else:
-            for cls in CNF.loose_minority_constraint(edge_vars):
-                ssc.add_clause(cls, strict=True)
+            F.add_loose_minority(e(None, v))
 
-    return ssc
+    return F

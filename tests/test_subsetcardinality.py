@@ -1,5 +1,6 @@
 import pytest
 import networkx as nx
+from itertools import product
 
 from cnfgen import CNF
 from cnfgen import SubsetCardinalityFormula
@@ -32,7 +33,6 @@ def test_complete_even():
     -1 -3 0
     -2 -4 0
     """
-    print(F.latex())
     assertCnfEqualsDimacs(F, dimacs)
 
 
@@ -81,20 +81,21 @@ def test_complete_odd():
     assertCnfEqualsDimacs(F, dimacs)
 
 
-def test_cli_complete():
-    for rows in range(2, 5):
-        for columns in range(2, 5):
-            parameters = [
-                "cnfgen", "-q", "subsetcard", "complete",
-                str(rows),
-                str(columns)
-            ]
-            graph = CompleteBipartiteGraph(rows, columns)
-            F = SubsetCardinalityFormula(graph)
+cli_complete_cases=product(range(2, 5),range(2, 5))
 
-            lib = F.dimacs(export_header=False)
-            cli = cnfgen(parameters, mode='string')
-            assert cli == lib
+@pytest.mark.parametrize('rows,columns', cli_complete_cases)
+def test_cli_complete(rows,columns):
+    parameters = [
+        "cnfgen", "-q", "subsetcard", "complete",
+        rows,
+        columns
+    ]
+    graph = CompleteBipartiteGraph(rows, columns)
+    F = SubsetCardinalityFormula(graph)
+
+    lib = F.to_dimacs()
+    cli = cnfgen(parameters, mode='string')
+    assert cli == lib
 
 
 def test_cli_not_bipartite():
@@ -105,10 +106,10 @@ def test_cli_not_bipartite():
 def test_cli_shortcut_one_arg():
     F = cnfgen(["cnfgen", "-q", "subsetcard", "10"], mode='formula')
     # 10 x 10 4 regular graph + 1 edge: 41 vars
-    assert len(list(F.variables())) == 41
+    assert F.number_of_variables() == 41
 
 
 def test_cli_shortcut_two_args():
     F = cnfgen(["cnfgen", "-q", "subsetcard", "15", "6"], mode='formula')
     # 15 x 15 6-regular graph + 1 edge: 91 vars
-    assert len(list(F.variables())) == 91
+    assert F.number_of_variables() == 91

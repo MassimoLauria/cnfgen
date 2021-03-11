@@ -158,6 +158,8 @@ class CNFLinear(BaseCNF):
         lists : iterable(int)
            literals in the constraint
         """
+        if isgenerator(lits):
+            lits = list(lits)
         threshold = ((len(lits) + 1) // 2)
         return self.add_linear(lits, '>=', threshold)
 
@@ -169,6 +171,8 @@ class CNFLinear(BaseCNF):
         lists : iterable(int)
            literals in the constraint
         """
+        if isgenerator(lits):
+            lits = list(lits)
         threshold = len(lits) // 2
         return self.add_linear(lits, '<=', threshold)
 
@@ -180,6 +184,8 @@ class CNFLinear(BaseCNF):
         lists : iterable(int)
            literals in the constraint
         """
+        if isgenerator(lits):
+            lits = list(lits)
         threshold = len(lits)//2 + 1
         return self.add_linear(lits, '>=', threshold)
 
@@ -191,5 +197,7 @@ class CNFLinear(BaseCNF):
         lists : iterable(int)
            literals in the constraint
         """
+        if isgenerator(lits):
+            lits = list(lits)
         threshold = (len(lits) - 1) // 2
         return self.add_linear(lits, '<=', threshold)

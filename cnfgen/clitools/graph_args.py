@@ -312,29 +312,6 @@ class ObtainGraphAction(argparse.Action):
                                                 **kwargs)
 
 
-def _make_graph_action(graphtype):
-    """Create an Argparse action for the appropriate graph type"""
-    class X(ObtainGraphAction):
-        def __init__(self, option_strings, dest, nargs=None, **kwargs):
-            if nargs is not None:
-                raise ValueError("nargs not allowed")
-            super(ObtainSimpleGraph, self).__init__(option_strings, dest,
-                                                    **kwargs)
-
-        def __call__(self, parser, args, values, option_string=None):
-            try:
-                G = make_graph_from_spec(graphtype, values)
-                setattr(args, self.dest, G)
-            except ValueError as e:
-                parser.error(str(e))
-            except FileNotFoundError as e:
-                parser.error(str(e))
-
-
-# ObtainSimpleGraph = _make_graph_action('simple')
-# ObtainBipartiteGraph = _make_graph_action('bipartite')
-# ObtainDirectedAcyclicGraph = _make_graph_action('dag')
-
 
 class ObtainSimpleGraph(ObtainGraphAction):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):

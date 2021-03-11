@@ -11,8 +11,7 @@ from io import StringIO
 import copy
 from bisect import bisect_right, bisect_left
 __all__ = [
-    "supported_formats", "readGraph", "writeGraph", "is_dag",
-    "enumerate_vertices", "enumerate_edges", "neighbors",
+    "supported_formats", "readGraph", "writeGraph",
     "bipartite_random_left_regular", "bipartite_random_regular",
     "bipartite_random_m_edges", "bipartite_random", "dag_complete_binary_tree",
     "dag_pyramid",'BipartiteGraph', 'Graph'
@@ -173,23 +172,8 @@ have that u < v."""
 
     @classmethod
     def normalize(cls, G):
-        """Guarantees a cnfgen graph object
-
-If the given graph `G` is a networkx graph object, this method
-produces a CNFgen graph object, relabeling vertices so that vertices
-are labeled as numbers from 1 to `n`, where `n` is the number of
-vertices in `G`. If the vertices in the original graph have some kind
-of order, the order is preserved.
-
-If `G` is already a `cnfgen.graphs.Graph` object, nothing is done."""
-        if isinstance(G, BaseGraph):
-            return G
-        try:
-            G2 = cls.from_networkx(G)
-            return G2
-        except AttributeError:
-            raise ValueError("G cannot be converted into a cnfgen graph object")
-
+        """Guarantees a cnfgen graph object"""
+        raise NotImplementedError
 
 class Graph(BaseGraph):
 
@@ -283,6 +267,28 @@ class Graph(BaseGraph):
             for v in range(u+1,n+1):
                 G.add_edge(u,v)
         return G
+
+
+    @classmethod
+    def normalize(cls, G):
+        """Guarantees a cnfgen.graphs.Graph object
+
+If the given graph `G` is a networkx.Graph object, this method
+produces a CNFgen simple graph object, relabeling vertices so that
+vertices are labeled as numbers from 1 to `n`, where `n` is the number
+of vertices in `G`. If the vertices in the original graph have some
+kind of order, the order is preserved.
+
+If `G` is already a `cnfgen.graphs.Graph` object, nothing is done."""
+        if isinstance(G, Graph):
+            return G
+        if isinstance(G, BaseGraph):
+            raise TypeError("G must be either a networx.Graph or cnfgen.Graph object")
+        try:
+            G2 = cls.from_networkx(G)
+            return G2
+        except AttributeError:
+            raise ValueError("G cannot be converted to a simple graph object")
 
 
 class DirectedGraph(BaseGraph):
@@ -387,6 +393,30 @@ edges can be added and not removed."""
             C.name='<unknown graph>'
         return C
 
+    @classmethod
+    def normalize(cls, G):
+        """Guarantees a cnfgen.graphs.DirerctedGraph object
+
+If the given graph `G` is a networkx.DiGraph object, this method
+produces a CNFgen directed graph object, relabeling vertices so that
+vertices are labeled as numbers from 1 to `n`, where `n` is the number
+of vertices in `G`. If the vertices in the original graph have some
+kind of order, the order is preserved.
+
+If all edges go from lower vertices to higher vertices, with respect
+to the labeling, then t he graph is considered a directed acyclic
+graph DAG.
+
+If `G` is already a `cnfgen.graphs.DirectedGraph` object, nothing is done."""
+        if isinstance(G, DirectedGraph):
+            return G
+        if isinstance(G, BaseGraph):
+            raise TypeError("G must be either a networx.DiGraph or cnfgen.DirectedGraph object")
+        try:
+            G2 = cls.from_networkx(G)
+            return G2
+        except AttributeError:
+            raise ValueError("G cannot be converted to a directed graph object")
 
 class BaseBipartiteGraph(BaseGraph):
     """Base class for bipartite graphs"""
@@ -592,12 +622,36 @@ class BipartiteGraph(BaseBipartiteGraph):
         # Read file
         return readGraph(fileorname,'bipartite',fileformat)
 
+    @classmethod
+    def normalize(cls, G):
+        """Guarantees a cnfgen.graphs.BipartiteGraph object
+
+If the given graph `G` is a networkx.Graph object with a bipartition,
+this method produces a CNFgen bipartite graph object, relabeling
+vertices so that vertices og each side are labeled as numbers from 1
+to `n` and 1 to `m` respectively, where `n` and `m` are the numbers of
+vertices in `G` on the left and right side, respectively. If the
+vertices in the original graph have some kind of order, the order
+is preserved.
+
+If `G` is already a `cnfgen.graphs.BipartiteGraph` object, nothing is done.
+
+        """
+        if isinstance(G, BipartiteGraph):
+            return G
+        if isinstance(G, BaseGraph):
+            raise TypeError("G must be either a bipartite networx.Graph or cnfgen.BipartiteGraph object")
+        try:
+            G2 = cls.from_networkx(G)
+            return G2
+        except AttributeError:
+            raise ValueError("G cannot be converted to a cnfgen bipartite graph")
 
 
 
-class CompleteBipartiteGraph(BaseBipartiteGraph):
+class CompleteBipartiteGraph(BipartiteGraph):
     def __init__(self, L, R):
-        BaseBipartiteGraph.__init__(self, L, R)
+        BipartiteGraph.__init__(self, L, R)
         self.name = 'Complete bipartite graph with ({},{}) vertices'.format(
             L, R)
 

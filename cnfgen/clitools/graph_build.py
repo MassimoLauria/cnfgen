@@ -417,7 +417,6 @@ def obtain_tree(parsed):
     except (TypeError, ValueError, AssertionError):
         raise ValueError('\'tree\' expects a single height argument h>=0')
     G = dag_complete_binary_tree(height)
-    G.name = "Complete binary tree of height {}".format(height)
     return G
 
 
@@ -432,7 +431,6 @@ def obtain_pyramid(parsed):
     except (TypeError, ValueError, AssertionError):
         raise ValueError('\'pyramid\' expects a single height argument h>=0')
     G = dag_pyramid(height)
-    G.name = "Pyramid graph of height {}".format(height)
     return G
 
 
@@ -447,5 +445,4 @@ def obtain_path(parsed):
     except (TypeError, ValueError, AssertionError):
         raise ValueError('\'path\' expects a single length argument L>=0')
     G = dag_path(length)
-    G.name = "Directed path of length {}".format(length)
     return G
