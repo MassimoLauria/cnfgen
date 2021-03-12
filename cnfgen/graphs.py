@@ -13,6 +13,8 @@ from bisect import bisect_right, bisect_left
 
 import networkx
 
+from cnfgen.localtypes import positive_int,non_negative_int
+
 __all__ = [
     "supported_formats", "readGraph", "writeGraph",
     "bipartite_random_left_regular", "bipartite_random_regular",
@@ -179,8 +181,7 @@ class Graph(BaseGraph):
         return False
 
     def __init__(self, n, name=None):
-        if n<0:
-            raise ValueError("n must be non negative")
+        non_negative_int(n,'n')
         self.n = n
         self.m = 0
         self.adjlist = [[] for i in range(n+1)]
@@ -273,7 +274,7 @@ The sequence of neighbors is guaranteed to be sorted.
 
 
     @classmethod
-    def normalize(cls, G):
+    def normalize(cls, G, varname=''):
         """Guarantees a cnfgen.graphs.Graph object
 
 If the given graph `G` is a networkx.Graph object, this method
@@ -282,16 +283,28 @@ vertices are labeled as numbers from 1 to `n`, where `n` is the number
 of vertices in `G`. If the vertices in the original graph have some
 kind of order, the order is preserved.
 
-If `G` is already a `cnfgen.graphs.Graph` object, nothing is done."""
+If `G` is already a `cnfgen.graphs.Graph` object, nothing is done.
+
+        Parameters
+        ----------
+        cls: a class
+
+        G : networkx.Graph or cnfgen.Graph
+            the graph to normalize/check
+        varname: str
+            the variable name, for error messages (default: 'G')
+        """
+        typemsg = "type of argument '{}' must be either networx.Graph or cnfgen.Graph"
+        conversionmsg = "cannot convert '{}' into a cnfgen.Graph object"
+        if not isinstance(G, (Graph, networkx.Graph)):
+            raise TypeError(typemsg.format(varname))
         if isinstance(G, Graph):
             return G
-        if isinstance(G, BaseGraph):
-            raise TypeError("G must be either a networx.Graph or cnfgen.Graph object")
         try:
             G2 = cls.from_networkx(G)
             return G2
         except AttributeError:
-            raise ValueError("G cannot be converted to a simple graph object")
+            raise ValueError(conversionmsg.format(varname))
 
 
 class DirectedGraph(BaseGraph):
@@ -309,8 +322,7 @@ edges can be added and not removed."""
         return True
 
     def __init__(self, n, name='a simple directed graph'):
-        if n<0:
-            raise ValueError("n must be non negative")
+        non_negative_int(n,'n')
         self.n = n
         self.m = 0
         self.still_a_dag = True
@@ -406,7 +418,7 @@ The sequence of successors is guaranteed to be sorted."""
         return C
 
     @classmethod
-    def normalize(cls, G):
+    def normalize(cls, G, varname='G'):
         """Guarantees a cnfgen.graphs.DirerctedGraph object
 
 If the given graph `G` is a networkx.DiGraph object, this method
@@ -419,25 +431,35 @@ If all edges go from lower vertices to higher vertices, with respect
 to the labeling, then t he graph is considered a directed acyclic
 graph DAG.
 
-If `G` is already a `cnfgen.graphs.DirectedGraph` object, nothing is done."""
+If `G` is already a `cnfgen.graphs.DirectedGraph` object, nothing is done.
+
+        Parameters
+        ----------
+        cls: a class
+
+        G : networkx.DiGraph or cnfgen.DirectedGraph
+            the graph to normalize/check
+        varname: str
+            the variable name, for error messages (default: 'G')
+        """
+        typemsg = "type of argument '{}' must be either networx.DiGraph or cnfgen.DirectedGraph"
+        conversionmsg = "cannot convert '{}' into a cnfgen.DirectedGraph object"
+        if not isinstance(G, (DirectedGraph, networkx.DiGraph)):
+            raise TypeError(typemsg.format(varname))
         if isinstance(G, DirectedGraph):
             return G
-        if isinstance(G, BaseGraph):
-            raise TypeError("G must be either a networx.DiGraph or cnfgen.DirectedGraph object")
         try:
             G2 = cls.from_networkx(G)
             return G2
         except AttributeError:
-            raise ValueError("G cannot be converted to a directed graph object")
+            raise ValueError(conversionmsg.format(varname))
 
 class BaseBipartiteGraph(BaseGraph):
     """Base class for bipartite graphs"""
 
     def __init__(self, L, R, name=None):
-        if L < 0 or R < 0:
-            raise ValueError(
-                "Left and right size of the bipartite graph must be non-negative"
-            )
+        non_negative_int(L, 'L')
+        non_negative_int(R, 'R')
         self.lorder = L
         self.rorder = R
         if name is None:
@@ -487,6 +509,8 @@ class BaseBipartiteGraph(BaseGraph):
 
 class BipartiteGraph(BaseBipartiteGraph):
     def __init__(self, L, R, name=None):
+        non_negative_int(L, 'L')
+        non_negative_int(R, 'R')
         BaseBipartiteGraph.__init__(self, L, R, name)
         self.ladj = {}
         self.radj = {}
@@ -641,7 +665,7 @@ The sequence of neighbors is guaranteed to be sorted."""
         return readGraph(fileorname,'bipartite',fileformat)
 
     @classmethod
-    def normalize(cls, G):
+    def normalize(cls, G, varname='G'):
         """Guarantees a cnfgen.graphs.BipartiteGraph object
 
 If the given graph `G` is a networkx.Graph object with a bipartition,
@@ -655,16 +679,17 @@ is preserved.
 If `G` is already a `cnfgen.graphs.BipartiteGraph` object, nothing is done.
 
         """
+        typemsg = "type of argument '{}' must be either networx.Graph or cnfgen.BipartiteGraph"
+        conversionmsg = "cannot convert '{}' to a bipartite graph: inconsistent 'bipartite' labeling"
+        if not isinstance(G, (BipartiteGraph, networkx.Graph)):
+            raise TypeError(typemsg.format(varname))
         if isinstance(G, BipartiteGraph):
             return G
-        if isinstance(G, BaseGraph):
-            raise TypeError("G must be either a bipartite networx.Graph or cnfgen.BipartiteGraph object")
         try:
             G2 = cls.from_networkx(G)
             return G2
         except AttributeError:
-            raise ValueError("G cannot be converted to a cnfgen bipartite graph")
-
+            raise ValueError(conversionmsg.format(varname))
 
 
 class CompleteBipartiteGraph(BipartiteGraph):

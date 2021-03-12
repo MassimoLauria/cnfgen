@@ -3,10 +3,11 @@
 """Formulas that encode dominating set problems
 """
 
-from cnfgen.formula.cnf import CNF
+from itertools import combinations
 
+from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import Graph
-from itertools import combinations, combinations_with_replacement, product
+from cnfgen.localtypes import positive_int
 
 def unique_neighborhoods(G):
     """List the neighborhoods of a graph
@@ -54,14 +55,11 @@ def DominatingSet(G, d, alternative=False):
 
     """
     # Describe the formula
+    G = Graph.normalize(G, 'G')
+    positive_int(d, 'd')
 
-    G = Graph.normalize(G)
-    description = "{}-dominating set on {}".format(d,G.name)
-
+    description = "{}-dominating set on {}".format(d, G.name)
     F = CNF(description=description)
-
-    if not isinstance(d, int) or d < 1:
-        ValueError("Parameter \"d\" is expected to be a positive integer")
 
     # Create variables
     V = G.number_of_nodes()
@@ -120,7 +118,7 @@ def Tiling(G):
 
     """
     # Describe the formula
-    G = Graph.normalize(G)
+    G = Graph.normalize(G,'G')
     description = "tiling of {}".format(G.name)
 
     F = CNF(description=description)

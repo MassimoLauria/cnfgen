@@ -5,34 +5,32 @@
 
 from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import Graph
+from cnfgen.localtypes import positive_int, non_negative_int
 
 
 def CountingPrinciple(M, p):
-    """Generates the clauses for the counting matching principle.
+    """Counting principle
 
-    The principle claims that there is a way to partition M in sets of
-    size p each.
+    The principle claims that there is a way to partition M elements
+    in sets of size p each.
 
-    Arguments:
-    - `M`  : size of the domain
-    - `p`  : size of each class
+    Parameters
+    ----------
+    M : non negative integer
+        size of the domain
+    p : positive integer
+        size of each part
 
+    Returns
+    -------
+    cnfgen.CNF
     """
-    try:
-        M+0
-        p+0
-    except TypeError:
-        raise TypeError('M and p must be integers')
+    non_negative_int(M, "M")
+    positive_int(p, "p")
 
-    if M < p or M < 1 or p < 1:
-        raise ValueError(
-            "M,p mustbe so that 1 <= p <= M")
     description = "Counting Principle: {0} divided in parts of size {1}.".format(
         M, p)
     F = CNF(description=description)
-
-    def var_name(tpl):
-        return "Y_{{" + ",".join("{0}".format(v) for v in tpl) + "}}"
 
     X = F.new_combinations(M, p)
 
@@ -60,7 +58,7 @@ def PerfectMatchingPrinciple(G):
 
     """
     # Describe the formula
-    G = Graph.normalize(G)
+    G = Graph.normalize(G, 'G')
 
     description = "Perfect Matching Principle on {}".format(G.name)
     F = CNF(description=description)

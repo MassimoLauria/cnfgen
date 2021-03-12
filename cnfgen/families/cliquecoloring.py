@@ -3,10 +3,9 @@
 """Implementation of the clique-coloring formula
 """
 
-from itertools import combinations, permutations
-from networkx import complete_graph
-from cnfgen.graphs import normalize_networkx_labels
+from itertools import combinations
 from cnfgen.formula.cnf import CNF
+from cnfgen.localtypes import non_negative_int
 
 def CliqueColoring(n, k, c):
     r"""Clique-coloring CNF formula
@@ -45,8 +44,9 @@ def CliqueColoring(n, k, c):
            Journal of Symbolic Logic (1997)
 
     """
-    if n<0 or k<0 or c<0:
-        raise ValueError("Parameters n, k, c must be non negative")
+    non_negative_int(n, 'n')
+    non_negative_int(k, 'k')
+    non_negative_int(c, 'c')
 
     description = "There is a graph of {0} vertices with a {1}-clique and a {2}-coloring".format(
         n, k, c)

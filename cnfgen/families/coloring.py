@@ -2,14 +2,10 @@
 # -*- coding:utf-8 -*-
 """Formulas that encode coloring related problems
 """
-import networkx as nx
 
 from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import Graph
-
-from itertools import combinations
-from collections.abc import Iterable
-
+from cnfgen.localtypes import non_negative_int
 
 def GraphColoringFormula(G, colors, functional=True):
     """Generates the clauses for colorability formula
@@ -21,10 +17,12 @@ def GraphColoringFormula(G, colors, functional=True):
 
     Parameters
     ----------
-    G : networkx.Graph
+    G : cnfgen.Graph
         a simple undirected graph
     colors : non negative int
         the number of colors
+    functional: bool
+        forbid a vertex to be mapped to multiple colors
 
     Returns
     -------
@@ -32,11 +30,8 @@ def GraphColoringFormula(G, colors, functional=True):
        the CNF encoding of the coloring problem on graph ``G``
 
     """
-    if colors < 0:
-        ValueError(
-            "Parameter \"colors\" is expected to be a non negative")
-
-    G = Graph.normalize(G)
+    non_negative_int(colors, 'colors')
+    G = Graph.normalize(G, 'G')
 
     # Describe the formula
     description = "Graph {}-Colorability of {}".format(colors,G)
@@ -45,7 +40,8 @@ def GraphColoringFormula(G, colors, functional=True):
 
     # Color each vertex
     F.force_complete_mapping(col)
-    F.force_functional_mapping(col)
+    if functional:
+        F.force_functional_mapping(col)
 
 
     # This is a legal coloring
@@ -69,7 +65,7 @@ def EvenColoringFormula(G):
 
     Arguments
     ---------
-    G : cnfgen.graphs.Graph
+    G : cnfgen.Graph
        a simple undirected graph where all vertices have even degree
 
     Raises
@@ -87,7 +83,7 @@ def EvenColoringFormula(G):
        Journal on Satisfiability, Boolean Modeling and Computation 2 (2006) 221-228
 
     """
-    G = Graph.normalize(G)
+    G = Graph.normalize(G, 'G')
 
     description = "Even coloring formula on " + G.name
     F = CNF(description=description)

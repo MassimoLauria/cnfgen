@@ -3,10 +3,11 @@
 """Implementation of the pigeonhole principle formulas
 """
 
-from cnfgen.formula.cnf import CNF
-from cnfgen.graphs import CompleteBipartiteGraph, DirectedGraph
-
 from itertools import product
+from cnfgen.formula.cnf import CNF
+from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph
+from cnfgen.graphs import DirectedGraph
+from cnfgen.localtypes import non_negative_int
 
 
 
@@ -31,10 +32,10 @@ def PebblingFormula(digraph):
     Arguments:
     - `digraph`: directed acyclic graph.
     """
-    digraph = DirectedGraph.normalize(digraph)
+    digraph = DirectedGraph.normalize(digraph, 'digraph')
     if not digraph.is_dag():
         raise ValueError(
-            "Pebbling formula is defined only for directed acyclic graphs")
+            "'digraph' must be acyclic, and topologically sorted")
 
     description = 'Pebbling formula'
     description += " for " + digraph.name
@@ -104,13 +105,12 @@ def StoneFormula(D, nstones):
            Combinatorica (1999)
 
     """
-    D = DirectedGraph.normalize(D)
+    D = DirectedGraph.normalize(D, 'D')
     if not D.is_dag():
         raise ValueError(
-            "Stone formulas are defined only for directed acyclic graphs.")
+            "'D' must be acyclic, and topologically sorted")
 
-    if nstones < 0:
-        raise ValueError("There must be at least one stone.")
+    non_negative_int(nstones, 'nstones')
 
     description = "Stone formula of {} with {} stones".format(D.name, nstones)
     B = CompleteBipartiteGraph(D.number_of_vertices(),nstones)
@@ -170,10 +170,11 @@ def SparseStoneFormula(D, B):
     StoneFormula
 
     """
-    D = DirectedGraph.normalize(D)
+    D = DirectedGraph.normalize(D, 'D')
+    B = BipartiteGraph.normalize(B, 'B')
     if not D.is_dag():
         raise ValueError(
-            "Stone formulas are defined only for directed acyclic graphs.")
+            "'D' must be acyclic, and topologically sorted")
 
     Left, stones = B.parts()
 

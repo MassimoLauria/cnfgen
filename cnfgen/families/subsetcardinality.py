@@ -75,7 +75,7 @@ def SubsetCardinalityFormula(B, equalities=False):
            Theory and Applications of Satisfiability Testing--SAT 2010(2010)
 
     """
-    B = BipartiteGraph.normalize(B)
+    B = BipartiteGraph.normalize(B,'B')
 
     Left, Right = B.parts()
 

@@ -2,12 +2,13 @@
 """CNF Formulas for Ramsey-like statements
 """
 
-from cnfgen.formula.cnf import CNF
 
 from textwrap import dedent
 from itertools import combinations
 from math import sqrt
 
+from cnfgen.formula.cnf import CNF
+from cnfgen.localtypes import positive_int, positive_int_seq
 
 def PythagoreanTriples(N):
     """There is a Pythagorean triples free coloring on N
@@ -195,12 +196,10 @@ def VanDerWaerden(N, k1, k2, *ks):
     TypeError
        Parameters are not integers
     """
-
-    for v in [N, k1, k2] + list(ks):
-        if not isinstance(v, int):
-            raise TypeError("all parameters expected to be positive integers")
-        if v < 1:
-            raise ValueError("all parameters expected to be positive integers")
+    positive_int(N,'N')
+    positive_int(k1,'k1')
+    positive_int(k2,'k2')
+    positive_int_seq(ks, 'ks')
 
     K = [k1, k2] + list(ks)
     K_text = ", ".join(str(k) for k in K)
@@ -224,7 +223,7 @@ def VanDerWaerden(N, k1, k2, *ks):
             vdw.add_linear(X(i, None), '==', 1)
 
         # Forbid arithmetic progressions
-        for c in range(len(K)):
+        for c in range(1,len(K)+1):
             for ap in _vdw_ap_generator(N, K[c - 1]):
                 vdw.add_clause([-X(i, c) for i in ap])
     return vdw

@@ -3,10 +3,11 @@
 """Implementation of the ordering principle formulas
 """
 
+from itertools import combinations, permutations
 from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import Graph
-from itertools import combinations, permutations
-from bisect import bisect_right
+from cnfgen.localtypes import non_negative_int
+
 
 def OrderingPrinciple(size, total=False, smart=False, plant=False, knuth=0):
     """Generates the clauses for ordering principle
@@ -18,6 +19,8 @@ def OrderingPrinciple(size, total=False, smart=False, plant=False, knuth=0):
     - `plant` : allow a single element to be minimum (could make the formula SAT)
     - `knuth` : Donald Knuth variant of the formula ver. 2 or 3 (anything else suppress it)
     """
+    non_negative_int(size, 'size')
+
     if total or smart:
         description = "Total ordering principle"
     else:
@@ -50,6 +53,8 @@ def GraphOrderingPrinciple(graph,
     - `knuth` : Don Knuth variants 2 or 3 of the formula (anything else suppress it)
     """
     # Describe the formula
+    graph = Graph.normalize(graph, 'graph')
+
     if total or smart:
         description = "Total graph ordering principle"
     else:
@@ -61,8 +66,7 @@ def GraphOrderingPrinciple(graph,
     if knuth in [2, 3]:
         description += " (Knuth variant {})".format(knuth)
 
-    if hasattr(graph, 'name'):
-        description += " on " + graph.name
+    description += " on " + graph.name
 
     gop = CNF(description=description)
 

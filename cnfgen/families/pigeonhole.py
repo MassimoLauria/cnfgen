@@ -3,10 +3,11 @@
 """Implementation of the pigeonhole principle formulas
 """
 
-from cnfgen.formula.cnf import CNF
-from cnfgen.graphs import BaseBipartiteGraph,BipartiteGraph, CompleteBipartiteGraph
 from itertools import combinations, product
 
+from cnfgen.formula.cnf import CNF
+from cnfgen.graphs import BaseBipartiteGraph,BipartiteGraph, CompleteBipartiteGraph
+from cnfgen.localtypes import non_negative_int
 
 def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
     """Pigeonhole Principle CNF formula
@@ -55,6 +56,9 @@ def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
     -9 -12 0
     <BLANKLINE>
     """
+    non_negative_int(pigeons, 'pigeon')
+    non_negative_int(holes, 'holes')
+
     if functional:
         if onto:
             formula_name = "Matching"
@@ -69,10 +73,6 @@ def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
     description = "{0} formula for {1} pigeons and {2} holes".format(
         formula_name, pigeons, holes)
     F = CNF(description=description)
-
-    if pigeons < 0 or holes < 0:
-        raise ValueError(
-            "Number of pigeons and holes must both be non negative")
 
     p = F.new_mapping(pigeons, holes, label='p_{{{},{}}}')
     F.force_complete_mapping(p)
@@ -115,6 +115,7 @@ def GraphPigeonholePrinciple(G, functional=False, onto=False):
     onto: bool
         add clauses to enforce that any right vertex has one incident edge
     """
+    G = BipartiteGraph.normalize(G, 'G')
     if functional:
         if onto:
             formula_name = "Graph matching"
@@ -164,16 +165,14 @@ def BinaryPigeonholePrinciple(pigeons, holes):
     holes : int
        number of holes
     """
+    non_negative_int(pigeons, 'pigeon')
+    non_negative_int(holes, 'holes')
 
     description = "Binary Pigeonhole Principle for {0} pigeons and {1} holes".format(
         pigeons, holes)
     F = CNF(description=description)
 
-    if pigeons < 0 or holes < 0:
-        raise ValueError(
-            "Number of pigeons and holes must both be non negative")
-
-    p = F.new_binary_mapping(pigeons,holes)
+    p = F.new_binary_mapping(pigeons, holes)
     F.force_complete_mapping(p)
     F.force_injective_mapping(p)
     return F
@@ -205,17 +204,14 @@ def RelativizedPigeonholePrinciple(pigeons, resting_places, holes):
            IEEE Conference on Computational Complexity 2014
 
     """
+    non_negative_int(pigeons, 'pigeon')
+    non_negative_int(resting_places, 'resting_places')
+    non_negative_int(holes, 'holes')
+
     rphp = CNF()
     rphp.header[
         'description'] = "Relativized pigeonhole principle formula for {0} pigeons, {1} resting places and {2} holes".format(
             pigeons, resting_places, holes)
-
-    if pigeons < 0:
-        raise ValueError('The number of pigeons must be non-negative')
-    if resting_places < 0:
-        raise ValueError('The number of resting places must be non-negative')
-    if holes < 0:
-        raise ValueError('The number of holes must be non-negative')
 
     U = pigeons
     V = resting_places
