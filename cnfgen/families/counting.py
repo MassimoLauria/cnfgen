@@ -4,7 +4,7 @@
 """
 
 from cnfgen.formula.cnf import CNF
-from itertools import combinations
+from cnfgen.graphs import Graph
 
 
 def CountingPrinciple(M, p):
@@ -24,7 +24,7 @@ def CountingPrinciple(M, p):
     except TypeError:
         raise TypeError('M and p must be integers')
 
-    if M < p or M<1 or p<1:
+    if M < p or M < 1 or p < 1:
         raise ValueError(
             "M,p mustbe so that 1 <= p <= M")
     description = "Counting Principle: {0} divided in parts of size {1}.".format(
@@ -60,25 +60,15 @@ def PerfectMatchingPrinciple(G):
 
     """
     # Describe the formula
-    description = "Perfect Matching Principle"
+    G = Graph.normalize(G)
 
-    if hasattr(G, 'name'):
-        description += " on " + G.name
-
-    cnf = CNF(description=description)
-
-    def var_name(u, v):
-        if u <= v:
-            return 'x_{{{0},{1}}}'.format(u, v)
-        else:
-            return 'x_{{{0},{1}}}'.format(v, u)
+    description = "Perfect Matching Principle on {}".format(G.name)
+    F = CNF(description=description)
+    e = F.new_graph_edges(G, label='e_{{{0},{1}}}')
 
     # Each vertex has exactly one edge set to one.
-    for v in enumerate_vertices(G):
+    for u in G.vertices():
 
-        edge_vars = [var_name(u, v) for u in neighbors(G, v)]
+        F.add_linear(e(u, None), '==', 1)
 
-        for cls in CNF.equal_to_constraint(edge_vars, 1):
-            cnf.add_clause(cls)
-
-    return cnf
+    return F
