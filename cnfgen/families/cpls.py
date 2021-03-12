@@ -6,7 +6,7 @@
 from itertools import product
 
 from cnfgen.formula.cnf import CNF
-
+from cnfgen.localtypes import positive_int
 
 def CPLSFormula(a, b, c):
     """Thapen's size-width tradeoff formula
@@ -30,11 +30,12 @@ def CPLSFormula(a, b, c):
            Theory of Computing, 12(1), 1–14.
 
     """
-    if a <= 0:
-        raise ValueError("a must be positive.")
-    if b <= 0 or b & (b - 1):
+    positive_int(a, 'a')
+    positive_int(b, 'b')
+    positive_int(c, 'c')
+    if b & (b - 1):
         raise ValueError("b must be a power of two.")
-    if c <= 0 or c & (c - 1):
+    if c & (c - 1):
         raise ValueError("c must be a power of two.")
 
     log_b = 0

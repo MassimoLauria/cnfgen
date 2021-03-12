@@ -109,7 +109,6 @@ def StoneFormula(D, nstones):
     if not D.is_dag():
         raise ValueError(
             "'D' must be acyclic, and topologically sorted")
-
     non_negative_int(nstones, 'nstones')
 
     description = "Stone formula of {} with {} stones".format(D.name, nstones)

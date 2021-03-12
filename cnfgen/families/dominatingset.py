@@ -40,7 +40,7 @@ def DominatingSet(G, d, alternative=False):
 
     Parameters
     ----------
-    G : cnfgen.graphs.Graph or networkx.Graph
+    G : cnfgen.Graph or networkx.Graph
         a simple undirected graph
     d : a positive int
         the size limit for the dominating set
@@ -108,7 +108,7 @@ def Tiling(G):
 
     Parameters
     ----------
-    G : networkx.Graph
+    G : cnfgen.Graph or networkx.Graph
         a simple undirected graph
 
     Returns

@@ -7,8 +7,10 @@ import networkx as nx
 
 from itertools import combinations
 from itertools import product
+
 from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import Graph
+from cnfgen.localtypes import non_negative_int
 
 def SubgraphFormula(G, H, induced=False, symbreak=False):
     """Test whether a graph has a k-clique.
@@ -18,9 +20,9 @@ def SubgraphFormula(G, H, induced=False, symbreak=False):
 
     Parameters
     ----------
-    G : networkx.Graph
+    G : cnfgen.Graph
         a simple graph
-    H : networkx.Graph
+    H : cnfgen.Graph
         the candidate subgraph
     induced: bool
         test for induced containment
@@ -33,15 +35,15 @@ def SubgraphFormula(G, H, induced=False, symbreak=False):
     a CNF object
 
     """
+    G = Graph.normalize(G,'G')
+    H = Graph.normalize(H,'H')
+
     F = CNF()
     if induced:
         description = "{} is not an induced subgraph of {}".format(H.name, G.name)
     else:
         description = "{} is not a subgraph of {}".format(H.name, G.name)
     F.header['description'] = description
-
-    G = Graph.normalize(G)
-    H = Graph.normalize(H)
 
     N = G.order()
     k = H.order()
@@ -78,7 +80,7 @@ def CliqueFormula(G, k, symbreak=True):
 
     Parameters
     ----------
-    G : networkx.Graph
+    G : cnfgen.Graph
         a simple graph
     k : a non negative integer
         clique size
@@ -90,12 +92,12 @@ def CliqueFormula(G, k, symbreak=True):
     a CNF object
 
     """
+    non_negative_int(k, 'k')
+    G = Graph.normalize(G, 'G')
+
     F = CNF()
     description = "{} does not contain any {}-clique.".format(G.name, k)
     F.header['description'] = description
-
-    if isinstance(G, nx.Graph) and not isinstance(G, Graph):
-        G = Graph.from_networkx(G)
 
     N = G.order()
     s = F.new_mapping(k, N, label='s_{{{},{}}}')
@@ -129,7 +131,7 @@ def BinaryCliqueFormula(G, k, symbreak=True):
 
     Parameters
     ----------
-    G : networkx.Graph
+    G : cnfgen.Graph
         a simple graph
     k : a non negative integer
         clique size
@@ -141,12 +143,13 @@ def BinaryCliqueFormula(G, k, symbreak=True):
     a CNF object
 
     """
+    non_negative_int(k, 'k')
+    G = Graph.normalize(G, 'G')
+
     F = CNF()
     description = "{} does not contain any {}-clique (Binary encoding).".format(G.name, k)
     F.header['description'] = description
 
-    if isinstance(G, nx.Graph) and not isinstance(G, Graph):
-        G = Graph.from_networkx(G)
     N = G.order()
     m = F.new_binary_mapping(k, N, label='y_{{{},{}}}')
     F.force_complete_mapping(m)
@@ -178,7 +181,7 @@ def RamseyWitnessFormula(G, k, s, symbreak=True):
 
     Parameters
     ----------
-    G : networkx.Graph
+    G : cnfgen.Graph
         a simple graph
     k : a non negative integer
         clique size
@@ -191,14 +194,16 @@ def RamseyWitnessFormula(G, k, s, symbreak=True):
     -------
     a CNF object
     """
+    non_negative_int(k, 'k')
+    non_negative_int(s, 's')
+    G = Graph.normalize(G, 'G')
+
     F = CNF()
     description = "{} does not contain {}-cliques nor {}-independent sets.".format(
         G.name, k, s)
     F.header['description'] = description
     maybeclique = F.new_variable('C')
 
-    if isinstance(G, nx.Graph) and not isinstance(G, Graph):
-        G = Graph.from_networkx(G)
     N = G.order()
     s = F.new_mapping(k, N, label='s_{{{},{}}}')
     F.force_complete_mapping(s)

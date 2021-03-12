@@ -7,7 +7,7 @@ import itertools
 import random
 
 from cnfgen.formula.cnf import CNF
-
+from cnfgen.localtypes import non_negative_int
 
 def clause_satisfied(cls, assignments):
     """Test whether a clause is satisfied by all assignments
@@ -115,14 +115,15 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
         when some paramenter is negative, or when k>n.
 
     """
+    non_negative_int(n, 'n')
+    non_negative_int(m, 'm')
+    non_negative_int(k, 'k')
+
     if seed is not None:
         random.seed(seed)
 
-    if n < 0 or m < 0 or k < 0:
-        raise ValueError("Parameters must be non-negatives.")
-
     if k > n:
-        raise ValueError("Clauses cannot have more {} literals.".format(n))
+        raise ValueError("clauses width is {}, and we only have {} variables".format(k,n))
 
     descr = "Random {}-CNF over {} variables and {} clauses".format(k, n, m)
     F = CNF(description=descr)

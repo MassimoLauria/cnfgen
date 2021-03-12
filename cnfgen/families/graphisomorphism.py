@@ -2,12 +2,9 @@
 # -*- coding:utf-8 -*-
 """Graph isomorphimsm/automorphism formulas
 """
-
-import networkx as nx
+from itertools import combinations
 from cnfgen.formula.cnf import CNF
-
 from cnfgen.graphs import Graph
-from itertools import combinations, product
 
 def GraphIsomorphism(G1, G2, nontrivial=False):
     """Graph Isomorphism formula
@@ -30,15 +27,13 @@ def GraphIsomorphism(G1, G2, nontrivial=False):
     are isomorphic.
 
     """
+    G1 = Graph.normalize(G1, 'G1')
+    G2 = Graph.normalize(G2, 'G2')
+
     description = "Graph isomorphism between (1) '{}' and (2) '{}'"
     description = description.format(G1.name, G2.name)
 
     F = CNF(description=description)
-
-    if isinstance(G1, nx.Graph) and not isinstance(G1, Graph):
-        G1 = Graph.from_networkx(G1)
-    if isinstance(G2, nx.Graph) and not isinstance(G2, Graph):
-        G2 = Graph.from_networkx(G2)
 
     f = F.new_mapping(G1.order(), G2.order(),
                       label='x_{{{},{}}}')
@@ -75,7 +70,9 @@ def GraphAutomorphism(G):
     A CNF formula which is satiafiable if and only if graph G has a
     nontrivial automorphism.
     """
+    G = Graph.normalize(G, 'G')
     description = "Graph automorphism formula for " + G.name
+
     F = GraphIsomorphism(G, G)
     F.header['description'] = description
 

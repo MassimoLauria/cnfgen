@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
-from cnfgen.formula.cnf import CNF
-
-import cnfgen.families
-
+from itertools import combinations
 from itertools import product
 
 import networkx
-from cnfgen.families.tseitin import TseitinFormula
-from itertools import combinations
 
+from cnfgen.formula.cnf import CNF
+from cnfgen.families.tseitin import TseitinFormula
+from cnfgen.localtypes import positive_int
 
 def PitfallFormula(v, d, ny, nz, k):
     """Pitfall Formula
@@ -59,18 +57,13 @@ def PitfallFormula(v, d, ny, nz, k):
            Hard examples for common variable decision heuristics.
            In, AAAI 2020 (pp. 1652–1659).
     """
-    if v <= 0:
-        raise ValueError("v must be positive.")
-    if d <= 0:
-        raise ValueError("d must be positive.")
-    if ny <= 0:
-        raise ValueError("ny must be positive.")
-    if nz <= 0:
-        raise ValueError("nz must be positive.")
-    if k <= 0:
-        raise ValueError("k must be positive.")
+    positive_int(v, 'v')
+    positive_int(d, 'd')
+    positive_int(ny, 'ny')
+    positive_int(nz, 'nz')
+    positive_int(k, 'k')
     if k % 2 != 0:
-        raise ValueError("k must be even.")
+        raise ValueError("argument 'k' must be even.")
 
     def xname(j, x):
         return "{}_{}".format(x, j)

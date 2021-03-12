@@ -39,6 +39,7 @@ def PythagoreanTriples(N):
            Solving and verifying the boolean pythagorean triples problem via cube-and-conquer.
            arXiv preprint arXiv:1605.00723, 2016.
     """
+    positive_int(N, 'N')
 
     description = "Pythagorean triples problem on 1...{}".format(N)
     F = CNF(description=description)
@@ -97,15 +98,11 @@ def RamseyNumber(s, k, N):
        Parameters are not integers
 
     """
-
+    positive_int(N, 'N')
+    positive_int(s, 's')
+    positive_int(k, 'k')
     description = "{}-vertices graph free of {}-independent sets and {}-cliques".format(N, s, k)
     ram = CNF(description=description)
-
-    if not isinstance(N, int) or N < 1:
-        raise TypeError("argument N expected to be a positive integer")
-
-    if not isinstance(s, int) or not isinstance(k, int) or s<1 or k<1:
-        raise TypeError("arguments s,k expected to be positive integers")
 
     # One variable per edge (indices are ordered)
     e = ram.new_combinations(N, 2, label='e_{{{}}}')
@@ -199,7 +196,7 @@ def VanDerWaerden(N, k1, k2, *ks):
     positive_int(N,'N')
     positive_int(k1,'k1')
     positive_int(k2,'k2')
-    positive_int_seq(ks, 'ks')
+    positive_int_seq(ks, '*ks')
 
     K = [k1, k2] + list(ks)
     K_text = ", ".join(str(k) for k in K)
