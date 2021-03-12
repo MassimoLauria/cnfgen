@@ -7,7 +7,7 @@ from cnfgen import TseitinFormula
 
 from networkx.algorithms.bipartite import random_graph as bipartite_random_graph
 from networkx.algorithms.bipartite import complete_bipartite_graph
-from cnfgen.graphs import BipartiteGraph
+from cnfgen.graphs import Graph,BipartiteGraph
 
 from cnfgen.clitools import cnfgen
 from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
@@ -15,7 +15,7 @@ from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
 
 def test_empty():
     G = CNF()
-    graph = nx.Graph()
+    graph = Graph(0)
     F = PerfectMatchingPrinciple(graph)
     assertCnfEqual(F, G)
 

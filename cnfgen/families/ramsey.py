@@ -40,29 +40,23 @@ def PythagoreanTriples(N):
     """
 
     description = "Pythagorean triples problem on 1...{}".format(N)
-    ptn = CNF(description=description)
+    F = CNF(description=description)
 
     if not isinstance(N, int):
         raise TypeError("argument N expected to be a non negative integer")
     if N < 0:
         raise ValueError("argument N expected to be a non negative integer")
 
-    def V(i):
-        return "x_{{{}}}".format(i)
-
     # Variables represent the coloring of the number
-    for i in range(1, N + 1):
-        ptn.add_variable(V(i))
+    v = F.new_block(N, label='v({})')
 
     for x, y in combinations(range(1, N + 1), 2):
         z = int(sqrt(x**2 + y**2))
         if z <= N and z**2 == x**2 + y**2:
-            ptn.add_clause([(True, V(x)), (True, V(y)), (True, V(z))],
-                           strict=True)
-            ptn.add_clause([(False, V(x)), (False, V(y)), (False, V(z))],
-                           strict=True)
+            F.add_clause([+v(x), +v(y), +v(z)])
+            F.add_clause([-v(x), -v(y), -v(z)])
 
-    return ptn
+    return F
 
 
 def RamseyNumber(s, k, N):
@@ -103,46 +97,27 @@ def RamseyNumber(s, k, N):
 
     """
 
-    description = "{}-vertices graph free of {}-independent sets and {}-cliques".format(
-        N, s, k)
+    description = "{}-vertices graph free of {}-independent sets and {}-cliques".format(N, s, k)
     ram = CNF(description=description)
 
-    if not isinstance(N, int):
+    if not isinstance(N, int) or N < 1:
         raise TypeError("argument N expected to be a positive integer")
-    if N < 1:
-        raise ValueError("argument N expected to be a positive integer")
 
-    if not (isinstance(s, int) and isinstance(k, int)):
+    if not isinstance(s, int) or not isinstance(k, int) or s<1 or k<1:
         raise TypeError("arguments s,k expected to be positive integers")
-    if s < 1 or k < 1:
-        raise ValueError("arguments s,k expected to be positive integers")
 
-    def V(i):
-        return "x_{{{}}}".format(i)
-
-    #
     # One variable per edge (indices are ordered)
-    #
-    for edge in combinations(range(1, N + 1), 2):
-        ram.add_variable('e_{{{0},{1}}}'.format(*edge))
+    e = ram.new_combinations(N, 2, label='e_{{{}}}')
 
-    #
     # No independent set of size s
-    #
     for vertex_set in combinations(range(1, N + 1), s):
-        clause = []
-        for edge in combinations(vertex_set, 2):
-            clause += [(True, 'e_{{{0},{1}}}'.format(*edge))]
-        ram.add_clause(clause, strict=True)
+        clause = [e(u, v) for u, v in combinations(vertex_set, 2)]
+        ram.add_clause(clause)
 
-    #
     # No clique of size k
-    #
     for vertex_set in combinations(range(1, N + 1), k):
-        clause = []
-        for edge in combinations(vertex_set, 2):
-            clause += [(False, 'e_{{{0},{1}}}'.format(*edge))]
-        ram.add_clause(clause, strict=True)
+        clause = [-e(u, v) for u, v in combinations(vertex_set, 2)]
+        ram.add_clause(clause)
 
     return ram
 
@@ -233,43 +208,23 @@ def VanDerWaerden(N, k1, k2, *ks):
         N, K_text)
     vdw = CNF(description=description)
 
-    colors = range(1, len(K) + 1)
-
-    # Use unary functional mapping for >2 colorings
-    if len(colors) > 2:
-        # Use unary functional mapping for >2 colorings
-        def Var(i, c):
-            return "x_{{{},{}}}".format(i, c)
-
-        def Not(i, c):
-            return (False, Var(i, c))
-    else:
-        # Use a single binary variable for 2-colorings
-        def Var(i, c):
-            return "x_{{{}}}".format(i)
-
-        def Not(i, c):
-            if c == 1:
-                return (True, Var(i, c))
-            else:
-                return (False, Var(i, c))
-
     # Only one row of variable needed for 2 colors.
-    if len(colors) == 2:
-        for i in range(1, N + 1):
-            vdw.add_variable(Var(i, 1))
-    else:
-        # For more than two color we need all variables
-        for c in colors:
-            for i in range(1, N + 1):
-                vdw.add_variable(Var(i, c))
-        # I need to pick exactly one color index
-        for i in range(1, N + 1):
-            for cls in CNF.equal_to_constraint([Var(i, c) for c in colors], 1):
-                vdw.add_clause(cls)
+    if len(K) == 2:
+        X = vdw.new_block(N, label='x_{{{}}}')
 
-    # Forbid arithmetic progressions
-    for c in colors:
-        for ap in _vdw_ap_generator(N, K[c - 1]):
-            vdw.add_clause([Not(i, c) for i in ap], strict=True)
+        for ap in _vdw_ap_generator(N, K[0]):
+            vdw.add_clause([X(i) for i in ap])
+
+        for ap in _vdw_ap_generator(N, K[1]):
+            vdw.add_clause([-X(i) for i in ap])
+
+    else:
+        X = vdw.new_block(N, len(K), label='x_{{{0},{1}}}')
+        for i in range(1, N + 1):
+            vdw.add_linear(X(i, None), '==', 1)
+
+        # Forbid arithmetic progressions
+        for c in range(len(K)):
+            for ap in _vdw_ap_generator(N, K[c - 1]):
+                vdw.add_clause([-X(i, c) for i in ap])
     return vdw

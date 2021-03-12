@@ -72,9 +72,9 @@ def GraphOrderingPrinciple(graph,
 
     # Add variables
     if smart:
-        X = gop.new_combinations(n, 2, label='x_{}')
+        X = gop.new_combinations(n, 2, label='x_{{{}}}')
     else:
-        X = gop.new_permutations(n, 2, label='x_{}')
+        X = gop.new_permutations(n, 2, label='x_{{{}}}')
     #
     # Non minimality axioms
     #

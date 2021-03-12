@@ -15,10 +15,14 @@ Copyright (C) 2019-2021  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
-from itertools import product,combinations, combinations_with_replacement,permutations
+from itertools import product
+from itertools import combinations
+from itertools import combinations_with_replacement
+from itertools import permutations
+
 from bisect import bisect_right
 
-from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph, CompleteBipartiteGraph
+from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph
 from cnfgen.graphs import Graph, DirectedGraph
 
 from cnfgen.formula.basecnf import BaseCNF
@@ -312,11 +316,15 @@ class BlockOfVariables(BaseVariableGroup):
                 'label must be a valid format string for all indices')
 
         if len(ranges) == 0:
-            raise ValueError(
-                'The index domain must have at least dimension one')
+            raise ValueError('ranges must have at least dimension one')
 
-        if len([x for x in ranges if x < 0]):
-            raise ValueError('Indices range must be all non negative')
+        valid_ranges = 0
+        for x in ranges:
+            if isinstance(x,int) and x >= 0:
+                valid_ranges += 1
+
+        if valid_ranges != len(ranges):
+            raise ValueError('ranges must be a sequence of non negative integers')
 
         weights = [1]  # cumulative products
         for r in ranges[::-1]:
@@ -513,11 +521,11 @@ class WordOfIndicesVariables(BaseVariableGroup):
             labelfmt.format(2)
         except IndexError:
             raise ValueError(
-                'label must be a valid format string one index')
+                'the label for these variables must have one placeholder')
 
-        if n<0 or k<0:
+        if not isinstance(n,int) or not isinstance(k,int) or n < 0 or k < 0:
             raise ValueError(
-                'It must be that 0<= k <= n')
+                'k,n must be integer with 0<= k <= n')
 
         self.n = n
         self.k = k

@@ -3,40 +3,40 @@
 import random
 import itertools
 import pytest
-
+import io
 from cnfgen import CNF
 
 
 def test_empty():
     F = CNF()
     assert F.debug()
-    assert list(F.variables()) == []
-    assert list(F.clauses()) == []
+    assert F.number_of_clauses() == 0
+    assert F.number_of_variables() == 0
 
 
-def test_safe_clause_insertion():
+def test_variable_auto_increase():
 
     F = CNF()
-    F.add_variable("S")
-    F.add_variable("U")
-    assert len(list(F.variables())) == 2
+    s = F.new_variable("S")
+    u = F.new_variable("U")
+    assert F.number_of_variables() == 2
 
-    F.add_clause([(True, "S"), (False, "T")])
-    assert len(list(F.variables())) == 3
+    F.add_clause([1,-3])
+    assert F.number_of_variables() == 3
 
-    F.add_clause([(True, "T"), (False, "U")], strict=True)
-    assert len(list(F.variables())) == 3
-
-    with pytest.raises(ValueError):
-        F.add_clause([(True, "T"), (False, "V")], strict=True)
+    F.add_clause([3,2])
+    assert F.number_of_variables() == 3
 
 
 def test_dimacs_ascii():
     "CNF should support unicode. This is Python 3 after all."
     cnf = CNF(description='Unicöde string not ascii')
-    cnf.add_variable('x')
-    cnf.add_variable('ζ')
-    cnf.add_clause([(True, "x"), (False, "ζ")])
-    text = cnf.dimacs(extra_text='áéíóúàèìòù')
+    cnf.new_variable('x')
+    cnf.new_variable('ζ')
+    cnf.add_clause([1,2])
+    cnf.header['extra'] = 'áéíóúàèìòù'
+    buffer=io.StringIO()
+    cnf.to_file(buffer)
+    text = buffer.getvalue()
     byte = text.encode('ascii')
     assert len(byte) == len(text)

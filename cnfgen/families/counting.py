@@ -18,31 +18,34 @@ def CountingPrinciple(M, p):
     - `p`  : size of each class
 
     """
-    if M < p:
+    try:
+        M+0
+        p+0
+    except TypeError:
+        raise TypeError('M and p must be integers')
+
+    if M < p or M<1 or p<1:
         raise ValueError(
-            "Domain size must be larger or equal than the class size")
+            "M,p mustbe so that 1 <= p <= M")
     description = "Counting Principle: {0} divided in parts of size {1}.".format(
         M, p)
-    cnf = CNF(description=description)
+    F = CNF(description=description)
 
     def var_name(tpl):
         return "Y_{{" + ",".join("{0}".format(v) for v in tpl) + "}}"
 
-    # Incidence lists
-    incidence = [[] for _ in range(M)]
-    for tpl in combinations(range(M), p):
-        for i in tpl:
-            incidence[i].append(tpl)
+    X = F.new_combinations(M, p)
+
+    stars = [[] for i in range(M)]
+    for pattern, var in zip(X.indices(), X()):
+        for i in pattern:
+            stars[i-1].append(var)
 
     # Each element of the domain is in exactly one part.
-    for el in range(M):
+    for star in stars:
+        F.add_linear(star, '==', 1)
 
-        edge_vars = [var_name(tpl) for tpl in incidence[el]]
-
-        for cls in CNF.equal_to_constraint(edge_vars, 1):
-            cnf.add_clause(cls)
-
-    return cnf
+    return F
 
 
 def PerfectMatchingPrinciple(G):
