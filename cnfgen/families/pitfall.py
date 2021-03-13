@@ -11,6 +11,7 @@ from cnfgen.families.tseitin import TseitinFormula
 from cnfgen.localtypes import positive_int
 from cnfgen.graphs import Graph
 
+
 def PitfallFormula(v, d, ny, nz, k):
     """Pitfall Formula
 
@@ -66,14 +67,11 @@ def PitfallFormula(v, d, ny, nz, k):
     if k % 2 != 0:
         raise ValueError("argument 'k' must be even.")
 
-    if (d > v) or (v*d % 2 == 1):
-        raise ValueError("No regular {}-degree graph with {}-vertices exists.\n".format(d, v) +
-                         "It requires  degree <= #vertices and degree*#vertices even")
-
-
-    def xname(j, x):
-        return "{}_{}".format(x, j)
-
+    if (d > v) or (v * d % 2 == 1):
+        raise ValueError(
+            "No regular {}-degree graph with {}-vertices exists.\n".format(
+                d, v) +
+            "It requires  degree <= #vertices and degree*#vertices even")
     phi = CNF(
         description=
         'Pitfall Formula with parameters (v={},d={},ny={},nz={},k={})'.format(
@@ -89,29 +87,27 @@ def PitfallFormula(v, d, ny, nz, k):
     # Hard variables (we waste position 0 to start indexing from 1)
     # now X[j](u,v) is the edge variable for {u,v} in the j-th copy.
     X = [None]
-    Xoffset = [None]
-    for j in range(1, k+1):
-        jlabel= 'e[{}]'.format(j) + '_{{{},{}}}'
-        X.append( phi.new_graph_edges(graph, label=jlabel) )
-        Xoffset.append( X[-1].variable_ids()[0] - 1)
+    for j in range(1, k + 1):
+        jlabel = 'e[{}]'.format(j) + '_{{{},{}}}'
+        X.append(phi.new_graph_edges(graph, label=jlabel))
 
     # Easy variables
-    Y = phi.new_block(k, ny, label = 'y_{{{},{}}}')
+    Y = phi.new_block(k, ny, label='y_{{{},{}}}')
 
     # Pipe and Pitfall variables
-    Z = phi.new_block(k, nz, label = 'z_{{{},{}}}')
-    P = phi.new_block(k, nx + nz, label = 'p_{{{},{}}}')
+    Z = phi.new_block(k, nz, label='z_{{{},{}}}')
+    P = phi.new_block(k, nx + nz, label='p_{{{},{}}}')
     # Tail variables
-    A = phi.new_block(k, 3, label = 'a_{{{},{}}}')
+    A = phi.new_block(k, 3, label='a_{{{},{}}}')
 
     def shift_edgelit(j, lit):
         sign = lit // abs(lit)
-        return sign*Xoffset[j] + lit
+        return sign * X[j][0] + lit - 1
 
     # Hard part
     # Copy the Tseitin formula for k times
     # with a prefix of Z(j,..)
-    for j in range(1, k+1):
+    for j in range(1, k + 1):
         append = list(Z(j, None))
         for clause in T:
             shifted = [shift_edgelit(j, lit) for lit in clause]
@@ -119,7 +115,7 @@ def PitfallFormula(v, d, ny, nz, k):
 
     # Pitfall gadgets
     # any two easy variables trigger the p's
-    for j in range(1, k+1):
+    for j in range(1, k + 1):
         for (y1, y2) in combinations(Y(j, None), 2):
             for p in P(j, None):
                 phi.add_clause([y1, y2, -p])
@@ -141,9 +137,9 @@ def PitfallFormula(v, d, ny, nz, k):
             phi.add_clause(CY + CP + CS + [-s])
             C.append(s)
 
-    for j in range(1, k+1):
+    for j in range(1, k + 1):
         for y in Y(j, None):
-            pipe(y, P(j, None), X[j].variable_ids(), Z(j, None))
+            pipe(y, P(j, None), X[j], Z(j, None))
 
     # Tail gadgets
     for j in range(1, k + 1):
@@ -157,8 +153,8 @@ def PitfallFormula(v, d, ny, nz, k):
     # Gamma
     for i in range(1, ny, 2):
         clause = []
-        for j in range(1, k+1):
-            clause.extend([-Y(j, i), -Y(j, i+1)])
+        for j in range(1, k + 1):
+            clause.extend([-Y(j, i), -Y(j, i + 1)])
         phi.add_clause(clause)
 
     return phi

@@ -127,9 +127,12 @@ class BaseVariableGroup():
         """The number of variables in the group"""
         return len(self.ids)
 
-    def variable_ids(self):
-        """The ID interval for this variable group"""
-        return self.ids
+    def __getitem__(self,choices):
+        """Access a variable in the group"""
+        return self.ids[choices]
+
+    def __iter__(self):
+        return iter(self.ids)
 
     def __contains__(self, lit):
         """Check in the literal is in the group"""
@@ -216,7 +219,7 @@ class SingletonVariableGroup(BaseVariableGroup):
         BaseVariableGroup.__init__(self, formula, 1, labelfmt=name)
 
     def __call__(self):
-        return self.variable_ids()[0]
+        return self[0]
 
     def label(self):
         return self.name
@@ -229,7 +232,7 @@ class SingletonVariableGroup(BaseVariableGroup):
 
     def to_index(self, lit):
         """Convert a literal of the corresponding variable index"""
-        if abs(lit) != self.variable_ids()[0]:
+        if abs(lit) != self[0]:
             raise ValueError("Literal do not belong to this variable group")
         return ()
 
@@ -1225,13 +1228,12 @@ class VariablesManager(CNFLinear):
 
     def _add_variable_group(self, vg):
         """Add a group of variables to the formula"""
-        ids = vg.variable_ids()
-        if len(ids) == 0:
+        if len(vg) == 0:
             # variable groups of length 0
             self._groups.append(vg)
             return
 
-        begin, end = ids[0], ids[-1]
+        begin, end = vg[0], vg[-1]
         assert end >= begin
         if begin <= self.number_of_clauses():
             raise ValueError(
@@ -1528,13 +1530,13 @@ argument `default_label_format` (e.g. 'x{}').
         #
         varid = 1
         for vg in self._groups:
-            if len(vg.variable_ids()) == 0:
+            if len(vg) == 0:
                 continue
             if isinstance(vg, SingletonVariableGroup):
                 yield vg.name
                 varid += 1
                 continue
-            begin = vg.variable_ids()[0]
+            begin = vg[0]
             while varid < begin:
                 yield default_label_format.format(varid)
                 varid += 1
