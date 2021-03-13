@@ -31,23 +31,9 @@ def test_most():
 
 
 def test_all():
-    ass = [
-        {
-            'x_1': False,
-            'x_2': True
-        },
-        {
-            'x_1': True,
-            'x_2': False
-        },
-        {
-            'x_1': False,
-            'x_2': False
-        },
-        {
-            'x_1': True,
-            'x_2': True
-        },
-    ]
+    ass = [[+1, -2],
+           [-1, -2],
+           [+1, +2],
+           [-1, +2]]
     with pytest.raises(ValueError):
         RandomKCNF(2, 2, 1, planted_assignments=ass)
