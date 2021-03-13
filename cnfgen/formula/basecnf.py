@@ -6,6 +6,8 @@
 from collections import OrderedDict
 from cnfgen.info import info
 
+from cnfgen.localtypes import non_negative_int
+
 class BaseCNF:
     """Basic propositional formulas in conjunctive normal form.
 
@@ -115,6 +117,7 @@ class BaseCNF:
 
 If the formula has already at least `new_value` variables, this does
 not have any effect."""
+        non_negative_int(new_value, 'new_value')
         self._numvar = max(self._numvar, new_value)
 
     def debug(self, allow_opposite=False, allow_repetition=False):
@@ -212,8 +215,9 @@ not have any effect."""
 
         try:
             maxid = max([abs(literal) for literal in data])
-        except TypeError:
-            raise ValueError("'clause' must be a sequence of non-zero integers")
+        except TypeError as te:
+            msg = "'clause' must be a sequence of non-zero integers"
+            raise ValueError(msg) from te
         self._numvar = max(maxid, self._numvar)
         self._clauses.append(data)
 

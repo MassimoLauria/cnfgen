@@ -17,15 +17,13 @@ def positive_int(value, name):
 def positive_int_seq(value, name):
     """Check that `value` is a positive integer"""
     msg = "argument '{}' must be a sequence of positive integers".format(name)
-    invalid_type = False
     try:
         for v in value:
             if not isinstance(v, numbers.Integral):
-                invalid_type = True
-    except TypeError:
-        invalid_type = True
-    if invalid_type:
-        raise TypeError(msg)
+                raise TypeError('non numeric element in the sequence')
+    except TypeError as te:
+        raise TypeError(msg) from te
+
     for v in value:
         if v < 1:
             raise ValueError(msg)
@@ -33,15 +31,13 @@ def positive_int_seq(value, name):
 def non_negative_int_seq(value, name):
     """Check that `value` is a positive integer"""
     msg = "argument '{}' must be a sequence of non negative integers".format(name)
-    invalid_type = False
     try:
         for v in value:
             if not isinstance(v, numbers.Integral):
-                invalid_type = True
-    except TypeError:
-        invalid_type = True
-    if invalid_type:
-        raise TypeError(msg)
+                raise TypeError('non numeric element in the sequence')
+    except TypeError as te:
+        raise TypeError(msg) from te
+
     for v in value:
         if v < 0:
             raise ValueError(msg)
