@@ -8,11 +8,25 @@ from itertools import product
 from cnfgen.formula.cnf import CNF
 from cnfgen.localtypes import positive_int
 
+
+def intlog2(x):
+    """Compute the ceiling of the log2(x)"""
+    ilog = 0
+    while 2**ilog < x:
+        ilog += 1
+    return ilog
+
+
 def CPLSFormula(a, b, c):
     """Thapen's size-width tradeoff formula
 
     The formula is a propositional version of the coloured polynomial
     local search principle (CPLS). A description can be found in [1]_.
+    The difference with the formula in the paper is that here, unary
+    indices start from 1 instead of 0. Binary strings stil counts from
+    0, therefore the mappings :math:`f[i](x)=x'` is actually
+    represented in binary with the binary representation
+    of :math:`x'-1`.
 
     Parameters
     ----------
@@ -38,64 +52,45 @@ def CPLSFormula(a, b, c):
     if c & (c - 1):
         raise ValueError("c must be a power of two.")
 
-    log_b = 0
-    while 2**log_b < b:
-        log_b += 1
-    log_c = 0
-    while 2**log_c < c:
-        log_c += 1
+    description = "Thapen's CPLS formula with {} levels, {} nodes per level, {} colours".format(a, b, c)
+    F = CNF(description=description)
 
-    description = "Thapen's CPLS formula with {} levels, {} nodes per level, {} colours".format(
-        a, b, c)
-    formula = CNF(description=description)
+    # 1. For each 1 <= i <= a, 1 <= x <= b and 1 <= y <= c
+    # G_i(x, y)
+    G = F.new_block(a, b, c, label='G_{}({},{})')
 
-    # this allows notation G[i](x, y) and similar, which looks more like G_{i}(x, y) than G(i, x, y)
-    class func_list(list):
-        def __init__(self, f):
-            self.f = f
+    # 2. For each 1 <= i <= a, 1 <= x <= b and j < log b
+    # (f_i(x))_j
+    f = [None]
+    for i in range(1,a+1):
+        ilabel = '(f_{{'+str(i)+'}}'+'({}))_{{{}}}'
+        f.append(F.new_binary_mapping(b, b, label=ilabel))
 
-        def __getitem__(self, key):
-            return self.f(key)
+    # 3. For each 1 <= x <= b and j < log c, there is a variable (u(x))_j,
+    # (u(x))_j
+    u = F.new_binary_mapping(b, c, label='(u({0}))_{{{1}}}')
 
-    # TODO: Is "log a" a typo in "3." of the variables definition? I assume it's "log c".
+    # Axiom 1. For each 1 <= y <= c, the clause ~G_1(1, y)
+    for y in range(1, c+1):
+        F.add_clause([-G(1, 1, y)])
 
-    # G_i(x, y) -> G[i](x, y)
-    G = func_list(lambda i: lambda x, y: 'G_{{{0}}}({1},{2})'.format(i, x, y))
-    # (f_i(x))_j -> f[i](x)[j]
-    f = func_list(lambda i: lambda x: func_list(
-        lambda j: '(f_{{{0}}}({1}))_{{{2}}}'.format(i, x, j)))
-    # (u(x))_j -> u(x)[j]
-    u = lambda x: func_list(lambda j: '(u({0}))_{{{1}}}'.format(x, j))
-
-    # 1. For each i < a, x < b and y < c, there is a variable G_i(x,y).
-    for i, x, y in product(range(a), range(b), range(c)):
-        formula.add_variable(G[i](x, y))
-    # 2. For each i < a, x < b and j < log b, there is a variable (f_i(x))_j,
-    #    standing for the j'th bit of the value of f_i(x).
-    for i, x, j in product(range(a), range(b), range(log_b)):
-        formula.add_variable(f[i](x)[j])
-    # 3. For each x < b and j < log a, there is a variable (u(x))_j,
-    #    standing for the j'th bit of the value of u(x).
-    for x, j in product(range(b), range(log_c)):
-        formula.add_variable(u(x)[j])
-
-    # x_{bits-1}..x_0 != binary(x'), encoded as the disjunction of l_j for all j,
-    # where l_j = ~x_j if the j'th bit of x' is 1, and l_j = x_j otherwise.
-    def bin_ineq(f_i_x, x_prime, bits):
-        return [(not bool(x_prime & (1 << j)), f_i_x[j]) for j in range(bits)]
-
-    # 1. For each y < c, the clause ~G_0(0, y)
-    for y in range(c):
-        formula.add_clause([(False, G[0](0, y))], strict=True)
-    # 2. For each i < a-1, each pair x,x' < b and each y < c,
+    # Axiom 2. For each 1 <= i < a, each pair x,x' in [b] and each [c],
     #    the clause f_i(x) = x' ^ G_{i+1}(x', y) -> G_i(x, y)
-    for i, x, x_, y in product(range(a - 1), range(b), range(b), range(c)):
-        formula.add_clause(bin_ineq(f[i](x), x_, log_b) +
-                           [(False, G[i + 1](x_, y)), (True, G[i](x, y))],
-                           strict=True)
-    # 3. For each x < b and each y < c, the clause u(x) = y -> G_{a-1}(x, y)
-    for x, y in product(range(b), range(c)):
-        formula.add_clause(bin_ineq(u(x), y, log_c) + [(True, G[a - 1](x, y))],
-                           strict=True)
+    domains = product(range(1, a),
+                      range(1, b+1),
+                      range(1, b+1),
+                      range(1, c+1))
+    for i, x, xx, y in domains:
+        first = f[i].forbid(x, xx - 1)
+        F.add_clause(first + [-G(i+1, xx, y), G(i, x, y)])
 
-    return formula
+    # Axiom 3. For each 1 <= x <= b and each 1 <= y <= c,
+    #     the clause u(x) = y-1 -> G_{a}(x, y)
+    for x, y in product(range(1, b+1), range(1, c+1)):
+        F.add_clause(u.forbid(x, y - 1) + [G(a, x, y)])
+
+    nvars = a*b*c + a*b*intlog2(b) + b*intlog2(c)
+    ncls = c + (a-1)*b*b*c + b*c
+    assert F.number_of_variables() == nvars
+    assert F.number_of_clauses() == ncls
+    return F
