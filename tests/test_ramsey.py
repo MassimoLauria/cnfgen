@@ -24,83 +24,83 @@ def subsets(N, k):
 #
 def test_ramsey_3_3_5():
     F = RamseyNumber(3, 3, 5)
-    assert len(list(F.variables())) == 10
+    assert F.number_of_variables() == 10
     assert len(F) == subsets(5, 3) * 2
     assert F.is_satisfiable()[0]
 
 
 def test_ramsey_3_3_6():
     F = RamseyNumber(3, 3, 6)
-    assert len(list(F.variables())) == 15
+    assert F.number_of_variables() == 15
     assert len(F) == subsets(6, 3) * 2
     assert not F.is_satisfiable()[0]
 
 
 def test_ptn_0():
     F = PythagoreanTriples(0)
-    assert len(list(F.variables())) == 0
+    assert F.number_of_variables() == 0
     assert len(F) == 0
     assert F.is_satisfiable()[0]
 
 
 def test_ptn_3():
     F = PythagoreanTriples(3)
-    assert len(list(F.variables())) == 3
+    assert F.number_of_variables() == 3
     assert len(F) == 0
     assert F.is_satisfiable()[0]
 
 
 def test_ptn_13():
     F = PythagoreanTriples(13)
-    assert len(list(F.variables())) == 13
+    assert F.number_of_variables() == 13
     assert len(F) == 6
     assert F.is_satisfiable()[0]
 
 
 def test_vdw_9_3_3():
     F = VanDerWaerden(9, 3, 3)
-    assert len(list(F.variables())) == 9
+    assert F.number_of_variables() == 9
     assert not F.is_satisfiable()[0]
 
 
 def test_vdw_18_4_3():
     F = VanDerWaerden(18, 4, 3)
-    assert len(list(F.variables())) == 18
+    assert F.number_of_variables() == 18
     assert not F.is_satisfiable()[0]
 
 
 def test_vdw_35_4_4():
     F = VanDerWaerden(35, 4, 4)
-    assert len(list(F.variables())) == 35
+    assert F.number_of_variables() == 35
     assert not F.is_satisfiable()[0]
 
 
 def test_vdw_8_3_3():
     F = VanDerWaerden(8, 3, 3)
-    assert len(list(F.variables())) == 8
+    assert F.number_of_variables() == 8
     assert F.is_satisfiable()[0]
 
 
 def test_vdw_17_4_3():
     F = VanDerWaerden(17, 4, 3)
-    assert len(list(F.variables())) == 17
+    assert F.number_of_variables() == 17
     assert F.is_satisfiable()[0]
 
 
 def test_vdw_34_4_4():
     F = VanDerWaerden(34, 4, 4)
-    assert len(list(F.variables())) == 34
+    assert F.number_of_variables() == 34
     assert F.is_satisfiable()[0]
 
 
 def test_vdw_15_3_4_5():
     F = VanDerWaerden(15, 3, 4, 5)
-    assert len(list(F.variables())) == 45
+    assert F.number_of_variables() == 45
 
 
 def test_vdw_15_3_4_5_5():
     F = VanDerWaerden(15, 3, 4, 5, 5)
-    assert len(list(F.variables())) == 60
+    assert F.number_of_variables() == 60
 
 
 #
@@ -170,83 +170,83 @@ def test_vdw_bad_types5():
 
 def test_ramsey_3_3_5_cli():
     F = cnfgen(["cnfgen", 'ram', 3, 3, 5], mode='formula')
-    assert len(list(F.variables())) == 10
+    assert F.number_of_variables() == 10
     assert len(F) == subsets(5, 3) * 2
     assert F.is_satisfiable()[0]
 
 
 def test_ramsey_3_3_6_cli():
     F = cnfgen(["cnfgen", 'ram', 3, 3, 6], mode='formula')
-    assert len(list(F.variables())) == 15
+    assert F.number_of_variables() == 15
     assert len(F) == subsets(6, 3) * 2
     assert not F.is_satisfiable()[0]
 
 
 def test_ptn_0_cli():
     F = cnfgen(["cnfgen", 'ptn', 0], mode='formula')
-    assert len(list(F.variables())) == 0
+    assert F.number_of_variables() == 0
     assert len(F) == 0
     assert F.is_satisfiable()[0]
 
 
 def test_ptn_3_cli():
     F = cnfgen(["cnfgen", 'ptn', 3], mode='formula')
-    assert len(list(F.variables())) == 3
+    assert F.number_of_variables() == 3
     assert len(F) == 0
     assert F.is_satisfiable()[0]
 
 
 def test_ptn_13_cli():
     F = cnfgen(["cnfgen", 'ptn', 13], mode='formula')
-    assert len(list(F.variables())) == 13
+    assert F.number_of_variables() == 13
     assert len(F) == 6
     assert F.is_satisfiable()[0]
 
 
 def test_vdw_9_3_3_cli():
     F = cnfgen(["cnfgen", 'vdw', 9, 3, 3], mode='formula')
-    assert len(list(F.variables())) == 9
+    assert F.number_of_variables() == 9
     assert not F.is_satisfiable()[0]
 
 
 def test_vdw_18_4_3_cli():
     F = cnfgen(["cnfgen", 'vdw', 18, 4, 3], mode='formula')
-    assert len(list(F.variables())) == 18
+    assert F.number_of_variables() == 18
     assert not F.is_satisfiable()[0]
 
 
 def test_vdw_35_4_4_cli():
     F = cnfgen(["cnfgen", 'vdw', 35, 4, 4], mode='formula')
-    assert len(list(F.variables())) == 35
+    assert F.number_of_variables() == 35
     assert not F.is_satisfiable()[0]
 
 
 def test_vdw_8_3_3_cli():
     F = cnfgen(["cnfgen", 'vdw', 8, 3, 3], mode='formula')
-    assert len(list(F.variables())) == 8
+    assert F.number_of_variables() == 8
     assert F.is_satisfiable()[0]
 
 
 def test_vdw_17_4_3_cli():
     F = cnfgen(["cnfgen", 'vdw', 17, 4, 3], mode='formula')
-    assert len(list(F.variables())) == 17
+    assert F.number_of_variables() == 17
     assert F.is_satisfiable()[0]
 
 
 def test_vdw_34_4_4_cli():
     F = cnfgen(["cnfgen", 'vdw', 34, 4, 4], mode='formula')
-    assert len(list(F.variables())) == 34
+    assert F.number_of_variables() == 34
     assert F.is_satisfiable()[0]
 
 
 def test_vdw_15_3_4_5_cli():
     F = cnfgen(["cnfgen", 'vdw', 15, 3, 4, 5], mode='formula')
-    assert len(list(F.variables())) == 45
+    assert F.number_of_variables() == 45
 
 
 def test_vdw_15_3_4_5_5_cli():
     F = cnfgen(["cnfgen", 'vdw', 15, 3, 4, 5, 5], mode='formula')
-    assert len(list(F.variables())) == 60
+    assert F.number_of_variables() == 60
 
 
 #

@@ -9,6 +9,7 @@ from math import sqrt
 
 from cnfgen.formula.cnf import CNF
 from cnfgen.localtypes import positive_int, positive_int_seq
+from cnfgen.localtypes import non_negative_int
 
 def PythagoreanTriples(N):
     """There is a Pythagorean triples free coloring on N
@@ -39,15 +40,10 @@ def PythagoreanTriples(N):
            Solving and verifying the boolean pythagorean triples problem via cube-and-conquer.
            arXiv preprint arXiv:1605.00723, 2016.
     """
-    positive_int(N, 'N')
+    non_negative_int(N, 'N')
 
     description = "Pythagorean triples problem on 1...{}".format(N)
     F = CNF(description=description)
-
-    if not isinstance(N, int):
-        raise TypeError("argument N expected to be a non negative integer")
-    if N < 0:
-        raise ValueError("argument N expected to be a non negative integer")
 
     # Variables represent the coloring of the number
     v = F.new_block(N, label='v({})')
@@ -98,7 +94,7 @@ def RamseyNumber(s, k, N):
        Parameters are not integers
 
     """
-    positive_int(N, 'N')
+    non_negative_int(N, 'N')
     positive_int(s, 's')
     positive_int(k, 'k')
     description = "{}-vertices graph free of {}-independent sets and {}-cliques".format(N, s, k)
@@ -193,7 +189,7 @@ def VanDerWaerden(N, k1, k2, *ks):
     TypeError
        Parameters are not integers
     """
-    positive_int(N,'N')
+    non_negative_int(N,'N')
     positive_int(k1,'k1')
     positive_int(k2,'k2')
     positive_int_seq(ks, '*ks')
