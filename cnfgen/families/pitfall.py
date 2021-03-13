@@ -9,6 +9,7 @@ import networkx
 from cnfgen.formula.cnf import CNF
 from cnfgen.families.tseitin import TseitinFormula
 from cnfgen.localtypes import positive_int
+from cnfgen.graphs import Graph
 
 def PitfallFormula(v, d, ny, nz, k):
     """Pitfall Formula
@@ -65,6 +66,11 @@ def PitfallFormula(v, d, ny, nz, k):
     if k % 2 != 0:
         raise ValueError("argument 'k' must be even.")
 
+    if (d > v) or (v*d % 2 == 1):
+        raise ValueError("No regular {}-degree graph with {}-vertices exists.\n".format(d, v) +
+                         "It requires  degree <= #vertices and degree*#vertices even")
+
+
     def xname(j, x):
         return "{}_{}".format(x, j)
 
@@ -72,17 +78,14 @@ def PitfallFormula(v, d, ny, nz, k):
         description=
         'Pitfall Formula with parameters (v={},d={},ny={},nz={},k={})'.format(
             v, d, ny, nz, k))
-    try:
-        graph = networkx.random_regular_graph(d, v)
-    except networkx.exception.NetworkXError:
-        raise ValueError("""No regular {}-degree graph with {}-vertices exists.
-Degree d must less than the number v of vertices,
-and d*v must be even.""".format(d, v))
+
+    graph = networkx.random_regular_graph(d, v)
+    graph = Graph.normalize(graph)
 
     charge = [1] + [0] * (v - 1)
     ts = TseitinFormula(graph, charge)
 
-    X_ = list(ts.variables())
+    X_ = range(1, ts.number_of_variables()+1)
     nx = len(X_)
 
     ### Variables

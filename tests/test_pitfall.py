@@ -67,7 +67,7 @@ without the comments.
     args = ["cnfgen", "-q", "pitfall", 5, 2, 4, 4, 2]
     random.seed(42)
     F = PitfallFormula(5, 2, 4, 4, 2)
-    lib = F.dimacs(export_header=False)
+    lib = F.to_dimacs()
     random.seed(42)
     cli = cnfgen(args, mode='string')
     assert lib == cli
