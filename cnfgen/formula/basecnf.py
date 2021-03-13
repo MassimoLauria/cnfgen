@@ -206,11 +206,14 @@ not have any effect."""
             formula too.
         """
         data = list(clause)
-        if len(data)==0:
+        if len(data) == 0:
             self._clauses.append([])
             return
 
-        maxid = max([abs(literal) for literal in data])
+        try:
+            maxid = max([abs(literal) for literal in data])
+        except TypeError:
+            raise ValueError("'clause' must be a sequence of non-zero integers")
         self._numvar = max(maxid, self._numvar)
         self._clauses.append(data)
 
@@ -219,6 +222,9 @@ not have any effect."""
         for c in clauses:
             self.add_clause(c)
 
+    def variables(self):
+        """Return the list of variables"""
+        return range(1, self.number_of_variables()+1)
 
     def clauses(self):
         """Return the list of clauses

@@ -29,62 +29,34 @@ class BaseSubstitution(CNF):
         #
         # For n variables we get
         #
-        # varadditional = [None, F1, F2,..., Fn]
         # substitution  = [None, F1, F2,..., Fn, -Fn, -F(n-1), ..., -F2, -F1]
         #
-        variablenames = [None] + list(self._orig_cnf.variables())
-        substitutions = [None] * (2 * len(variablenames) - 1)
-        varadditional = [None] * (len(variablenames))
+        N = cnf.number_of_variables()
+        substitutions = [None] * (2 * N + 1)
+
+        # Add the clauses additional clauses per variable
+        for var in range(1, N+1):
+            self.add_clauses_from(self.transform_variable_preamble(var))
 
         # Transform all possible literals
-        for i in range(1, len(variablenames)):
-            varadditional[i] = self.transform_variable_preamble(
-                variablenames[i])
-            substitutions[i] = self.transform_a_literal(True, variablenames[i])
-            substitutions[-i] = self.transform_a_literal(
-                False, variablenames[i])
-
-        # Collect new variable names from the CNFs:
-        # clause compression needs the variable names
-        if new_variables is None:
-            for i in range(1, len(variablenames)):
-                for clause in varadditional[i] + substitutions[
-                        i] + substitutions[-i]:
-                    for _, varname in clause:
-                        self.add_variable(varname)
-        else:
-            for v in new_variables:
-                self.add_variable(v)
-
-        # Compress substitution cnfs
-        for i in range(1, len(varadditional)):
-            varadditional[i] = [
-                list(self._compress_clause(cls)) for cls in varadditional[i]
-            ]
-
-        for i in range(1, len(substitutions)):
-            substitutions[i] = [
-                list(self._compress_clause(cls)) for cls in substitutions[i]
-            ]
+        for i in range(1, N+1):
+            substitutions[i] = self.transform_a_literal(i)
+            substitutions[-i] = self.transform_a_literal(-i)
 
         # build and add new clauses
-        for orig_cls in self._orig_cnf._clauses:
+        for orig_cls in self._orig_cnf:
 
-            # a substituted clause is the OR of the substituted literals
+            # a substituted clause is the OR of the CNF for the literals
             domains = [substitutions[lit] for lit in orig_cls]
             domains = tuple(domains)
-
-            block = [
+            # apply distribution
+            block = (
                 tuple([lit for clause in clause_tuple for lit in clause])
                 for clause_tuple in product(*domains)
-            ]
+            )
 
-            self._add_compressed_clauses(block)
+            self.add_clauses_from(block)
 
-        # transformation may need additional clauses per variables
-        for block in varadditional[1:]:
-            if block:
-                self._add_compressed_clauses(block)
 
     def add_transformation_description(self, description):
         i = 1
@@ -92,7 +64,7 @@ class BaseSubstitution(CNF):
             i += 1
         self.header['transformation {}'.format(i)] = description
 
-    def transform_variable_preamble(self, name):
+    def transform_variable_preamble(self, var):
         """Additional clauses for each variable
 
         Arguments:
@@ -102,16 +74,15 @@ class BaseSubstitution(CNF):
         """
         return []
 
-    def transform_a_literal(self, polarity, name):
+    def transform_a_literal(self, lit):
         """Substitute a literal with the transformation function
 
         Arguments:
-        - `polarity`: polarity of the literal
-        - `name`:     variable to be substituted
+        - `lit`:     literal to be substituted
 
         Returns: a list of clauses
         """
-        return [[(polarity, name)]]
+        return [[lit]]
 
 
 class IfThenElseSubstitution(BaseSubstitution):
@@ -636,7 +607,7 @@ class FlipPolarity(BaseSubstitution):
 
         self.add_transformation_description("All polarities have been flipped")
 
-    def transform_a_literal(self, polarity, varname):
+    def transform_a_literal(self, lit):
         """Substitute a positive literal with an OR,
         and negative literals with its negation.
 
@@ -646,7 +617,7 @@ class FlipPolarity(BaseSubstitution):
 
         Returns: a list of clauses
         """
-        return [[(not polarity, varname)]]
+        return [[-lit]]
 
 
 class VariableCompression(BaseSubstitution):
