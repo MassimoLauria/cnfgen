@@ -13,33 +13,20 @@ def test_not_planted():
 
 
 def test_one():
-    assign = [{'x_1': True, 'x_2': False}]
+    assign = [[1,-2]]
     F = RandomKCNF(2, 2, 3, planted_assignments=assign)
-    G = CNF([
-        [(True, 'x_1'), (False, 'x_2')],
-        [(False, 'x_1'), (False, 'x_2')],
-        [(True, 'x_1'), (True, 'x_2')],
-    ])
+    G = CNF([[+1, -2],
+             [-1, -2],
+             [+1, +2]])
     assertCnfEqual(F, G)
 
 
 def test_most():
-    ass = [
-        {
-            'x_1': True,
-            'x_2': False
-        },
-        {
-            'x_1': False,
-            'x_2': False
-        },
-        {
-            'x_1': True,
-            'x_2': True
-        },
-    ]
+    ass = [[+1, -2],
+           [-1, -2],
+           [+1, +2]]
     F = RandomKCNF(2, 2, 1, planted_assignments=ass)
-    G = CNF([[(True, 'x_1'), (False, 'x_2')]])
+    G = CNF([[1, -2]])
     assertCnfEqual(F, G)
 
 

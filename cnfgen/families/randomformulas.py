@@ -15,14 +15,14 @@ def clause_satisfied(cls, assignments):
 Test if clauses `cls` is satisfied by all assigment in the
 list assignments.
 """
+    if assignments is None:
+        return True
     for assignment in assignments:
-        issat = False
         for lit in cls:
             if lit in assignment:
-                issat = True
-        if not issat:
+                break
+        else:
             return False
-
     return True
 
 
@@ -77,7 +77,7 @@ def sample_clauses_dense(k, n, m, planted_assignments):
     return random.sample(list(all_clauses(k, n, planted_assignments)), m)
 
 
-def RandomKCNF(k, n, m, seed=None, planted_assignments=[]):
+def RandomKCNF(k, n, m, seed=None, planted_assignments=None):
     """Build a random k-CNF
 
     Sample :math:`m` clauses over :math:`n` variables, each of width

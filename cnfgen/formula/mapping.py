@@ -285,6 +285,8 @@ class BinaryMappingVariables(BaseVariableGroup):
         >>> V.forbid(4,3)
         [10, -11, -12]
         '''
+        if j >= 2**self.bitlength:
+            raise ValueError("j must be between 0 and {}".format(2**self.bitlength-1))
         pairs = zip(self.flips[j], self(i, None))
         return [ s*v for s,v in pairs ]
 
