@@ -94,7 +94,6 @@ def PitfallFormula(v, d, ny, nz, k):
         jlabel= 'e[{}]'.format(j) + '_{{{},{}}}'
         X.append( phi.new_graph_edges(graph, label=jlabel) )
         Xoffset.append( X[-1].variable_ids()[0] - 1)
-    print(Xoffset)
 
     # Easy variables
     Y = phi.new_block(k, ny, label = 'y_{{{},{}}}')
