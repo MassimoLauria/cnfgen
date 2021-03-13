@@ -71,8 +71,8 @@ def CPLSFormula(a, b, c):
     u = F.new_binary_mapping(b, c, label='(u({0}))_{{{1}}}')
 
     # Axiom 1. For each 1 <= y <= c, the clause ~G_1(1, y)
-    for y in range(1, c+1):
-        F.add_clause([-G(1, 1, y)])
+    for var in G(1, 1, None):
+        F.add_clause([-var])
 
     # Axiom 2. For each 1 <= i < a, each pair x,x' in [b] and each [c],
     #    the clause f_i(x) = x' ^ G_{i+1}(x', y) -> G_i(x, y)
