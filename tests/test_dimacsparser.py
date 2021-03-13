@@ -44,28 +44,27 @@ def test_commented_empty_cnf():
 def test_one_clause_cnf():
     dimacs = io.StringIO("c Hej!\np cnf 2 1\n1 -2 0\n")
     cnf = readCNF(dimacs)
-    assertCnfEqual(cnf, CNF([[(True, 1), (False, 2)]]))
+    assertCnfEqual(cnf, CNF([[1, -2]]))
 
 
 def test_one_var_cnf():
     dimacs = io.StringIO("c Hej!\np cnf 1 2\n1 0\n-1 0\n")
     cnf = readCNF(dimacs)
-    assertCnfEqual(cnf, CNF([[(True, 1)], [(False, 1)]]))
+    assertCnfEqual(cnf, CNF([[1], [-1]]))
 
 
 def test_double_conversion():
     cnf = CNF()
-    cnf.add_variable(1)
-    cnf.add_variable(2)
-    cnf.add_clause([(True, 2), (False, 1)])
-    dimacs = io.StringIO(cnf.dimacs())
+    cnf.update_variable_number(2)
+    cnf.add_clause([2, -1])
+    dimacs = io.StringIO(cnf.to_dimacs())
     cnf2 = readCNF(dimacs)
     assertCnfEqual(cnf2, cnf)
 
 
 def test_double_conversion_random():
     cnf = RandomKCNF(4, 10, 100)
-    dimacs = io.StringIO(cnf.dimacs())
+    dimacs = io.StringIO(cnf.to_dimacs())
     cnf2 = readCNF(dimacs)
     assertCnfEqualsIgnoreVariables(cnf, cnf2)
 
@@ -82,7 +81,8 @@ def test_dimacs_subcommand_goodinput():
 1 -3 5 0
 -2 3 -4 0
 2 -3 -5 0
-2 3 -5 0"""
+2 3 -5 0
+"""
     with redirect_stdin(io.StringIO(din)):
         dout = cnfgen(['cnfgen', '-q', 'dimacs'], mode='string')
     assert din == dout
