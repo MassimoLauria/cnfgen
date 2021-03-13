@@ -82,86 +82,84 @@ def PitfallFormula(v, d, ny, nz, k):
     graph = networkx.random_regular_graph(d, v)
     graph = Graph.normalize(graph)
 
-    charge = [1] + [0] * (v - 1)
-    ts = TseitinFormula(graph, charge)
+    # Template for the hard variables
+    T = TseitinFormula(graph, [True])
+    nx = T.number_of_variables()
 
-    X_ = range(1, ts.number_of_variables()+1)
-    nx = len(X_)
+    # Hard variables (we waste position 0 to start indexing from 1)
+    # now X[j](u,v) is the edge variable for {u,v} in the j-th copy.
+    X = [None]
+    Xoffset = [None]
+    for j in range(1, k+1):
+        jlabel= 'e[{}]'.format(j) + '_{{{},{}}}'
+        X.append( phi.new_graph_edges(graph, label=jlabel) )
+        Xoffset.append( X[-1].variable_ids()[0] - 1)
+    print(Xoffset)
 
-    ### Variables
-    X = [0] * k
-    P = [0] * k
-    Y = [0] * k
-    Z = [0] * k
-    A = [0] * k
-    for j in range(k):
-        X[j] = [xname(j, x) for x in X_]
-        P[j] = ["p_{}_{}".format(j, i) for i in range(nx + nz)]
-        Y[j] = ["y_{}_{}".format(j, i) for i in range(ny)]
-        Z[j] = ["z_{}_{}".format(j, i) for i in range(nz)]
-        A[j] = ["a_{}_{}".format(j, i) for i in range(3)]
+    # Easy variables
+    Y = phi.new_block(k, ny, label = 'y_{{{},{}}}')
 
-    for YY in Y:
-        for y in YY:
-            phi.add_variable(y)
+    # Pipe and Pitfall variables
+    Z = phi.new_block(k, nz, label = 'z_{{{},{}}}')
+    P = phi.new_block(k, nx + nz, label = 'p_{{{},{}}}')
+    # Tail variables
+    A = phi.new_block(k, 3, label = 'a_{{{},{}}}')
 
-    for XX in X:
-        for x in XX:
-            phi.add_variable(x)
+    def shift_edgelit(j, lit):
+        sign = lit // abs(lit)
+        return sign*Xoffset[j] + lit
 
-    ### Hard part
-    # Ts_j
-    for j in range(k):
-        append = [(True, z) for z in Z[j]]
-        for C in ts:
-            CC = [(p, xname(j, x)) for (p, x) in C]
-            phi.add_clause(CC + append)
+    # Hard part
+    # Copy the Tseitin formula for k times
+    # with a prefix of Z(j,..)
+    for j in range(1, k+1):
+        append = list(Z(j, None))
+        for clause in T:
+            shifted = [shift_edgelit(j, lit) for lit in clause]
+            phi.add_clause(shifted + append)
 
-    ### Pitfall part
-    # Psi
-    def pitfall(y1, y2, PP):
-        CY = [(True, y1), (True, y2)]
-        for p in PP:
-            phi.add_clause(CY + [(False, p)])
+    # Pitfall gadgets
+    # any two easy variables trigger the p's
+    for j in range(1, k+1):
+        for (y1, y2) in combinations(Y(j, None), 2):
+            for p in P(j, None):
+                phi.add_clause([y1, y2, -p])
 
-    for j in range(k):
-        for (y1, y2) in combinations(Y[j], 2):
-            pitfall(y1, y2, P[j])
-
-    # Pi
+    # Pipe gadgets
     def pipe(y, PP, XX, ZZ):
+        PP = list(PP)
+        XX = list(XX)
+        ZZ = list(ZZ)
         S = XX + ZZ
-        CY = [(True, y)]
+        CY = [y]
         C = []
         for (s, PPP) in zip(S, combinations(PP, len(PP) - 1)):
-            CP = [(True, p) for p in PPP]
+            CP = list(PPP)
             CS = C
             if len(CS) + 1 == len(S):
                 # C_{m+n} does not contain z_1
                 del CS[nx]
-            phi.add_clause(CY + CP + CS + [(False, s)])
-            C.append((True, s))
+            phi.add_clause(CY + CP + CS + [-s])
+            C.append(s)
 
-    for j in range(k):
-        for y in Y[j]:
-            pipe(y, P[j], X[j], Z[j])
+    for j in range(1, k+1):
+        for y in Y(j, None):
+            pipe(y, P(j, None), X[j].variable_ids(), Z(j, None))
 
-    # Delta
-    def tail(y, z, AA):
-        phi.add_clause([(False, AA[0]), (True, AA[2]), (False, z)])
-        phi.add_clause([(False, AA[1]), (False, AA[2]), (False, z)])
-        phi.add_clause([(True, AA[0]), (False, z), (False, y)])
-        phi.add_clause([(True, AA[1]), (False, z), (False, y)])
-
-    for j in range(k):
-        for (y, z) in product(Y[j], Z[j]):
-            tail(y, z, A[j])
+    # Tail gadgets
+    for j in range(1, k + 1):
+        for (y, z) in product(Y(j, None), Z(j, None)):
+            phi.add_clause([-A(j, 1), A(j, 3), -z])
+            phi.add_clause([-A(j, 2), -A(j, 3), -z])
+            phi.add_clause([A(j, 1), -z, -y])
+            phi.add_clause([A(j, 2), -z, -y])
 
     ### Easy part
     # Gamma
-    split_gamma = 2
-    for i in range(0, ny, split_gamma):
-        phi.add_clause([(False, Y[j][i + ii]) for j in range(k)
-                        for ii in range(split_gamma)])
+    for i in range(1, ny, 2):
+        clause = []
+        for j in range(1, k+1):
+            clause.extend([-Y(j, i), -Y(j, i+1)])
+        phi.add_clause(clause)
 
     return phi
