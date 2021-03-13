@@ -1,5 +1,4 @@
 import pytest
-import random
 
 from cnfgen import CPLSFormula
 from cnfgen.clitools import cnfgen, CLIError
@@ -13,18 +12,18 @@ def test_helper_exists():
 
 def test_bad_cmd_line():
     with pytest.raises(CLIError):
-        cnfgen(["cnfgen", "-q", "pitfall", -3, 4, 4])
+        cnfgen(["cnfgen", "-q", "cpls", -3, 4, 4])
     with pytest.raises(CLIError):
-        cnfgen(["cnfgen", "-q", "pitfall", 3, -4, 4])
+        cnfgen(["cnfgen", "-q", "cpls", 3, -4, 4])
     with pytest.raises(CLIError):
-        cnfgen(["cnfgen", "-q", "pitfall", 3, 4, -4])
+        cnfgen(["cnfgen", "-q", "cpls", 3, 4, -4])
 
 
 def test_bad_cmd_line_pow2():
     with pytest.raises(CLIError):
-        cnfgen(["cnfgen", "-q", "pitfall", 3, 7, 8])
+        cnfgen(["cnfgen", "-q", "cpls", 3, 7, 8])
     with pytest.raises(CLIError):
-        cnfgen(["cnfgen", "-q", "pitfall", 3, 8, 7])
+        cnfgen(["cnfgen", "-q", "cpls", 3, 8, 7])
 
 
 def test_bad_args():
@@ -61,6 +60,6 @@ without the comments.
 """
     args = ["cnfgen", "-q", "cpls", 3, 4, 4]
     F = CPLSFormula(3, 4, 4)
-    lib = F.dimacs(export_header=False)
+    lib = F.to_dimacs()
     cli = cnfgen(args, mode='string')
     assert lib == cli
