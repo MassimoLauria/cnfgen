@@ -7,24 +7,24 @@ from cnfgen.clitools import cnfgen, CLIError
 
 def test_php_cli():
     F = cnfgen(['cnfgen', 'php', 5], mode='formula')
-    assert len(list(F.variables())) == 30
+    assert F.number_of_variables() == 30
     assert len(F) == 6 + 15 * 5
     assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', 8, 5], mode='formula')
-    assert len(list(F.variables())) == 40
+    assert F.number_of_variables() == 40
     assert len(F) == 8 + 28 * 5
     assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', '--functional', 8, 5], mode='formula')
-    assert len(list(F.variables())) == 40
+    assert F.number_of_variables() == 40
     assert len(F) == 8 + 28 * 5 + 10 * 8
     assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', '--onto', 8, 5], mode='formula')
-    assert len(list(F.variables())) == 40
+    assert F.number_of_variables() == 40
     assert len(F) == 8 + 5 + 28 * 5
     assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', '--onto', '--functional', 8, 5],
                mode='formula')
-    assert len(list(F.variables())) == 40
+    assert F.number_of_variables() == 40
     assert len(F) == 8 + 5 + 28 * 5 + 10 * 8
     assert not F.is_satisfiable()[0]
 
@@ -33,22 +33,22 @@ def test_gphp_cli():
     F = cnfgen(['cnfgen', 'php', 8, 5, 3], mode='formula')
     for c in F:
         assert len(c) <= 3
-    assert len(list(F.variables())) == 24
+    assert F.number_of_variables() == 24
     assert len(F) <= 8 + 28 * 5
     assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', '--functional', 8, 5, 3], mode='formula')
     for c in F:
         assert len(c) <= 3
-    assert len(list(F.variables())) == 24
+    assert F.number_of_variables() == 24
     assert len(F) <= 8 + 28 * 5 + 10 * 8
     assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', '--onto', 8, 5, 3], mode='formula')
-    assert len(list(F.variables())) == 24
+    assert F.number_of_variables() == 24
     assert len(F) <= 8 + 5 + 28 * 5
     assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'php', '--onto', '--functional', 8, 5, 3],
                mode='formula')
-    assert len(list(F.variables())) == 24
+    assert F.number_of_variables() == 24
     assert len(F) <= 8 + 5 + 28 * 5 + 10 * 8
     assert not F.is_satisfiable()[0]
 
@@ -95,19 +95,19 @@ def test_tseitin_cli(shared_datadir):
 
 def test_randkcnf_cli():
     F = cnfgen(['cnfgen', 'randkcnf', 3, 10, 7], mode='formula')
-    assert len(list(F.variables())) == 10
+    assert F.number_of_variables() == 10
     assert len(F) == 7
     for c in F:
         assert len(c) == 3
 
     F = cnfgen(['cnfgen', 'randkcnf', 4, 10, 7], mode='formula')
-    assert len(list(F.variables())) == 10
+    assert F.number_of_variables() == 10
     assert len(F) == 7
     for c in F:
         assert len(c) == 4
 
     F = cnfgen(['cnfgen', 'randkcnf', 6, 15, 4], mode='formula')
-    assert len(list(F.variables())) == 15
+    assert F.number_of_variables() == 15
     assert len(F) == 4
     for c in F:
         assert len(c) == 6
@@ -174,20 +174,20 @@ def test_op_cli(shared_datadir):
 
 def test_peb_cli(shared_datadir):
     F = cnfgen(['cnfgen', 'peb', 'pyramid', 5], mode='formula')
-    assert len(list(F.variables())) == 21
+    assert F.number_of_variables() == 21
     assert not F.is_satisfiable()[0]
 
     F = cnfgen(['cnfgen', 'peb', 'pyramid', 5, '-T', 'xor', 2], mode='formula')
-    assert len(list(F.variables())) == 42
+    assert F.number_of_variables() == 42
     assert not F.is_satisfiable()[0]
 
     F = cnfgen(['cnfgen', 'peb', 'pyramid', 2, '-T', 'lift', 3],
                mode='formula')
-    assert len(list(F.variables())) == 36
+    assert F.number_of_variables() == 36
     assert not F.is_satisfiable()[0]
 
     F = cnfgen(['cnfgen', 'peb', 'pyramid', 5, '-T', 'or', 2], mode='formula')
-    assert len(list(F.variables())) == 42
+    assert F.number_of_variables() == 42
     assert not F.is_satisfiable()[0]
     F = cnfgen(['cnfgen', 'peb', shared_datadir / 'dag.gml', '-T', 'xor', 2],
                mode='formula')

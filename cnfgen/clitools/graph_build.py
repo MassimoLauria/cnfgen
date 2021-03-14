@@ -206,7 +206,7 @@ def modify_simple_graph_plantclique(parsed, G):
     if cliquesize > G.order():
         raise ValueError("Planted clique cannot be larger than graph")
 
-    clique = random.sample(list(G.nodes()), cliquesize)
+    clique = random.sample(G.vertices(), cliquesize)
 
     for v, w in combinations(clique, 2):
         G.add_edge(v, w)
@@ -220,8 +220,8 @@ def modify_graph_addedges(parsed, G):
             raise ValueError
         k = int(parsed['addedges'][0])
         assert k >= 0
-    except (TypeError, ValueError, AssertionError):
-        raise ValueError('\'addedges\' expects argument m with m>=0')
+    except (TypeError, ValueError, AssertionError) as e:
+        raise ValueError('\'addedges\' expects argument m with m>=0') from e
 
     add_random_missing_edges(G, k)
     G.name += " + {} random edges".format(k)
@@ -241,10 +241,10 @@ def obtain_glrp(parsed):
         assert left > 0
         assert right > 0
         assert 0 <= p <= 1
-    except (TypeError, ValueError, AssertionError):
+    except (TypeError, ValueError, AssertionError) as e:
         raise ValueError(
             '\'glrp\' expects three arguments L R p\n with L>0, R>0, p in [0,1]'
-        )
+        ) from e
     G = bipartite_random(left, right, p)
     G.name = 'Random {}-biased bipartite with ({},{}) vertices'.format(
         p, left, right)

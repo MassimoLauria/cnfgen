@@ -1,4 +1,4 @@
-from cnfgen.graphs import supported_formats
+from cnfgen.graphs import supported_graph_formats
 
 simple_graph_doc = """
             HOW TO SPECIFY A SIMPLE UNDIRECTED GRAPH
@@ -141,7 +141,7 @@ is required only when it does not match the extension of <filename>.
 
 
 def make_graph_doc(graphtype, cliprefix):
-    formats = supported_formats()[graphtype]
+    formats = supported_graph_formats()[graphtype]
     if graphtype == 'simple':
         return simple_graph_doc.format(prefix=cliprefix,
                                        formats=str(formats)[1:-1])

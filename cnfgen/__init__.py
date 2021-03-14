@@ -10,9 +10,11 @@ transformations implemented, plus some IO functions.
 # Basic CNF object
 from cnfgen.formula.cnf import CNF
 
-# IO functions
+# Graph IO functions
 from cnfgen.graphs import readGraph, writeGraph
-from cnfgen.graphs import supported_formats as supported_graph_formats
+from cnfgen.graphs import Graph
+from cnfgen.graphs import DirectedGraph
+from cnfgen.graphs import BipartiteGraph
 
 # SAT solvers
 from cnfgen.utils.solver import supported_satsolvers

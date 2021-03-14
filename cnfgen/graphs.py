@@ -16,28 +16,13 @@ import networkx
 from cnfgen.localtypes import positive_int,non_negative_int
 
 __all__ = [
-    "supported_formats", "readGraph", "writeGraph",
+    "readGraph", "writeGraph",
+    "Graph", "DirectedGraph", "BipartiteGraph",
+    "supported_graph_formats",
     "bipartite_random_left_regular", "bipartite_random_regular",
-    "bipartite_random_m_edges", "bipartite_random", "dag_complete_binary_tree",
-    "dag_pyramid",'BipartiteGraph', 'Graph'
+    "bipartite_random_m_edges", "bipartite_random",
+    "dag_complete_binary_tree", "dag_pyramid", "dag_path"
 ]
-
-#################################################################
-#          Graph Decoders (first is default)
-#################################################################
-
-_graphformats = {
-    'dag': ['kthlist', 'gml', 'dot', 'dimacs'],
-    'digraph': ['kthlist', 'gml', 'dot', 'dimacs'],
-    'simple': ['kthlist', 'gml', 'dot', 'dimacs'],
-    'bipartite': ['kthlist', 'gml', 'dot', 'matrix']
-}
-
-
-def supported_formats():
-    """The graph file formats supported by the library."""
-    return copy.deepcopy(_graphformats)
-
 
 #################################################################
 #          Import third party code
@@ -173,6 +158,59 @@ have that u < v."""
         """Guarantees a cnfgen graph object"""
         raise NotImplementedError
 
+    @classmethod
+    def supported_file_formats(cls):
+        """File formats supported for graph I/O"""
+        raise NotImplementedError
+
+    @classmethod
+    def graph_type_name(cls):
+        """File formats supported for graph I/O"""
+        raise NotImplementedError
+
+    @classmethod
+    def from_file(cls, fileorname, fileformat=None):
+        """Load the graph from a file
+
+        The file format is either indicated in the `fileformat` variable or, if
+        that is `None`, or from the extension of the filename.
+
+        Parameters
+        -----------
+        fileorname: str or file-like object
+            the input file from which the graph is read. If it is a string
+            then the graph is read from a file with that string as
+            filename. Otherwise if the fileorname is a file object (or
+            a text stream), the graph is read from there.
+
+            Input files are assumed to be UTF-8 by default (for some
+            formats it is actually ascii)
+
+        fileformat: string, optional
+            The file format that the parser should expect to receive.
+            See also :py:func:`cnfgen.graph.supported_formats`. By default
+            it tries to autodetect it from the file name extension (when applicable)."""
+
+        # Reduce to the case of filestream
+        if isinstance(fileorname, str):
+            with open(fileorname, 'r', encoding='utf-8') as file_handle:
+                return cls.from_file(file_handle, fileformat)
+
+        # Discover and test file format
+        fileformat = guess_fileformat(fileorname, fileformat)
+        allowed = cls.supported_file_formats()
+        typename = cls.graph_type_name()
+        if fileformat not in allowed:
+            raise ValueError(
+                "Invalid file type."
+                " For {} graphs we support {}".format(typename,
+                                                      allowed))
+
+        # Read file
+        return readGraph(fileorname, typename, fileformat)
+
+
+
 class Graph(BaseGraph):
 
     def is_dag(self):
@@ -255,6 +293,20 @@ The sequence of neighbors is guaranteed to be sorted.
         except AttributeError:
             C.name='<unknown graph>'
         return C
+
+    @classmethod
+    def graph_type_name(cls):
+        """Simple graphs are laleled as 'simple'"""
+        return 'simple'
+
+    @classmethod
+    def supported_file_formats(cls):
+        """File formats supported for simple graph I/O"""
+        # Check that DOT is a supported format
+        if has_dot_library():
+            return ['kthlist', 'gml', 'dot', 'dimacs']
+        else:
+            return ['kthlist', 'gml', 'dimacs']
 
     @classmethod
     def null_graph(cls):
@@ -416,6 +468,20 @@ The sequence of successors is guaranteed to be sorted."""
         except AttributeError:
             C.name='<unknown graph>'
         return C
+
+    @classmethod
+    def graph_type_name(cls):
+        """Directed graphs are laleled as 'digraph'"""
+        return 'digraph'
+
+    @classmethod
+    def supported_file_formats(cls):
+        """File formats supported for directed graph I/O"""
+        if has_dot_library():
+            return ['kthlist', 'gml', 'dot', 'dimacs']
+        else:
+            return ['kthlist', 'gml', 'dimacs']
+
 
     @classmethod
     def normalize(cls, G, varname='G'):
@@ -628,41 +694,17 @@ The sequence of neighbors is guaranteed to be sorted."""
         return B
 
     @classmethod
-    def from_file(cls, fileorname, fileformat=None):
-        """Load the graph from a file
+    def graph_type_name(cls):
+        """Bipartite graphs are laleled as 'bipartite'"""
+        return 'bipartite'
 
-        The file format is either indicated in the `fileformat` variable or, if
-        that is `None`, or from the extension of the filename.
-
-        Parameters
-        -----------
-        fileorname: str or file-like object
-            the input file from which the graph is read. If it is a string
-            then the graph is read from a file with that string as
-            filename. Otherwise if the fileorname is a file object (or
-            a text stream), the graph is read from there.
-
-            Input files are assumed to be UTF-8 by default.
-
-        fileformat: string, optional
-            The file format that the parser should expect to receive.
-            See also :py:func:`cnfgen.graph.supported_formats`. By default
-            it tries to autodetect it from the file name extension (when applicable)."""
-
-        # Reduce to the case of filestream
-        if isinstance(fileorname,str):
-            with open(fileorname, 'r', encoding='utf-8') as file_handle:
-                return cls.from_file(file_handle,fileformat)
-
-        # Discover and test file format
-        fileformat = guess_fileformat(fileorname, fileformat)
-        if fileformat not in _graphformats['bipartite']:
-            raise ValueError(
-                "Invalid file type."
-                " For bipartite graphs we support {}".format(_graphformats['bipartite']))
-
-        # Read file
-        return readGraph(fileorname,'bipartite',fileformat)
+    @classmethod
+    def supported_file_formats(cls):
+        """File formats supported for bipartite graph I/O"""
+        if has_dot_library():
+            return ['kthlist', 'gml', 'dot', 'matrix']
+        else:
+            return ['kthlist', 'gml', 'matrix']
 
     @classmethod
     def normalize(cls, G, varname='G'):
@@ -729,14 +771,6 @@ def has_dot_library():
     return False
 
 
-# Check that DOT is a supported format
-if not has_dot_library():
-    for k in list(_graphformats.values()):
-        try:
-            k.remove('dot')
-        except ValueError:
-            pass
-
 #################################################################
 #          Graph reader/writer
 #################################################################
@@ -770,7 +804,7 @@ def _process_graph_io_arguments(iofile, graph_type, file_format, multi_edges):
                 iofile))
 
     # Check the graph type specification
-    if graph_type not in _graphformats:
+    if graph_type not in ['dag', 'digraph', 'simple', 'bipartite']:
         raise ValueError("The graph type must be one of " +
                          list(_graphformats.keys()))
 
@@ -795,16 +829,16 @@ def _process_graph_io_arguments(iofile, graph_type, file_format, multi_edges):
             raise ValueError(
                 "Cannot guess a file format from an IO stream with no name. Please specify the format manually."
             )
-        if extension not in _graphformats[graph_type]:
+        if extension not in grtype.supported_file_formats():
             raise ValueError("Cannot guess a file format for {} graphs from the extension of \"{}\". Please specify the format manually.".
                              format(graph_type, iofile.name))
         else:
             file_format = extension
 
-    elif file_format not in _graphformats[graph_type]:
+    elif file_format not in grtype.supported_file_formats():
         raise ValueError(
             "For {} graphs we only support these formats: {}".format(
-                graph_type, _graphformats[graph_type]))
+                graph_type, grtype.supported_file_formats()))
 
     return (grtype, file_format)
 
@@ -837,8 +871,8 @@ def readGraph(input_file,
     In the case of "dag" or "directed" type, the graph obtained is of
     :py:class:`cnfgen.graphs.DirectedGraph`.
 
-    The supported file formats are enumearated by
-    :py:func:`cnfgen.graph.supported_formats`
+    The supported file formats are enumerated by the respective class method
+    ``supported_file_formats``
 
     In the case of "dag" type, the graph read in input must have
     increasing edges, in the sense that all edges must be such that
@@ -857,11 +891,10 @@ def readGraph(input_file,
         Input files are assumed to be UTF-8 by default.
 
     graph_type: string in {"simple","digraph","dag","bipartite"}
-        see also :py:func:`cnfgen.graph.supported_formats`
 
     file_format: string, optional
         The file format that the parser should expect to receive.
-        See also :py:func:`cnfgen.graph.supported_formats`. By default
+        See also the method py:method::``supported_file_formats``. By default
         it tries to autodetect it from the file name extension (when applicable).
 
     multi_edges: bool,optional
@@ -870,8 +903,7 @@ def readGraph(input_file,
     Returns
     -------
     a graph object
-        one type among networkx.DiGraph, networkx.MultiDiGraph,
-        networkx.Graph, networkx.MultiGraph, cnfgen.graphs.BipartiteGraph.
+        one type among Graph, DirectedGraph, BipartiteGraph
 
     Raises
     ------
@@ -1975,3 +2007,17 @@ def add_random_missing_edges(G, m, seed=None):
         for u, v in random.sample(available_edges(),
                                   goal - G.number_of_edges()):
             G.add_edge(u, v)
+
+
+def supported_graph_formats():
+    """File formats supported for graph I/O
+
+    Given as a dictionary that maps graph types to the respective
+    supported formats.
+
+    E.g. 'dag' -> ['dimacs', 'kthlist']
+"""
+    return {'simple': Graph.supported_file_formats(),
+            'digraph': DirectedGraph.supported_file_formats(),
+            'dag': DirectedGraph.supported_file_formats(),
+            'bipartite': BipartiteGraph.supported_file_formats()}

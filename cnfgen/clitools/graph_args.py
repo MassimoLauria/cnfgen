@@ -42,8 +42,9 @@ https://github.com/MassimoLauria/cnfgen.git
 import os
 import argparse
 
-from cnfgen.graphs import supported_formats
 from cnfgen.graphs import readGraph, writeGraph
+from cnfgen.graphs import Graph, DirectedGraph, BipartiteGraph
+from cnfgen.graphs import supported_graph_formats
 from cnfgen.clitools.msg import InternalBug
 
 # Simple graphs
@@ -76,6 +77,13 @@ from cnfgen.clitools.graph_build import modify_graph_addedges
 
 # Read input
 from cnfgen.clitools.graph_fileinput import read_graph_from_input
+
+classes = {
+    'simple': Graph,
+    'digraph': DirectedGraph,
+    'dag': DirectedGraph,
+    'bipartite': BipartiteGraph
+}
 
 constructions = {
     'simple': {
@@ -115,8 +123,8 @@ options = {
     'bipartite': ['plantbiclique', 'addedges', 'save']
 }
 
-formats = supported_formats()
-
+# File formats for each graph type
+formats = supported_graph_formats()
 
 def determine_graph_format_from_filename(filename):
     try:

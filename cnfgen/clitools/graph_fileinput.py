@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Functionality for reading graphs on the command line
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020  Massimo Lauria <lauria@kth.se>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021  Massimo Lauria <lauria@kth.se>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -13,7 +13,7 @@ import textwrap
 import contextlib
 from fileinput import FileInput
 
-from cnfgen.graphs import supported_formats as supported_graph_formats
+from cnfgen.graphs import supported_graph_formats
 from cnfgen.graphs import readGraph
 
 from cnfgen.clitools.msg import interactive_msg, msg_prefix
@@ -38,7 +38,7 @@ def read_graph_from_input(graphtype, filename, fileformat):
     Parameters:
     -----------
     graphtype: str
-         one of {dag,bipartite, simple}
+         one of {dag, directed, bipartite, simple}
     filename:
          filename for be read
     fileformat:
