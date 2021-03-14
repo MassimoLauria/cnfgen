@@ -4,6 +4,8 @@
 from itertools import combinations, product, permutations
 from copy import copy
 
+from cnfgen.localtypes import positive_int
+
 from cnfgen.formula.cnf import CNF
 # from cnfgen.graphs import bipartite_sets, neighbors
 
@@ -22,15 +24,22 @@ class BaseSubstitution(CNF):
         - `cnf`: the original cnf
         """
         self._orig_cnf = cnf
-        super(BaseSubstitution, self).__init__([])
+        CNF.__init__(self)
         self.header = copy(cnf.header)
 
+
+    def _apply(self):
+        """Apply the substitutions
+
+        This should be called after setting up the lifted variables
+        """
         # Load original variable names
         #
         # For n variables we get
         #
         # substitution  = [None, F1, F2,..., Fn, -Fn, -F(n-1), ..., -F2, -F1]
         #
+        cnf = self._orig_cnf
         N = cnf.number_of_variables()
         substitutions = [None] * (2 * N + 1)
 
@@ -44,7 +53,7 @@ class BaseSubstitution(CNF):
             substitutions[-i] = self.transform_a_literal(-i)
 
         # build and add new clauses
-        for orig_cls in self._orig_cnf:
+        for orig_cls in cnf:
 
             # a substituted clause is the OR of the CNF for the literals
             domains = [substitutions[lit] for lit in orig_cls]
@@ -169,14 +178,18 @@ class OrSubstitution(BaseSubstitution):
         - `cnf`: the original cnf
         - `rank`: how many variables in each or
         """
+        positive_int(rank, 'rank')
+        BaseSubstitution.__init__(self, cnf)
+
         self._rank = rank
-
-        super(OrSubstitution, self).__init__(cnf)
-
+        for name in cnf.all_variable_labels():
+            self.new_block(rank, label='{{'+name+'}}^{}')
         self.add_transformation_description(
             "Substitution with OR of {}".format(self._rank))
+        self._apply()
+        self._rank = rank
 
-    def transform_a_literal(self, polarity, varname):
+    def transform_a_literal(self, lit):
         """Substitute a positive literal with an OR,
         and negative literals with its negation.
 
@@ -186,11 +199,12 @@ class OrSubstitution(BaseSubstitution):
 
         Returns: a list of clauses
         """
-        names = ["{{{}}}^{}".format(varname, i) for i in range(self._rank)]
-        if polarity:
-            return [[(True, name) for name in names]]
+        k = self._rank
+        nvars = [(abs(lit)-1)*k + i for i in range(1,k+1)]
+        if lit > 0:
+            return [nvars]
         else:
-            return [[(False, name)] for name in names]
+            return [[-nvar] for nvar in nvars]
 
 
 class AllEqualSubstitution(BaseSubstitution):
@@ -274,24 +288,34 @@ class XorSubstitution(BaseSubstitution):
         - `cnf`: the original cnf
         - `rank`: how many variables in each xor
         """
+
+        positive_int(rank, 'rank')
+        BaseSubstitution.__init__(self, cnf)
+
         self._rank = rank
-
-        super(XorSubstitution, self).__init__(cnf)
-
+        for name in cnf.all_variable_labels():
+            self.new_block(rank, label='{{'+name+'}}^{}')
         self.add_transformation_description(
             "Substitution with XOR of {}".format(self._rank))
+        self._apply()
 
-    def transform_a_literal(self, polarity, varname):
-        """Substitute a literal with a (negated) XOR
+    def transform_a_literal(self, lit):
+        """Substitute a literal with a XOR
 
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
+        Parameters
+        ----------
+        lit : literal to substitute
 
-        Returns: a list of clauses
+        Returns
+        -------
+        a list of clauses
         """
-        names = ["{{{}}}^{}".format(varname, i) for i in range(self._rank)]
-        return list(self.parity_constraint(names, polarity))
+        polarity = 1 if lit > 0 else 0
+        k = self._rank
+        nvars = [(abs(lit)-1)*k + i for i in range(1,k+1)]
+        temp = CNF()
+        temp.add_parity(nvars,polarity)
+        return list(temp)
 
 
 class FormulaLifting(BaseSubstitution):
@@ -304,14 +328,18 @@ class FormulaLifting(BaseSubstitution):
         - `cnf`: the original cnf
         - `rank`: how many variables in each xor
         """
+        positive_int(rank, 'rank')
+        BaseSubstitution.__init__(self, cnf)
         self._rank = rank
-
-        super(FormulaLifting, self).__init__(cnf)
+        for name in cnf.all_variable_labels():
+            self.new_block(rank, label='X_{{'+name+'}}^{}')
+            self.new_block(rank, label='Y_{{'+name+'}}^{}')
 
         self.add_transformation_description(
             "Lifting with selectors over {} values".format(self._rank))
+        self._apply()
 
-    def transform_variable_preamble(self, name):
+    def transform_variable_preamble(self, variable):
         """Additional clauses for each lifted variable
 
         Arguments:
@@ -319,30 +347,27 @@ class FormulaLifting(BaseSubstitution):
 
         Returns: a list of clauses
         """
-        selector_clauses = []
-        selector_clauses.append([(True, "Y_{{{}}}^{}".format(name, i))
-                                 for i in range(self._rank)])
+        Yoff = (variable-1)*2*self._rank + self._rank
+        temp = CNF()
+        temp.add_linear([Yoff+i for i in range(1,self._rank+1)], '==', 1)
+        return list(temp)
 
-        for s1, s2 in combinations(
-            ["Y_{{{}}}^{}".format(name, i) for i in range(self._rank)], 2):
-            selector_clauses.append([(False, s1), (False, s2)])
+    def transform_a_literal(self, lit):
+        """Lift a literal
 
-        return selector_clauses
+        Parameters
+        ----------
+        lit : literal to substitute
 
-    def transform_a_literal(self, polarity, varname):
-        """Substitute a literal with a (negated) XOR
-
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
-
-        Returns: a list of clauses
+        Returns
+        -------
+        a list of clauses
         """
-        clauses = []
-        for i in range(self._rank):
-            clauses.append([(False, "Y_{{{}}}^{}".format(varname, i)),
-                            (polarity, "X_{{{}}}^{}".format(varname, i))])
-        return clauses
+        sign = lit//abs(lit)
+        oldvar = abs(lit)
+        Xoff = (oldvar-1)*2*self._rank
+        Yoff = (oldvar-1)*2*self._rank + self._rank
+        return [[-(Yoff + i), sign*(Xoff + i)] for i in range(1, self._rank+1)]
 
 
 class ExactlyOneSubstitution(BaseSubstitution):

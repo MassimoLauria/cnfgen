@@ -7,7 +7,7 @@ import pytest
 
 import cnfgen
 from cnfgen.clitools import CLIError
-from cnfgen.graphs import readGraph, writeGraph, supported_formats
+from cnfgen.graphs import readGraph, writeGraph, supported_graph_formats
 from cnfgen.graphs import has_dot_library
 from cnfgen.graphs import Graph, BipartiteGraph,DirectedGraph
 
@@ -121,7 +121,7 @@ def test_low_level_dimacs_read_path2():
 
 def test_readGraph_dot_path2():
 
-    if 'dot' not in supported_formats()['simple']:
+    if 'dot' not in supported_graph_formats()['simple']:
         pytest.skip("No support for Dot file I/O.")
 
     with pytest.raises(ValueError):
@@ -226,7 +226,7 @@ def test_readGraph_kthlist_bipartite_strict():
 
 def test_readGraph_dot_file_as_gml(shared_datadir):
 
-    if 'dot' not in supported_formats()['simple']:
+    if 'dot' not in supported_graph_formats()['simple']:
         pytest.skip("No support for Dot file I/O.")
 
     fname = str(shared_datadir / 'path2.dot')
@@ -239,7 +239,7 @@ def test_readGraph_dot_file_as_gml(shared_datadir):
 def test_readGraph_dot_file_remember_name(shared_datadir):
     """Even if we are reading the file from a IO stream, we still remember
 the original file name so we can guess the format."""
-    if 'dot' not in supported_formats()['simple']:
+    if 'dot' not in supported_graph_formats()['simple']:
         pytest.skip("No support for Dot file I/O.")
 
     fname = str(shared_datadir / 'path2.dot')

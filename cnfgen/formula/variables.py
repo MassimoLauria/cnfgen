@@ -1235,7 +1235,7 @@ class VariablesManager(CNFLinear):
 
         begin, end = vg[0], vg[-1]
         assert end >= begin
-        if begin <= self.number_of_clauses():
+        if begin <= self.number_of_variables():
             raise ValueError(
                 "The new variable group must not overlaps old variables")
         self._groups.append(vg)

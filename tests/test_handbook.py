@@ -177,18 +177,23 @@ def test_peb_cli(shared_datadir):
     assert F.number_of_variables() == 21
     assert not F.is_satisfiable()[0]
 
+def test_peb_cli_xor(shared_datadir):
     F = cnfgen(['cnfgen', 'peb', 'pyramid', 5, '-T', 'xor', 2], mode='formula')
     assert F.number_of_variables() == 42
     assert not F.is_satisfiable()[0]
 
+def test_peb_cli_lift(shared_datadir):
     F = cnfgen(['cnfgen', 'peb', 'pyramid', 2, '-T', 'lift', 3],
                mode='formula')
     assert F.number_of_variables() == 36
     assert not F.is_satisfiable()[0]
 
+def test_peb_cli_or(shared_datadir):
     F = cnfgen(['cnfgen', 'peb', 'pyramid', 5, '-T', 'or', 2], mode='formula')
     assert F.number_of_variables() == 42
     assert not F.is_satisfiable()[0]
+
+def test_peb_cli_read(shared_datadir):
     F = cnfgen(['cnfgen', 'peb', shared_datadir / 'dag.gml', '-T', 'xor', 2],
                mode='formula')
     assert not F.is_satisfiable()[0]
