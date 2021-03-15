@@ -44,13 +44,16 @@ class OR(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        clause = [ (True,"x_{}".format(i)) for i in range(args.P) ] + \
-                 [ (False,"y_{}".format(i)) for i in range(args.N) ]
-        description = "A single clause with {} positive and {} negative literals".format(
+        description = "A clause with {} positive and {} negative literals".format(
             args.P, args.N)
-        orcnf = CNF([clause], description)
-
-        return orcnf
+        F = CNF(description=description)
+        positive = F.new_block(args.P,label='x_{}')
+        negative = F.new_block(args.N,label='y_{}')
+        clause = []
+        clause.extend(positive)
+        clause.extend(-v for v in negative)
+        F.add_clause(clause)
+        return F
 
 
 class AND(FormulaHelper):
@@ -82,11 +85,14 @@ class AND(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        clauses = [ [(True,"x_{}".format(i))] for i in range(args.P) ] + \
-                  [ [(False,"y_{}".format(i))] for i in range(args.N) ]
         description = "Singleton clauses: {} positive and {} negative".format(
             args.P, args.N)
-        return CNF(clauses, description)
+        F = CNF(description=description)
+        positive = F.new_block(args.P,label='x_{}')
+        negative = F.new_block(args.N,label='y_{}')
+        F.add_clauses_from([v] for v in positive)
+        F.add_clauses_from([-v] for v in negative)
+        return F
 
 
 class EMPTY(FormulaHelper):

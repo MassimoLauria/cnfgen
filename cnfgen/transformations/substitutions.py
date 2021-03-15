@@ -5,13 +5,178 @@ from itertools import combinations, product, permutations
 from copy import copy
 
 from cnfgen.localtypes import positive_int
-
 from cnfgen.formula.cnf import CNF
-# from cnfgen.graphs import bipartite_sets, neighbors
 
-###
-### Substitions
-###
+#
+# Utilities
+#
+
+def add_description(F, text):
+    """Add the description of a transformation
+
+    Parameters
+    ----------
+    F : cnfgen.CNF
+        formula that gets the new description
+    text : str
+        text of the description"""
+    i = 1
+    while 'transformation {}'.format(i) in F.header:
+        i += 1
+    F.header['transformation {}'.format(i)] = text
+
+
+def apply_substitution(formula, subst):
+    """Apply the substitution ``f`` to a formula
+
+    Applies a substitution to a formula and produces a sequence
+    of clauses.
+
+    Parameters
+    ----------
+    formula : cnfgen.CNF
+        formula that gets the new description
+    subst : function
+        a function that maps literals to sequences of clauses
+    """
+    # Load original variable names
+    #
+    # For n variables we get
+    #
+    # substitution  = [None, F1, F2,..., Fn, -Fn, -F(n-1), ..., -F2, -F1]
+    #
+    N = formula.number_of_variables()
+    substitutions = [None] * (2 * N + 1)
+
+    # Transform all possible literals
+    for i in range(1, N+1):
+        substitutions[i] = subst(i)
+        substitutions[-i] = subst(-i)
+
+    # build and add new clauses
+    for clause in formula:
+
+        # a substituted clause is the OR of the CNF for the literals
+        domains = [substitutions[lit] for lit in clause]
+        domains = tuple(domains)
+        # apply distribution
+        block = (
+            tuple([lit for clause in clause_tuple for lit in clause])
+            for clause_tuple in product(*domains)
+        )
+        yield from block
+
+
+#
+# Substitutions
+#
+def FlipPolarity(F):
+    """Flip the polarity of variables
+
+    F : cnfgen.CNF
+        formula
+    """
+    newF = CNF()
+    newF.header = copy(F.header)
+    add_description(newF,"All polarities have been flipped")
+
+    def subst(lit):
+        return [[-lit]]
+    newF.add_clauses_from(apply_substitution(F, subst))
+    return newF
+
+
+def XorSubstitution(F, k):
+    """Apply Xor substitution or rank ``k``
+
+    F : cnfgen.CNF
+        formula
+    k : int
+        arity of the xor substitution
+    """
+    positive_int(k, 'k')
+    newF = CNF()
+    newF.header = copy(F.header)
+    for name in F.all_variable_labels():
+        newF.new_block(k, label='{{'+name+'}}^{}')
+    add_description(newF, "Substitution with XOR of arity {}".format(k))
+
+    def xorify(lit):
+        polarity = 1 if lit > 0 else 0
+        nvars = [(abs(lit)-1)*k + i for i in range(1, k+1)]
+        temp = CNF()
+        temp.add_parity(nvars, polarity)
+        return list(temp)
+
+    newF.add_clauses_from(
+        apply_substitution(F, xorify))
+
+    return newF
+
+
+def OrSubstitution(F, k):
+    """Apply Or substitution or rank ``k``
+
+    F : cnfgen.CNF
+        formula
+    k : int
+        arity of the or substitution
+    """
+    positive_int(k, 'k')
+    newF = CNF()
+    newF.header = copy(F.header)
+    for name in F.all_variable_labels():
+        newF.new_block(k, label='{{'+name+'}}^{}')
+    add_description(newF, "Substitution with OR of arity {}".format(k))
+
+    def orify(lit):
+        nvars = [(abs(lit)-1)*k + i for i in range(1, k+1)]
+        if lit > 0:
+            return [nvars]
+        else:
+            return [[-nvar] for nvar in nvars]
+
+    newF.add_clauses_from(
+        apply_substitution(F, orify))
+
+    return newF
+
+
+
+def FormulaLifting(F, k):
+    """Formula lifting: Y variable select X values
+
+    F : cnfgen.CNF
+        a formula
+    k : int
+        arity of the lifting
+    """
+    positive_int(k, 'k')
+    newF = CNF()
+    newF.header = copy(F.header)
+    for name in F.all_variable_labels():
+        newF.new_block(k, label='X_{{'+name+'}}^{}')
+        newF.new_block(k, label='Y_{{'+name+'}}^{}')
+    add_description(newF, "Lifting with selectors over {} values".format(k))
+
+    N = newF.number_of_variables()
+    # cycle on the blocks of Y variables
+    for y in range(k+1, N+1, 2*k):
+        newF.add_linear([y+i for i in range(k)], '==', 1)
+
+    def lift(lit):
+        sign = lit//abs(lit)
+        oldvar = abs(lit)
+        Xoff = (oldvar-1)*2*k
+        Yoff = (oldvar-1)*2*k + k
+        return [[-(Yoff + i), sign*(Xoff + i)] for i in range(1, k+1)]
+
+    newF.add_clauses_from(
+        apply_substitution(F, lift))
+
+    return newF
+
+
 
 
 class BaseSubstitution(CNF):
@@ -167,44 +332,6 @@ class MajoritySubstitution(BaseSubstitution):
             return list(self.less_than_constraint(variables, threshold))
 
 
-class OrSubstitution(BaseSubstitution):
-    """Transformed formula: substitutes variable with a OR
-    """
-    def __init__(self, cnf, rank):
-        """Build a new CNF obtained by substituting a OR to the
-        variables of the original CNF
-
-        Arguments:
-        - `cnf`: the original cnf
-        - `rank`: how many variables in each or
-        """
-        positive_int(rank, 'rank')
-        BaseSubstitution.__init__(self, cnf)
-
-        self._rank = rank
-        for name in cnf.all_variable_labels():
-            self.new_block(rank, label='{{'+name+'}}^{}')
-        self.add_transformation_description(
-            "Substitution with OR of {}".format(self._rank))
-        self._apply()
-        self._rank = rank
-
-    def transform_a_literal(self, lit):
-        """Substitute a positive literal with an OR,
-        and negative literals with its negation.
-
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
-
-        Returns: a list of clauses
-        """
-        k = self._rank
-        nvars = [(abs(lit)-1)*k + i for i in range(1,k+1)]
-        if lit > 0:
-            return [nvars]
-        else:
-            return [[-nvar] for nvar in nvars]
 
 
 class AllEqualSubstitution(BaseSubstitution):
@@ -276,46 +403,6 @@ class NotAllEqualSubstitution(BaseSubstitution):
         return AllEqualSubstitution.transform_a_literal(
             self, not polarity, varname)
 
-
-class XorSubstitution(BaseSubstitution):
-    """Transformed formula: substitutes variable with a XOR
-    """
-    def __init__(self, cnf, rank):
-        """Build a new CNF obtained by substituting a XOR to the
-        variables of the original CNF
-
-        Arguments:
-        - `cnf`: the original cnf
-        - `rank`: how many variables in each xor
-        """
-
-        positive_int(rank, 'rank')
-        BaseSubstitution.__init__(self, cnf)
-
-        self._rank = rank
-        for name in cnf.all_variable_labels():
-            self.new_block(rank, label='{{'+name+'}}^{}')
-        self.add_transformation_description(
-            "Substitution with XOR of {}".format(self._rank))
-        self._apply()
-
-    def transform_a_literal(self, lit):
-        """Substitute a literal with a XOR
-
-        Parameters
-        ----------
-        lit : literal to substitute
-
-        Returns
-        -------
-        a list of clauses
-        """
-        polarity = 1 if lit > 0 else 0
-        k = self._rank
-        nvars = [(abs(lit)-1)*k + i for i in range(1,k+1)]
-        temp = CNF()
-        temp.add_parity(nvars,polarity)
-        return list(temp)
 
 
 class FormulaLifting(BaseSubstitution):
@@ -618,31 +705,29 @@ class AnythingButKSubstitution(BaseSubstitution):
         return clauses
 
 
-class FlipPolarity(BaseSubstitution):
-    """Flip the polarity of variables
-    """
-    def __init__(self, cnf):
-        """Build a new CNF obtained by flipping the polarity of the variables
 
-        Parameters
-        ----------
-        cnf : a CNF object
-        """
-        super(FlipPolarity, self).__init__(cnf)
+    # def __init__(self, cnf):
+    #     """Build a new CNF obtained by flipping the polarity of the variables
 
-        self.add_transformation_description("All polarities have been flipped")
+    #     Parameters
+    #     ----------
+    #     cnf : a CNF object
+    #     """
+    #     BaseSubstitution.__init__(self, cnf)
+    #     self.add_transformation_description("All polarities have been flipped")
+    #     self._apply()
 
-    def transform_a_literal(self, lit):
-        """Substitute a positive literal with an OR,
-        and negative literals with its negation.
+    # def transform_a_literal(self, lit):
+    #     """Substitute a positive literal with an OR,
+    #     and negative literals with its negation.
 
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
+    #     Arguments:
+    #     - `polarity`: polarity of the literal
+    #     - `varname`: fariable to be substituted
 
-        Returns: a list of clauses
-        """
-        return [[-lit]]
+    #     Returns: a list of clauses
+    #     """
+    #     return [[-lit]]
 
 
 class VariableCompression(BaseSubstitution):
