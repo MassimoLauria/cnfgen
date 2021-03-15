@@ -215,6 +215,7 @@ class Graph(BaseGraph):
 
     def is_dag(self):
         return False
+
     def is_directed(self):
         return False
 
@@ -1243,14 +1244,16 @@ def _read_nonbipartite_kthlist(inputfile, graph_class):
     G = graph_class(size, name)
 
     previous = 0
-    for left, right, lineno in parser:
+    for succ, predecessors, lineno in parser:
 
-        if left <= previous:
+        if succ <= previous:
             raise ValueError("Vertex at line {} is smaller than the previous one.".format(lineno))
 
         # after vertices, add the edges
-        for v in right:
-            G.add_edge(left, v)
+        for v in predecessors:
+            G.add_edge(v, succ)
+
+        previous = succ
 
     if size != G.order():
         raise ValueError("{} vertices expected. Got {} instead.".format(

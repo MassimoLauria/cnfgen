@@ -126,10 +126,9 @@ def cli(argv=sys.argv, mode='output'):
     if mode == 'formula':
         return F2
     elif mode == 'string':
-        return F2.dimacs(export_header=args.verbose)
+        return F2.to_dimacs()
     else:
-        with paginate_or_redirect_stdout(args.output):
-            print(F2.dimacs(export_header=args.verbose))
+        F2.to_file(args.output, 'dimacs')
 
 
 # Launcher

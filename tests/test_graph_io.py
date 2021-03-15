@@ -41,9 +41,9 @@ dimacs_path2 = "p edge 3 2\ne 1 2\ne 2 3\n"
 kthlist_non_bipartite = """
 5
 1: 2 3 0
-5: 3 4 0
-4: 5 0
 2: 3 0
+4: 5 0
+5: 3 4 0
 """
 
 kthlist_non_dag = """
@@ -52,6 +52,15 @@ kthlist_non_dag = """
 2: 3 0
 3: 1 0
 """
+
+kthlist_dag = """
+3
+1: 0
+2: 1 0
+3: 2 0
+"""
+
+
 kthlist_bipartite_non_strict = """
 5
 1: 2 0
@@ -171,6 +180,16 @@ def test_readGraph_kthlist_non_dag():
     assert isinstance(G, DirectedGraph)
     assert G.order() == 3
     assert len(G.edges()) == 3
+
+
+def test_readGraph_kthlist_dag():
+
+    G = readGraph(sio(kthlist_dag),
+                  graph_type='dag',
+                  file_format='kthlist')
+    assert isinstance(G, DirectedGraph)
+    assert G.order() == 3
+    assert len(G.edges()) == 2
 
 
 def test_readGraph_kthlist_non_bipartite():

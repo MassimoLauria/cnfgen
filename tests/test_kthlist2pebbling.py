@@ -15,7 +15,7 @@ def test_unit_graph():
 
     input = io.StringIO("1\n1 : 0\n")
     F = PebblingFormula(readGraph(input, 'dag', 'kthlist'))
-    lib = F.dimacs(export_header=False)
+    lib = F.to_dimacs()
 
     input.seek(0)
     with redirect_stdin(input):
@@ -28,7 +28,7 @@ def test_small_line():
 
     input = io.StringIO("3\n1 : 0\n2 : 1 0\n3 : 2 0\n")
     F = PebblingFormula(readGraph(input, 'dag', 'kthlist'))
-    lib = F.dimacs(export_header=False)
+    lib = F.to_dimacs()
 
     input.seek(0)
     with redirect_stdin(input):
@@ -40,7 +40,7 @@ def test_small_line():
 def test_small_pyramid():
     input = io.StringIO("3\n1 : 0\n2 : 0\n3 : 1 2 0\n")
     F = PebblingFormula(readGraph(input, 'dag', 'kthlist'))
-    lib = F.dimacs(export_header=False)
+    lib = F.to_dimacs()
 
     input.seek(0)
     with redirect_stdin(input):
@@ -52,7 +52,7 @@ def test_small_pyramid():
 def test_no_argument():
     input = io.StringIO("3\n1 : 0\n2 : 0\n3 : 1 2 0\n")
     F = PebblingFormula(readGraph(input, 'dag', 'kthlist'))
-    lib = F.dimacs(export_header=False)
+    lib = F.to_dimacs()
 
     input.seek(0)
     with redirect_stdin(input):
@@ -65,7 +65,7 @@ def test_or_substitution():
     input = io.StringIO("3\n1 : 0\n2 : 0\n3 : 1 2 0\n")
     G = PebblingFormula(readGraph(input, 'dag', 'kthlist'))
     F = OrSubstitution(G, 2)
-    lib = F.dimacs(export_header=False)
+    lib = F.to_dimacs()
 
     input.seek(0)
     with redirect_stdin(input):
@@ -78,7 +78,7 @@ def test_lift_substitution():
     input = io.StringIO("3\n1 : 0\n2 : 0\n3 : 1 2 0\n")
     G = PebblingFormula(readGraph(input, 'dag', 'kthlist'))
     F = FormulaLifting(G, 3)
-    lib = F.dimacs(export_header=False)
+    lib = F.to_dimacs()
 
     input.seek(0)
     with redirect_stdin(input):
@@ -92,7 +92,7 @@ def test_xor_substitution():
     G = PebblingFormula(readGraph(input, 'dag', 'kthlist'))
     F = XorSubstitution(G, 2)
     input.seek(0)
-    lib = F.dimacs(export_header=False)
+    lib = F.to_dimacs()
 
     with redirect_stdin(input):
         cli = kthlist2pebbling(["kthlist2pebbling", "-q", "xor", "2"],
