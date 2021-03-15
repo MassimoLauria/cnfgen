@@ -169,6 +169,38 @@ def AndSubstitution(F, k):
     return newF
 
 
+def IfThenElseSubstitution(F):
+    """Apply if-then-else substitution
+
+    Each original variable is substituted with a function on three
+    new variables x,y,z which is
+
+    if x then y else z
+
+    F : cnfgen.CNF
+        formula
+    """
+    newF = CNF()
+    newF.header = copy(F.header)
+    N = F.number_of_variables()
+    for name in F.all_variable_labels():
+        newF.new_variable('{{'+name+'}}^{i}')
+    for name in F.all_variable_labels():
+        newF.new_variable('{{'+name+'}}^{t}')
+    for name in F.all_variable_labels():
+        newF.new_variable('{{'+name+'}}^{e}')
+    add_description(newF, "If-Then-Else substitution formula")
+
+    def ite(lit):
+        var = abs(lit)
+        sign = lit//var
+        return [[-var, sign*(N+var)], [var, sign*(2*N+var)]]
+
+    newF.add_clauses_from(
+        apply_substitution(F, ite))
+    return newF
+
+
 def FormulaLifting(F, k):
     """Formula lifting: Y variable select X values
 
@@ -284,37 +316,6 @@ class BaseSubstitution(CNF):
         """
         return [[lit]]
 
-
-class IfThenElseSubstitution(BaseSubstitution):
-    """Transformed formula: substitutes variable with a three variables
-    if-then-else
-    """
-    def __init__(self, cnf):
-        """Build a new CNF obtained by substituting an if-then-else to the
-        variables of the original CNF
-
-        Arguments:
-        - `cnf`: the original cnf
-        """
-        super(IfThenElseSubstitution, self).__init__(cnf)
-
-        self.add_transformation_description(
-            "If-Then-Else substitution formula")
-
-    def transform_a_literal(self, polarity, varname):
-        """Substitute a positive literal with an if then else statement,
-
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: variable to be substituted
-
-        Returns: a list of clauses
-        """
-        X = "{{{}}}^0".format(varname)
-        Y = "{{{}}}^1".format(varname)
-        Z = "{{{}}}^2".format(varname)
-
-        return [[(False, X), (polarity, Y)], [(True, X), (polarity, Z)]]
 
 
 class MajoritySubstitution(BaseSubstitution):
