@@ -141,6 +141,32 @@ def OrSubstitution(F, k):
 
     return newF
 
+def AndSubstitution(F, k):
+    """Apply AND substitution or rank ``k``
+
+    F : cnfgen.CNF
+        formula
+    k : int
+        arity of the or substitution
+    """
+    positive_int(k, 'k')
+    newF = CNF()
+    newF.header = copy(F.header)
+    for name in F.all_variable_labels():
+        newF.new_block(k, label='{{'+name+'}}^{}')
+    add_description(newF, "Substitution with AND of arity {}".format(k))
+
+    def andify(lit):
+        nvars = [(abs(lit)-1)*k + i for i in range(1, k+1)]
+        if lit > 0:
+            return [[nvar] for nvar in nvars]
+        else:
+            return [-nvar for nvar in nvars]
+
+    newF.add_clauses_from(
+        apply_substitution(F, andify))
+
+    return newF
 
 
 def FormulaLifting(F, k):
