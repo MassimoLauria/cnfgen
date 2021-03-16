@@ -8,6 +8,51 @@ from cnfgen.info import info
 
 from cnfgen.localtypes import non_negative_int
 
+class ClausesView:
+    """Object that represents a lit of clauses
+
+Useful to provide some read only operations to the list of causes of
+a formula"""
+    def __init__(self,F):
+        """Create a view of the clauses of ``F``"""
+        self.F = F
+        self.data = F._clauses
+
+    def __len__(self):
+        """Number of clauses in the formula
+        """
+        return len(self.data)
+
+    def __iter__(self):
+        """Number of clauses in the formula
+        """
+        return iter(self.data)
+
+    def __eq__(self,other):
+        if isinstance(other, BaseCNF):
+            return self.data == other._clauses
+        elif isinstance(other, ClausesView):
+            return self.data == other.data
+        else:
+            return self.data == other
+
+    def __getitem__(self, idx):
+        """Number of clauses in the formula
+        """
+        if isinstance(idx, slice):
+            return self.data[idx]
+        elif isinstance(idx, int):
+            return self.data[idx][:]
+        else:
+            raise TypeError("Invalid type for an index")
+
+    def __str__(self):
+        return 'ClausesView({})'.format(self.data)
+
+    def __repr__(self):
+        return 'ClausesView({})'.format(self.data)
+
+
 class BaseCNF:
     """Basic propositional formulas in conjunctive normal form.
 
@@ -233,4 +278,4 @@ not have any effect."""
     def clauses(self):
         """Return the list of clauses
         """
-        return self.__iter__()
+        return ClausesView(self)

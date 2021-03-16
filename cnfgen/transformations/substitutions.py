@@ -87,7 +87,7 @@ def FlipPolarity(F):
 
 
 def XorSubstitution(F, k):
-    """Apply Xor substitution or rank ``k``
+    """Apply Xor substitution of rank ``k``
 
     F : cnfgen.CNF
         formula
@@ -113,9 +113,126 @@ def XorSubstitution(F, k):
 
     return newF
 
+def ExactlyOneSubstitution(F, k):
+    """Apply exactly-oine substitution of rank ``k``
+
+    F : cnfgen.CNF
+        formula
+    k : int
+        arity of the xor substitution
+    """
+    positive_int(k, 'k')
+    newF = CNF()
+    newF.header = copy(F.header)
+    for name in F.all_variable_labels():
+        newF.new_block(k, label='{{'+name+'}}^{}')
+    add_description(newF, "Substitution with exaclty-one, of arity {}".format(k))
+
+    def oneify(lit):
+        nvars = [(abs(lit)-1)*k + i for i in range(1, k+1)]
+        temp = CNF()
+        if lit:
+            temp.add_linear(nvars, '==', 1)
+        else:
+            for i in range(len(nvars)):
+                nvars[i] *= -1
+                temp.add_clause(nvars)
+                nvars[i] *= -1
+        return list(temp)
+
+    newF.add_clauses_from(
+        apply_substitution(F, oneify))
+
+    return newF
+
+
+
+
+
+def MajoritySubstitution(F, k):
+    """Apply Majority substitution of rank ``k``
+
+    F : cnfgen.CNF
+        formula
+    k : int
+        arity of the majority substitution
+    """
+    positive_int(k, 'k')
+    newF = CNF()
+    newF.header = copy(F.header)
+    for name in F.all_variable_labels():
+        newF.new_block(k, label='{{'+name+'}}^{}')
+    add_description(newF, "Substitution with majority of arity {}".format(k))
+
+    def majorify(lit):
+        nvars = [(abs(lit)-1)*k + i for i in range(1, k+1)]
+        temp = CNF()
+        if lit > 0:
+            temp.add_loose_majority(nvars)
+        else:
+            temp.add_strict_minority(nvars)
+        return list(temp)
+
+    newF.add_clauses_from(
+        apply_substitution(F, majorify))
+
+    return newF
+
+
+def AllEqualSubstitution(F, k, invert=False):
+    """Apply all-equals substitution of rank ``k``
+
+    F : cnfgen.CNF
+        formula
+    k : int
+        arity of the all-equals substitution
+    invert : bool
+        apply the not-all-equal substitution
+    """
+    positive_int(k, 'k')
+    newF = CNF()
+    newF.header = copy(F.header)
+    for name in F.all_variable_labels():
+        newF.new_block(k, label='{{'+name+'}}^{}')
+    if invert:
+        add_description(newF, "Substitution with not-all-equals of arity {}".format(k))
+    else:
+        add_description(newF, "Substitution with not-all-equals of arity {}".format(k))
+
+    def aesubst(lit):
+        nvars = [(abs(lit)-1)*k + i for i in range(1, k+1)]
+        clauses = []
+        if invert:
+            lit *= -1
+        if lit > 0:
+            # one true implies all true
+            clauses = []
+            clauses.append([nvars[0],-nvars[-1]])
+            clauses.extend([[-nvars[i-1], nvars[i]] for i in range(1,len(nvars))])
+        else:
+            # at least one true
+            clauses = [nvars, [-v for v in nvars]]
+        return clauses
+
+    newF.add_clauses_from(
+        apply_substitution(F, aesubst))
+
+    return newF
+
+def NotAllEqualSubstitution(F, k):
+    """Apply not-all-equals substitution of rank ``k``
+
+    F : cnfgen.CNF
+        formula
+    k : int
+        arity of the not-all-equals substitution
+    """
+    positive_int(k, 'k')
+    return AllEqualSubstitution(F, k, invert=True)
+
 
 def OrSubstitution(F, k):
-    """Apply Or substitution or rank ``k``
+    """Apply Or substitution of rank ``k``
 
     F : cnfgen.CNF
         formula
@@ -142,7 +259,7 @@ def OrSubstitution(F, k):
     return newF
 
 def AndSubstitution(F, k):
-    """Apply AND substitution or rank ``k``
+    """Apply AND substitution of rank ``k``
 
     F : cnfgen.CNF
         formula
@@ -318,217 +435,7 @@ class BaseSubstitution(CNF):
 
 
 
-class MajoritySubstitution(BaseSubstitution):
-    """Transformed formula: substitutes variable with a Majority
-    """
-    def __init__(self, cnf, rank):
-        """Build a new CNF obtained by substituting a Majority to the
-        variables of the original CNF
 
-        Arguments:
-        - `cnf`: the original cnf
-        - `rank`: how many variables in each or
-        """
-        self._rank = rank
-
-        super(MajoritySubstitution, self).__init__(cnf)
-
-        self.add_transformation_description(
-            "Substitution with Majority of {}".format(self._rank))
-
-    def transform_a_literal(self, polarity, varname):
-        """Substitute a positive literal with Loose Majority,
-        and negative literals with Strict Minority.
-
-        Parameters
-        ----------
-        polarity : bool
-            polarity of the literal
-        varname  : string
-            variable to be substituted
-
-        Returns: a list of clauses
-        """
-
-        variables = ["{{{}}}^{}".format(varname, i) for i in range(self._rank)]
-
-        threshold = (self._rank + 1) // 2  # loose majority
-        if polarity:
-            return list(self.greater_or_equal_constraint(variables, threshold))
-        else:
-            return list(self.less_than_constraint(variables, threshold))
-
-
-
-
-class AllEqualSubstitution(BaseSubstitution):
-    """Transformed formula: substitutes variable with 'all equals'
-    """
-    def __init__(self, cnf, rank):
-        """Build a new CNF obtained by substituting 'all equals' to the
-        variables of the original CNF
-
-        Arguments:
-        - `cnf`: the original cnf
-        - `rank`: how many variables in each or
-        """
-        self._rank = rank
-
-        super(AllEqualSubstitution, self).__init__(cnf)
-
-        self.add_transformation_description(
-            "Substitution with Equality of {}".format(self._rank))
-
-    def transform_a_literal(self, polarity, varname):
-        """Substitute a positive literal with an 'all equal' statement,
-
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
-
-        Returns: a list of clauses
-        """
-        names = ["{{{}}}^{}".format(varname, i) for i in range(self._rank)]
-        pairs = permutations(names, 2)
-        if polarity:
-            return [[(False, a), (True, b)] for a, b in pairs
-                    ]  # a true variable implies all the others to true.
-
-        else:
-            return [[(False, a) for a in names],
-                    [(True, a)
-                     for a in names]]  # at least a true and a false variable.
-
-
-class NotAllEqualSubstitution(BaseSubstitution):
-    """Transformed formula: substitutes variable with 'not all equals'
-    """
-    def __init__(self, cnf, rank):
-        """Build a new CNF obtained by substituting 'not all equals' to the
-        variables of the original CNF
-
-        Arguments:
-        - `cnf`: the original cnf
-        - `rank`: how many variables in each or
-        """
-        self._rank = rank
-
-        super(NotAllEqualSubstitution, self).__init__(cnf)
-
-        self.add_transformation_description(
-            "Substitution with NonEquality of {}".format(self._rank))
-
-    def transform_a_literal(self, polarity, varname):
-        """Substitute a positive literal with an 'not all equal' statement,
-
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
-
-        Returns: a list of clauses
-        """
-        return AllEqualSubstitution.transform_a_literal(
-            self, not polarity, varname)
-
-
-
-class FormulaLifting(BaseSubstitution):
-    """Formula lifting: Y variable select X values
-    """
-    def __init__(self, cnf, rank):
-        """Build a new CNF obtained by lifting procedures
-
-        Arguments:
-        - `cnf`: the original cnf
-        - `rank`: how many variables in each xor
-        """
-        positive_int(rank, 'rank')
-        BaseSubstitution.__init__(self, cnf)
-        self._rank = rank
-        for name in cnf.all_variable_labels():
-            self.new_block(rank, label='X_{{'+name+'}}^{}')
-            self.new_block(rank, label='Y_{{'+name+'}}^{}')
-
-        self.add_transformation_description(
-            "Lifting with selectors over {} values".format(self._rank))
-        self._apply()
-
-    def transform_variable_preamble(self, variable):
-        """Additional clauses for each lifted variable
-
-        Arguments:
-        - `name`:     variable to be substituted
-
-        Returns: a list of clauses
-        """
-        Yoff = (variable-1)*2*self._rank + self._rank
-        temp = CNF()
-        temp.add_linear([Yoff+i for i in range(1,self._rank+1)], '==', 1)
-        return list(temp)
-
-    def transform_a_literal(self, lit):
-        """Lift a literal
-
-        Parameters
-        ----------
-        lit : literal to substitute
-
-        Returns
-        -------
-        a list of clauses
-        """
-        sign = lit//abs(lit)
-        oldvar = abs(lit)
-        Xoff = (oldvar-1)*2*self._rank
-        Yoff = (oldvar-1)*2*self._rank + self._rank
-        return [[-(Yoff + i), sign*(Xoff + i)] for i in range(1, self._rank+1)]
-
-
-class ExactlyOneSubstitution(BaseSubstitution):
-    """Transformed formula: exactly one variable is true
-    """
-    def __init__(self, cnf, rank):
-        """Build a new CNF obtained substituting all variables with
-        'exactly one' function.
-
-        Arguments:
-        - `cnf`: the original cnf
-        - `rank`: how many variables in each substitution
-        """
-        self._rank = rank
-
-        super(ExactlyOneSubstitution, self).__init__(cnf)
-
-        self.add_transformation_description(
-            "Substitution with Exactly one of {}".format(self._rank))
-
-    def transform_a_literal(self, polarity, varname):
-        """Substitute a literal with an \"Exactly One\"
-
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
-
-        Returns: a list of clauses
-        """
-        clauses = []
-        varnames = [
-            "X_{{{}}}^{}".format(varname, i) for i in range(self._rank)
-        ]
-
-        if polarity:
-            # at least one variable is true
-            clauses.append([(True, name) for name in varnames])
-            # no two variables are true
-            for (n1, n2) in combinations(varnames, 2):
-                clauses.append([(False, n1), (False, n2)])
-        else:
-            # if all variables but one are false, the other must be false
-            for name in varnames:
-                clauses.append([(False, name)] +
-                               [(True, other)
-                                for other in varnames if other != name])
-        return clauses
 
 
 class AtLeastKSubstitution(BaseSubstitution):
@@ -733,28 +640,6 @@ class AnythingButKSubstitution(BaseSubstitution):
 
 
 
-    # def __init__(self, cnf):
-    #     """Build a new CNF obtained by flipping the polarity of the variables
-
-    #     Parameters
-    #     ----------
-    #     cnf : a CNF object
-    #     """
-    #     BaseSubstitution.__init__(self, cnf)
-    #     self.add_transformation_description("All polarities have been flipped")
-    #     self._apply()
-
-    # def transform_a_literal(self, lit):
-    #     """Substitute a positive literal with an OR,
-    #     and negative literals with its negation.
-
-    #     Arguments:
-    #     - `polarity`: polarity of the literal
-    #     - `varname`: fariable to be substituted
-
-    #     Returns: a list of clauses
-    #     """
-    #     return [[-lit]]
 
 
 class VariableCompression(BaseSubstitution):

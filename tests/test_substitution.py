@@ -2,159 +2,126 @@ import pytest
 
 from cnfgen import CNF
 
-from cnfgen import OrSubstitution, XorSubstitution, MajoritySubstitution
-from cnfgen import AllEqualSubstitution, NotAllEqualSubstitution
-from cnfgen import IfThenElseSubstitution
-from cnfgen import ExactlyKSubstitution, ExactlyOneSubstitution
+from cnfgen.transformations.substitutions import OrSubstitution, XorSubstitution, MajoritySubstitution
+from cnfgen.transformations.substitutions import AllEqualSubstitution, NotAllEqualSubstitution
+from cnfgen.transformations.substitutions import IfThenElseSubstitution
+from cnfgen.transformations.substitutions import ExactlyKSubstitution, ExactlyOneSubstitution
+from cnfgen.transformations.substitutions import FlipPolarity
 from cnfgen.clitools import cnfgen, CLIError
 
-from tests.utils import assertCnfEqual
+from tests.utils import assertCnfEqual,assertCnfEqualsIgnoreVariables
 
 
 def test_or():
-    cnf = CNF([[(True, 'x'), (False, 'y')]])
+    cnf = CNF([[1,-2]])
     lift = OrSubstitution(cnf, 3)
-    assertCnfEqual(
-        lift,
-        CNF([
-            [(True, '{x}^0'), (True, '{x}^1'), (True, '{x}^2'),
-             (False, '{y}^0')],
-            [(True, '{x}^0'), (True, '{x}^1'), (True, '{x}^2'),
-             (False, '{y}^1')],
-            [(True, '{x}^0'), (True, '{x}^1'), (True, '{x}^2'),
-             (False, '{y}^2')],
-        ]))
-    lift2 = OrSubstitution(cnf, 3)
-    assertCnfEqual(lift, lift2)
-
+    expected = CNF([
+        [1, 2, 3, -4],
+        [1, 2, 3, -5],
+        [1, 2, 3, -6]])
+    assert lift.number_of_variables() == expected.number_of_variables()
+    assert lift.clauses() == expected.clauses()
 
 def test_xor():
-    cnf = CNF([[(True, 'x'), (False, 'y')]])
+    cnf = CNF([[1, -2]])
     lift = XorSubstitution(cnf, 2)
-    assertCnfEqual(
-        lift,
-        CNF([
-            [(True, '{x}^0'), (True, '{x}^1'), (True, '{y}^0'),
-             (False, '{y}^1')],
-            [(False, '{x}^0'), (False, '{x}^1'), (True, '{y}^0'),
-             (False, '{y}^1')],
-            [(True, '{x}^0'), (True, '{x}^1'), (False, '{y}^0'),
-             (True, '{y}^1')],
-            [(False, '{x}^0'), (False, '{x}^1'), (False, '{y}^0'),
-             (True, '{y}^1')],
-        ]))
-    lift2 = XorSubstitution(cnf, 2)
-    assertCnfEqual(lift, lift2)
+    expected = CNF([
+            [1, 2, 3, -4],
+            [1, 2, -3, 4],
+            [-1, -2, 3, -4],
+            [-1, -2, -3, 4]])
+    assert lift.number_of_variables() == expected.number_of_variables()
+    assert lift.clauses() == expected.clauses()
 
 
 def test_majority():
-    cnf = CNF([[(True, 'x'), (False, 'y')]])
+    cnf = CNF([[1, -2]])
     lift = MajoritySubstitution(cnf, 3)
-    assertCnfEqual(
-        lift,
-        CNF([
-            [(True, '{x}^0'), (True, '{x}^1'), (False, '{y}^0'),
-             (False, '{y}^1')],
-            [(True, '{x}^1'), (True, '{x}^2'), (False, '{y}^0'),
-             (False, '{y}^1')],
-            [(True, '{x}^2'), (True, '{x}^0'), (False, '{y}^0'),
-             (False, '{y}^1')],
-            [(True, '{x}^0'), (True, '{x}^1'), (False, '{y}^1'),
-             (False, '{y}^2')],
-            [(True, '{x}^1'), (True, '{x}^2'), (False, '{y}^1'),
-             (False, '{y}^2')],
-            [(True, '{x}^2'), (True, '{x}^0'), (False, '{y}^1'),
-             (False, '{y}^2')],
-            [(True, '{x}^0'), (True, '{x}^1'), (False, '{y}^2'),
-             (False, '{y}^0')],
-            [(True, '{x}^1'), (True, '{x}^2'), (False, '{y}^2'),
-             (False, '{y}^0')],
-            [(True, '{x}^2'), (True, '{x}^0'), (False, '{y}^2'),
-             (False, '{y}^0')],
-        ]))
-    lift2 = MajoritySubstitution(cnf, 3)
-    assertCnfEqual(lift, lift2)
+    expected = CNF([
+            [1, 2, -4, -5],
+            [1, 2, -4, -6],
+            [1, 2, -5, -6],
+            [1, 3, -4, -5],
+            [1, 3, -4, -6],
+            [1, 3, -5, -6],
+            [2, 3, -4, -5],
+            [2, 3, -4, -6],
+            [2, 3, -5, -6]])
+    assert lift.number_of_variables() == expected.number_of_variables()
+    assert lift.clauses() == expected.clauses()
 
 
 def test_equality():
-    cnf = CNF([[(False, 'x'), (True, 'y')]])
+    cnf = CNF([[-1, +2]])
     lift = AllEqualSubstitution(cnf, 2)
-    assertCnfEqual(
-        lift,
-        CNF([
-            [(True, '{x}^0'), (True, '{x}^1'), (True, '{y}^0'),
-             (False, '{y}^1')],
-            [(False, '{x}^0'), (False, '{x}^1'), (True, '{y}^0'),
-             (False, '{y}^1')],
-            [(True, '{x}^0'), (True, '{x}^1'), (False, '{y}^0'),
-             (True, '{y}^1')],
-            [(False, '{x}^0'), (False, '{x}^1'), (False, '{y}^0'),
-             (True, '{y}^1')],
-        ]))
-    lift2 = AllEqualSubstitution(cnf, 2)
-    assertCnfEqual(lift, lift2)
+    expected = CNF([
+        [+1, +2, +3, -4],
+        [+1, +2, -3, +4],
+        [-1, -2, +3, -4],
+        [-1, -2, -3, +4],
+    ])
+    assert lift.number_of_variables() == expected.number_of_variables()
+    assert lift.clauses() == expected.clauses()
 
 
 def test_inequality():
-    cnf = CNF([[(False, 'x'), (True, 'y')]])
+    cnf = CNF([[-1, +2]])
     lift = NotAllEqualSubstitution(cnf, 2)
-    assertCnfEqual(
-        lift,
-        CNF([
-            [(True, '{x}^0'), (False, '{x}^1'), (True, '{y}^0'),
-             (True, '{y}^1')],
-            [(False, '{x}^0'), (True, '{x}^1'), (True, '{y}^0'),
-             (True, '{y}^1')],
-            [(True, '{x}^0'), (False, '{x}^1'), (False, '{y}^0'),
-             (False, '{y}^1')],
-            [(False, '{x}^0'), (True, '{x}^1'), (False, '{y}^0'),
-             (False, '{y}^1')],
-        ]))
+    expected = CNF([
+        [+1, -2, +3, +4],
+        [+1, -2, -3, -4],
+        [-1, +2, +3, +4],
+        [-1, +2, -3, -4]])
+    assert lift.number_of_variables() == expected.number_of_variables()
+    assert lift.clauses() == expected.clauses()
 
 
 def test_inequality_pos_clause():
-    cnf = CNF([[(True, 'x')]])
+    cnf = CNF([[1]])
     lift = NotAllEqualSubstitution(cnf, 3)
-    assertCnfEqual(
-        lift,
-        CNF([[(True, '{x}^0'), (True, '{x}^1'), (True, '{x}^2')],
-             [(False, '{x}^0'), (False, '{x}^1'), (False, '{x}^2')]]))
+    expected = CNF([[1, 2, 3], [-1, -2, -3]])
+    assert lift.number_of_variables() == expected.number_of_variables()
+    assert lift.clauses() == expected.clauses()
 
 
 def test_eq_vs_neq():
-    cnf = CNF([[(False, 'x'), (True, 'y')], [(True, 'z'), (True, 't')],
-               [(False, 'u'), (False, 'v')]])
-    cnfneg = CNF([[(True, 'x'), (False, 'y')], [(False, 'z'), (False, 't')],
-                  [(True, 'u'), (True, 'v')]])
+    cnf = CNF([[-1, 2], [3, 4], [-5, -6]])
+    cnfneg = FlipPolarity(cnf)
     lifteq = AllEqualSubstitution(cnf, 4)
     liftneq = NotAllEqualSubstitution(cnfneg, 4)
-    assertCnfEqual(lifteq, liftneq)
+    assert lifteq.number_of_variables() == liftneq.number_of_variables()
+    assert lifteq.clauses() == liftneq.clauses()
 
 
 def test_if_then_else():
-    cnf = CNF([[(True, 'x'), (False, 'y')]])
+    cnf = CNF([[1, -2]])
     lift = IfThenElseSubstitution(cnf)
-    assertCnfEqual(
-        lift,
-        CNF([
-            [(False, '{x}^0'), (True, '{x}^1'), (False, '{y}^0'),
-             (False, '{y}^1')],
-            [(False, '{x}^0'), (True, '{x}^1'), (True, '{y}^0'),
-             (False, '{y}^2')],
-            [(True, '{x}^0'), (True, '{x}^2'), (False, '{y}^0'),
-             (False, '{y}^1')],
-            [(True, '{x}^0'), (True, '{x}^2'), (True, '{y}^0'),
-             (False, '{y}^2')],
-        ]))
-    lift2 = IfThenElseSubstitution(cnf)
-    assertCnfEqual(lift, lift2)
+    expected = CNF([
+        [-1, +3, -2, -4],
+        [-1, +3, +2, -6],
+        [+1, +5, -2, -4],
+        [+1, +5, +2, -6],
+    ])
+    assert lift.number_of_variables() == expected.number_of_variables()
+    assert lift.clauses() == expected.clauses()
 
 
 def test_exactly_one():
-    cnf = CNF([[(True, 'x'), (False, 'y')]])
-    lift = ExactlyOneSubstitution(cnf, 2)
-    lift2 = ExactlyOneSubstitution(cnf, 2)
-    assertCnfEqual(lift, lift2)
+    cnf = CNF([[1, -2]])
+    lift = ExactlyOneSubstitution(cnf, 3)
+    expected = CNF([
+        [-1, -2, -4, 5, 6],
+        [-1, -2,  4,+5, 6],
+        [-1, -2, +4, 5,+6],
+        [-1, -3],
+        [-1, -3],
+        [-1, -3],
+        [-2, -3],
+        [-2, -3],
+        [-2, -3],
+    ])
+    assert lift.number_of_variables() == expected.number_of_variables()
+    assert lift.clauses() == expected.clauses()
 
 
 def test_cli_xorcompression_good1():

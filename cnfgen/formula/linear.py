@@ -124,6 +124,7 @@ class CNFLinear(BaseCNF):
             self.add_linear(lits, '>=', constant)
             return
         elif op == "!=":
+            raise NotImplementedError
             self.add_linear(lits, '<=', constant-1)
             self.add_linear(lits, '>=', constant+1)
             return
