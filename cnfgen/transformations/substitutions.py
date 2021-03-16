@@ -4,7 +4,7 @@
 from itertools import combinations, product, permutations
 from copy import copy
 
-from cnfgen.localtypes import positive_int
+from cnfgen.localtypes import positive_int, any_int, one_of_value
 from cnfgen.formula.cnf import CNF
 
 #
@@ -146,7 +146,49 @@ def ExactlyOneSubstitution(F, k):
     return newF
 
 
+def LinearSubstitution(F, k, op, C):
+    """Linear substitution of rank ``k``
 
+    Substitute each variable x(i) with a linear form
+
+    x(i,1) + x(i,2) + ... x(i,k)  op  constant
+
+    F : cnfgen.CNF
+        formula
+    k : int
+        arity of the linear substitution
+    op : str
+        an operator among
+    C : int
+        constant
+    """
+    opchoices = ['==', '<', '>', '<=', '>=', '!=']
+    positive_int(k, 'k')
+    one_of_value(op, 'op', opchoices)
+    any_int(C, 'C')
+
+    i = opchoices.index(op)
+    negop = opchoices[-i-1]
+    newF = CNF()
+    newF.header = copy(F.header)
+    for name in F.all_variable_labels():
+        newF.new_block(k, label='{{'+name+'}}^{}')
+    desc = "Substitution x --> x1 + x2 + ... x{} {} {}".format(k, op, C)
+    add_description(newF, desc)
+
+    def linear(lit):
+        nvars = [(abs(lit)-1)*k + i for i in range(1, k+1)]
+        temp = CNF()
+        if lit > 0:
+            temp.add_linear(nvars, op, C)
+        else:
+            temp.add_linear(nvars, negop, C)
+        return list(temp)
+
+    newF.add_clauses_from(
+        apply_substitution(F, linear))
+
+    return newF
 
 
 def MajoritySubstitution(F, k):
@@ -434,212 +476,24 @@ class BaseSubstitution(CNF):
         return [[lit]]
 
 
+def AtLeastKSubstitution(F, N, k):
+    """Substitution: at least ``k`` true variables out of ``N`` copies"""
+    return LinearSubstitution(F, N, '>=', k)
 
 
+def AtMostKSubstitution(F, N, k):
+    """Substitution: at most ``k`` true variables out of ``N`` copies"""
+    return LinearSubstitution(F, N, '<=', k)
 
 
-class AtLeastKSubstitution(BaseSubstitution):
-    """Transformed formula: at least k variables are true
-    """
-    def __init__(self, cnf, N, K):
-        """Build a new CNF obtained substituting all variables with
-        'at least k' function.
-
-        Arguments:
-        - `cnf`: the original cnf
-        - `N`: how many variables in each substitution
-        - `K`: at least how many variables must be true
-        """
-        self._cnf = cnf
-        self._N = N
-        self._K = K
-
-        if N < 0:
-            raise ValueError("N must be a non-negative integer")
-        if not isinstance(K, int):
-            raise ValueError("K must be an integer value")
-
-        super(AtLeastKSubstitution, self).__init__(cnf)
-
-        self.add_transformation_description(
-            "Substitution with At Least {} of {}".format(self._K, self._N))
-
-    def transform_a_literal(self, polarity, varname):
-        """Substitute a literal with an \"At Least K of N\"
-
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
-
-        Returns: a list of clauses
-        """
-        K = self._K
-        clauses = []
-        varnames = ["X_{{{}}}^{}".format(varname, i) for i in range(self._N)]
-
-        if polarity:
-            # at least k variables are true
-            for clause in self._cnf.greater_or_equal_constraint(varnames, K):
-                clauses.append(clause)
-        else:
-            # at most k-1 variables are true
-            for clause in self._cnf.less_or_equal_constraint(varnames, K - 1):
-                clauses.append(clause)
-        return clauses
+def ExactlyKSubstitution(F, N, k):
+    """Substitution: exactly ``k`` true variables out of ``N`` copies"""
+    return LinearSubstitution(F, N, '==', k)
 
 
-class AtMostKSubstitution(BaseSubstitution):
-    """Transformed formula: at most k variables are true
-    """
-    def __init__(self, cnf, N, K):
-        """Build a new CNF obtained substituting all variables with
-        'at most k' function.
-
-        Arguments:
-        - `cnf`: the original cnf
-        - `N`: how many variables in each substitution
-        - `K`: at most how many variables must be true
-        """
-        self._cnf = cnf
-        self._N = N
-        self._K = K
-
-        if N < 0:
-            raise ValueError("N must be a non-negative integer")
-        if not isinstance(K, int):
-            raise ValueError("K must be an integer value")
-
-        super(AtMostKSubstitution, self).__init__(cnf)
-
-        self.add_transformation_description(
-            "Substitution with At Most {} of {}".format(self._K, self._N))
-
-    def transform_a_literal(self, polarity, varname):
-        """Substitute a literal with an \"At Least K of N\"
-
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
-
-        Returns: a list of clauses
-        """
-        K = self._K
-        clauses = []
-        varnames = ["X_{{{}}}^{}".format(varname, i) for i in range(self._N)]
-
-        if polarity:
-            # at most k variables are true
-            for clause in self._cnf.less_or_equal_constraint(varnames, K):
-                clauses.append(clause)
-        else:
-            # at least k+1 variables are true
-            for clause in self._cnf.greater_or_equal_constraint(
-                    varnames, K + 1):
-                clauses.append(clause)
-        return clauses
-
-
-class ExactlyKSubstitution(BaseSubstitution):
-    """Transformed formula: exactly k variables are true
-    """
-    def __init__(self, cnf, N, K):
-        """Build a new CNF obtained substituting all variables with
-        'exactly K' function.
-
-        Arguments:
-        - `cnf`: the original cnf
-        - `N`: how many variables in each substitution
-        - `K`: exactly how many variables must be true
-        """
-        self._cnf = cnf
-        self._N = N
-        self._K = K
-
-        if N < 0:
-            raise ValueError("N must be a non-negative integer")
-        if not isinstance(K, int):
-            raise ValueError("K must be an integer value")
-
-        super(ExactlyKSubstitution, self).__init__(cnf)
-
-        self.add_transformation_description(
-            "Substitution with Exactly {} of {}".format(self._K, self._N))
-
-    def transform_a_literal(self, polarity, varname):
-        """Substitute a literal with an \"Exactly K of N\"
-
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
-
-        Returns: a list of clauses
-        """
-        K = self._K
-        clauses = []
-        varnames = ["X_{{{}}}^{}".format(varname, i) for i in range(self._N)]
-
-        if polarity:
-            # exactly k variables are true
-            for clause in self._cnf.equal_to_constraint(varnames, K):
-                clauses.append(clause)
-        else:
-            # any number different from k of true variables
-            for clause in self._cnf.not_equal_to_constraint(varnames, K):
-                clauses.append(clause)
-        return clauses
-
-
-class AnythingButKSubstitution(BaseSubstitution):
-    """Transformed formula: anything but k variables are true
-    """
-    def __init__(self, cnf, N, K):
-        """Build a new CNF obtained substituting all variables with
-        'anything but k' function.
-
-        Arguments:
-        - `cnf`: the original cnf
-        - `N`: how many variables in each substitution
-        - `K`: how many variables will cause falsity
-        """
-        self._cnf = cnf
-        self._N = N
-        self._K = K
-
-        if N < 0:
-            raise ValueError("N must be a non-negative integer")
-        if not isinstance(K, int):
-            raise ValueError("K must be an integer value")
-
-        super(AnythingButKSubstitution, self).__init__(cnf)
-
-        self.add_transformation_description(
-            "Substitution with anything but {} of {}".format(self._K, self._N))
-
-    def transform_a_literal(self, polarity, varname):
-        """Substitute a literal with an \"Anything but K of N\"
-
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: fariable to be substituted
-
-        Returns: a list of clauses
-        """
-        K = self._K
-        clauses = []
-        varnames = ["X_{{{}}}^{}".format(varname, i) for i in range(self._N)]
-
-        if polarity:
-            # any number different from k of true variables
-            for clause in self._cnf.not_equal_to_constraint(varnames, K):
-                clauses.append(clause)
-        else:
-            # anything but k variables are true
-            for clause in self._cnf.equal_to_constraint(varnames, K):
-                clauses.append(clause)
-        return clauses
-
-
-
+def AnythingButKSubstitution(F, N, k):
+    """Substitution: anything bit ``C`` true variables out of ``N`` copies"""
+    return LinearSubstitution(F, N, '!=', k)
 
 
 class VariableCompression(BaseSubstitution):
