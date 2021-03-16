@@ -118,15 +118,26 @@ class CNFLinear(BaseCNF):
         if isgenerator(lits) and op != '<=':
             lits = list(lits)
 
+        # We fist manage the case of !=
+        if op == "!=":
+            n = len(lits)
+            if constant < 0 or constant > n:
+                return
+            for flips in combinations(range(n), constant):
+                for i in flips:
+                    lits[i] *= -1
+                self.add_clause(lits)
+                for i in flips:
+                    lits[i] *= -1
+            return
+
+        if isgenerator(lits) and op != '<=':
+            lits = list(lits)
+
         # We reduce to the case of >=
         if op == "==":
             self.add_linear(lits, '<=', constant)
             self.add_linear(lits, '>=', constant)
-            return
-        elif op == "!=":
-            raise NotImplementedError
-            self.add_linear(lits, '<=', constant-1)
-            self.add_linear(lits, '>=', constant+1)
             return
         elif op == "<":
             self.add_linear(lits, '<=', constant-1)

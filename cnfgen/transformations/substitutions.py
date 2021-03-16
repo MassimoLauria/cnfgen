@@ -131,7 +131,7 @@ def ExactlyOneSubstitution(F, k):
     def oneify(lit):
         nvars = [(abs(lit)-1)*k + i for i in range(1, k+1)]
         temp = CNF()
-        if lit:
+        if lit > 0:
             temp.add_linear(nvars, '==', 1)
         else:
             for i in range(len(nvars)):
