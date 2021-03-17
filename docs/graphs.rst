@@ -1,4 +1,3 @@
-
 Graph based formulas
 ====================
 
@@ -8,19 +7,13 @@ is realized over a star graph with five arms.
 
 
    >>> import cnfgen
-   >>> import networkx as nx
    >>> from pprint import pprint
-   >>> G = nx.star_graph(5)
-   >>> sorted(G.edges())
-   [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
-   >>> F = cnfgen.TseitinFormula(G,charges=[0,1,1,0,1,1])
+   >>> G = cnfgen.Graph.star_graph(5)
+   >>> list(G.edges())
+   [(1, 6), (2, 6), (3, 6), (4, 6), (5, 6)]
+   >>> F = cnfgen.TseitinFormula(G,charges=[0,1,0,0,1,0])
    >>> pprint(F.is_satisfiable())
-   (True,
-    {'E_{0,1}': True,
-     'E_{0,2}': True,
-     'E_{0,3}': False,
-     'E_{0,4}': True,
-     'E_{0,5}': True})
+   (True, [-1, 2, -3, -4, 5])
 
 Tseitin formulas can  be really hard for if the  graph has large `edge
 expansion <https://en.wikipedia.org/wiki/Expander_graph>`_. Indeed the
@@ -41,64 +34,55 @@ different types of graphs.
 | ``dag``       | directed acyclic graph | no cycles, edges induce a partial ordering      |
 +---------------+------------------------+-------------------------------------------------+
 
-To manipulate graphs ``CNFgen`` does  not reinvent the wheel, but uses
-the famous  NetworkX_ library behind the  scene. ``NetworkX`` supports
-reading and writing  graph from/to files, and  ``CNFgen`` leverages on
-that.  Furthermore  ``CNFgen``  implements  graph  I/O  in  few  other
-file formats. The function
-:py:func:`cnfgen.graphs.supported_formats` lists  the file formats
-available for each graph type.
-
-   >>> from cnfgen.graphs import supported_formats
-   >>> from pprint import pprint
-   >>> pprint(supported_formats())
-   {'bipartite': ['kthlist', 'matrix', 'gml', 'dot'],
-    'dag': ['kthlist', 'gml', 'dot'],
-    'digraph': ['kthlist', 'gml', 'dot', 'dimacs'],
-    'simple': ['kthlist', 'gml', 'dot', 'dimacs']}
-
-The ``dot`` format  is from Graphviz_ and it is  available only if the
-optional  ``pydot``  python  package  is  installed  in  the  system.
-The Graph Modelling Language (GML_) ``gml`` is the current standard in
-graph  representation. The  DIMACS_ (``dimacs``)  format [2]_  is used
-sometimes for programming competitions  or in the theoretical computer
-science community. The ``kthlist``  and ``matrix`` formats are defined
-and implemented inside ``CNFgen``.
-
-.. note::
-
-   More information about  the supported graph file formats  is in the
-   `User  Documentation`_   for  the  ``cnfgen``  command   line  too.
-   In   particular  there   is  a   description  of   ``kthlist``  and
-   ``matrix`` formats.
+Internally,  vertices  of  these  graphs  are  identified  as  integer
+starting from 1.  Edges are pairs of integers and  in general the data
+structure  is such  that edge  lists  and neighborhoods  are given  in
+a sorted fashion.
+- :py:class:`cnfgen.Graph` to represent undirected graphs ``simple``.
+- :py:class:`cnfgen.DirectedGraph`:   to   represent  directed  graphs
+  ``digraph``  and  ``dag``  (directed   acyclic  graphs).  A  DAG  is
+  a `DirectedGraph` where all edges go from vertices with loweer id to
+  vertices  with higher  id. Therefore  the ids  of the  vertices must
+  represent a topological  order of the DAG. In  particular a directed
+  graph  maybe acyclic  but yet  not considered  a dag  in ``CNFgen``.
+  The method :py:method:`cnfgen.DirectedGraph.is_dag`  checks that the
+  directed graph is indeed a DAG according to this standard.
+- :py:class:`cnfgen.BipartiteGraph` represents  graph of ``bipartite``
+  type. The vertices are divided in two parts (left and right) and the
+  vertices in each part are enumerated  from 1. For example in a graph
+  with 10 vertices on the left side  and 4 vertices on the right side,
+  the edge  ``(6,3)`` connects  vertex ``6`` on  the left  with vertex
+  ``4`` on  the right. Similarly  edge ``(2,2)`` connects vertex  2 on
+  the left to vertex 2 on the right.
 
 
-Directed Acyclic Graphs and Bipartite Graphs
+
+Directed Acyclic Graphs
 --------------------------------------------
 
-``NetworkX`` does  not have a  specific data structure for  a directed
-acyclic graphs  (DAGs). In  ``CNFgen`` a  DAG is  any object  which is
-either           a           :py:class:`networkx.DiGraph`           or
-:py:class:`networkx.MultiDiGraph`  instance,   and  which  furthermore
-passes the test :py:func:`cnfgen.graphs.is_dag`.
+In     ``CNFgen``     a    DAG     is     an     object    of     type
+:py:class:`cnfgen.DirectedGraph`  which  furthermore passes  the  test
+:py:func:`cnfgen.DirectedGraph.is_dag`.  We stress  that the  vertices
+numeric id must induce a topological order for the graph to be a dag.
 
-   >>> import networkx as nx
-   >>> G = nx.DiGraph()
-   >>> nx.add_cycle(G,[1,2,3])
-   >>> cnfgen.graphs.is_dag(G)
+   >>> from cnfgen import DirectedGraph
+   >>> G = DirectedGraph(3)
+   >>> G.add_edges_from([(1,2),(2,3),(3,1)])
+   >>> G.is_dag()
    False
-   >>> H = nx.DiGraph()
-   >>> nx.add_path(H,[1,2,3])
-   >>> cnfgen.graphs.is_dag(H)
+   >>> H = DirectedGraph(4)
+   >>> H.add_edges_from([(1,2),(2,3),(3,4)])
+   >>> H.is_dag()
    True
-   
-For   bipartite    graphs   we    use   a   custom    data   structure
-:py:class:`cnfgen.graphs.BipartiteGraph` to  compensate for  the lacks
-of a specific one in ``Networkx``. Vertices are identified as integers
-starting  from  1  and  the  left and  right  sides  have  independent
-enumerations (this  means that the  same identifier may occur  on both
-sides).  The  function :py:func:`cnfgen.graphs.has_bipartition`  tests
-whether the a graph object is bipartite graph.
+   >>> Z = DirectedGraph(4)
+   >>> Z.add_edges_from([(1,2),(3,2)])
+   >>> Z.is_dag()
+   False
+
+Bipartite Graphs
+----------------   
+
+We represent bipartite graphs using :py:class:`cnfgen.BipartiteGraph`.
 
    >>> B = cnfgen.graphs.BipartiteGraph(2,3)
    >>> B.left_order()
@@ -108,76 +92,103 @@ whether the a graph object is bipartite graph.
    >>> B.order()
    5
    >>> B.add_edges_from([(1,2),(2,1),(2,3)])
-   >>> B.size()
+   >>> B.number_of_edges()
    3
    >>> F = cnfgen.GraphPigeonholePrinciple(B)
-   >>> sorted(F.variables())
+   >>> sorted(F.all_variable_labels())
    ['p_{1,2}', 'p_{2,1}', 'p_{2,3}']
    
 Graph I/O
 ---------
 
-The  :py:mod:`cnfgen.graphs`  module  implements  a  graph  reader
-:py:mod:`cnfgen.graphs.readGraph`     and    a     graph    writer
-:py:mod:`cnfgen.graphs.writeGraph`  to  facilitate  graph  I/O.
-..
+Furthermore ``CNFgen``  allows graphs  I/O on  files, in  few formats.
+The function :py:func:`cnfgen.supported_graph_formats` lists the file
+formats available for each graph type.
+
+   >>> from cnfgen import supported_graph_formats
+   >>> from pprint import pprint
+   >>> pprint(supported_graph_formats())
+   {'bipartite': ['kthlist', 'gml', 'dot', 'matrix'],
+    'dag': ['kthlist', 'gml', 'dot', 'dimacs'],
+    'digraph': ['kthlist', 'gml', 'dot', 'dimacs'],
+    'simple': ['kthlist', 'gml', 'dot', 'dimacs']}
+
+The  ``dot`` and  ``gml`` formats  are read  using NetworkX_  library,
+which is a powerful library  for graph manipulation. The support
+for the other formats is natively implemented.
+
+The ``dot``  format is is from  Graphviz_ and it is  available only if
+the  optional ``pydot``  python package  is installed  in the  system.
+The Graph  Modelling Language  (GML_) ``gml``  is a  modern industrial
+standard in graph representation. The DIMACS_ (``dimacs``) format [2]_
+is used sometimes  for programming competitions or  in the theoretical
+computer science  community. For  more informations  about ``kthlist``
+and ``matrix`` formats you can refer to the `User Documentation`_.
+
+To    facilitate   graph    I/O    ``CNFgen``    has   to    functions
+:py:func:`cnfgen.graphs.readGraph`                                 and
+:py:func:`cnfgen.graphs.writeGraph`.
+
 Both  ``readGraph`` and  ``writeGraph`` operate  either on  filenames,
-encoded  as :py:class:`str`  or :py:class:`unicode`,  or otherwise  on
-file-like objects such as
+encoded as `str`, or on file-like objects such as
 
    + standard file objects (including :py:obj:`sys.stdin` and :py:obj:`sys.stdout`);
-   + string buffers of type :py:class:`StringIO.StringIO`;
+   + string buffers of type :py:class:`io.StringIO`;
    + in-memory text streams that inherit from :py:class:`io.TextIOBase`.
      
    >>> import sys
    >>> from io import BytesIO
    >>> import networkx as nx
-   >>> from cnfgen.graphs import readGraph, writeGraph
+   >>> from cnfgen import readGraph, writeGraph, BipartiteGraph
 
-   >>> G = nx.bipartite.havel_hakimi_graph([2,1],[1,1,1])
+   >>> G = BipartiteGraph(3,3,name='a bipartite graph')
+   >>> G.add_edges_from([[1,1],[1,2],[2,3]])
+   >>> G.number_of_edges()
+   3
    >>> writeGraph(G,sys.stdout,graph_type='bipartite',file_format='gml')
    graph [
-     multigraph 1
-     name "bipartite_havel_hakimi_graph"
+     name "a bipartite graph"
      node [
        id 0
-       label "0"
-       bipartite 0
-     ]
-     node [
-       id 1
        label "1"
        bipartite 0
      ]
      node [
-       id 2
+       id 1
        label "2"
-       bipartite 1
+       bipartite 0
+     ]
+     node [
+       id 2
+       label "3"
+       bipartite 0
      ]
      node [
        id 3
-       label "3"
+       label "4"
        bipartite 1
      ]
      node [
        id 4
-       label "4"
+       label "5"
+       bipartite 1
+     ]
+     node [
+       id 5
+       label "6"
        bipartite 1
      ]
      edge [
        source 0
        target 3
-       key 0
      ]
      edge [
        source 0
        target 4
-       key 0
      ]
      edge [
        source 1
-       target 2
-       key 0
+       target 5
      ]
    ]
    <BLANKLINE>
@@ -203,7 +214,7 @@ would check that.
    >>> readGraph(buffer,graph_type='dag',file_format='dot')
    Traceback (most recent call last):
    ...
-   ValueError: [Input error] Graph must be acyclic
+   ValueError: [Input error] Graph must be explicitly acyclic ...
 
 When the  file object has an  associated file name, it  is possible to
 omit the ``file_format`` argument. In this latter case the appropriate
@@ -212,7 +223,7 @@ choice of format  will be guessed by the file  extension.
    >>> with open(tmpdir+"example_dag1.dot","w") as f:
    ...     print("digraph A {1->2->3}",file=f)
    >>> G = readGraph(tmpdir+"example_dag1.dot",graph_type='dag')
-   >>> sorted(G.edges())
+   >>> list(G.edges())
    [(1, 2), (2, 3)]
 
 is equivalent to
@@ -220,7 +231,7 @@ is equivalent to
    >>> with open(tmpdir+"example_dag2.gml","w") as f:
    ...     print("digraph A {1->2->3}",file=f)
    >>> G = readGraph(tmpdir+"example_dag2.gml",graph_type='dag',file_format='dot')
-   >>> sorted(G.edges())
+   >>> list(G.edges())
    [(1, 2), (2, 3)]
 
 Instead, if we omit the format and the file extension is misleading we
@@ -281,17 +292,14 @@ Recall that GML files are supposed to be ASCII encoded.
 
 Graph generators
 ----------------
-
-
-
 .. note::
 
    See  the documentation  of the  module :py:mod:`cnfgen.graphs`
    for more information about the ``CNFgen`` support code for graphs.
 
 
-.. _`User Documentation`: http://massimolauria.github.io/cnfgen/graphformats.html
-.. _cnfgengraph: http://massimolauria.github.io/cnfgen/graphformats.html
+.. _`User Documentation`: http://massimolauria.net/cnfgen/graphformats.html
+.. _cnfgengraph: http://massimolauria.net/cnfgen/graphformats.html
 .. _DIMACS: http://prolland.free.fr/works/research/dsat/dimacs.html
 .. _GML: http://www.infosun.fim.uni-passau.de/Graphlet/GML/gml-tr.html
 .. _Graphviz: http://www.graphviz.org/content/dot-language

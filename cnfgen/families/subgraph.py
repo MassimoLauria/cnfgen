@@ -12,6 +12,17 @@ from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import Graph
 from cnfgen.localtypes import non_negative_int
 
+
+def non_edges(G):
+    N = G.order()
+    for u in range(1, N):
+        for v in range(u+1, N+1):
+            if not G.has_edge(u, v):
+                yield (u, v)
+
+
+
+
 def SubgraphFormula(G, H, induced=False, symbreak=False):
     """Test whether a graph has a k-clique.
 
@@ -35,8 +46,8 @@ def SubgraphFormula(G, H, induced=False, symbreak=False):
     a CNF object
 
     """
-    G = Graph.normalize(G,'G')
-    H = Graph.normalize(H,'H')
+    G = Graph.normalize(G, 'G')
+    H = Graph.normalize(H, 'H')
 
     F = CNF()
     if induced:
@@ -51,11 +62,14 @@ def SubgraphFormula(G, H, induced=False, symbreak=False):
     F.force_complete_mapping(s)
     F.force_functional_mapping(s)
     F.force_injective_mapping(s)
+    if symbreak:
+        F.force_nondecreasing_mapping(s)
 
     # Local consistency
     localmaps = product(combinations(list(range(1, k+1)), 2),
                         combinations(list(range(1, N+1)), 2))
 
+    s = s.to_dict()
     for (i1, i2), (j1, j2) in localmaps:
 
         # check if this mapping is compatible
@@ -63,12 +77,11 @@ def SubgraphFormula(G, H, induced=False, symbreak=False):
         tedge = H.has_edge(i1, i2)
 
         consistent = (gedge == tedge) or (gedge and not induced)
-
         if not consistent:
-            F.add_clause([-s(i1, j1), -s(i2, j2)], check=False)
-            F.add_clause([-s(i1, j2), -s(i2, j1)], check=False)
-        elif symbreak:
-            F.add_clause([-s(i1, j2), -s(i2, j1)], check=False)
+            F.add_clause([-s[i1, j1], -s[i2, j2]], check=False)
+            if not symbreak:
+                F.add_clause([-s[i1, j2], -s[i2, j1]], check=False)
+
     return F
 
 
@@ -104,21 +117,20 @@ def CliqueFormula(G, k, symbreak=True):
     F.force_complete_mapping(s)
     F.force_functional_mapping(s)
     F.force_injective_mapping(s)
+    if symbreak:
+        F.force_nondecreasing_mapping(s)
 
     # Local consistency
-    localmaps = product(combinations(list(range(1, k+1)), 2),
-                        combinations(list(range(1, N+1)), 2))
-
     s = s.to_dict()
-    for (i1, i2), (j1, j2) in localmaps:
+    nonconsistents = product(combinations(list(range(1, k+1)), 2),
+                             non_edges(G))
 
+    for (i1, i2), (j1, j2) in nonconsistents:
         # check if this mapping is compatible
-        edge = G.has_edge(j1, j2)
-        if not edge:
-            F.add_clause([-s[i1, j1], -s[i2, j2]], check=False)
+        F.add_clause([-s[i1, j1], -s[i2, j2]], check=False)
+        if not symbreak:
             F.add_clause([-s[i1, j2], -s[i2, j1]], check=False)
-        elif symbreak:
-            F.add_clause([-s[i1, j2], -s[i2, j1]], check=False)
+
     return F
 
 
@@ -155,20 +167,19 @@ def BinaryCliqueFormula(G, k, symbreak=True):
     m = F.new_binary_mapping(k, N, label='y_{{{},{}}}')
     F.force_complete_mapping(m)
     F.force_injective_mapping(m)
+    if symbreak:
+        F.force_nondecreasing_mapping(m)
 
     # Local consistency
-    localmaps = product(combinations(list(range(1, k+1)), 2),
-                        combinations(range(N), 2))
+    nonconsistents = product(combinations(list(range(1, k+1)), 2),
+                             non_edges(G))
 
-    for (i1, i2), (j1, j2) in localmaps:
-
+    for (i1, i2), (j1, j2) in nonconsistents:
         # check if this mapping is compatible
-        edge = G.has_edge(j1, j2)
-        if not edge:
-            F.add_clause(m.forbid(i1, j1) + m.forbid(i2, j2))
-            F.add_clause(m.forbid(i1, j2) + m.forbid(i2, j1))
-        elif symbreak:
-            F.add_clause(m.forbid(i1, j2) + m.forbid(i2, j1))
+        F.add_clause(m.forbid(i1, j1) + m.forbid(i2, j2), check=False)
+        if not symbreak:
+            F.add_clause(m.forbid(i1, j2) + m.forbid(i2, j1), check=False)
+
     return F
 
 

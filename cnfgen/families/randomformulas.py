@@ -40,8 +40,8 @@ wasteful for just few samples."""
     sampled = set()
     variables = range(1,n+1)
     t = 0
-    clauses = 0
-    while clauses < m and t < 10 * m:
+    clauses = []
+    while len(clauses) < m and t < 10 * m:
         t += 1
 
         selection =  sorted(random.sample(variables, k))
@@ -55,11 +55,9 @@ wasteful for just few samples."""
             continue
 
         sampled.add(tcls)
+        clauses.append(cls)
 
-        clauses += 1
-        yield cls
-
-    if clauses < m:
+    if len(clauses) < m:
         return sample_clauses_dense(k, n, m, planted_assignments)
     return clauses
 
@@ -131,7 +129,7 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=None):
     F.update_variable_number(n)
     try:
         for clause in sample_clauses(k, n, m, planted_assignments):
-            F.add_clause(clause)
+            F.add_clause(clause, check=False)
     except ValueError:
         raise ValueError(
             "There are fewer clauses available than the number requested")

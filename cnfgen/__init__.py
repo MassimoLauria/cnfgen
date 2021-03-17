@@ -12,6 +12,7 @@ from cnfgen.formula.cnf import CNF
 
 # Graph IO functions
 from cnfgen.graphs import readGraph, writeGraph
+from cnfgen.graphs import supported_graph_formats
 from cnfgen.graphs import Graph
 from cnfgen.graphs import DirectedGraph
 from cnfgen.graphs import BipartiteGraph

@@ -324,6 +324,13 @@ The sequence of neighbors is guaranteed to be sorted.
                 G.add_edge(u,v)
         return G
 
+    @classmethod
+    def star_graph(cls, n):
+        G = cls(n+1, 'the star graph with {} arms'.format(n))
+        for u in range(1, n+1):
+            G.add_edge(u, n+1)
+        return G
+
 
     @classmethod
     def normalize(cls, G, varname=''):
