@@ -109,15 +109,16 @@ def CliqueFormula(G, k, symbreak=True):
     localmaps = product(combinations(list(range(1, k+1)), 2),
                         combinations(list(range(1, N+1)), 2))
 
+    s = s.to_dict()
     for (i1, i2), (j1, j2) in localmaps:
 
         # check if this mapping is compatible
         edge = G.has_edge(j1, j2)
         if not edge:
-            F.add_clause([-s(i1, j1), -s(i2, j2)])
-            F.add_clause([-s(i1, j2), -s(i2, j1)])
+            F.add_clause([-s[i1, j1], -s[i2, j2]])
+            F.add_clause([-s[i1, j2], -s[i2, j1]])
         elif symbreak:
-            F.add_clause([-s(i1, j2), -s(i2, j1)])
+            F.add_clause([-s[i1, j2], -s[i2, j1]])
     return F
 
 

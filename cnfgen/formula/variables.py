@@ -123,6 +123,10 @@ class BaseVariableGroup():
         else:
             return next(IDs)
 
+    def to_dict(self):
+        D = {t: self._unsafe_index_to_lit(t) for t in self.indices()}
+        return D
+
     def __len__(self):
         """The number of variables in the group"""
         return len(self.ids)

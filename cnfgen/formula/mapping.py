@@ -663,11 +663,13 @@ class CNFMapping(VariablesManager):
         if f.parent_formula() != self:
             raise ValueError("mapping f was created from a different formula")
 
+
         if isinstance(f, UnaryMappingVariables):
+            fd = f.to_dict()
             for (u1, u2) in combinations(f.domain(), 2):
                 for (v1, v2) in product(f.range(u1), f.range(u2)):
                     if v1 > v2:
-                        self.add_clause([-f(u1, v1), -f(u2, v2)])
+                        self.add_clause([-fd[(u1, v1)], -fd[(u2, v2)]])
 
         if isinstance(f, BinaryMappingVariables):
             for (u1, u2) in combinations(f.domain(), 2):
