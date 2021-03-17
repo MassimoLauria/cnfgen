@@ -65,8 +65,9 @@ def to_dimacs_file(formula, fileorname=None,
     output.write("p cnf {0} {1}\n".format(n, m))
     # Clauses
     for cls in formula:
-        print(*cls, 0, file=output)
-
+        for lit in cls:
+            output.write(str(lit)+" ")
+        output.write("0\n")
 
 def parse_dimacs(infile):
     """Parse a dimacs cnf in file object

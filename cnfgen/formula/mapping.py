@@ -515,12 +515,11 @@ class CNFMapping(VariablesManager):
             k = f.bits()
             for i in f.domain():
                 for j in range(m, 2**k):
-                    self.add_clause(f.forbid(i, j))
-            return
+                    self.add_clause(f.forbid(i, j), check=False)
 
         if isinstance(f, UnaryMappingVariables):
             for x in f.domain():
-                self.add_clause(f(x, None))
+                self.add_clause(f(x, None), check=False)
 
     def force_functional_mapping(self, f):
         """Enforce the mapping `f` to be functional
@@ -559,7 +558,7 @@ class CNFMapping(VariablesManager):
             return
         if isinstance(f, UnaryMappingVariables):
             for x in f.domain():
-                self.add_linear(list(f(x, None)), '<=', 1)
+                self.add_linear(list(f(x, None)), '<=', 1, check=False)
 
     def force_surjective_mapping(self, f):
         """Enforce the mapping `f` to be surjective
@@ -587,8 +586,7 @@ class CNFMapping(VariablesManager):
             raise ValueError("mapping f was created from a different formula")
 
         for y in f.range():
-            self.add_clause(f(None, y))
-
+            self.add_clause(f(None, y), check=False)
 
     def force_injective_mapping(self, f):
         """Enforce the mapping `f` to be injective
@@ -620,13 +618,12 @@ class CNFMapping(VariablesManager):
 
         if isinstance(f, UnaryMappingVariables):
             for y in f.range():
-                self.add_linear(list(f(None, y)), '<=', 1)
+                self.add_linear(list(f(None, y)), '<=', 1, check=False)
 
         if isinstance(f, BinaryMappingVariables):
             for y in f.range():
                 for x1, x2 in combinations(f.domain(), 2):
-                    self.add_clause(f.forbid(x1, y) + f.forbid(x2, y))
-
+                    self.add_clause(f.forbid(x1, y) + f.forbid(x2, y), check=False)
 
     def force_nondecreasing_mapping(self, f):
         """Enforce the mapping `f` to be non decreasing
@@ -669,9 +666,9 @@ class CNFMapping(VariablesManager):
             for (u1, u2) in combinations(f.domain(), 2):
                 for (v1, v2) in product(f.range(u1), f.range(u2)):
                     if v1 > v2:
-                        self.add_clause([-fd[(u1, v1)], -fd[(u2, v2)]])
+                        self.add_clause([-fd[(u1, v1)], -fd[(u2, v2)]], check=False)
 
         if isinstance(f, BinaryMappingVariables):
             for (u1, u2) in combinations(f.domain(), 2):
                 for (v1, v2) in combinations(f.range(), 2):
-                    self.add_clause(f.forbid(u1, v2) + f.forbid(u2, v1))
+                    self.add_clause(f.forbid(u1, v2) + f.forbid(u2, v1), check=False)

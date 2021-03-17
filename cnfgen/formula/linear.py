@@ -29,7 +29,7 @@ class CNFLinear(BaseCNF):
     ###
     # Various utility function for CNFs
     ###
-    def add_parity(self, lits, constant):
+    def add_parity(self, lits, constant, check=True):
         """Adds the CNF encoding of a parity constraint
 
         E.g. X1 + X2 + X3 = 1 (mod 2) is encoded as
@@ -45,6 +45,8 @@ class CNFLinear(BaseCNF):
             literals
         constant : {0,1}
             the constant of the linear equation
+        check : bool
+            check that the literals are valid and update the variable count
 
         Returns
         -------
@@ -61,14 +63,20 @@ class CNFLinear(BaseCNF):
         >>> list(C)
         [[-1, -2], [1, 2]]
         """
+        if isgenerator(lits):
+            lits = list(lits)
+        if check:
+            self._check_and_update(lits)
+
         desired_sign = 1 if constant == 1 else -1
         for signs in product([1, -1], repeat=len(lits)):
             # Save only the clauses with the right polarity
             parity = reduce(mul, signs, 1)
             if parity == desired_sign:
-                self.add_clause([lit*sign for lit, sign in zip(lits, signs)])
+                self.add_clause([lit*sign for lit, sign in zip(lits, signs)],
+                                check=False)
 
-    def add_linear(self, lits, op, constant):
+    def add_linear(self, lits, op, constant, check=True):
         """Add a linear constraint to the formula
 
         Encodes an equality or an inequality constraint on literals (no
@@ -82,7 +90,8 @@ class CNFLinear(BaseCNF):
             one among '<=', ">=", '<', '>', '==', '!='
         constant : integer
             the constant of the linear equation
-
+        check : bool
+            check that the literals are valid and update the variable count
         Returns
         -------
         None
@@ -115,8 +124,11 @@ class CNFLinear(BaseCNF):
             raise ValueError('Invalid operator, only {} allowed'.
                              format(", ".join(operators)))
 
-        if isgenerator(lits) and op != '<=':
+        if isgenerator(lits):
             lits = list(lits)
+
+        if check:
+            self._check_and_update(lits)
 
         # We fist manage the case of !=
         if op == "!=":
@@ -126,7 +138,7 @@ class CNFLinear(BaseCNF):
             for flips in combinations(range(n), constant):
                 for i in flips:
                     lits[i] *= -1
-                self.add_clause(lits)
+                self.add_clause(lits, check=False)
                 for i in flips:
                     lits[i] *= -1
             return
@@ -136,18 +148,18 @@ class CNFLinear(BaseCNF):
 
         # We reduce to the case of >=
         if op == "==":
-            self.add_linear(lits, '<=', constant)
-            self.add_linear(lits, '>=', constant)
+            self.add_linear(lits, '<=', constant, check=False)
+            self.add_linear(lits, '>=', constant, check=False)
             return
         elif op == "<":
-            self.add_linear(lits, '<=', constant-1)
+            self.add_linear(lits, '<=', constant-1, check=False)
             return
         elif op == ">":
-            self.add_linear(lits, '>=', constant+1)
+            self.add_linear(lits, '>=', constant+1, check=False)
             return
         elif op == "<=":
             negated = [-lit for lit in lits]
-            self.add_linear(negated, '>=', len(negated) - constant)
+            self.add_linear(negated, '>=', len(negated) - constant, check=False)
             return
 
         # Tautologies and invalid inequalities
@@ -155,61 +167,69 @@ class CNFLinear(BaseCNF):
             return
 
         if constant > len(lits):
-            self.add_clause([])
+            self.add_clause([], check=False)
             return
 
         k = len(lits) - constant + 1
         for clause in combinations(lits, k):
-            self.add_clause(clause)
+            self.add_clause(clause, check=False)
 
-    def add_loose_majority(self, lits):
+    def add_loose_majority(self, lits, check=True):
         """Clauses encoding a \"at least half\" constraint
 
         Parameters
         ----------
         lists : iterable(int)
            literals in the constraint
+        check : bool
+            check that the literals are valid and update the variable count
         """
         if isgenerator(lits):
             lits = list(lits)
         threshold = ((len(lits) + 1) // 2)
-        return self.add_linear(lits, '>=', threshold)
+        return self.add_linear(lits, '>=', threshold, check=check)
 
-    def add_loose_minority(self, lits):
+    def add_loose_minority(self, lits, check=True):
         """Clauses encoding a \"at most half\" constraint
 
         Parameters
         ----------
         lists : iterable(int)
            literals in the constraint
+        check : bool
+            check that the literals are valid and update the variable count
         """
         if isgenerator(lits):
             lits = list(lits)
         threshold = len(lits) // 2
-        return self.add_linear(lits, '<=', threshold)
+        return self.add_linear(lits, '<=', threshold, check=check)
 
-    def add_strict_majority(self, lits):
+    def add_strict_majority(self, lits, check=True):
         """Clauses encoding a "strict majority" constraint
 
         Parameters
         ----------
         lists : iterable(int)
            literals in the constraint
+        check : bool
+            check that the literals are valid and update the variable count
         """
         if isgenerator(lits):
             lits = list(lits)
         threshold = len(lits)//2 + 1
-        return self.add_linear(lits, '>=', threshold)
+        return self.add_linear(lits, '>=', threshold, check=check)
 
-    def add_strict_minority(self, lits):
+    def add_strict_minority(self, lits, check=True):
         """Clauses encoding a \"at most half\" constraint
 
         Parameters
         ----------
         lists : iterable(int)
            literals in the constraint
+        check : bool
+            check that the literals are valid and update the variable count
         """
         if isgenerator(lits):
             lits = list(lits)
         threshold = (len(lits) - 1) // 2
-        return self.add_linear(lits, '<=', threshold)
+        return self.add_linear(lits, '<=', threshold, check=check)

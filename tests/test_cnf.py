@@ -21,12 +21,18 @@ def test_variable_auto_increase():
     u = F.new_variable("U")
     assert F.number_of_variables() == 2
 
-    F.add_clause([1,-3])
+    F.add_clause([1,-3], check=True)
     assert F.number_of_variables() == 3
 
-    F.add_clause([3,2])
+    F.add_clause([3,2], check=True)
     assert F.number_of_variables() == 3
 
+def test_variable_no_auto_increase():
+
+    F = CNF()
+    F.add_clause([1,-3], check=False)
+    assert F.number_of_variables() == 0
+    assert not F.debug()
 
 def test_dimacs_ascii():
     "CNF should support unicode. This is Python 3 after all."

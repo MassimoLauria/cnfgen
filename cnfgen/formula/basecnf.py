@@ -93,7 +93,7 @@ class BaseCNF:
             is the polarity and the second is the variable, which must
             be an hashable object.
 
-            E.g. (not x3) or x4 or (not x2) is encoded as [(False,"x3"),(True,"x4"),False,"x2")]
+            E.g. (not x3) or x4 or (not x2) is encoded as [-3,4,-2]
 
         description: string, optional
             a description of the formula
@@ -117,7 +117,7 @@ class BaseCNF:
         self._numvar = 0
         self._clauses = []
         for c in clauses or []:
-            self.add_clause(c)
+            self.add_clause(c, check=True)
 
     def __str__(self):
         """String representation of the formula
@@ -154,8 +154,22 @@ class BaseCNF:
     def all_variable_labels(self,default_label_format='x{}'):
         """Produces the labels of all the variables"""
 
-        for i in range(1,self._numvar+1):
+        for i in range(1, self._numvar+1):
             yield default_label_format.format(i)
+
+    def _check_and_update(self, data):
+        if len(data) == 0:
+            return
+        try:
+            if 0 in data:
+                raise ValueError("0 is not a valid literal")
+            maxv = max(data)
+            minv = min(data)
+            self._numvar = max(self._numvar, maxv, -minv)
+        except (TypeError, ValueError) as te:
+            msg = "literals must be non-zero integers"
+            raise ValueError(msg) from te
+
 
     def update_variable_number(self, new_value):
         """Raises the number of variable in the formula to `new_value`
@@ -191,11 +205,18 @@ not have any effect."""
         Examples
         --------
         >>> c=BaseCNF()
-        >>> c.add_clauses_from([[-1,2],[1,0,-2],[1,3]])
+        >>> c.add_clauses_from([[-1,2],[1,0,-2],[1,3]], check=False)
         >>> c.debug()
         False
         >>> c=BaseCNF()
-        >>> c.add_clauses_from([[-1,2],[1,-2],[1,3]])
+        >>> c.add_clauses_from([[-1,2],[1,0,-2],[1,3]], check=True) # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        ValueError: 0 is not a valid literal
+        >>> c=BaseCNF()
+        >>> c.add_clauses_from([[-1,2],[1,-2],[1,3]], check=False)
+        >>> c.debug()
+        False
+        >>> c=BaseCNF([[-1,2],[1,-2],[1,3]])
         >>> c.debug()
         True
         >>> c.add_clause([-1,2,2])
@@ -226,7 +247,7 @@ not have any effect."""
         # formula passed all tests
         return True
 
-    def add_clause(self, clause):
+    def add_clause(self, clause, check=True):
         """Add a clause to the CNF.
 
         E.g. (not x3) or x4 or (not x2) is encoded as [-1, 4, -2]
@@ -235,7 +256,7 @@ not have any effect."""
         of variables  of the CNF,  in the  order of appearance  in the
         clauses.
 
-        No check is done on the clauses.
+        By default no check is done on the clauses.
 
         Parameters
         ----------
@@ -252,24 +273,35 @@ not have any effect."""
             Clauses are added with repetition, i.e. if the same clause
             is added twice then it will occur twice in the
             formula too.
+
+        check : bool
+            check that all literals as integer and update the number of variables, based
+            on the literal present in the clause. (default: True)
         """
         data = list(clause)
         if len(data) == 0:
             self._clauses.append([])
             return
 
-        try:
-            maxid = max([abs(literal) for literal in data])
-        except TypeError as te:
-            msg = "'clause' must be a sequence of non-zero integers"
-            raise ValueError(msg) from te
-        self._numvar = max(maxid, self._numvar)
         self._clauses.append(data)
 
-    def add_clauses_from(self, clauses):
-        """Add a sequence of clauses to the CNF"""
+        if check:
+            self._check_and_update(data)
+
+    def add_clauses_from(self, clauses, check=True):
+        """Add a sequence of clauses to the CNF
+
+        Parameters
+        ----------
+        clause: list of clauses
+            the clauses to be added in the CNF
+
+        check : bool
+            check that all literals as integer and update the number of variables, based
+            on the literal present in the clause. (default: False)
+        """
         for c in clauses:
-            self.add_clause(c)
+            self.add_clause(c, check=check)
 
     def variables(self):
         """Return the list of variables"""

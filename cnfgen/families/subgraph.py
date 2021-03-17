@@ -65,10 +65,10 @@ def SubgraphFormula(G, H, induced=False, symbreak=False):
         consistent = (gedge == tedge) or (gedge and not induced)
 
         if not consistent:
-            F.add_clause([-s(i1, j1), -s(i2, j2)])
-            F.add_clause([-s(i1, j2), -s(i2, j1)])
+            F.add_clause([-s(i1, j1), -s(i2, j2)], check=False)
+            F.add_clause([-s(i1, j2), -s(i2, j1)], check=False)
         elif symbreak:
-            F.add_clause([-s(i1, j2), -s(i2, j1)])
+            F.add_clause([-s(i1, j2), -s(i2, j1)], check=False)
     return F
 
 
@@ -115,10 +115,10 @@ def CliqueFormula(G, k, symbreak=True):
         # check if this mapping is compatible
         edge = G.has_edge(j1, j2)
         if not edge:
-            F.add_clause([-s[i1, j1], -s[i2, j2]])
-            F.add_clause([-s[i1, j2], -s[i2, j1]])
+            F.add_clause([-s[i1, j1], -s[i2, j2]], check=False)
+            F.add_clause([-s[i1, j2], -s[i2, j1]], check=False)
         elif symbreak:
-            F.add_clause([-s[i1, j2], -s[i2, j1]])
+            F.add_clause([-s[i1, j2], -s[i2, j1]], check=False)
     return F
 
 

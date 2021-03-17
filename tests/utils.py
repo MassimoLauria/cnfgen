@@ -44,6 +44,8 @@ def assertCnfEqualsDimacs(cnf, dimacs):
     dimacs = textwrap.dedent(dimacs)
     dimacs = dimacs.strip()
     output = cnf.to_dimacs().strip()
+    print(output)
+    print(dimacs)
     assert output == dimacs
 
 

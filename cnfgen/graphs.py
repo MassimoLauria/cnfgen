@@ -224,6 +224,7 @@ class Graph(BaseGraph):
         self.n = n
         self.m = 0
         self.adjlist = [[] for i in range(n+1)]
+        self.edgeset = set()
         if name is None:
             self.name = "a simple graph with {} vertices".format(n)
         else:
@@ -233,7 +234,7 @@ class Graph(BaseGraph):
         if not (1 <= u <= self.n and 1 <= v <= self.n and u != v):
             raise ValueError(
                 "u,v must be distinct, between 1 and the number of nodes")
-        if self.has_edge(u, v):
+        if (u, v) in self.edgeset:
             return
         u, v = min(u, v), max(u, v)
         pos = bisect_right(self.adjlist[u], v)
@@ -241,13 +242,11 @@ class Graph(BaseGraph):
         pos = bisect_right(self.adjlist[v], u)
         self.adjlist[v].insert(pos, u)
         self.m += 1
+        self.edgeset.add((u, v))
+        self.edgeset.add((v, u))
 
     def has_edge(self, u, v):
-        if not (1 <= u <= self.n and 1 <= v <= self.n and u != v):
-            return False
-
-        pos = bisect_left(self.adjlist[u], v)
-        return pos < len(self.adjlist[u]) and self.adjlist[u][pos] == v
+        return (u, v) in self.edgeset
 
     def vertices(self):
         return range(1, self.n+1)
@@ -378,6 +377,7 @@ edges can be added and not removed."""
         non_negative_int(n,'n')
         self.n = n
         self.m = 0
+        self.edgeset = set()
         self.still_a_dag = True
         self.pred = [[] for i in range(n+1)]
         self.succ = [[] for i in range(n+1)]
@@ -402,13 +402,11 @@ edges can be added and not removed."""
         self.succ[src].insert(pos, dest)
 
         self.m += 1
+        self.edgeset.add((src,dest))
 
     def has_edge(self, src, dest):
         """True if graph contains directed edge (src,dest)"""
-        if not (1 <= src <= self.n and 1 <= dest <= self.n):
-            return False
-        pos = bisect_left(self.succ[src], dest)
-        return pos < len(self.succ[src]) and self.succ[src][pos] == dest
+        return (src, dest) in self.edgeset
 
     def vertices(self):
         return range(1, self.n+1)
@@ -581,10 +579,10 @@ class BipartiteGraph(BaseBipartiteGraph):
         BaseBipartiteGraph.__init__(self, L, R, name)
         self.ladj = {}
         self.radj = {}
-        self.edgecount = 0
+        self.edgeset = set()
 
     def has_edge(self, u, v):
-        return u in self.ladj and v in self.ladj[u]
+        return (u,v) in self.edgeset
 
     def add_edge(self, u, v):
         """Add an edge to the graph.
@@ -604,7 +602,7 @@ class BipartiteGraph(BaseBipartiteGraph):
         if not (1 <= u <= self.lorder and 1 <= v <= self.rorder):
             raise ValueError("Invalid choice of vertices")
 
-        if self.has_edge(u, v):
+        if (u, v) in self.edgeset:
             return
 
         if u not in self.ladj:
@@ -616,10 +614,10 @@ class BipartiteGraph(BaseBipartiteGraph):
         pu = bisect_right(self.radj[v], u)
         self.ladj[u].insert(pv, v)
         self.radj[v].insert(pu, u)
-        self.edgecount += 1
+        self.edgeset.add((u,v))
 
     def number_of_edges(self):
-        return self.edgecount
+        return len(self.edgeset)
 
     def right_neighbors(self, u):
         """Outputs the neighbors of a left vertex `u`
