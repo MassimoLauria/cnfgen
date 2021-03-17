@@ -18,13 +18,13 @@ installed in  the running environment.  If the formula  is satisfiable
 the value returned includes a satisfying assignment.
 
    >>> from cnfgen import CNF
-   >>> F = CNF([ [(True,'X'),(False,'Y')], [(False,'X')] ])
+   >>> F = CNF([ [1,-2], [-1] ])
    >>> outcome,assignment = F.is_satisfiable()
    >>> outcome
    True
-   >>> assignment == {'X': False, 'Y': False}
+   >>> assignment == [-1,-2]
    True
-   >>> F.add_clause([(True,'Y')])
+   >>> F.add_clause([2])
    >>> F.is_satisfiable()
    (False, None)
 

@@ -39,26 +39,27 @@ object. Let's see a simple example of its usage.
    >>> from pprint import pprint
    >>> import cnfgen
    >>> F = cnfgen.CNF()
-   >>> F.add_clause([(True,"X"),(False,"Y")])
-   >>> F.add_clause([(False,"X")])
+   >>> F.add_clause([1,-2])
+   >>> F.add_clause([-1])
    >>> outcome,assignment = F.is_satisfiable() # outputs a pair
    >>> outcome                                 # is the formula SAT?
    True
    >>> pprint(assignment)                      # a solution
-   {'X': False, 'Y': False}
-   >>> F.add_clause([(True,"Y")])
+   [-1, -2]
+   >>> F.add_clause([2])
    >>> F.is_satisfiable()                      # no solution
    (False, None)
-   >>> print(F.dimacs(export_header=False))
+   >>> print(F.to_dimacs())
    p cnf 2 3
    1 -2 0
    -1 0
    2 0
-   >>> print(F.latex(export_header=False))
+   <BLANKLINE>
+   >>> print(F.to_latex())
    \begin{align}
-   &       \left(            {X} \lor   \overline{Y} \right) \\
-   & \land \left(   \overline{X} \right) \\
-   & \land \left(            {Y} \right)
+   &       \left(            {x_1} \lor {\overline{x}_2} \right) \\
+   & \land \left( {\overline{x}_1} \right) \\
+   & \land \left(            {x_2} \right)
    \end{align}
 
 A typical  unsatisfiable formula  studied in  Proof Complexity  is the
@@ -66,12 +67,13 @@ pigeonhole principle formula.
 
    >>> from cnfgen import PigeonholePrinciple
    >>> F = PigeonholePrinciple(5,4)
-   >>> print(F.dimacs(export_header=False))
+   >>> print(F.to_dimacs())
    p cnf 20 45
    1 2 3 4 0
    5 6 7 8 0
    ...
    -16 -20 0
+   <BLANKLINE>
    >>> F.is_satisfiable()
    (False, None)
 

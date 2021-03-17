@@ -81,19 +81,20 @@ function   :py:func:`cnfgen.TransformFormula`.   For  example   to
 substitute each variable with a 2-XOR we can do
 
    >>> from cnfgen import CNF, XorSubstitution
-   >>> F = CNF([ [(True,"x1"),(True,"x2"),(False,"x3")], [(False,"x2"),(True,"x4")] ])
+   >>> F = CNF([ [1,2,-3], [-2,4] ])
    >>> G = XorSubstitution(F,2)
 
 Here is the original formula.
 
-   >>> print( F.dimacs(export_header=False) )
+   >>> print( F.to_dimacs() )
    p cnf 4 2
    1 2 -3 0
    -2 4 0
+   <BLANKLINE>
 
 Here it is after the transformation.
    
-   >>> print( G.dimacs(export_header=False) )
+   >>> print( G.to_dimacs() )
    p cnf 8 12
    1 2 3 4 5 -6 0
    1 2 3 4 -5 6 0
@@ -107,6 +108,7 @@ Here it is after the transformation.
    3 -4 -7 -8 0
    -3 4 7 8 0
    -3 4 -7 -8 0
+   <BLANKLINE>
 
 It is possible  to omit the rank parameter. In  such case the default
 value is used.
