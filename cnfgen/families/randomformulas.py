@@ -44,8 +44,8 @@ wasteful for just few samples."""
     while len(clauses) < m and t < 10 * m:
         t += 1
 
-        selection =  sorted(random.sample(variables, k))
-        cls = [v*random.choice([-1,1]) for v in selection]
+        selection = sorted(random.sample(variables, k))
+        cls = [v*random.choice([1, -1]) for v in selection]
         tcls = tuple(cls)
 
         if tcls in sampled:
