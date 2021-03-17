@@ -4,8 +4,9 @@
 from itertools import combinations, product, permutations
 from copy import copy
 
-from cnfgen.localtypes import positive_int, any_int, one_of_value
+from cnfgen.localtypes import positive_int, any_int, one_of_values
 from cnfgen.formula.cnf import CNF
+from cnfgen.graphs import BipartiteGraph
 
 #
 # Utilities
@@ -164,7 +165,7 @@ def LinearSubstitution(F, k, op, C):
     """
     opchoices = ['==', '<', '>', '<=', '>=', '!=']
     positive_int(k, 'k')
-    one_of_value(op, 'op', opchoices)
+    one_of_values(op, 'op', opchoices)
     any_int(C, 'C')
 
     i = opchoices.index(op)
@@ -395,87 +396,6 @@ def FormulaLifting(F, k):
 
 
 
-
-class BaseSubstitution(CNF):
-    """Apply a substitution to a formula
-    """
-    def __init__(self, cnf, new_variables=None):
-        """Build a new CNF substituting variables
-
-        Arguments:
-        - `cnf`: the original cnf
-        """
-        self._orig_cnf = cnf
-        CNF.__init__(self)
-        self.header = copy(cnf.header)
-
-
-    def _apply(self):
-        """Apply the substitutions
-
-        This should be called after setting up the lifted variables
-        """
-        # Load original variable names
-        #
-        # For n variables we get
-        #
-        # substitution  = [None, F1, F2,..., Fn, -Fn, -F(n-1), ..., -F2, -F1]
-        #
-        cnf = self._orig_cnf
-        N = cnf.number_of_variables()
-        substitutions = [None] * (2 * N + 1)
-
-        # Add the clauses additional clauses per variable
-        for var in range(1, N+1):
-            self.add_clauses_from(self.transform_variable_preamble(var))
-
-        # Transform all possible literals
-        for i in range(1, N+1):
-            substitutions[i] = self.transform_a_literal(i)
-            substitutions[-i] = self.transform_a_literal(-i)
-
-        # build and add new clauses
-        for orig_cls in cnf:
-
-            # a substituted clause is the OR of the CNF for the literals
-            domains = [substitutions[lit] for lit in orig_cls]
-            domains = tuple(domains)
-            # apply distribution
-            block = (
-                tuple([lit for clause in clause_tuple for lit in clause])
-                for clause_tuple in product(*domains)
-            )
-
-            self.add_clauses_from(block)
-
-
-    def add_transformation_description(self, description):
-        i = 1
-        while 'transformation {}'.format(i) in self.header:
-            i += 1
-        self.header['transformation {}'.format(i)] = description
-
-    def transform_variable_preamble(self, var):
-        """Additional clauses for each variable
-
-        Arguments:
-        - `name`:     variable to add clauses for
-
-        Returns: a list of clauses
-        """
-        return []
-
-    def transform_a_literal(self, lit):
-        """Substitute a literal with the transformation function
-
-        Arguments:
-        - `lit`:     literal to be substituted
-
-        Returns: a list of clauses
-        """
-        return [[lit]]
-
-
 def AtLeastKSubstitution(F, N, k):
     """Substitution: at least ``k`` true variables out of ``N`` copies"""
     return LinearSubstitution(F, N, '>=', k)
@@ -496,85 +416,61 @@ def AnythingButKSubstitution(F, N, k):
     return LinearSubstitution(F, N, '!=', k)
 
 
-class VariableCompression(BaseSubstitution):
+def VariableCompression(F, B, function):
     """Vabiable compression transformation
 
     The original variable are substituted with the XOR (or MAJ) of
-    a subset of a new set of variables (usually smaller).
+    a subset of a new set of variables. The mapping between the
+    original variables and the new ones is given by a bipartite graph
+
+    Parameters
+    ----------
+    F : CNF
+        the original cnf formula
+    B : cnfgen.graphs.BipartiteGraph
+        a bipartite graph. The left side must have the number of
+        vertices equal to the number of original variables
+    func: string
+        Select which faction is used for the compression.
+        It must be one among 'xor' or 'maj'
     """
+    one_of_values(function, 'function', ['xor', 'maj'])
+    B = BipartiteGraph.normalize(B)
 
-    _name_vertex_dict = {}
-    _pattern = None
-    _function = None
+    if B.left_order() != F.number_of_variables():
+        raise ValueError(
+            "Left side of graph B must have size equal to the number of variables in F")
 
-    def __init__(self, cnf, B, function='xor'):
-        """Build a new CNF obtained by substituting a XOR to the
-        variables of the original CNF.
+    newF = CNF()
+    newF.header = copy(F.header)
 
-        Parameters
-        ----------
-        cnf : CNF
-            the original cnf formula
-        B : cnfgen.graphs.BipartiteGraph
-            a bipartite graph. The left side must have the number of
-            vertices equal to the number of original variables
+    L = B.left_order()
+    R = B.right_order()
+    newF.update_variable_number(R)
+    desc = "Variable {}-compression from {} to {} variables".format(function, L, R)
+    add_description(newF, desc)
 
-        function: string
-            Select which faction is used for the compression. It must
-            be one among 'xor' or 'maj'.
+    def applyxor(lit):
+        nvars = B.right_neighbors(abs(lit))
+        polarity = 1 if lit > 0 else 0
+        temp = CNF()
+        temp.add_parity(nvars, polarity)
+        return list(temp)
 
-        """
-        if function not in ['xor', 'maj']:
-            raise ValueError(
-                "Function specification for variable compression must be either 'xor' or 'maj'."
-            )
-
-        Left, Right = B.parts()
-
-        if len(Left) != len(list(cnf.variables())):
-            raise ValueError(
-                "Left side of the graph must match the variable numbers of the CNF."
-            )
-
-        self._pattern = B
-        self._function = function
-        for n, v in zip(cnf.variables(), Left):
-            self._name_vertex_dict[n] = v
-
-        super(VariableCompression, self).__init__(
-            cnf, new_variables=["Y_{{{0}}}".format(i) for i in Right])
-
-        self.add_transformation_description(
-            "Variable {}-compression from {} to {} variables".format(
-                function, len(Left), len(Right)))
-
-    def transform_a_literal(self, polarity, varname):
-        """Substitute a literal with a (negated) XOR
-
-        Arguments:
-        - `polarity`: polarity of the literal
-        - `varname`: variable to be substituted
-
-        Returns: a list of clauses
-        """
-        varname = self._name_vertex_dict[varname]
-        local_vars = self._pattern.right_neighbors(varname)
-        local_names = ["Y_{{{0}}}".format(i) for i in local_vars]
-
-        if self._function == 'xor':
-
-            return list(self.parity_constraint(local_names, polarity))
-
-        elif self._function == 'maj':
-
-            threshold = (len(local_names) + 1) // 2  # loose majority
-
-            if polarity:
-                return list(
-                    self.greater_or_equal_constraint(local_names, threshold))
-            else:
-                return list(self.less_than_constraint(local_names, threshold))
-
+    def applymaj(lit):
+        nvars = B.right_neighbors(abs(lit))
+        temp = CNF()
+        if lit > 0:
+            temp.add_loose_majority(nvars)
         else:
-            raise RuntimeError(
-                "Error: variable compression with invalid function")
+            temp.add_strict_minority(nvars)
+        return list(temp)
+
+    if function == 'xor':
+        newF.add_clauses_from(apply_substitution(F, applyxor))
+    elif function == 'maj':
+        newF.add_clauses_from(apply_substitution(F, applymaj))
+    else:
+        raise RuntimeError("Function {} not supported for compression".format(func))
+
+    return newF

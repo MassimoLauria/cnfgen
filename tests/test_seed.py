@@ -66,7 +66,7 @@ def test_formula_vs_cli():
 
 def test_formula_vs_seed_2311():
     F1 = RandomKCNF(3, 7, 6, seed=2311)
-    dimacs = F1.dimacs(export_header=False)
+    dimacs = F1.to_dimacs()
     assert dimacs == seed_2311.strip()
 
 
@@ -78,7 +78,7 @@ def test_cli_vs_seed_2311():
 
 def test_formula_vs_seed_46512():
     F1 = RandomKCNF(2, 10, 20, seed=46512)
-    dimacs = F1.dimacs(export_header=False)
+    dimacs = F1.to_dimacs()
     assert dimacs == seed_46512
 
 

@@ -42,7 +42,7 @@ def non_negative_int_seq(value, name):
         if v < 0:
             raise ValueError(msg)
 
-def one_of_value(value, name, choices):
+def one_of_values(value, name, choices):
     '''Check if the value is in a specific set'''
     msg = "argument '{}' must be one of [{}]".format(name,
                                                      choices)

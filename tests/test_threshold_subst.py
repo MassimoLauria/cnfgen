@@ -18,7 +18,7 @@ from cnfgen.clitools import cnfgen, CLIError
 def test_exactk_check_args():
     # Negative N
     with pytest.raises(ValueError):
-        F = CNF([[(True, 'x')], [(False, 'y')]])
+        F = CNF([[1, -2]])
         F = ExactlyKSubstitution(F, -1, 1)
 
 
@@ -32,7 +32,7 @@ def test_cli_exactk_check_args():
 def test_anybutk_check_args():
     # Negative N
     with pytest.raises(ValueError):
-        F = CNF([[(True, 'x')], [(False, 'y')]])
+        F = CNF([[1,-2]])
         F = AnythingButKSubstitution(F, -1, 1)
 
 
@@ -46,7 +46,7 @@ def test_cli_anybutk_check_args():
 def test_atmostk_check_args():
     # Negative N
     with pytest.raises(ValueError):
-        F = CNF([[(True, 'x')], [(False, 'y')]])
+        F = CNF([[1,-2]])
         F = AtMostKSubstitution(F, -1, 1)
 
 
@@ -60,7 +60,7 @@ def test_cli_atmostk_check_args():
 def test_atleastk_check_args():
     # Negative N
     with pytest.raises(ValueError):
-        F = CNF([[(True, 'x')], [(False, 'y')]])
+        F = CNF([[1,-2]])
         F = AtLeastKSubstitution(F, -1, 1)
 
 

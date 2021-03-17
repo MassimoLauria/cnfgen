@@ -281,7 +281,7 @@ class AnythingButKSubstitutionCmd(TransformationHelper):
 
     @staticmethod
     def transform_cnf(F, args):
-        return AnythingButSubstitution(F, args.N, args.K)
+        return AnythingButKSubstitution(F, args.N, args.K)
 
 
 # Technically lifting is not a substitution, therefore it should be in
