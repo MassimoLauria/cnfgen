@@ -2,10 +2,14 @@ Testing satisfiability
 ===========================
 
 To   test  the   satisfiability  of   the  CNF   formula  encoded   in
-a    :py:class:`cnfgen.CNF`    instance    we    can    use    the
-:py:func:`cnfgen.CNF.is_satisfiable`                       method.
-Testing satisfiability of a CNF is not at all considered to be an easy
-task.  In  full   generality  the  problem  is   NP-hard  [1]_,  which
+a     :py:class:`cnfgen.CNF`    instance     we     can    use     the
+:py:func:`cnfgen.CNF.is_satisfiable`  and  :py:func:`cnfgen.CNF.solve`
+methods.  The former  just gives  a  boolean answer,  with the  latter
+provides  more  options  about  how  to run  the  solver  and  returns
+a satisfying assignment found in the process.
+
+Testing satisfiability of a CNF is not at all considered to be
+an easy  task. In full generality  the problem is NP-hard  [1]_, which
 essentially means that there are no fast algorithm to solve it.
 
 In practice  many formula  that come from  applications can  be solved
@@ -19,14 +23,14 @@ the value returned includes a satisfying assignment.
 
    >>> from cnfgen import CNF
    >>> F = CNF([ [1,-2], [-1] ])
-   >>> outcome,assignment = F.is_satisfiable()
+   >>> outcome,assignment = F.solve()
    >>> outcome
    True
    >>> assignment == [-1,-2]
    True
    >>> F.add_clause([2])
    >>> F.is_satisfiable()
-   (False, None)
+   False
 
 It is always possible to force ``CNFgen`` to use a specific solver or
 a specific  command line invocation  using the ``cmd``  parameters for

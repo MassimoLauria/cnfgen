@@ -12,7 +12,7 @@ pigeohole principle formula with 5 pigeons and 4 holes.
    >>> import cnfgen
    >>> F = cnfgen.PigeonholePrinciple(5,4)
    >>> F.is_satisfiable()
-   (False, None)
+   False
 
 
 Included formula families

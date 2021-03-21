@@ -12,7 +12,7 @@ is realized over a star graph with five arms.
    >>> list(G.edges())
    [(1, 6), (2, 6), (3, 6), (4, 6), (5, 6)]
    >>> F = cnfgen.TseitinFormula(G,charges=[0,1,0,0,1,0])
-   >>> pprint(F.is_satisfiable())
+   >>> pprint(F.solve())
    (True, [-1, 2, -3, -4, 5])
 
 Tseitin formulas can  be really hard for if the  graph has large `edge

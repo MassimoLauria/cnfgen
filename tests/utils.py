@@ -58,7 +58,7 @@ def assertCnfEqualsIgnoreVariables(cnf1, cnf2):
 
 def assertSAT(formula):
     if some_solver_installed():
-        result, _ = formula.is_satisfiable()
+        result, _ = formula.solve()
         if not result:
             raise AssertionError(
                 "Formula {} is unexpectedly UNSAT".format(formula))
@@ -68,7 +68,7 @@ def assertSAT(formula):
 
 def assertUNSAT(formula):
     if some_solver_installed():
-        result, ass = formula.is_satisfiable()
+        result, ass = formula.solve()
         if result:
             print(formula.to_latex())
             print(result,ass)

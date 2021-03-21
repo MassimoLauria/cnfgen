@@ -41,13 +41,13 @@ object. Let's see a simple example of its usage.
    >>> F = cnfgen.CNF()
    >>> F.add_clause([1,-2])
    >>> F.add_clause([-1])
-   >>> outcome,assignment = F.is_satisfiable() # outputs a pair
-   >>> outcome                                 # is the formula SAT?
+   >>> outcome,assignment = F.solve() # outputs a pair
+   >>> outcome                        # is the formula SAT?
    True
-   >>> pprint(assignment)                      # a solution
+   >>> pprint(assignment)             # a solution
    [-1, -2]
    >>> F.add_clause([2])
-   >>> F.is_satisfiable()                      # no solution
+   >>> F.solve()             # no solution
    (False, None)
    >>> print(F.to_dimacs())
    p cnf 2 3
@@ -75,7 +75,7 @@ pigeonhole principle formula.
    -16 -20 0
    <BLANKLINE>
    >>> F.is_satisfiable()
-   (False, None)
+   False
 
 The ``cnfgen`` command line tool
 --------------------------------

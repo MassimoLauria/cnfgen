@@ -9,7 +9,7 @@ from cnfgen.formula.basecnf import BaseCNF
 
 from cnfgen.utils.parsedimacs import to_dimacs_file, from_dimacs_file
 from cnfgen.utils.latexoutput import to_latex_string, to_latex_document
-from cnfgen.utils.solver import is_satisfiable
+from cnfgen.utils.solver import sat_solve, some_solver_installed
 
 
 def guess_output_format(fileorname, fileformat_request):
@@ -195,8 +195,8 @@ class CNFio(BaseCNF):
             destination file given either as object or as filename"""
         return from_dimacs_file(cls, fileorname)
 
-    def is_satisfiable(self, cmd=None, sameas=None, verbose=0):
-        """Determines whether a CNF is satisfiable or not.
+    def solve(self, cmd=None, sameas=None, verbose=0):
+        """Solve the formula with a SAT solver
 
         The formula is passed to a SAT solver, according to the
         optional command line ``cmd``. If no command line is
@@ -215,8 +215,8 @@ class CNFio(BaseCNF):
         is possible to indicate which interface to use, or more
         specifically which known solver interface to mimic.
 
-        >>> F.is_satisfiable(cmd='minisat-style-solver',sameas='minisat')  # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='dimacs-style-solver',sameas='lingeling') # doctest: +SKIP
+        >>> F.solve(cmd='minisat-style-solver',sameas='minisat')  # doctest: +SKIP
+        >>> F.solve(cmd='dimacs-style-solver',sameas='lingeling') # doctest: +SKIP
 
         Parameters
         ----------
@@ -234,13 +234,13 @@ class CNFio(BaseCNF):
 
         Examples
         --------
-        >>> F.is_satisfiable()                                              # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='minisat -no-pre')                         # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='glucose -pre')                            # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='lingeling --plain')                       # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='sat4j')                                   # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='my-hacked-minisat -pre',sameas='minisat') # doctest: +SKIP
-        >>> F.is_satisfiable(cmd='patched-lingeling',sameas='lingeling')    # doctest: +SKIP
+        >>> F.solve()                                              # doctest: +SKIP
+        >>> F.solve(cmd='minisat -no-pre')                         # doctest: +SKIP
+        >>> F.solve(cmd='glucose -pre')                            # doctest: +SKIP
+        >>> F.solve(cmd='lingeling --plain')                       # doctest: +SKIP
+        >>> F.solve(cmd='sat4j')                                   # doctest: +SKIP
+        >>> F.solve(cmd='my-hacked-minisat -pre',sameas='minisat') # doctest: +SKIP
+        >>> F.solve(cmd='patched-lingeling',sameas='lingeling')    # doctest: +SKIP
 
         Returns
         -------
@@ -263,11 +263,71 @@ class CNFio(BaseCNF):
 
         See Also
         --------
-        cnfgen.utils.solver.is_satisfiable : implementation independent of CNF object.
+        cnfgen.utils.solver.sat_solve : implementation independent of CNF object.
+        cnfgen.utils.solver.supported_satsolvers : the SAT solver recognized by `cnfgen`.
+        """
+        return sat_solve(self,
+                         cmd=cmd,
+                         sameas=sameas,
+                         verbose=verbose)
+
+    def is_satisfiable(self, cmd=None, sameas=None):
+        """Determines if the formula is satisfiable of not
+
+        This method is just a simpler interface to the
+        :py:method:`solve` method.
+
+        The formula is passed to a SAT solver, and the method returns
+        True if the solvers claims the formula to be satisfiable, and
+        false otherwise. If there is no solver available the method
+        raises `RuntimeError`.
+
+        For a better description about the (optional) arguments to
+        pass, see the documentation of :py:method:`solve` method.
+
+        >>> F.is_satifiable(cmd='minisat-style-solver',sameas='minisat')  # doctest: +SKIP
+        >>> F.is_satifiable(cmd='dimacs-style-solver',sameas='lingeling') # doctest: +SKIP
+
+        Parameters
+        ----------
+        cmd : string,optional
+            the actual command line used to invoke the SAT solver
+
+        sameas : string, optional
+            use the interface of one of the supported solvers. Useful
+            when the solver used in the command line is not supported.
+
+        Examples
+        --------
+        >>> F.is_satisfiable()                                              # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='minisat -no-pre')                         # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='glucose -pre')                            # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='lingeling --plain')                       # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='sat4j')                                   # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='my-hacked-minisat -pre',sameas='minisat') # doctest: +SKIP
+        >>> F.is_satisfiable(cmd='patched-lingeling',sameas='lingeling')    # doctest: +SKIP
+
+        Returns
+        -------
+        boolean
+            True when F is satisfiable, or False otherwise.
+
+        Raises
+        ------
+        RuntimeError
+           if it is not possible to correctly invoke the solver needed.
+
+        ValueError
+           if `sameas` is set and is not the name of a supported solver.
+
+        See Also
+        --------
+        solve : run a SAT solver on this formula
+        cnfgen.utils.solver.sat_solve : implementation independent of CNF object.
         cnfgen.utils.solver.supported_satsolvers : the SAT solver recognized by `cnfgen`.
 
         """
-        return is_satisfiable(self,
-                              cmd=cmd,
-                              sameas=sameas,
-                              verbose=verbose)
+        return sat_solve(self,
+                         cmd=cmd,
+                         sameas=sameas,
+                         verbose=0)[0]

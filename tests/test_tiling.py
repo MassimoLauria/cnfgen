@@ -62,8 +62,8 @@ def test_cycle():
 
 def test_tiling_grid3_cli():
     F = cnfgen(["cnfgen", "-q", "tiling", "grid", 3, 3], mode='formula')
-    assert not F.is_satisfiable()[0]
+    assert not F.is_satisfiable()
 
 def test_tiling_grid4_cli():
     F = cnfgen(["cnfgen", "-q", "tiling", "grid", 4, 4], mode='formula')
-    assert F.is_satisfiable()[0]
+    assert F.is_satisfiable()

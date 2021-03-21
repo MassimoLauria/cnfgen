@@ -385,7 +385,7 @@ def some_solver_installed(solvers=None):
     return False
 
 
-def is_satisfiable(F, cmd=None, sameas=None, verbose=0):
+def sat_solve(F, cmd=None, sameas=None, verbose=0):
     """Determines whether a CNF is satisfiable or not.
 
     The satisfiability is determined using an external sat solver.  If
@@ -410,13 +410,13 @@ def is_satisfiable(F, cmd=None, sameas=None, verbose=0):
 
     Examples
     --------
-    >>> is_satisfiable(F)                                               # doctest: +SKIP
-    >>> is_satisfiable(F,cmd='minisat -no-pre')                         # doctest: +SKIP
-    >>> is_satisfiable(F,cmd='glucose -pre')                            # doctest: +SKIP
-    >>> is_satisfiable(F,cmd='lingeling --plain')                       # doctest: +SKIP
-    >>> is_satisfiable(F,cmd='sat4j')                                   # doctest: +SKIP
-    >>> is_satisfiable(F,cmd='my-hacked-minisat -pre',sameas='minisat') # doctest: +SKIP
-    >>> is_satisfiable(F,cmd='patched-lingeling',sameas='lingeling')    # doctest: +SKIP
+    >>> sat_solve(F)                                               # doctest: +SKIP
+    >>> sat_solve(F,cmd='minisat -no-pre')                         # doctest: +SKIP
+    >>> sat_solve(F,cmd='glucose -pre')                            # doctest: +SKIP
+    >>> sat_solve(F,cmd='lingeling --plain')                       # doctest: +SKIP
+    >>> sat_solve(F,cmd='sat4j')                                   # doctest: +SKIP
+    >>> sat_solve(F,cmd='my-hacked-minisat -pre',sameas='minisat') # doctest: +SKIP
+    >>> sat_solve(F,cmd='patched-lingeling',sameas='lingeling')    # doctest: +SKIP
 
     Returns
     -------
@@ -450,8 +450,8 @@ def is_satisfiable(F, cmd=None, sameas=None, verbose=0):
     For the supported solver we can pick the right interface, but for
     other solvers it is impossible to guess. We suggest to use one of
 
-    >>> is_satisfiable(F,cmd='minisat-style-solver',sameas='minisat')  # doctest: +SKIP
-    >>> is_satisfiable(F,cmd='dimacs-style-solver',sameas='lingeling') # doctest: +SKIP
+    >>> sat_solve(F,cmd='minisat-style-solver',sameas='minisat')  # doctest: +SKIP
+    >>> sat_solve(F,cmd='dimacs-style-solver',sameas='lingeling') # doctest: +SKIP
 
     """
 
