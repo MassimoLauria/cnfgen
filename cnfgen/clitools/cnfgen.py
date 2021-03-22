@@ -55,13 +55,13 @@ from cnfgen.clitools.graph_docs import make_graph_doc
 #################################################################
 
 # Help strings
-usage_string = """{} [-h] [-V] [--tutorial] [...options...]
+USAGE_STRING = """{} [-h] [-V] [--tutorial] [...options...]
               <formula> <args>
               [-T <transformation> <args>]
               [-T <transformation> <args>]
               ..."""
 
-description_string = """example:
+DESCRIPTION_STRING = """example:
  {0} php 100 40         --- Pigeonhole principle 100 pigeons 40 holes (unsat)
  {0} op  14             --- Ordering principle on 14 elements (unsat)
  {0} randkcnf 3 10 5    --- Random 3-CNF with 10 vars and 5 clauses
@@ -71,7 +71,7 @@ tutorial:
 
 """
 
-tutorial_string = """
+TUTORIAL_STRING = """
                  CNFGEN TUTORIAL
 
 {0} builds CNF formulas mostly coming from proof complexity
@@ -168,8 +168,8 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
 
     # now we setup the main parser for the formula generation command
     parser = CLIParser(prog=progname,
-                       usage=usage_string.format(progname),
-                       description=description_string.format(progname),
+                       usage=USAGE_STRING.format(progname),
+                       description=DESCRIPTION_STRING.format(progname),
                        formatter_class=CLIHelpFormatter)
 
     def print_help(string):
@@ -187,7 +187,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
                         version='{project} ({version})'.format(**info))
     parser.add_argument('--tutorial',
                         nargs=0,
-                        action=print_help(tutorial_string),
+                        action=print_help(TUTORIAL_STRING),
                         help="show a brief tutorial on CNFgen")
     parser.add_argument(
         '--help-graph',
@@ -364,7 +364,7 @@ def build_latex_cmdline_description(argv, args, t_args):
 
 
 # Command line interface
-def cli(argv=sys.argv, mode='output'):
+def cli(argv=None, mode='output'):
     """CNFgen main command line interface
 
     This function provide the main interface to CNFgen. It sets up the
@@ -393,6 +393,9 @@ def cli(argv=sys.argv, mode='output'):
     depends on the 'mode' argument
     """
 
+    if argv is None:
+        argv = sys.argv
+
     progname = os.path.basename(argv[0])
 
     formula_helpers = get_formula_helpers()
@@ -406,18 +409,16 @@ def cli(argv=sys.argv, mode='output'):
     with msg_prefix('c '):
         args, t_args = parse_command_line(argv, parser, t_parser)
 
-    #
     #  Determine output format
     output_format = guess_output_format(args.output, args.output_format)
-
 
     # Correctly infer the comment character, useful to shield
     # the output.
     comment_char = {'dimacs': 'c ', 'latex': '% '}
     try:
         cprefix = comment_char[output_format]
-    except KeyError:
-        raise InternalBug("Unknown output format")
+    except KeyError as e:
+        raise InternalBug("Unknown output format") from e
 
     with msg_prefix(cprefix):
 
@@ -441,7 +442,7 @@ def cli(argv=sys.argv, mode='output'):
         except (CLIError, ValueError) as e:
             args.generator.subparser.error(e)
         except RuntimeError as e:
-            raise InternalBug(e)
+            raise InternalBug(e) from e
 
         for argdict in t_args:
             try:
@@ -449,12 +450,11 @@ def cli(argv=sys.argv, mode='output'):
             except (CLIError, ValueError) as e:
                 argdict.transformation.subparser.error(e)
             except RuntimeError as e:
-                raise InternalBug(e)
+                raise InternalBug(e) from e
 
         if hasattr(args, 'seed') and args.seed:
             cnf.header['random seed'] = args.seed
         cnf.header['command line'] = "cnfgen " + " ".join(argv[1:])
-
 
         if mode == 'formula':
             return cnf
@@ -462,10 +462,11 @@ def cli(argv=sys.argv, mode='output'):
         if mode == 'string':
             if output_format == 'latex':
                 return cnf.to_latex()
-            elif output_format == 'dimacs':
+
+            if output_format == 'dimacs':
                 return cnf.to_dimacs()
-            else:
-                raise InternalBug("Unknown output format")
+
+            raise InternalBug("Unknown output format")
 
         extra_text = build_latex_cmdline_description(argv, args, t_args)
         cnf.to_file(args.output,
@@ -474,9 +475,11 @@ def cli(argv=sys.argv, mode='output'):
                     export_varnames=args.varnames,
                     extra_text=extra_text)
 
+    return None
 
 # command line entry point
 def main():
+    """The starting point of CNFgen program"""
 
     setup_SIGINT()
 
