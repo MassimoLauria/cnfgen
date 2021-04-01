@@ -1,35 +1,74 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-"""Implementation of the pigeonhole principle formulas
+"""Pigeonhole principle formulas
+
+The pigeonhole principle :math:`\\mathsf{PHP}_{n}^{m}`, written in
+conjunctive normal form, is a propositional formula which claims that
+it is possible to place :math:`m` pigeons into :math:`n` holes without
+collisions, whenever :math:`m > n`.
+
+Pigeonhole principle formulas are classic benchmarks for SAT solving
+and for Resolution proof systems. The module contains the
+implementation of several variants of this formulas.
+
+The most classic pigeonhole principle formula
+:math:`\\mathsf{PHP}_{n}^{n+1}` was the first CNF proved to be hard
+for resolution [H85]_.
+
+.. [H85] Haken, A. (1985). The intractability of resolution.
+         Theoretical Computer Science, 39, 297–308.
 """
 
 from itertools import combinations, product
 
 from cnfgen.formula.cnf import CNF
-from cnfgen.graphs import BaseBipartiteGraph,BipartiteGraph, CompleteBipartiteGraph
+from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph
 from cnfgen.localtypes import non_negative_int
+
 
 def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
     """Pigeonhole Principle CNF formula
 
-    The pigeonhole  principle claims  that no M  pigeons can sit  in N
-    pigeonholes  without collision  if M>N.   The  counterpositive CNF
-    formulation  requires  such mapping  to  be  satisfied. There  are
-    different  variants of this  formula, depending  on the  values of
-    `functional` and `onto` argument.
+    The pigeonhole principle CNF formula claims that that it is
+    possibile to place :math:`m` pigeons into :math:`n` holes without
+    collisions. This is clearly impossible whenever :math:`m > n`.
+
+    The formula is encoded with variables :math:`p_{i,j}` for :math:`i
+    \\in [m]` and :math:`j \\in [n]` where the intended meaning is
+    that :math:`p_{i,j}` is `True` when pigeon :math:`i` flies into
+    hole :math:`j`. There are different variants of this formula,
+    depending on the values of `functional` and `onto` argument.
 
     - PHP: pigeon can sit in multiple holes
     - FPHP: each pigeon sits in exactly one hole
-    - onto-PHP: pigeon can  sit in multiple holes, every  hole must be
-                covered.
+    - onto-PHP: pigeon can  sit in multiple holes, every  hole must be covered
     - Matching: one-to-one bijection between pigeons and holes.
 
-    Arguments:
-    - `pigeon`: number of pigeons
-    - `hole`:   number of holes
-    - `functional`: add clauses to enforce at most one hole per pigeon
-    - `onto`: add clauses to enforce that any hole must have a pigeon
+    Parameters
+    ----------
+    pigeon: int
+        number of pigeons (must be >=0).
+    hole: int
+        number of holes (must be >=0).
+    functional: bool, optional
+        enforce at most one hole per pigeon (default: False).
+    onto: bool, optional
+        enforce that any hole must have a pigeon (default: False).
 
+    Returns
+    -------
+    :py:class:`cnfgen.formula.cnf.CNF`
+         A CNF formulas encoding the pigeonhole principle.
+
+    Raises
+    ------
+    TypeError
+        If either `pigeons` or `holes` is not an integer number.
+    ValueError
+        If either `pigeons` or `holes` is less than zero.
+
+    Examples
+    --------
     >>> print(PigeonholePrinciple(4,3).to_dimacs())
     p cnf 12 22
     1 2 3 0
@@ -92,28 +131,58 @@ def GraphPigeonholePrinciple(G, functional=False, onto=False):
     """Graph Pigeonhole Principle CNF formula
 
     The graph pigeonhole principle CNF formula, defined on a bipartite
-    graph G=(L,R,E), claims that there is a subset E' of the edges such that
-    every vertex on the left size L has at least one incident edge in E' and
-    every edge on the right side R has at most one incident edge in E'.
+    graph :math:`G=(L,R,E)`, is a variant of the pigeonhole principle
+    where the left vertices :math:`L` are the pigeons, the right
+    vertices :math:`R` are the holes. The formula claims that there is
+    a subset of edges :math:`E' \\subseteq E` such that every vertex in
+    :math:`u \\in L` has at least one incident edge in :math:`E'` and every
+    :math:`v \\in R` has at most one incident edge in :math:`E'`.
 
-    This is possible only if the graph has a matching of size |L|.
+    The formula is satisfiable if and only if the graph has a matching
+    of size :math:`|L|`.
 
-    There are different variants of this formula, depending on the
-    values of `functional` and `onto` argument.
+    The formula is encoded with variables :math:`p_{u,v}` for :math:`u
+    \\in L` and :math:`v \\in R` where the intended meaning is
+    that :math:`p_{u,v}` is `True` when pigeon :math:`u` flies into
+    hole :math:`v`. There are different variants of this formula,
+    depending on the values of `functional` and `onto` argument.
 
-    - PHP(G):  each left vertex can be incident to multiple edges in E'
-    - FPHP(G): each left vertex must be incident to exaclty one edge in E'
-    - onto-PHP: all right vertices must be incident to some vertex
-    - matching: E' must be a perfect matching between L and R
+    - PHP(G):  each :math:`u \\in L` can fly to multiple :math:`v \\in R`
+    - FPHP(G): each :math:`u \\in L` can fly to exactly one :math:`v \\in R`
+    - onto-PHP: each :math:`v \\in R` must get a pigeon
+    - matching: :math:`E'` must be a perfect matching
+
+    Parameter `G` can be either of type
+    :py:class:`cnfgen.graphs.BipartiteGraph` or of type
+    a :py:class:`networkx.graph`. In the latter case it must be
+    a correct representation of a bipartite graph according to
+    [NetworkX]_.
 
     Parameters
     ----------
-    G : cnfgen.graphs.BipartiteGraph
-        the underlying bipartite
+    G : :py:class:`cnfgen.graphs.BipartiteGraph` or :py:class:`networkx.graph`
+        the bipartite graph describing the possible pairings
     functional: bool
-        add clauses to enforce at most one edge per left vertex
+        enforce at most one edge per left vertex
     onto: bool
-        add clauses to enforce that any right vertex has one incident edge
+        enforce that any right vertex has one incident edge
+
+    Returns
+    -------
+    :py:class:`cnfgen.formula.cnf.CNF`
+         A CNF formulas encoding the graph pigeonhole principle.
+
+    Raises
+    ------
+    TypeError
+        `G` is neither a :py:class:`cnfgen.graphs.BipartiteGraph` nor a :py:class:`networkx.graph`
+    ValueError
+        `G` is not a proper bipartite graph
+
+    References
+    ----------
+    [Networkx] https://networkx.org/documentation/networkx-2.5/reference/algorithms/generated/networkx.algorithms.bipartite.basic.is_bipartite.html
+
     """
     G = BipartiteGraph.normalize(G, 'G')
     if functional:
@@ -129,14 +198,6 @@ def GraphPigeonholePrinciple(G, functional=False, onto=False):
 
     description = "{0} formula on {1}".format(formula_name, G.name)
     F = CNF(description=description)
-
-    if not isinstance(G, BaseBipartiteGraph):
-        G = BipartiteGraph.from_networkx(G)
-
-
-    if not G.is_bipartite():
-        raise ValueError("The pattern graph must be bipartite")
-
     p = F.new_sparse_mapping(G, label='p_{{{},{}}}')
     F.force_complete_mapping(p)
 
@@ -154,16 +215,35 @@ def GraphPigeonholePrinciple(G, functional=False, onto=False):
 def BinaryPigeonholePrinciple(pigeons, holes):
     """Binary Pigeonhole Principle CNF formula
 
-    The pigeonhole principle claims that no M pigeons can sit in
-    N pigeonholes without collision if M>N. This formula encodes the
-    principle using binary strings to identify the holes.
+    The binary pigeonhole principle CNF formula claims that that it is
+    possibile to place :math:`m` pigeons into :math:`n` holes without
+    collisions. This is clearly impossible whenever :math:`m > n`.
+
+    This formula encodes the principle using binary strings to
+    identify the holes. Let :math:`b` the smallest number of bits
+    sufficient to encode in binary all values from :math:`0` to
+    :math:`n-1`. For every :math:`i \\in [m]` there are :math:`b`
+    dedicated boolean variables encoding the hole where the pigeon
+    :math:`i` flies.
 
     Parameters
     ----------
-    pigeon : int
-       number of pigeons
-    holes : int
-       number of holes
+    pigeon: int
+        number of pigeons (must be >=0).
+    hole: int
+        number of holes (must be >=0).
+
+    Returns
+    -------
+    :py:class:`cnfgen.formula.cnf.CNF`
+         A CNF formulas encoding binary the pigeonhole principle.
+
+    Raises
+    ------
+    TypeError
+        If either `pigeons` or `holes` is not an integer number.
+    ValueError
+        If either `pigeons` or `holes` is less than zero.
     """
     non_negative_int(pigeons, 'pigeon')
     non_negative_int(holes, 'holes')
@@ -181,27 +261,53 @@ def BinaryPigeonholePrinciple(pigeons, holes):
 def RelativizedPigeonholePrinciple(pigeons, resting_places, holes):
     """Relativized Pigeonhole Principle CNF formula
 
+    This formula is a variant of the pigeonhole principle. We consider
+    :math:`m` pigeons, :math:`r` resting places, and :math:`n` holes.
     The formula claims that pigeons can fly into holes with no
     conflicts, with the additional caveat that before landing in
     a hole, each pigeon stops in some resting place. No two pigeons
     can rest in the same place.
 
-    A description can be found in [1]_
+    The formula is encoded with variables :math:`p_{i,j}` for :math:`i
+    \\in [m]` and :math:`k \\in [t]`, and variables :math:`q_{k,j}`
+    for :math:`k \\in [t]` and :math:`j \\in [n]`. The intended
+    meaning is that :math:`p_{i,k}` is `True` when pigeon :math:`i`
+    rests into a resting place :math:`k`, and :math:`q_{k,j}` is
+    `True` when the pigeon resting at :math:`k` flies into hole
+    :math:`j`. The formula is only satisfiable when :math:`m \\leq
+    t \\leq n`.
+
+    A more complete description of the formula can be found in
+    [ALN16]_
 
     Parameters
     ----------
     pigeons: int
-        number of pigeons
+        number of pigeons (must be >=0).
     resting_places: int
-        number of resting places
+        number of resting places (must be >=0).
     holes: int
-        number of holes
+        number of holes (must be >=0).
+
+    Returns
+    -------
+    :py:class:`cnfgen.formula.cnf.CNF`
+         A CNF formulas encoding the pigeonhole principle.
+
+    Raises
+    ------
+    TypeError
+        If either `pigeons`, `resting_places`, or `holes` is not an integer
+        number.
+    ValueError
+        If either `pigeons`, `resting_places`, or `holes` is less than zero.
 
     References
     ----------
-    .. [1] A. Atserias, M. Lauria and J. Nordström
-           Narrow Proofs May Be Maximally Long
-           IEEE Conference on Computational Complexity 2014
+    .. [ALN16] Atserias, A., Lauria, M., & Nordstr\"om, Jakob (2016).
+               Narrow Proofs May Be Maximally Long. ACM Transactions on
+               Computational Logic, 17(3), 19–1–19–30.
+               http://dx.doi.org/10.1145/2898435
 
     """
     non_negative_int(pigeons, 'pigeon')
@@ -218,7 +324,7 @@ def RelativizedPigeonholePrinciple(pigeons, resting_places, holes):
     W = holes
     p = rphp.new_mapping(U, V, label='p_{{{0},{1}}}')
     q = rphp.new_mapping(V, W, label='q_{{{0},{1}}}')
-    if V>0:
+    if V > 0:
         r = rphp.new_block(V, label='r_{{{0}}}')
 
     # NOTE: the order of ranges in the products are chosen such that related clauses appear after each other
