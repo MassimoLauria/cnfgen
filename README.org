@@ -2,7 +2,7 @@
 #+OPTIONS:     H:2 num:nil toc:nil \n:nil @:t ::t |:t ^:t f:t TeX:t
 
 
-* CNFgen formula generator and tools
+* CNFgen formula generator
 
 
 #+begin_html
@@ -23,13 +23,16 @@
    </a>
 #+end_html
 
-  /CNFgen/ produces  benchmark propositional formulas in  DIMACS format,
+  /CNFgen/ produces benchmark propositional formulas in DIMACS format,
   ready to  be fed to SAT  solvers. These benchmarks come  mostly from
   research in  Proof Complexity  (e.g. pigeonhole  principle, ordering
-  principle, k-clique,  …). Many  of these formulas  encode structured
+  principle,  k-clique,…). Many  of these  formulas encode  structured
   combinatorial  problems well  known  to be  challenging for  certain
   SAT solvers.
 
+  Homepage of the project at http://massimolauria.net/cnfgen/
+
+  
 ** Basic usage
 
    In most cases  it is sufficient to invoke =cnfgen=  giving the name
@@ -41,21 +44,27 @@
 
    : cnfgen php 10 7
 
-   gives the Pigeonhole Principle from 10 pigeons and 7 holes.
+   gives the Pigeonhole Principle from 10  pigeons and 7 holes. To get
+   more help you can type
 
-   To get help for =cnfgen= or for the parameters of a formula you can type
-
-   : cnfgen --help
-   : cnfgen <formula> --help
+   : cnfgen --help                # available formulas / help for the tool
+   : cnfgen <formula> --help      # help the the specific formula
+   : cnfgen --tutorial            # a quick tutorial 
    
-** Formula transformations
+** Lifting/transformations/post-processing
 
    It is possible to apply one  or more transformations to the formula
    by  appending one  or more  =-T <transformation>  <params>= to  the
    command line. For example
    
-   : cnfgen php 10 7 -T shuffle
-      
+   : cnfgen op 15 -T shuffle
+
+   produces  the  ordering  principle  formula on  15  elements,  with
+   a random shuffle of variables,  polarities and clauses. To list the
+   available transformations you can use
+
+   : cnfgen --help
+   
 ** Installation
    
    You can install CNFgen from  [[http://pypi.python.org][Python Package Index]], together with all
