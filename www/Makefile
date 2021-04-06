@@ -3,7 +3,7 @@
 ########### CONFIGURATION ########################
 PROJECT="cnfgen"
 REMOTE="massimo@massimolauria.net:/srv/www/massimolauria.net/cnfgen/"
-SOURCES=index.org transformation.org background.org graphformats.org
+SOURCES=index.org benchmarks.org transformation.org background.org graphformats.org
 EMACS=emacs
 
 
@@ -32,13 +32,10 @@ clean:
 view: ${TARGET}
 	@${BROWSE} index.html
 
-%.html: %.org 
+%.html: %.org
 	@$(EMACS) -Q -batch --visit=$< -l setup.el -f export-org-file >/dev/null
 
 deploy: all
 	rsync -rvz --chmod='u=rwX,go=rX' . $(REMOTE)
 
 .PHONY: all clean view version deploy
-
-
-

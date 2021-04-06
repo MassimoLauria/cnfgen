@@ -48,7 +48,7 @@
    more help you can type
 
    : cnfgen --help                # available formulas / help for the tool
-   : cnfgen <formula> --help      # help the the specific formula
+   : cnfgen <formula> --help      # help about a specific formula
    : cnfgen --tutorial            # a quick tutorial 
    
 ** Lifting/transformations/post-processing
