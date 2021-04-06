@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+"""Implementation of the Pitfall formula by Marc Vinyals, according to
+the paper [MV20].
+
+.. [MV20] Marc Vinyals.
+          Hard examples for common variable decision heuristics.
+          In Proceedings of the 34th AAAI Conference on Artificial
+          Intelligence (AAAI) 2020, pp. 1652–1659.
+          https://doi.org/10.1609/aaai.v34i02.5527
+"""
+
 
 from itertools import combinations
 from itertools import product
@@ -51,13 +61,15 @@ def PitfallFormula(v, d, ny, nz, k):
     Raises
     ------
     ValueError
-        When `v < d` or `d*v` is odd there is no d-regular graph on `v` verices.
+        The is no d-regular graph when `v < d` or `d*v` are odd.
 
     References
     ----------
     .. [1] Marc Vinyals.
            Hard examples for common variable decision heuristics.
-           In, AAAI 2020 (pp. 1652–1659).
+           In Proceedings of the 34th AAAI Conference on Artificial
+           Intelligence (AAAI) 2020, pp. 1652–1659.
+           https://doi.org/10.1609/aaai.v34i02.5527
     """
     positive_int(v, 'v')
     positive_int(d, 'd')

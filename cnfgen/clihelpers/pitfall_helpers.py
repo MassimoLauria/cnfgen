@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Formula Helpers for the Pitfall formula
 
-Copyright (C) 2012-2020 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012-2021 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -26,8 +26,7 @@ usage_string = """Pitfall Formula
     being assigned, and safety variables, which prevent the gadget
     from breaking even if a few other variables are assigned.
 
-    For more details, see the corresponding paper (Marc Vinyals, AAAI
-    2020).
+    For more details, see the corresponding paper by Marc Vinyals (AAAI 2020).
 
 positional arguments:
  {0} v,d,ny,nz,k

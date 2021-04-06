@@ -45,7 +45,7 @@ a sorted fashion.
   vertices  with higher  id. Therefore  the ids  of the  vertices must
   represent a topological  order of the DAG. In  particular a directed
   graph  maybe acyclic  but yet  not considered  a dag  in ``CNFgen``.
-  The method :py:method:`cnfgen.DirectedGraph.is_dag`  checks that the
+  The method :py:meth:`cnfgen.DirectedGraph.is_dag`  checks that the
   directed graph is indeed a DAG according to this standard.
 - :py:class:`cnfgen.BipartiteGraph` represents  graph of ``bipartite``
   type. The vertices are divided in two parts (left and right) and the
