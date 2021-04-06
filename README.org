@@ -23,25 +23,39 @@
    </a>
 #+end_html
 
-  This repository provides the command
+  /CNFgen/ produces  benchmark propositional formulas in  DIMACS format,
+  ready to  be fed to SAT  solvers. These benchmarks come  mostly from
+  research in  Proof Complexity  (e.g. pigeonhole  principle, ordering
+  principle, k-clique,  …). Many  of these formulas  encode structured
+  combinatorial  problems well  known  to be  challenging for  certain
+  SAT solvers.
 
-  - =cnfgen= formula generator;
+** Basic usage
 
-  and  the  following  python  script, designed  to  operate  from/to
-  dimacs CNFs:
-  
-  - =cnfshuffle= random shuffler;
+   In most cases  it is sufficient to invoke =cnfgen=  giving the name
+   of the formula family and the corresponding parameters.
 
-  You  can get  a brief  help on  how to  use these  tools by  running
-  =<program_name> --help= from the command line.
+   : cnfgen <formula> <param1> <param2> ...
 
-  Run =cnfgen --help= to get a list of the implemented formula families.
-  To get  more specific information  on one  class of formula  use the
-  command
+   For example 
 
-  : cnfgen <formula_type> --help
+   : cnfgen php 10 7
 
+   gives the Pigeonhole Principle from 10 pigeons and 7 holes.
 
+   To get help for =cnfgen= or for the parameters of a formula you can type
+
+   : cnfgen --help
+   : cnfgen <formula> --help
+   
+** Formula transformations
+
+   It is possible to apply one  or more transformations to the formula
+   by  appending one  or more  =-T <transformation>  <params>= to  the
+   command line. For example
+   
+   : cnfgen php 10 7 -T shuffle
+      
 ** Installation
    
    You can install CNFgen from  [[http://pypi.python.org][Python Package Index]], together with all
@@ -73,7 +87,7 @@
 
 ** Contribution 
 
-   Please contribute to the code by sending pull requests. 
+   Please contribute to the code by sending pull requests.
 
 
-Copyright 2012-2020 © Massimo Lauria ([[mailto:massimo.lauria@uniroma1.it][massimo.lauria@uniroma1.it]])
+Copyright 2012-2021 © Massimo Lauria ([[mailto:massimo.lauria@uniroma1.it][massimo.lauria@uniroma1.it]])
