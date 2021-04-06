@@ -94,14 +94,24 @@ Create a pigeonhole principle formula first, then applies the
 'shuffle' transformation and finally the 'xor' transformation with
 parameter 3.
 
-Some formulas are built on top of graph structures, passed as input
-files or randomly generated. The command lines
+Tseitin formula are class implemented in CNFgen. The command
+
+    {0} tseitin 100
+
+Produces an unsatisfiable Tseitin formula on a 4-regular random graph
+of 100 vertices. To have additional control on the formula you can
+also use the command line
+
+    {0} tseitin <charge> <graph spec>
+
+For example:
 
     {0} tseitin randomodd graph.dot
-    {0} tseitin random gnd 10 4
+    {0} tseitin random gnd 10 6
 
-build Tseitin formulas, respectively, over a graph passed as a DOT
-file, and over a random 4-regular graph of 10 vertices.
+gives two Tseitin formulas. The first has random charges of odd parity
+over the encoded in the file 'graph.dot'; the second has random
+changes over a random 6-regular graph of 10 vertices.
 
 For the full list of formulas and formula transformations type one of
 
