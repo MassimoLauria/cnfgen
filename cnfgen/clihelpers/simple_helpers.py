@@ -95,12 +95,12 @@ class AND(FormulaHelper):
         return F
 
 
-class EMPTY(FormulaHelper):
+class TRUE(FormulaHelper):
     """Command line helper for the empty CNF (no clauses)
     """
 
-    name = 'empty'
-    description = 'empty CNF formula'
+    name = 'true'
+    description = 'CNF formula with no clauses'
 
     @staticmethod
     def setup_command_line(parser):
@@ -115,15 +115,15 @@ class EMPTY(FormulaHelper):
         args : ignored
              command line options
         """
-        return CNF()
+        return CNF(description='Formula with no clauses')
 
 
-class EMPTY_CLAUSE(FormulaHelper):
+class FALSE(FormulaHelper):
     """Command line helper for the contradiction (one empty clause)
     """
 
-    name = 'emptyclause'
-    description = 'one empty clause'
+    name = 'false'
+    description = 'CNF with one empty clause'
 
     @staticmethod
     def setup_command_line(parser):
@@ -138,7 +138,7 @@ class EMPTY_CLAUSE(FormulaHelper):
         args : ignored
              command line options
         """
-        return CNF([[]])
+        return CNF([[]], description='Formula with one empty clause')
 
 
 class RandCmdHelper(FormulaHelper):
