@@ -27,13 +27,12 @@ from cnfgen.clitools import make_graph_doc
 from .formula_helpers import FormulaHelper
 import argparse
 
-help_usage = """{0} [-h] [--functional] [--onto] <pigeon> <holes>
-
-usage variants:
+help_usage = """
  {0} N               --- N+1 pigeons fly to N holes
  {0} M N             --- M pigeons fly to N holes
  {0} M N D           --- M pigeons fly to N holes, pigeon left degree D
- {0} <bipartite>     --- bipartite graph specification
+ {0} <bipartite>     --- pigeons can fly to certain holes with <bipartite>
+ {1}                     (see 'cnfgen --help-bipartite')
 """
 
 help_description = """Pigeonhole principle claims that P pigeons can fly to H holes with
@@ -121,12 +120,13 @@ class PHPCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.usage = help_usage.format(parser.prog)
+        parser.usage = help_usage.format(parser.prog,
+                                         " " * len(parser.prog))
         parser.description = help_description.format(parser.prog,
                                                      " " * len(parser.prog))
 
-        parser.epilog = "Parameters <bipartite>:" + make_graph_doc(
-            'bipartite', parser.prog)
+        # parser.epilog = "Parameters <bipartite>:" + make_graph_doc(
+        #     'bipartite', parser.prog)
 
         parser.add_argument('pigeonholes',
                             action=PHPArgs,
@@ -274,15 +274,15 @@ vdw_help_usage = """
 """
 
 vdw_help_description = """A van der Waerden formula claims that N is smaller
-than the van der Waerden number vdw(k1,k2,...,kt), which is the smallest prefix 
+than the van der Waerden number vdw(k1,k2,...,kt), which is the smallest prefix
 of the integers that cannot be t-colored without some arithmetic progression of
-(1) color i, (2) length ki. 
+(1) color i, (2) length ki.
 
 Formula is satisfiable iff there is a t-coloring of 1...N with no such
 arithmetic progressions.
 
 positional arguments:
-  N           interval 1...N to be colored     
+  N           interval 1...N to be colored
   k1 k2 ...   lengths of the forbidden arith. progressions
 """
 
