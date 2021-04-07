@@ -46,12 +46,12 @@ SAT solvers.
 
   - =cnfgen= generator for [[file:background.org][CNF formula]] benchmarks,
   - several formula families (a list [[file:benchmarks.org][here]])
-  - several formula transformations (a list [[file:transformation.org][here]])
   - output in DIMACS and LaTeX formats,
+  - several formula transformations (a list [[file:transformation.org][here]])
+  - CNF based on graph structures (see the supported [[file:graphformats.org][graph formats]]).
   - behind-the-scene integration with many SAT solvers,
   - the =cnfgen=  python library ([[http://cnfgen.readthedocs.io/en/latest/][read  the docs]]) for  more flexible
     CNF generation and manipulation,
-  - CNF based on graph structures (see the supported [[file:graphformats.org][graph formats]]).
 
 * Installation
    
