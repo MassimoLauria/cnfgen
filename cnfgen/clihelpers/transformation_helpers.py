@@ -55,24 +55,39 @@ class ShuffleCmd(TransformationHelper):
 
     @staticmethod
     def setup_command_line(parser):
+
+        parser.usage="""usage:
+ {0} [-p] [-v] [-c]""".format(parser.prog)
+
+        parser.description= """
+
+Randomly reorder the formula, shuffling the variables, the clauses and
+flipping the polarity of literal.
+
+optional arguments:
+  --no-polarity-flips, -p
+                        Suppress polarity flips (default: active)
+  --no-variables-permutation, -v
+                        Suppress variable permutations (default: active)
+  --no-clauses-permutation, -c
+                        Suppress clauses permutations (default: active)
+"""
+
         parser.add_argument('--no-polarity-flips',
                             '-p',
                             action='store_true',
                             default=False,
-                            dest='no_polarity_flips',
-                            help="No polarity flips")
+                            dest='no_polarity_flips')
         parser.add_argument('--no-variables-permutation',
                             '-v',
                             action='store_true',
                             default=False,
-                            dest='no_variables_permutation',
-                            help="No permutation of variables")
+                            dest='no_variables_permutation')
         parser.add_argument('--no-clauses-permutation',
                             '-c',
                             action='store_true',
                             default=False,
-                            dest='no_clauses_permutation',
-                            help="No permutation of clauses")
+                            dest='no_clauses_permutation')
 
     @staticmethod
     def transform_cnf(F, args):
@@ -271,7 +286,6 @@ class ExactlyKSubstitutionCmd(TransformationHelper):
 
 class AnythingButKSubstitutionCmd(TransformationHelper):
     name = 'anybut'
-    description = 'substitute x with x1 + x2 + ... + xN != K'
 
     @staticmethod
     def setup_command_line(parser):
@@ -311,11 +325,11 @@ class FormulaLiftingCmd(TransformationHelper):
 
 class FlipCmd(TransformationHelper):
     name = 'flip'
-    description = 'negate all variables in the formula'
 
     @staticmethod
     def setup_command_line(parser):
-        pass
+        parser.usage = "usage:\n {0}\n".format(parser.prog)
+        parser.description ="Inverts the polarity of all literals in the formula."
 
     @staticmethod
     def transform_cnf(F, args):
@@ -325,17 +339,17 @@ class FlipCmd(TransformationHelper):
 
 class XorCompressionCmd(TransformationHelper):
     name = 'xorcomp'
-    description = 'variable compression using XOR'
 
     @staticmethod
     def setup_command_line(parser):
 
-        parser.usage = """
+        parser.usage = """usage:
  {0} N
  {0} N d
  {0} <bipartite>""".format(parser.prog)
 
-        parser.description = """Variable compression: each variable in the original formula is
+        parser.description =\
+"""Variable compression: each variable in the original formula is
 substituted with the XOR of d members of a set of N new variables.
 Alternatively you can use
 
@@ -384,17 +398,17 @@ positional arguments:
 
 class MajCompressionCmd(TransformationHelper):
     name = 'majcomp'
-    description = 'variable compression using Majority'
 
     @staticmethod
     def setup_command_line(parser):
 
-        parser.usage = """
+        parser.usage = """usage:
  {0} N
  {0} N d
  {0} <bipartite>""".format(parser.prog)
 
-        parser.description = """Variable compression: each variable in the original formula is
+        parser.description =\
+"""Variable compression: each variable in the original formula is
 substituted with the majority of d members of a set of N new
 variables. Alternatively you can use
 

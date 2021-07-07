@@ -156,7 +156,6 @@ class GIsoCmdHelper(FormulaHelper):
     """Command line helper for Graph Isomorphism formula
     """
     name = 'iso'
-    description = 'graph isomorphism/automorphism formula'
 
     @staticmethod
     def setup_command_line(parser):
@@ -165,7 +164,7 @@ class GIsoCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.usage = '{} [-h] G [-e G2]'.format(parser.prog)
+        parser.usage = 'usage:\n {} [-h] G [-e G2]'.format(parser.prog)
         parser.description = iso_description.format(parser.prog)
 
         parser.add_argument(

@@ -57,10 +57,10 @@ from cnfgen.clitools.graph_docs import make_graph_doc
 # Help strings
 USAGE_STRING = """usage:
  cnfgen [-h] [-V] [--tutorial] [...options...]
-              <formula> <args>
-              [-T <transformation> <args>]
-              [-T <transformation> <args>]
-              ..."""
+        <formula> <args>
+        [-T <transformation> <args>]
+        [-T <transformation> <args>]
+        ..."""
 
 DESCRIPTION_STRING = """example:
  cnfgen php 100 40       --- Pigeonhole principle 100 pigeons 40 holes (unsat)
@@ -246,16 +246,14 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     """
 
     # First we setup the parser for transformation command lines
-    t_parser = CLIParser(add_help=False)
-
+    t_parser = CLIParser(prog=progname,
+                         usage=USAGE_STRING,
+                         description=DESCRIPTION_STRING)
     t_subparsers = t_parser.add_subparsers(
         prog=progname + " <formula> <args> -T",
-        title="Available formula transformation",
-        metavar="<transformation>")
+        metavar='<transformation>')
     for sc in thelpers:
-        p = t_subparsers.add_parser(sc.name,
-                                    help=sc.description,
-                                    formatter_class=CLIHelpFormatter)
+        p = t_subparsers.add_parser(sc.name)
         sc.setup_command_line(p)
         sc.subparser = p
         p.set_defaults(transformation=sc)
@@ -263,8 +261,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     # now we setup the main parser for the formula generation command
     parser = CLIParser(prog=progname,
                        usage=USAGE_STRING,
-                       description=DESCRIPTION_STRING,
-                       formatter_class=CLIHelpFormatter)
+                       description=DESCRIPTION_STRING)
 
     def print_help(string):
         class _PrintHelp(argparse.Action):
@@ -289,10 +286,10 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     parser.add_argument(
         '--help-bipartite',
         nargs=0,
-        action=print_help(make_graph_doc('bipartite',progname)))
+        action=print_help(make_graph_doc('bipartite', progname)))
     parser.add_argument('--help-dag',
                         nargs=0,
-                        action=print_help(make_graph_doc('dag',progname)))
+                        action=print_help(make_graph_doc('dag', progname)))
     parser.add_argument(
         '--output',
         '-o',
@@ -331,12 +328,9 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
 
     # setup each formula command parser
     subparsers = parser.add_subparsers(prog=progname,
-                                       metavar='<formula>',
-                                       help=argparse.SUPPRESS)
+                                       metavar='<formula>')
     for sc in fhelpers:
-        p = subparsers.add_parser(sc.name,
-                                  help=sc.description,
-                                  formatter_class=CLIHelpFormatter)
+        p = subparsers.add_parser(sc.name)
         sc.setup_command_line(p)
         sc.subparser = p
         p.set_defaults(generator=sc)

@@ -53,6 +53,10 @@ examples:
  {0} regular 12 8 4  --- 12 pigeons and 8 holes, each pigeon has
  {1}                     and exactly 4 outgoing edges, each hole has
  {1}                     exactly 6 incoming edges (unsat)
+
+optional arguments:
+    --functional         each pigeon sits in at most one hole
+    --onto               every hole has a sitting pigeon
 """
 
 

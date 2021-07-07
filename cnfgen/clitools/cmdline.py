@@ -218,6 +218,8 @@ exception, instead of calling exit.
             msg = '%(value)r is an invalid choice.\n\nChoose from \n   %(choices)s'
             raise argparse.ArgumentError(action, msg % args)
 
+    def _get_formatter(self):
+        return CLIHelpFormatter(prog=self.prog)
 
 def positive_int(value):
     errmsg = "{} was supposed to be a positive integer".format(value)
