@@ -193,14 +193,30 @@ exception, instead of calling exit.
             errstr.append(self.usage)
             errstr.append("")
 
-        if self.description is not None:
-            errstr.append(self.description)
-            errstr.append("")
-
         errstr.append("See '{0} -h' or '{0} --help' for more info.".format(
             self.prog))
 
         raise CLIError("\n".join(errstr))
+
+    def format_usage(self):
+        formatter = self._get_formatter()
+        formatter.add_text(self.usage)
+        return formatter.format_help()
+
+    def format_help(self):
+        formatter = self._get_formatter()
+        formatter.add_text(self.usage)
+        formatter.add_text(self.description)
+        return formatter.format_help()
+
+
+    def _check_value(self, action, value):
+        # converted value must be one of the choices (if specified)
+        if action.choices is not None and value not in action.choices:
+            args = {'value': value,
+                    'choices': '\n   '.join(map(repr, action.choices))}
+            msg = '%(value)r is an invalid choice.\n\nChoose from \n   %(choices)s'
+            raise argparse.ArgumentError(action, msg % args)
 
 
 def positive_int(value):

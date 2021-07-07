@@ -55,40 +55,124 @@ from cnfgen.clitools.graph_docs import make_graph_doc
 #################################################################
 
 # Help strings
-USAGE_STRING = """{} [-h] [-V] [--tutorial] [...options...]
+USAGE_STRING = """usage:
+ cnfgen [-h] [-V] [--tutorial] [...options...]
               <formula> <args>
               [-T <transformation> <args>]
               [-T <transformation> <args>]
               ..."""
 
 DESCRIPTION_STRING = """example:
- {0} php 100 40         --- Pigeonhole principle 100 pigeons 40 holes (unsat)
- {0} op  14             --- Ordering principle on 14 elements (unsat)
- {0} randkcnf 3 10 5    --- Random 3-CNF with 10 vars and 5 clauses
+ cnfgen php 100 40       --- Pigeonhole principle 100 pigeons 40 holes (unsat)
+ cnfgen op  14           --- Ordering principle on 14 elements (unsat)
+ cnfgen randkcnf 3 10 5  --- Random 3-CNF with 10 vars and 5 clauses
 
 tutorial:
- {0} --tutorial         --- show a brief tutorial on CNFgen
+ cnfgen --tutorial       --- show a brief tutorial on CNFgen
 
+optional arguments:
+  -h, --help            show this help message and exit
+  -V, --version         show program's version number and exit
+  --tutorial            show a brief tutorial on CNFgen
+  --help-graph          help on specifying simple graphs on the command line
+  --help-bipartite      help on specifying bipartite graphs on the command line
+  --help-dag            help on specifying DAGs on the command line
+  --output <output>, -o <output>
+                        Save the formula to <output>.
+                        Setting '<output>' to '-' sends the
+                        formula to standard output. (default: -)
+  --output-format {latex,dimacs}, -of {latex,dimacs}
+                        Output format of the formulas. 'latex' is
+                        convenient to insert formulas into papers, and
+                        'dimacs' is the format used by sat solvers.
+                        (default: dimacs)
+  --latex, -l           Outputs formula in 'latex' format
+  --seed <seed>, -S <seed>
+                        Seed for any random process in the program.
+                        (default: current time)
+
+  --verbose, -v         Output formula header and comments.
+  --quiet, -q           Output just the formula with no header.
+  --varnames            Output map from variable indices to names.
+
+Choices for <formula>:
+    and                 a single conjunction
+    bphp                binary pigeonhole principle
+    cliquecoloring      There is a graph G with a k-clique and a c-coloring
+    count               counting principle
+    cpls                Thapen's Coloured Polynomial Local Search formula
+    dimacs              Read dimacs file
+    domset              k-Dominating set
+    ec                  even coloring formulas
+    false               CNF with one empty clause
+    iso                 graph isomorphism/automorphism formula
+    kclique             k clique formula
+    kcliquebin          Binary k clique formula
+    kcolor              k-colorability formula
+    matching            perfect matching principle
+    op                  ordering principle
+    or                  a single disjunction
+    parity              parity principle
+    peb                 pebbling formula
+    php                 pigeonhole principle
+    pitfall             Pitfall formula
+    ptn                 Bicoloring of N with no monochromatic
+                        Pythagorean Triples
+    ram                 ramsey number principle
+    ramlb               unsat if G witnesses that r(k,s)>|V(G)|
+                        (i.e. G has neither a k-clique nor an s-stable)
+    randkcnf            random k-CNF
+    rphp                relativized pigeonhole principle
+    stone               stone formula (dense and sparse)
+    subgraph            subgraph formula
+    subsetcard          subset cardinality formulas
+    tiling              tiling formula
+    true                CNF formula with no clauses
+    tseitin             tseitin formula
+    vdw                 van der Waerden principle
+
+Choices for <transformation>:
+    anybut          substitute x with x1 + x2 + ... + xN != K
+    atleast         substitute x with x1 + x2 + ... + xN >= K
+    atmost          substitute x with x1 + x2 + ... + xN <= K
+    eq              substitute x with predicate x1==x2==...==xN
+                    (i.e. all equals)
+    exact           substitute x with x1 + x2 + ... + xN == K
+    flip            negate all variables in the formula
+    ite             substitute x with "if X then Y else Z"
+    lift            one dimensional lifting x -> x1 y1 OR ... OR xN yN,
+                    with y1 + ... + yN = 1
+    maj             substitute x with Majority(x1,x2,...,xN)
+    majcomp         variable compression using Majority
+    neq             substitute x with |{x1,x2,...,xN}|>1
+                    (i.e. not all equals)
+    none            no transformation
+    one             substitute x with x1 + x2 + ... + xN = 1
+    or              substitute variable x with OR(x1,x2,...,xN)
+    shuffle         Permute variables, clauses and/or
+                    polarity of literals at random
+    xor             substitute variable x with XOR(x1,x2,...,xN)
+    xorcomp         variable compression using XOR
 """
 
 TUTORIAL_STRING = """
                  CNFGEN TUTORIAL
 
-{0} builds CNF formulas mostly coming from proof complexity
+cnfgen builds CNF formulas mostly coming from proof complexity
 literature, to use as benchmark against SAT solvers. Basic usage is
 
-    {0} <formula> <arg1> <arg2> ...
+    cnfgen <formula> <arg1> <arg2> ...
 
 which builds a CNF from family <formula> with various parameters.
 For example a Pigeonhole principle formula from 5 to 4 pigeons can be
 build with command line
 
-    {0} php 5 4
+    cnfgen php 5 4
 
 Various transformations can be applied to the generated formula, one
 after the other. For example.
 
-    {0} php 5 4 -T shuffle -T xor 3
+    cnfgen php 5 4 -T shuffle -T xor 3
 
 Create a pigeonhole principle formula first, then applies the
 'shuffle' transformation and finally the 'xor' transformation with
@@ -96,18 +180,18 @@ parameter 3.
 
 Tseitin formula are class implemented in CNFgen. The command
 
-    {0} tseitin 100
+    cnfgen tseitin 100
 
 Produces an unsatisfiable Tseitin formula on a 4-regular random graph
 of 100 vertices. To have additional control on the formula you can
 also use the command line
 
-    {0} tseitin <charge> <graph spec>
+    cnfgen tseitin <charge> <graph spec>
 
 For example:
 
-    {0} tseitin randomodd graph.dot
-    {0} tseitin random gnd 10 6
+    cnfgen tseitin randomodd graph.dot
+    cnfgen tseitin random gnd 10 6
 
 gives two Tseitin formulas. The first has random charges of odd parity
 over the encoded in the file 'graph.dot'; the second has random
@@ -115,19 +199,19 @@ changes over a random 6-regular graph of 10 vertices.
 
 For the full list of formulas and formula transformations type one of
 
-    {0} -h
-    {0} --help
+    cnfgen -h
+    cnfgen --help
 
 For the help of a specific CNF family named <formula> type one of
 
-    {0} <formula> -h
-    {0} <formula> --help
+    cnfgen <formula> -h
+    cnfgen <formula> --help
 
 For the help of a specific formula transformation pick any CNF family
 <formula> and type one of
 
-    {0} <formula> <args> -T <transformation> -h
-    {0} <formula> <args> -T <transformation> --help
+    cnfgen <formula> <args> -T <transformation> -h
+    cnfgen <formula> <args> -T <transformation> --help
 
 where <transformation> is the name of the formula transformation to
 get the help for.
@@ -178,15 +262,15 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
 
     # now we setup the main parser for the formula generation command
     parser = CLIParser(prog=progname,
-                       usage=USAGE_STRING.format(progname),
-                       description=DESCRIPTION_STRING.format(progname),
+                       usage=USAGE_STRING,
+                       description=DESCRIPTION_STRING,
                        formatter_class=CLIHelpFormatter)
 
     def print_help(string):
         class _PrintHelp(argparse.Action):
             def __call__(self, parser, args, values, option_string=None):
                 with paginate_or_redirect_stdout(sys.stdout):
-                    print(string.format(progname))
+                    print(string)
                 sys.exit(os.EX_OK)
 
         return _PrintHelp
@@ -197,76 +281,58 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
                         version='{project} ({version})'.format(**info))
     parser.add_argument('--tutorial',
                         nargs=0,
-                        action=print_help(TUTORIAL_STRING),
-                        help="show a brief tutorial on CNFgen")
+                        action=print_help(TUTORIAL_STRING))
     parser.add_argument(
         '--help-graph',
         nargs=0,
-        action=print_help(make_graph_doc('simple', '{0} ...')),
-        help="how to specify simple graphs on the command line")
+        action=print_help(make_graph_doc('simple',progname)))
     parser.add_argument(
         '--help-bipartite',
         nargs=0,
-        action=print_help(make_graph_doc('bipartite', '{0} ...')),
-        help="how to specify bipartite graphs on the command line")
+        action=print_help(make_graph_doc('bipartite',progname)))
     parser.add_argument('--help-dag',
                         nargs=0,
-                        action=print_help(make_graph_doc('dag', '{0} ...')),
-                        help="how to specify DAGs on the command line")
+                        action=print_help(make_graph_doc('dag',progname)))
     parser.add_argument(
         '--output',
         '-o',
         type=argparse.FileType('w', encoding='utf-8'),
         metavar="<output>",
-        default='-',
-        help="""Save the formula to <output>. Setting '<output>' to '-' sends the
-                        formula to standard output. (default: -)
-                        """)
+        default='-')
     ofgroup = parser.add_mutually_exclusive_group()
     ofgroup.add_argument('--output-format',
                          '-of',
                          choices=['latex', 'dimacs'],
-                         default=None,
-                         help="""
-                        Output format of the formulas. 'latex' is
-                        convenient to insert formulas into papers, and
-                        'dimacs' is the format used by sat solvers.
-                        (default: dimacs)
-                        """)
+                         default=None)
     ofgroup.add_argument('--latex',
                          '-l',
                          dest='output_format',
                          action='store_const',
-                         const='latex',
-                         help="Outputs formula in 'latex' format")
+                         const='latex')
     parser.add_argument('--seed',
                         '-S',
                         metavar="<seed>",
                         default=None,
                         type=int,
-                        action='store',
-                        help="""Seed for any random process in the
-                        program. (default: current time)
-                        """)
+                        action='store')
     g = parser.add_mutually_exclusive_group()
     g.add_argument('--verbose',
                    '-v',
                    action='store_true',
-                   default=True,
-                   help="""Output formula header and comments.""")
+                   default=True)
     g.add_argument('--quiet',
                    '-q',
                    action='store_false',
-                   dest='verbose',
-                   help="""Output just the formula with no header.""")
+                   dest='verbose')
 
-    parser.add_argument('--varnames', action='store_true', default=False,
-                        help="Output map from variable indices to names.")
+    parser.add_argument('--varnames',
+                        action='store_true',
+                        default=False)
 
     # setup each formula command parser
     subparsers = parser.add_subparsers(prog=progname,
-                                       title="Available formula types",
-                                       metavar='<formula>')
+                                       metavar='<formula>',
+                                       help=argparse.SUPPRESS)
     for sc in fhelpers:
         p = subparsers.add_parser(sc.name,
                                   help=sc.description,
@@ -274,12 +340,6 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
         sc.setup_command_line(p)
         sc.subparser = p
         p.set_defaults(generator=sc)
-
-    # Attach the list of available transformations
-    # but without usage string
-    extension = t_parser.format_help().splitlines()
-    extension = "\n".join(extension[2:])
-    parser.epilog = extension
 
     return parser, t_parser
 
@@ -406,7 +466,7 @@ def cli(argv=None, mode='output'):
     if argv is None:
         argv = sys.argv
 
-    progname = os.path.basename(argv[0])
+    progname = "cnfgen"
 
     formula_helpers = get_formula_helpers()
     transformation_helpers = get_transformation_helpers()
