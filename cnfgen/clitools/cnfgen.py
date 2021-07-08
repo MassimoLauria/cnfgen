@@ -367,6 +367,7 @@ def parse_command_line(argv, fparser, tparser):
         else:
             cmd_chunks[-1].append(arg)
 
+
     generator_cmd = cmd_chunks[0][1:]
     transformation_cmds = cmd_chunks[1:]
 

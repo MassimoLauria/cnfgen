@@ -144,11 +144,16 @@ iso_description = """The formula takes one or two graphs as input.
  {0} G1           --- test if G1 has nontrivial automorphisms
  {0} G1 -e G2     --- test if G1 and G2 are isomorphic
 
+where G1 and G2 are simple graph (see 'cnfgen --help-graph')
+
 examples:
  {0} grid 3 3
  {0} complete 4 -e empty 4 plantclique 4
  {0} first.gml -e second.gml
  {0} gnm 10 5
+
+optiona arguments:
+  -h, --help               show this help message and exit
 """
 
 
@@ -164,19 +169,12 @@ class GIsoCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.usage = 'usage:\n {} [-h] G [-e G2]'.format(parser.prog)
+        parser.usage = 'usage:\n {} [-h] G1 [-e G2]'.format(parser.prog)
         parser.description = iso_description.format(parser.prog)
 
-        parser.add_argument(
-            'G',
-            help='a simple undirected graph (see \'cnfgen --help-graph\')',
-            action=ObtainSimpleGraph)
-        parser.add_argument(
-            '-e',
-            metavar='G2',
-            action=ObtainSimpleGraph,
-            help='another simple undirected graph (see \'cnfgen --help-graph\')'
-        )
+        parser.add_argument('G',action=ObtainSimpleGraph)
+        parser.add_argument('-e', metavar='G2',action=ObtainSimpleGraph)
+
 
     @staticmethod
     def build_cnf(args):
@@ -197,18 +195,25 @@ class KCliqueCmdHelper(FormulaHelper):
     @staticmethod
     def setup_command_line(parser):
         """Setup the command line options for k-clique formula
-
-        Arguments:
-        - `parser`: parser to load with options.
         """
-        parser.add_argument('k',
-                            type=int,
-                            action='store',
-                            help="size of the clique to be found")
-        parser.add_argument(
-            'G',
-            help='a simple undirected graph (see \'cnfgen --help-graph\')',
-            action=ObtainSimpleGraph)
+        parser.usage="usage:\n cnfgen kclique [-h] k G"
+
+        parser.description="""
+The formula is satiafiable if and only if graph G contains a clique of
+size at least k.
+
+positional arguments:
+  k                       size of the clique to be found
+  G                       a simple undirected graph (see 'cnfgen --help-graph')
+
+optional arguments:
+  -h, --help              show this help message and exit
+  --no-symmetry-breaking  do not break symmetries by enforcing the
+                          solution to be in increasing order (default: on)
+"""
+
+        parser.add_argument('k', type=int, action='store')
+        parser.add_argument('G', action=ObtainSimpleGraph)
         parser.add_argument('--no-symmetry-breaking',
                             action='store_false',
                             default=True,

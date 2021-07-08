@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Implementation of some Ordering principle helpers
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -17,13 +17,16 @@ from cnfgen.clitools import make_graph_from_spec, make_graph_doc
 
 from .formula_helpers import FormulaHelper
 
-help_usage = """{0} [-h] [--total] [--smart] 
-                 [--knuth2] [--knuth3] [--plant] N
+help_usage = """usage:
+ {0} [-h] [--total] [--smart]
+     [--knuth2] [--knuth3] [--plant] N
 
 usage variants:
  {0} N         --- ordering principle on domain of size N
- {0} N d       --- graph ordering principle on random d-regular graph with N vertices.
- {0} <graph>   --- graph ordering principle on <graph> (see 'cnfgen --help-graph')
+ {0} N d       --- graph ordering principle on
+                   random d-regular graph with N vertices.
+ {0} <graph>   --- graph ordering principle
+                   on <graph> (see 'cnfgen --help-graph')
 """
 
 help_description = """The ordering principle (OP) claims that a partially ordered set of
@@ -42,6 +45,15 @@ examples:
  {0} 100 4                 --- GOP on 4-regular graph of size 100
  {0} gnm 20 60             --- GOP on random graph with 20 vertices and 60 edges
  {0} file.dot --plant      --- GOP on graph in 'file.dot', satisfiable variant
+
+optional arguments:
+ --smart, -s               encode 'x<y' and 'x>y' using a single variable.
+                           Implies totality. (default: off)
+ --knuth2                  Donald E. Knuth variant, include transitivity axioms
+                           \"(i<j)(j<k)->(i,k)\" only for j>i,k (default: off)
+ --knuth3                  Donald E. Knuth variant, include transitivity axioms
+                           \"(i<j)(j<k)->(i,k)\" only for k>i,j (default: off)
+ --plant, -p               allow one minimum element (default: off)
 """
 
 
@@ -73,21 +85,17 @@ class OPCmdHelper(FormulaHelper):
             '--smart',
             '-s',
             default=False,
-            action='store_true',
-            help=
-            "encode 'x<y' and 'x>y' in a single variable (implies totality)")
+            action='store_true')
         g.add_argument(
             '--knuth2',
             action='store_const',
             dest='knuth',
-            const=2,
-            help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for j>i,k")
+            const=2)
         g.add_argument(
             '--knuth3',
             action='store_const',
             dest='knuth',
-            const=3,
-            help="transitivity axioms: \"(i<j)(j<k)->(i,k)\" only for k>i,j")
+            const=3)
         parser.add_argument(
             '--plant',
             '-p',

@@ -28,7 +28,6 @@ class DimacsCmdHelper(FormulaHelper):
     """Command line helper for the Pigeonhole principle CNF"""
 
     name = 'dimacs'
-    description = 'Read dimacs file'
 
     @staticmethod
     def setup_command_line(parser):
@@ -37,7 +36,7 @@ class DimacsCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.usage = "{} [-h] [<inputfile>]".format(parser.prog)
+        parser.usage = "usage:\n {} [-h] [<inputfile>]".format(parser.prog)
         parser.description = description_string.format(parser.prog)
         parser.add_argument('input',
                             nargs='?',
