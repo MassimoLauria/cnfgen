@@ -61,7 +61,7 @@ def EvenColoringFormula(G):
 
     The formula is defined on graphs where all vertices have even
     degree. The formula is satisfiable only on those graphs with an
-    even number of vertices in each connected component [1]_.
+    even number of edges in each connected component [1]_.
 
     Arguments
     ---------

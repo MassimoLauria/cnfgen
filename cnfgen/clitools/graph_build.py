@@ -37,8 +37,9 @@ def obtain_gnd(parsed):
         d = int(d)
         assert n > 0
         assert d > 0
+        assert n >= d
     except (TypeError, AssertionError, ValueError):
-        raise ValueError('\'gnd\' expects arguments N d with N>0, d>0')
+        raise ValueError('\'gnd\' expects arguments N d with N >= d > 0')
 
     if (n * d) % 2 == 1:
         raise ValueError('\'gnd\' expects arguments N d with even N * d')

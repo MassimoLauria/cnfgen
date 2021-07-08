@@ -13,7 +13,6 @@ class CPLSCmdHelper(FormulaHelper):
     """Command line helper for Thapen's size-width tradeoff formula"""
 
     name = 'cpls'
-    description = 'Thapen\'s Coloured Polynomial Local Search formula'
 
     @staticmethod
     def setup_command_line(parser):
@@ -22,20 +21,28 @@ class CPLSCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('a',
-                            metavar='<a>',
-                            type=positive_int,
-                            help="Number of levels")
-        parser.add_argument(
-            'b',
-            metavar='<b>',
-            type=positive_int,
-            help=
-            "Number of nodes per level in the graph (must be a power of two)")
-        parser.add_argument('c',
-                            metavar='<c>',
-                            type=int,
-                            help="Number of colours (must be a power of two)")
+        parser.usage = "usage:\n {0} [-h|--help] <a> <b> <c>".format(parser.prog)
+        parser.description = """ The formula is a propositional version of the coloured polynomial
+    local search principle (CPLS). A description can be found in [1].
+    The difference with the formula in the paper is that here unary
+    indices start from 1 instead of 0. Binary strings still counts
+    from 0, therefore the mappings f[i](x)=x is actually represented
+    in binary with the binary representation of x-1.
+
+    [1] N. Thapen (2016) Trade-offs between length and width in resolution.
+
+positional arguments:
+  <a>                     number of levels
+  <b>                     number of nodes per level (must be a power of two)
+  <c>                     number of colours (must be a power of two)
+
+optional arguments:
+  --help, -h            show this help message and exit
+"""
+
+        parser.add_argument('a', type=positive_int)
+        parser.add_argument('b', type=positive_int)
+        parser.add_argument('c', type=positive_int)
 
     @staticmethod
     def build_cnf(args):

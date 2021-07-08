@@ -65,7 +65,7 @@ class PMatchingCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.usage = "usage:\n {0} G".format(parser.prog)
+        parser.usage = "usage:\n {0} [-h|--help] G".format(parser.prog)
         parser.description = """The perfect matching principle claims that
 a graph G has a perfect matching.
 
@@ -86,7 +86,6 @@ class CountingCmdHelper(FormulaHelper):
     """Command line helper for Counting Principle formulas
     """
     name = 'count'
-    description = 'counting principle'
 
     @staticmethod
     def setup_command_line(parser):
@@ -95,7 +94,7 @@ class CountingCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.usage = "usage:\n {0} M p".format(parser.prog)
+        parser.usage = "usage:\n {0} [-h|--help] M p".format(parser.prog)
         parser.description = """The formula claims that a set of M elements can be partitioned in sets
 of size p each. This is of course possible only if p divides M.
 

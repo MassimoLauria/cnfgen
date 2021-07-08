@@ -22,7 +22,7 @@ def CPLSFormula(a, b, c):
 
     The formula is a propositional version of the coloured polynomial
     local search principle (CPLS). A description can be found in [1]_.
-    The difference with the formula in the paper is that here, unary
+    The difference with the formula in the paper is that here unary
     indices start from 1 instead of 0. Binary strings stil counts from
     0, therefore the mappings :math:`f[i](x)=x'` is actually
     represented in binary with the binary representation

@@ -62,7 +62,7 @@ def DominatingSet(G, d, alternative=False):
     F = CNF(description=description)
 
     # Create variables
-    V = G.number_of_nodes()
+    V = G.number_of_vertices()
     D = F.new_block(V, label='x_{{{0}}}')
     M = F.new_mapping(V, d)
 
@@ -90,7 +90,7 @@ def DominatingSet(G, d, alternative=False):
         for i in range(1, d + 1):
             for v in range(1,V+1):
                 F.add_clause([-M(v, i), D(v)])
-    for v in G.nodes():
+    for v in G.vertices():
         F.add_clause([-D(v)] + list(M(v, None)))
 
     # Every neighborhood must have a true D variable

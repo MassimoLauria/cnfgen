@@ -18,7 +18,7 @@ from cnfgen.clitools import make_graph_from_spec, make_graph_doc
 from .formula_helpers import FormulaHelper
 
 help_usage = """usage:
- {0} [-h] [--total] [--smart]
+ {0} [-h|--help] [--total] [--smart]
      [--knuth2] [--knuth3] [--plant] N
 
 usage variants:
@@ -47,6 +47,7 @@ examples:
  {0} file.dot --plant      --- GOP on graph in 'file.dot', satisfiable variant
 
 optional arguments:
+ --total, -t               the order must be total (default: off)
  --smart, -s               encode 'x<y' and 'x>y' using a single variable.
                            Implies totality. (default: off)
  --knuth2                  Donald E. Knuth variant, include transitivity axioms
@@ -54,6 +55,7 @@ optional arguments:
  --knuth3                  Donald E. Knuth variant, include transitivity axioms
                            \"(i<j)(j<k)->(i,k)\" only for k>i,j (default: off)
  --plant, -p               allow one minimum element (default: off)
+ --help, -h                show this help message and exit
 """
 
 
@@ -61,7 +63,6 @@ class OPCmdHelper(FormulaHelper):
     """Command line helper for Ordering principle formulas
     """
     name = 'op'
-    description = 'ordering principle'
 
     @staticmethod
     def setup_command_line(parser):
@@ -79,8 +80,7 @@ class OPCmdHelper(FormulaHelper):
         g.add_argument('--total',
                        '-t',
                        default=False,
-                       action='store_true',
-                       help="assume a total order")
+                       action='store_true')
         g.add_argument(
             '--smart',
             '-s',
@@ -112,10 +112,7 @@ class OPCmdHelper(FormulaHelper):
                               help="degree",
                               default=None)
         gopparser = CLIParser()
-        gopparser.add_argument('G',
-                               metavar="<graph>",
-                               action=ObtainSimpleGraph,
-                               help='a simple undirected graph')
+        gopparser.add_argument('G', action=ObtainSimpleGraph)
         opaction = compose_two_parsers(gtparser, gopparser)
         parser.add_argument('args',
                             action=opaction,

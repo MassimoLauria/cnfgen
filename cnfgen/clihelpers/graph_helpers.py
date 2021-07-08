@@ -21,7 +21,7 @@ from cnfgen.families.subgraph import CliqueFormula
 from cnfgen.families.subgraph import BinaryCliqueFormula
 from cnfgen.families.subgraph import RamseyWitnessFormula
 
-from cnfgen.clitools import ObtainSimpleGraph, positive_int, make_graph_doc
+from cnfgen.clitools import ObtainSimpleGraph, positive_int, nonnegative_int, make_graph_doc
 from cnfgen.clihelpers.formula_helpers import FormulaHelper
 
 
@@ -29,7 +29,6 @@ class KColorCmdHelper(FormulaHelper):
     """Command line helper for k-color formula
     """
     name = 'kcolor'
-    description = 'k-colorability formula'
 
     @staticmethod
     def setup_command_line(parser):
@@ -38,14 +37,23 @@ class KColorCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('k',
-                            type=positive_int,
-                            action='store',
-                            help="number of available colors")
-        parser.add_argument(
-            'G',
-            help='simple undirected graph (see \'cnfgen --help-graph\')',
-            action=ObtainSimpleGraph)
+        parser.usage = "usage:\n {0} [-h|--help] k G".format(parser.prog)
+
+        parser.description = """The formula encodes the fact that the graph G has a k-coloring.
+This means that it is possible to assign one among the k colors to
+that each vertex of the graph such that no two adjacent vertices get
+the same color.
+
+positional arguments:
+  k                       number of available colors
+  G                       a simple undirected graph (see 'cnfgen --help-graph')
+
+optional arguments:
+  --help, -h              show this help message and exit
+"""
+
+        parser.add_argument('k', type=positive_int, action='store')
+        parser.add_argument('G', action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -59,15 +67,30 @@ class KColorCmdHelper(FormulaHelper):
 
 class ECCmdHelper(FormulaHelper):
     name = 'ec'
-    description = 'even coloring formulas'
 
     @staticmethod
     def setup_command_line(parser):
 
-        parser.add_argument(
-            'G',
-            help='simple undirected graph (see \'cnfgen --help-graph\')',
-            action=ObtainSimpleGraph)
+        parser.usage = "usage:\n {0} [-h|--help] G".format(parser.prog)
+
+        parser.description = """The formula is defined on a graph G and claims that it is possible
+to split the edges of the graph in two parts, so that each vertex has
+an equal number of incident edges in each part.
+
+The formula is well defined as long as all vertices have even degree
+(i.e. each connected component has an Eulerian circuit). The formula
+is satisfiable if and only if there is an even number of edges in each
+connected component (i.e. each such circuit has even length).
+The formula originate from the paper 'Locality and Hard SAT-instances'
+by Klas Markstrom (2006).
+
+positional arguments:
+  G                       a simple undirected graph (see 'cnfgen --help-graph')
+
+optional arguments:
+  --help, -h              show this help message and exit
+"""
+        parser.add_argument('G', action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -78,7 +101,6 @@ class DominatingSetCmdHelper(FormulaHelper):
     """Command line helper for k-dominating set
     """
     name = 'domset'
-    description = 'k-Dominating set'
 
     @staticmethod
     def setup_command_line(parser):
@@ -87,19 +109,31 @@ class DominatingSetCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
+        parser.usage = """usage:
+ {0} [-h|--help] [-a|--alternative] d G""".format(parser.prog)
+
+        parser.description = """The formula encodes the fact that the graph G has a dominating set
+of size d. This means that it is possible to pick at most d vertices
+in G so that all remaining vertices have distance at most one
+from them.
+
+positional arguments:
+  d                       size of the dominating set
+  G                       a simple undirected graph (see 'cnfgen --help-graph')
+
+optional arguments:
+  --help, -h              show this help message and exit
+  --alternative, -a       produces a provably hard version (default: false)
+"""
         parser.add_argument('--alternative',
                             '-a',
                             action='store_true',
-                            default=False,
-                            help="produce the provably hard version")
+                            default=False)
         parser.add_argument('d',
-                            type=int,
-                            action='store',
-                            help="size of the dominating set")
+                            type=positive_int,
+                            action='store')
         parser.add_argument(
-            'G',
-            help='simple undirected graph (see \'cnfgen --help-graph\')',
-            action=ObtainSimpleGraph)
+            'G', action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -190,17 +224,16 @@ class KCliqueCmdHelper(FormulaHelper):
     """Command line helper for k-clique formula
     """
     name = 'kclique'
-    description = 'k clique formula'
 
     @staticmethod
     def setup_command_line(parser):
         """Setup the command line options for k-clique formula
         """
-        parser.usage="usage:\n cnfgen kclique [-h] k G"
+        parser.usage = "usage:\n cnfgen kclique [-h|--help] k G"
 
-        parser.description="""
-The formula is satiafiable if and only if graph G contains a clique of
-size at least k.
+        parser.description = """The formula is satiafiable if and only if graph G contains
+a clique of size at least k, i.e. a set of k distinct vertices so that
+every pair of them are connected by an edge.
 
 positional arguments:
   k                       size of the clique to be found
@@ -212,7 +245,7 @@ optional arguments:
                           solution to be in increasing order (default: on)
 """
 
-        parser.add_argument('k', type=int, action='store')
+        parser.add_argument('k', type=nonnegative_int, action='store')
         parser.add_argument('G', action=ObtainSimpleGraph)
         parser.add_argument('--no-symmetry-breaking',
                             action='store_false',
@@ -233,7 +266,6 @@ class BinaryKCliqueCmdHelper(FormulaHelper):
     """Command line helper for k-clique formula
     """
     name = 'kcliquebin'
-    description = 'Binary k clique formula'
 
     @staticmethod
     def setup_command_line(parser):
@@ -243,14 +275,24 @@ class BinaryKCliqueCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
 
-        parser.add_argument('k',
-                            type=int,
-                            action='store',
-                            help="size of the clique to be found")
-        parser.add_argument(
-            'G',
-            help='a simple undirected graph (see \'cnfgen --help-graph\')',
-            action=ObtainSimpleGraph)
+        parser.usage = "usage:\n cnfgen kcliquebin [-h|--help] k G"
+
+        parser.description = """The formula is satiafiable if and only if graph G contains a clique
+of size at least k, i.e. a set of k distinct vertices so that every
+pair of them are connected by an edge. The encoding is different from
+the 'kclique' formula in the sense that every clique element is
+indexed by a binary string of log(|V(G)|) variables.
+
+positional arguments:
+  k                       size of the clique to be found
+  G                       a simple undirected graph (see 'cnfgen --help-graph')
+
+optional arguments:
+  --help, -h              show this help message and exit
+"""
+
+        parser.add_argument('k', type=nonnegative_int, action='store')
+        parser.add_argument('G', action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -305,14 +347,17 @@ subgraph_description = """The formula takes two graphs: a main <graph>
 and a candidate <subgraph>, and claims that
 the latter is indeed a subgraph of the former.
 
-positional arguments:
- -G <graph>      --- main graph         (see \'cnfgen --help-graph\')
- -H <subgraph>   --- candidate subgraph (see \'cnfgen --help-graph\')
-
 examples:
  {0} -G grid 4 4 -H grid 2 2
  {0} -G gnd 10 4 -H complete 5  (decides whether there is a 5-clique)
  {0} -G large.gml -H small.dot
+
+positional arguments:
+ -G <graph>           main graph         (see \'cnfgen --help-graph\')
+ -H <subgraph>        candidate subgraph (see \'cnfgen --help-graph\')
+
+optional arguments:
+ --help, -h           show this help message and exit
 """
 
 
@@ -320,7 +365,6 @@ class SubGraphCmdHelper(FormulaHelper):
     """Command line helper for Graph Isomorphism formula
     """
     name = 'subgraph'
-    description = 'subgraph formula'
 
     @staticmethod
     def setup_command_line(parser):
@@ -329,7 +373,7 @@ class SubGraphCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.usage = '{} [-h] -G <graph> -H <subgraph>'.format(parser.prog)
+        parser.usage = '{} [-h|--help] -G <graph> -H <subgraph>'.format(parser.prog)
         parser.description = subgraph_description.format(parser.prog)
 
         parser.add_argument('-G',
