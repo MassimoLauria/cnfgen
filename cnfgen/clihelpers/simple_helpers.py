@@ -8,7 +8,7 @@ https://massimolauria.net/cnfgen/
 
 from cnfgen.formula.cnf import CNF
 from cnfgen.families.randomformulas import RandomKCNF
-
+from cnfgen.clitools import nonnegative_int, positive_int
 from .formula_helpers import FormulaHelper
 
 import random
@@ -19,7 +19,6 @@ class OR(FormulaHelper):
     """
 
     name = 'or'
-    description = 'a single disjunction'
 
     @staticmethod
     def setup_command_line(parser):
@@ -28,14 +27,18 @@ class OR(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('P',
-                            metavar='<P>',
-                            type=int,
-                            help="positive literals")
-        parser.add_argument('N',
-                            metavar='<N>',
-                            type=int,
-                            help="negative literals")
+        parser.usage = "usage:\n {0} <P> <N>".format(parser.prog)
+        parser.description = """A single clause with <P> positive and <N> negative literals
+
+positional arguments:
+  <P>                  number of positive literals
+  <N>                  number of negative literals
+
+optional arguments:
+  --help, -h           show this help message and exit
+"""
+        parser.add_argument('P', type=nonnegative_int)
+        parser.add_argument('N', type=nonnegative_int)
 
     @staticmethod
     def build_cnf(args):
@@ -60,7 +63,6 @@ class AND(FormulaHelper):
     """Command line helper for a 1-CNF (i.e. conjunction)
     """
     name = 'and'
-    description = 'a single conjunction'
 
     @staticmethod
     def setup_command_line(parser):
@@ -69,14 +71,18 @@ class AND(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('P',
-                            metavar='<P>',
-                            type=int,
-                            help="positive literals")
-        parser.add_argument('N',
-                            metavar='<N>',
-                            type=int,
-                            help="negative literals")
+        parser.usage = "usage:\n {0} <P> <N>".format(parser.prog)
+        parser.description = """A single conjunction or <P> positive and <N> negative literals
+
+positional arguments:
+  <P>                  number of positive literals
+  <N>                  number of negative literals
+
+optional arguments:
+  --help, -h           show this help message and exit
+"""
+        parser.add_argument('P', type=nonnegative_int)
+        parser.add_argument('N', type=nonnegative_int)
 
     @staticmethod
     def build_cnf(args):
@@ -100,11 +106,15 @@ class TRUE(FormulaHelper):
     """
 
     name = 'true'
-    description = 'CNF formula with no clauses'
 
     @staticmethod
     def setup_command_line(parser):
-        pass
+        parser.usage = "usage:\n {0}".format(parser.prog)
+        parser.description = """A CNF with no clauses, hence always true.
+
+optional arguments:
+  --help, -h           show this help message and exit
+"""
 
     @staticmethod
     def build_cnf(args):
@@ -123,11 +133,15 @@ class FALSE(FormulaHelper):
     """
 
     name = 'false'
-    description = 'CNF with one empty clause'
 
     @staticmethod
     def setup_command_line(parser):
-        pass
+        parser.usage = "usage:\n {0}".format(parser.prog)
+        parser.description = """A CNF with one empty clause, hence always false.
+
+optional arguments:
+  --help, -h           show this help message and exit
+"""
 
     @staticmethod
     def build_cnf(args):
@@ -154,20 +168,28 @@ class RandCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('k', metavar='<k>', type=int, help="clause width")
-        parser.add_argument('n',
-                            metavar='<n>',
-                            type=int,
-                            help="number of variables")
-        parser.add_argument('m',
-                            metavar='<m>',
-                            type=int,
-                            help="number of clauses")
+        parser.usage = "usage:\n {0} [-h|--help] [-p|--plant] <k> <n> <m>".format(parser.prog)
+        parser.description = """ Sample <m> clauses over <n> variables, each of width <k>,
+uniformly at random. The sampling is done without repetition, meaning
+that whenever a clause is already in the CNF, it is never
+picked again.
+
+positional arguments:
+  <k>                  width of the clauses
+  <n>                  number of variables in the formula
+  <m>                  number of sampled clauses
+
+optional arguments:
+  --plant, -p          plant a random satisfying assignment (default: no)
+  --help, -h           show this help message and exit
+"""
+        parser.add_argument('k', type=positive_int)
+        parser.add_argument('n', type=positive_int)
+        parser.add_argument('m', type=nonnegative_int)
         parser.add_argument('--plant',
                             '-p',
                             action='store_true',
-                            default=False,
-                            help="plant a sat assignment at random")
+                            default=False)
 
     @staticmethod
     def build_cnf(args):
