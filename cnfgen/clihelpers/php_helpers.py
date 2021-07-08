@@ -27,7 +27,7 @@ from cnfgen.clitools import make_graph_doc
 from .formula_helpers import FormulaHelper
 import argparse
 
-help_usage = """
+help_usage = """usage:
  {0} N               --- N+1 pigeons fly to N holes
  {0} M N             --- M pigeons fly to N holes
  {0} M N D           --- M pigeons fly to N holes, pigeon left degree D
@@ -57,6 +57,7 @@ examples:
 optional arguments:
     --functional         each pigeon sits in at most one hole
     --onto               every hole has a sitting pigeon
+    --help, -h           show this help message and exit
 """
 
 
@@ -115,7 +116,6 @@ class PHPCmdHelper(FormulaHelper):
     """Command line helper for the Pigeonhole principle CNF"""
 
     name = 'php'
-    description = 'pigeonhole principle'
 
     @staticmethod
     def setup_command_line(parser):
@@ -181,14 +181,30 @@ class BPHPCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('pigeons',
-                            metavar='<pigeons>',
-                            type=positive_int,
-                            help="Number of pigeons")
-        parser.add_argument('holes',
-                            metavar='<holes>',
-                            type=positive_int,
-                            help="Number of holes")
+        parser.usage = """usage:
+ {0} M N             M pigeons fly to N holes""".format(parser.prog)
+
+        parser.description = """Binary Pigeonhole principle claims that M pigeons can fly to
+N holes with no two pigeons in the same hole. This is unsatisfiable
+when M > N. The difference with the standad pigeonhole principle is
+that here the target hole of a pigeon is represented in binary by
+a log(N) variables. If N is not a power of two, invalid targets
+are forbidden.
+
+examples:
+ {0} 100             --- 101 pigeons and 100 holes (unsat)
+ {0} 14 10           --- 14 pigeons and 10 holes (unsat)
+ {0} 9  10           --- 9  pigeons and 10 holes (sat)
+
+positional arguments:
+  M                    number of pigeons
+  N                    number of holes
+
+optional arguments:
+  --help, -h           show this help message and exit
+""".format(parser.prog)
+        parser.add_argument('M', type=positive_int)
+        parser.add_argument('N', type=positive_int)
 
     @staticmethod
     def build_cnf(args):
@@ -197,14 +213,13 @@ class BPHPCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        return BinaryPigeonholePrinciple(args.pigeons, args.holes)
+        return BinaryPigeonholePrinciple(args.M, args.N)
 
 
 class CliqueColoringCmdHelper(FormulaHelper):
     """Command line helper for the Clique-coclique CNF"""
 
     name = 'cliquecoloring'
-    description = 'There is a graph G with a k-clique and a c-coloring'
 
     @staticmethod
     def setup_command_line(parser):
@@ -213,18 +228,30 @@ class CliqueColoringCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('n',
-                            metavar='<n>',
-                            type=nonnegative_int,
-                            help="Number of vertices")
-        parser.add_argument('k',
-                            metavar='<k>',
-                            type=positive_int,
-                            help="Clique size")
-        parser.add_argument('c',
-                            metavar='<c>',
-                            type=positive_int,
-                            help="Coloring size")
+        parser.usage = """usage:
+ {0} n k c""".format(parser.prog)
+
+        parser.description = """Clique-Coloring principle claims that there there is a graph with
+n vertices that contains a k-clique and is simultaneously c-colorable.
+This is clearly satisfiabile if and only if k<=c and n>=k.
+
+examples:
+ {0} 10 4 3          --- there is a 10-verices graph which
+ {1}                     is 3-colorable and has a 4-clique (unsat)
+ {0} 14 5 5          --- there is a 14-verices graph which
+ {1}                     is 5-colorable and has a 5-clique (sat)
+
+positional arguments:
+  n                    number of vertices
+  k                    number of clique size
+  c                    coloring size
+
+optional arguments:
+  --help, -h           show this help message and exit
+""".format(parser.prog, " "*len(parser.prog))
+        parser.add_argument('n', type=nonnegative_int)
+        parser.add_argument('k', type=positive_int)
+        parser.add_argument('c', type=positive_int)
 
     @staticmethod
     def build_cnf(args):
@@ -240,7 +267,6 @@ class RamseyCmdHelper(FormulaHelper):
     """Command line helper for RamseyNumber formulas
     """
     name = 'ram'
-    description = 'ramsey number principle'
 
     @staticmethod
     def setup_command_line(parser):
@@ -249,18 +275,35 @@ class RamseyCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('s',
-                            metavar='<s>',
-                            type=positive_int,
-                            help="Forbidden independent set size")
-        parser.add_argument('k',
-                            metavar='<k>',
-                            type=positive_int,
-                            help="Forbidden independent clique")
-        parser.add_argument('N',
-                            metavar='<N>',
-                            type=nonnegative_int,
-                            help="Graph size")
+        parser.usage = """usage:
+ {0} s k N""".format(parser.prog)
+
+        parser.description = """This formula, given s, k, and N, claims that there is some graph
+with N vertices which has neither independent sets of size s nor
+cliques of size k. It turns out that there is a number r(s,k), called
+Ramsey number, so that every graph with at least r(s,k) vertices must
+contain either one or the other. Hence the generated formula is
+satisfiable if and only if r(s,k) > N
+
+examples:
+ {0} 3 3 6       --- claims r(3,3) > 6   (unsat)
+ {0} 4 6 34      --- claims r(4,6) > 34  (sat)
+ {0} 4 6 41      --- claims r(4,6) > 41  (unsat)
+ {0} 4 6 37      --- claims r(4,6) > 37  (???)
+ {0} 5 5 49      --- claims r(5,5) > 49  (unsat)
+
+positional arguments:
+  s                    forbidden independent set size
+  k                    forbidden clique size
+  N                    number of vertices
+
+optional arguments:
+  --help, -h           show this help message and exit
+""".format(parser.prog)
+
+        parser.add_argument('s', type=positive_int)
+        parser.add_argument('k', type=positive_int)
+        parser.add_argument('N', type=nonnegative_int)
 
     @staticmethod
     def build_cnf(args):
@@ -272,7 +315,7 @@ class RamseyCmdHelper(FormulaHelper):
         return RamseyNumber(args.s, args.k, args.N)
 
 
-vdw_help_usage = """
+vdw_help_usage = """usage:
  {0} N k1 k2             --- claims vdw(k1,k2) > N
  {0} N k1 k2 k3 ... kt   --- claims vdw(k1,k2,...,kt) > N
 """
@@ -288,6 +331,9 @@ arithmetic progressions.
 positional arguments:
   N           interval 1...N to be colored
   k1 k2 ...   lengths of the forbidden arith. progressions
+
+optional arguments:
+  --help, -h         show this help message and exit
 """
 
 
@@ -295,7 +341,6 @@ class VDWCmdHelper(FormulaHelper):
     """Command line helper for RamseyNumber formulas
     """
     name = 'vdw'
-    description = 'van der Waerden principle'
 
     @staticmethod
     def setup_command_line(parser):
@@ -340,14 +385,38 @@ class PTNCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('N',
-                            metavar='<N>',
-                            type=nonnegative_int,
-                            help="Size of the domain")
+        parser.usage = """usage:
+ {0} N""".format(parser.prog)
+
+        parser.description = """
+
+The formula claims that it is possible to bicolor the numbers from 1
+to N so that there is no monochromatic triplet (x,y,z) so that
+
+    x^2+y^2 = z^2.
+
+For every positive N there is a number PTN that is the smallest
+number for which this bicoloring is impossible. Hence the generated
+formula is satisfiable if and only if PTN > N.
+
+examples:
+ {0} 6         --- claims PTN > 6     (sat)
+ {0} 7824      --- claims PTN > 7824  (sat)
+ {0} 7825      --- claims PTN > 7825  (unsat)
+ {0} 10000     --- claims PTN > 10000 (unsat)
+
+positional arguments:
+  N                    consider the domain [1,...,N]
+
+optional arguments:
+  --help, -h           show this help message and exit
+""".format(parser.prog)
+
+        parser.add_argument('N', type=nonnegative_int)
 
     @staticmethod
     def build_cnf(args):
-        """Build a Ramsey formula according to the arguments
+        """Build a PTN formula according to the arguments
 
         Arguments:
         - `args`: command line options
@@ -367,18 +436,33 @@ class RPHPCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('pigeons',
-                            metavar='<pigeons>',
-                            type=nonnegative_int,
-                            help="Number of pigeons")
-        parser.add_argument('resting_places',
-                            metavar='<restingplaces>',
-                            type=nonnegative_int,
-                            help="Number of resting places")
-        parser.add_argument('holes',
-                            metavar='<holes>',
-                            type=nonnegative_int,
-                            help="Number of holes")
+        parser.usage = """usage:
+ {0} P R H""".format(parser.prog)
+
+        parser.description = """This formula is a variant of the pigeonhole principle. We consider
+P pigeons, R resting places, H holes. The formula claims that pigeons
+can fly into holes with no conflicts (i.e. two pigeons in the same
+home), with the additional caveat that before landing in a hole, each
+pigeon stops in some resting place. No two pigeons can rest in the
+same place.
+
+examples:
+ {0} 10 20 12      --- 10 pigeons, 20 resting places and 12 holes (sat)
+ {0} 10  8 12      --- 10 pigeons,  8 resting places and 12 holes (unsat)
+ {0} 13 15 11      --- 12 pigeons, 15 resting places and 11 holes (unsat)
+
+positional arguments:
+  P                    number of pigeons
+  R                    number of resting places
+  H                    number of holes
+
+optional arguments:
+  --help, -h           show this help message and exit
+""".format(parser.prog)
+
+        parser.add_argument('pigeons',        type=nonnegative_int)
+        parser.add_argument('resting_places', type=nonnegative_int)
+        parser.add_argument('holes',          type=nonnegative_int)
 
     @staticmethod
     def build_cnf(args):
