@@ -213,19 +213,27 @@ Here we assume that all parts have numeric arguments, except for
     # Test common mistakes. I.e. the format or the construction of
     # another graph type
     elif format_for_another_type(spec[0], graphtype):
-        validchoices=formats[graphtype]
-        msg1 = 'Graph format `{}` not valid for `{}` graphs'.format(
+        # A valid graph format but not for this graph type
+        validchoices = formats[graphtype]
+        errmsg = 'Graph format `{}` not valid for `{}` graphs'.format(
             spec[0], graphtype)
-        msg2 = "Choose from\n   " + "\n   ".join(
+        errmsg += "\n\n"
+        errmsg += "Choose from\n   " + "\n   ".join(
             repr(x) for x in validchoices)
-        raise ValueError(msg1 + "\n\n" + msg2)
+        errmsg += "\n\nSee 'cnfgen --help-{}' for more help.".format(graphtype)
+        raise ValueError(errmsg)
+
     elif construction_for_another_type(spec[0], graphtype):
+        # A valid construction format but not for this graph type
         validchoices = sorted(constructions[graphtype].keys())
-        msg1 = 'Construction `{}` not valid for `{}` graphs'.format(
+        errmsg = 'Construction `{}` not valid for `{}` graphs'.format(
             spec[0], graphtype)
-        msg2 = "Choose from\n   " + "\n   ".join(
+        errmsg += "\n\n"
+        errmsg += "Choose from\n   " + "\n   ".join(
             repr(x) for x in validchoices)
-        raise ValueError(msg1 + "\n\n" + msg2)
+        errmsg += "\n\nSee 'cnfgen --help-{}' for more help.".format(graphtype)
+        raise ValueError(errmsg)
+
     # Or a file without format specification
     else:
         result['construction'] = None
@@ -250,14 +258,20 @@ Here we assume that all parts have numeric arguments, except for
                 "Optional arguments as `{}` should be before any positional/graph argument"
                 .format(optionname))
         elif optionname not in options[graphtype]:
+
+            # Wrong option, maybe the graph construction was wrong to
+            # begin with, and we interpreted as a filename
+
             validchoices = sorted(formats[graphtype] +
                                   list(constructions[graphtype].keys()))
-            msg1 = "`{}` is not a valid option for '{}' graph\n{}".format(
+            errmsg = "`{}` is not a valid option for '{}' graph\n{}".format(
                 optionname, graphtype, grmsg)
-            msg2 = "Maybe instead of" + \
+            errmsg += "\n\n"
+            errmsg += "Maybe instead of" + \
                 " '{}' you meant one among\n ".format(result['filename']) + \
                 "\n  ".join(repr(x) for x in validchoices)
-            raise ValueError(msg1 + "\n\n" + msg2)
+            errmsg += "\n\nSee 'cnfgen --help-{}' for more help.".format(graphtype)
+            raise ValueError(errmsg)
 
         elif optionname in result:
             raise ValueError(
@@ -321,8 +335,15 @@ def make_graph_from_spec(graphtype, args):
     """Produce a graph from a graph specification string"""
     parsed = parse_graph_argument(graphtype, args)
     assert parsed['graphtype'] == graphtype
-    return obtain_graph(parsed)
-
+    try:
+        return obtain_graph(parsed)
+    except FileNotFoundError as e:
+        validchoices = sorted(formats[graphtype] +
+                              list(constructions[graphtype].keys()))
+        errmsg = "Maybe instead of '{}' you meant one among\n ".format(parsed['filename']) + \
+            "\n  ".join(repr(x) for x in validchoices)
+        errmsg += "\n\nSee 'cnfgen --help-{}' for more help.".format(graphtype)
+        raise FileNotFoundError(str(e) + "\n\n" + errmsg) from e
 
 class ObtainGraphAction(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):

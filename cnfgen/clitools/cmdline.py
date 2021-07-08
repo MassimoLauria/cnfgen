@@ -6,7 +6,7 @@ CNFgen has many command line entry points to its functionality, and
 some of them expose the same functionality over and over. This module
 contains useful common components.
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021
 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://github.com/MassimoLauria/cnfgen.git
 
@@ -263,7 +263,7 @@ def probability(value):
 
 
 def compose_two_parsers(parser1, parser2, test=None):
-    """Create an argparse action which compose two parsers
+    """Merge to parsers  create the corresponding action
 
 The action takes all remaining arguments and uses a test to determine
 which parser should parse them, using `test` function, given as argument.
@@ -279,6 +279,12 @@ If `test` is `None` then uses the default test:
 
             parser1.prog = parser.prog
             parser2.prog = parser.prog
+
+            parser1.usage = parser.usage
+            parser2.usage = parser.usage
+
+            parser1.description = parser.description
+            parser2.description = parser.description
 
             if len(values) == 0:
                 parser.error("{0} requires some arguments.".format(
