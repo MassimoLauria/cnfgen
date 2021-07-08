@@ -32,7 +32,6 @@ from cnfgen.clitools import CLIParser, positive_int, compose_two_parsers
 class TransformationHelper:
     """Command line helper for a formula family"""
     name = ""
-    description = ""
 
     @staticmethod
     def setup_command_line(parser):
@@ -51,7 +50,6 @@ class ShuffleCmd(TransformationHelper):
     """Shuffle
     """
     name = 'shuffle'
-    description = 'Permute variables, clauses and polarity of literals at random'
 
     @staticmethod
     def setup_command_line(parser):
@@ -59,9 +57,7 @@ class ShuffleCmd(TransformationHelper):
         parser.usage="""usage:
  {0} [-p] [-v] [-c]""".format(parser.prog)
 
-        parser.description= """
-
-Randomly reorder the formula, shuffling the variables, the clauses and
+        parser.description= """Randomly reorder the formula, shuffling the variables, the clauses and
 flipping the polarity of literal.
 
 optional arguments:
@@ -71,6 +67,7 @@ optional arguments:
                         Suppress variable permutations (default: active)
   --no-clauses-permutation, -c
                         Suppress clauses permutations (default: active)
+  --help, -h          show this help message and exit
 """
 
         parser.add_argument('--no-polarity-flips',
@@ -111,6 +108,14 @@ class NoSubstitutionCmd(TransformationHelper):
 
     @staticmethod
     def setup_command_line(parser):
+        parser.usage = "usage:\n {0}".format(parser.prog)
+
+        parser.description =\
+"""No transformation is applied.
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
         pass
 
     @staticmethod
@@ -120,16 +125,23 @@ class NoSubstitutionCmd(TransformationHelper):
 
 class OrSubstitutionCmd(TransformationHelper):
     name = 'or'
-    description = 'substitute variable x with OR(x1,x2,...,xN)'
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N',
-                            type=int,
-                            nargs='?',
-                            default=2,
-                            action='store',
-                            help="arity (default: 2)")
+        parser.usage = "usage:\n {0} N".format(parser.prog)
+
+        parser.description =\
+"""The value of each original variable X substituted with the
+predicate ``X(1) or ... or X(N)'' where variables X(1), ..., X(N)
+are new.
+
+positional arguments:
+  N                   the arity of the or operator
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('N', type=positive_int)
 
     @staticmethod
     def transform_cnf(F, args):
@@ -138,16 +150,23 @@ class OrSubstitutionCmd(TransformationHelper):
 
 class XorSubstitutionCmd(TransformationHelper):
     name = 'xor'
-    description = 'substitute variable x with XOR(x1,x2,...,xN)'
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N',
-                            type=int,
-                            nargs='?',
-                            default=2,
-                            action='store',
-                            help="arity (default: 2)")
+        parser.usage = "usage:\n {0} N".format(parser.prog)
+
+        parser.description =\
+"""The value of each original variable X substituted with the
+predicate ``X(1)+...+X(N) == 1 (mod 2)'' where variables
+X(1), ..., X(N) are new.
+
+positional arguments:
+  N                   the arity of the sum
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('N', type=positive_int)
 
     @staticmethod
     def transform_cnf(F, args):
@@ -156,16 +175,23 @@ class XorSubstitutionCmd(TransformationHelper):
 
 class AllEqualsSubstitutionCmd(TransformationHelper):
     name = 'eq'
-    description = 'substitute x with predicate x1==x2==...==xN (i.e. all equals)'
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N',
-                            type=int,
-                            nargs='?',
-                            default=3,
-                            action='store',
-                            help="arity (default: 3)")
+        parser.usage = "usage:\n {0} N".format(parser.prog)
+
+        parser.description =\
+"""The value of each original variable X substituted with the
+ predicate claiming that all the new variables X(1),...,X(N) have
+ the same value.
+
+positional arguments:
+  N                   the arity of the predicate
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('N', type=positive_int)
 
     @staticmethod
     def transform_cnf(F, args):
@@ -174,16 +200,23 @@ class AllEqualsSubstitutionCmd(TransformationHelper):
 
 class NeqSubstitutionCmd(TransformationHelper):
     name = 'neq'
-    description = 'substitute x with |{x1,x2,...,xN}|>1 (i.e. not all equals)'
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N',
-                            type=int,
-                            nargs='?',
-                            default=3,
-                            action='store',
-                            help="arity (default: 3)")
+        parser.usage = "usage:\n {0} N".format(parser.prog)
+
+        parser.description =\
+"""The value of each original variable X substituted with the
+ predicate claiming that the new variables X(1),...,X(N) do not have
+ all the same value.
+
+positional arguments:
+  N                   the arity of the predicate
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('N', type=positive_int)
 
     @staticmethod
     def transform_cnf(F, args):
@@ -192,16 +225,23 @@ class NeqSubstitutionCmd(TransformationHelper):
 
 class MajSubstitution(TransformationHelper):
     name = 'maj'
-    description = 'substitute x with Majority(x1,x2,...,xN)'
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N',
-                            type=int,
-                            nargs='?',
-                            default=3,
-                            action='store',
-                            help="arity (default: 3)")
+        parser.usage = "usage:\n {0} N".format(parser.prog)
+
+        parser.description =\
+"""The value of each original variable X substituted with the
+predicate ``X(1)+...+X(N) >= N/2'' where variables X(1), ..., X(N)
+are new.
+
+positional arguments:
+  N                   the arity of the sum
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('N', type=positive_int)
 
     @staticmethod
     def transform_cnf(F, args):
@@ -210,11 +250,18 @@ class MajSubstitution(TransformationHelper):
 
 class IfThenElseSubstitutionCmd(TransformationHelper):
     name = 'ite'
-    description = 'substitute x with "if X then Y else Z"'
 
     @staticmethod
     def setup_command_line(parser):
-        pass
+        parser.usage="usage:\n {0}".format(parser.prog)
+        parser.description=\
+"""Substitute a variable X with the predicate
+  if C then Y else Z
+where C, Y, Z are new variables.
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
 
     @staticmethod
     def transform_cnf(F, args):
@@ -223,16 +270,22 @@ class IfThenElseSubstitutionCmd(TransformationHelper):
 
 class ExactlyOneSubstitutionCmd(TransformationHelper):
     name = 'one'
-    description = 'substitute x with x1 + x2 + ... + xN = 1'
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N',
-                            type=int,
-                            nargs='?',
-                            default=3,
-                            action='store',
-                            help="arity (default: 3)")
+        parser.usage = "usage:\n {0} N".format(parser.prog)
+
+        parser.description =\
+"""The value of each original variable X substituted with the
+ predicate X(1)+...+X(N) == 1 where variables X(1), ..., X(N) are new.
+
+positional arguments:
+  N                   the arity of the sum
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('N', type=positive_int)
 
     @staticmethod
     def transform_cnf(F, args):
@@ -241,13 +294,24 @@ class ExactlyOneSubstitutionCmd(TransformationHelper):
 
 class AtLeastKSubstitutionCmd(TransformationHelper):
     name = 'atleast'
-    description = 'substitute x with x1 + x2 + ... + xN >= K'
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N', type=int, action='store', help="arity")
+        parser.usage = "usage:\n {0} N k".format(parser.prog)
 
-        parser.add_argument('K', type=int, action='store', help="threshold")
+        parser.description =\
+"""The value of each original variable X substituted with the
+ predicate X(1)+...+X(N) >= k where variables X(1), ..., X(N) are new.
+
+positional arguments:
+  N                   the arity of the sum
+  k                   the lower threshold
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('N', type=positive_int)
+        parser.add_argument('K', type=positive_int)
 
     @staticmethod
     def transform_cnf(F, args):
@@ -256,13 +320,24 @@ class AtLeastKSubstitutionCmd(TransformationHelper):
 
 class AtMostKSubstitutionCmd(TransformationHelper):
     name = 'atmost'
-    description = 'substitute x with x1 + x2 + ... + xN <= K'
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N', type=int, action='store', help="arity")
+        parser.usage = "usage:\n {0} N k".format(parser.prog)
 
-        parser.add_argument('K', type=int, action='store', help="threshold")
+        parser.description =\
+"""The value of each original variable X substituted with the
+ predicate X(1)+...+X(N) <= k where variables X(1), ..., X(N) are new.
+
+positional arguments:
+  N                   the arity of the sum
+  k                   the upper threshold
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('N', type=positive_int)
+        parser.add_argument('K', type=positive_int)
 
     @staticmethod
     def transform_cnf(F, args):
@@ -271,13 +346,24 @@ class AtMostKSubstitutionCmd(TransformationHelper):
 
 class ExactlyKSubstitutionCmd(TransformationHelper):
     name = 'exact'
-    description = 'substitute x with x1 + x2 + ... + xN == K'
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N', type=int, action='store', help="arity")
+        parser.usage = "usage:\n {0} N k".format(parser.prog)
 
-        parser.add_argument('K', type=int, action='store', help="value")
+        parser.description =\
+"""The value of each original variable X substituted with the
+ predicate X(1)+...+X(N) == k where variables X(1), ..., X(N) are new.
+
+positional arguments:
+  N                   the arity of the sum
+  k                   the desired value
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('N', type=positive_int)
+        parser.add_argument('K', type=positive_int)
 
     @staticmethod
     def transform_cnf(F, args):
@@ -289,9 +375,21 @@ class AnythingButKSubstitutionCmd(TransformationHelper):
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N', type=int, action='store', help="arity")
+        parser.usage = "usage:\n {0} N k".format(parser.prog)
 
-        parser.add_argument('K', type=int, action='store', help="value")
+        parser.description =\
+"""The value of each original variable X substituted with the
+ predicate X(1)+...+X(N) !=k where variables X(1), ..., X(N) are new.
+
+positional arguments:
+  N                   the arity of the sum
+  k                   the forbidded value
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('N', type=positive_int)
+        parser.add_argument('K', type=positive_int)
 
     @staticmethod
     def transform_cnf(F, args):
@@ -307,20 +405,28 @@ class FormulaLiftingCmd(TransformationHelper):
     """Lifting
     """
     name = 'lift'
-    description = 'one dimensional lifting  x -->  x1 y1  OR ... OR xN yN, with y1+..+yN = 1'
 
     @staticmethod
     def setup_command_line(parser):
-        parser.add_argument('N',
-                            type=int,
-                            nargs='?',
-                            default=3,
-                            action='store',
-                            help="arity (default: 3)")
+        parser.usage = "usage:\n {0} k".format(parser.prog)
+
+        parser.description =\
+"""One dimensional lifting of the formula. The value of the original
+variable X is taken from one among new variables X(1), ..., X(k).
+Which one is decided by the new selector variables Y(1), ..., Y(k), for
+which the condition Y(1)+...+Y(k) = 1 is enforced.
+
+positional arguments:
+  k                   the rank of the lifting
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('k', type=positive_int, action='store')
 
     @staticmethod
     def transform_cnf(F, args):
-        return FormulaLifting(F, args.N)
+        return FormulaLifting(F, args.k)
 
 
 class FlipCmd(TransformationHelper):
@@ -361,8 +467,11 @@ a bipartite graph (see 'cnfgen --help-bipartite').
 
 positional arguments:
   N           number of new variables
-  d           arity of majority
+  d           arity of majority (default: 3)
   <mapping>   a bipartite graph (see 'cnfgen --help-bipartite')
+
+optional arguments:
+  --help, -h          show this help message and exit
 """.format(parser.prog)
 
         firstparser = CLIParser()
@@ -420,8 +529,11 @@ a bipartite graph (see 'cnfgen --help-bipartite').
 
 positional arguments:
   N           number of new variables
-  d           arity of majority
+  d           arity of majority (default: 3)
   <mapping>   a bipartite graph (see 'cnfgen --help-bipartite')
+
+optional arguments:
+  --help, -h          show this help message and exit
 """.format(parser.prog)
 
         firstparser = CLIParser()
