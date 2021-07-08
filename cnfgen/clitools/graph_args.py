@@ -268,7 +268,7 @@ Here we assume that all parts have numeric arguments, except for
                 optionname, graphtype, grmsg)
             errmsg += "\n\n"
             errmsg += "Maybe instead of" + \
-                " '{}' you meant one among\n ".format(result['filename']) + \
+                " '{}' you meant one among\n  ".format(result['filename']) + \
                 "\n  ".join(repr(x) for x in validchoices)
             errmsg += "\n\nSee 'cnfgen --help-{}' for more help.".format(graphtype)
             raise ValueError(errmsg)
@@ -340,7 +340,7 @@ def make_graph_from_spec(graphtype, args):
     except FileNotFoundError as e:
         validchoices = sorted(formats[graphtype] +
                               list(constructions[graphtype].keys()))
-        errmsg = "Maybe instead of '{}' you meant one among\n ".format(parsed['filename']) + \
+        errmsg = "Maybe instead of '{}' you meant one among\n  ".format(parsed['filename']) + \
             "\n  ".join(repr(x) for x in validchoices)
         errmsg += "\n\nSee 'cnfgen --help-{}' for more help.".format(graphtype)
         raise FileNotFoundError(str(e) + "\n\n" + errmsg) from e
