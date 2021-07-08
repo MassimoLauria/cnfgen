@@ -25,7 +25,6 @@ class PebblingCmdHelper(FormulaHelper):
     """Command line helper for pebbling formulas
     """
     name = 'peb'
-    description = 'pebbling formula'
 
     @staticmethod
     def setup_command_line(parser):
@@ -35,11 +34,22 @@ class PebblingCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
 
-        parser.add_argument(
-            'D',
-            metavar='<dag>',
-            action=ObtainDirectedAcyclicGraph,
-            help='a directed acyclic graph (see \'cnfgen --help-dag\')')
+        parser.usage = "usage:\n {} [-h|--help] <dag>".format(parser.prog)
+
+        parser.description = """The Pebbling Formula is defined on a directed acyclic graph <dag>
+and claims that (1) each source vertex of <dag> (i.e. with no
+predecessors) has a pebble on it; (2) if all predecessors of a vertex
+are pebbled, the vertex is pebbled too; (3) the sink is not pebbled.
+This is clearly unsatisfiable.
+
+positional arguments:
+  <stones>            number of stones
+  <dag>               a directed acyclic graph (see \'cnfgen --help-dag\')
+
+optional arguments:
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('D', action=ObtainDirectedAcyclicGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -55,8 +65,6 @@ class StoneCmdHelper(FormulaHelper):
     """Command line helper for stone formulas
     """
     name = 'stone'
-    description = 'stone formula (dense and sparse)'
-    __doc__ = StoneFormula.__doc__
 
     @staticmethod
     def setup_command_line(parser):
@@ -65,23 +73,34 @@ class StoneCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        usage_string = "{} [-h] <stones> <dag> [--sparse <degree>]"
-        parser.usage = usage_string.format(parser.prog)
+        parser.usage = """usage:
+ {} [-h|--help] <stones> <dag> [--sparse <degree>]""".format(parser.prog)
 
-        parser.add_argument('s',
-                            metavar='<stones>',
-                            type=positive_int,
-                            help="number of stones")
-        parser.add_argument(
-            'D',
-            metavar='<dag>',
-            action=ObtainDirectedAcyclicGraph,
-            help='a directed acyclic graph (see \'cnfgen --help-graph\')')
-        parser.add_argument(
-            '--sparse',
-            metavar='<degree>',
-            type=positive_int,
-            help="each vertex can only choose among <degree> many stones")
+        parser.description = """A Stones formula claims that each vertex of a directed acyclic
+graph <dag> is associated with one among <stones> stones.
+Each stone can be either red or blue, and not both. The clauses of
+the formula encode the following constraints. (1) if a stone is on
+a vertex with no incoming edges, then it must be red. (2) if all
+stones on the predecessors of a vertex are red, then the stone of
+the vertex itself must be red. (3) the formula furthermore
+enforces that the stones on the sinks (i.e. vertices with no
+outgoing edges) are blue.
+
+In the sparse variant of the Stone Formula each vertex has only
+<degree> choices of stones to which it can be associated. This avoid
+large clauses in the formula.
+
+positional arguments:
+  <stones>            number of stones
+  <dag>               a directed acyclic graph (see \'cnfgen --help-dag\')
+
+optional arguments:
+  --sparse <degree>   each vertex can only choose among <degree> many stones
+  --help, -h          show this help message and exit
+"""
+        parser.add_argument('s', type=positive_int)
+        parser.add_argument('D', action=ObtainDirectedAcyclicGraph)
+        parser.add_argument('--sparse', metavar='<degree>', type=positive_int)
 
     @staticmethod
     def build_cnf(args):
