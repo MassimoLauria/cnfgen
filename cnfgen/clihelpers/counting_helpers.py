@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Implementation of counting/matching formulas helpers
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -16,7 +16,7 @@ from cnfgen.clitools import ObtainBipartiteGraph
 from cnfgen.clitools import make_graph_from_spec, make_graph_doc
 
 from cnfgen.clitools import CLIParser, compose_two_parsers
-from cnfgen.clitools import positive_int
+from cnfgen.clitools import positive_int, nonnegative_int
 
 from .formula_helpers import FormulaHelper
 
@@ -28,7 +28,6 @@ class ParityCmdHelper(FormulaHelper):
     """Command line helper for Parity Principle formulas
     """
     name = 'parity'
-    description = 'parity principle'
 
     @staticmethod
     def setup_command_line(parser):
@@ -37,7 +36,17 @@ class ParityCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('N', type=int, help="domain size")
+        parser.usage = "usage:\n {0} N".format(parser.prog)
+        parser.description = """The formula claims that a set of N elements can
+be grouped in pairs. This is of course possible only if N is even.
+
+positional arguments:
+  N                       number of elements
+
+optional arguments:
+  --help, -h              show this help message and exit
+"""
+        parser.add_argument('N', type=nonnegative_int)
 
     @staticmethod
     def build_cnf(args):
@@ -48,7 +57,6 @@ class PMatchingCmdHelper(FormulaHelper):
     """Command line helper for Perfect Matching Principle formulas
     """
     name = 'matching'
-    description = 'perfect matching principle'
 
     @staticmethod
     def setup_command_line(parser):
@@ -57,10 +65,17 @@ class PMatchingCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument(
-            'G',
-            help='a simple undirected graph (see \'cnfgen --help-graph\')',
-            action=ObtainSimpleGraph)
+        parser.usage = "usage:\n {0} G".format(parser.prog)
+        parser.description = """The perfect matching principle claims that
+a graph G has a perfect matching.
+
+positional arguments:
+  G                     a simple undirected graph (see 'cnfgen --help-graph')
+
+optional arguments:
+  --help, -h            show this help message and exit
+"""
+        parser.add_argument('G',action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -80,11 +95,18 @@ class CountingCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument('M', metavar='<M>', type=int, help="domain size")
-        parser.add_argument('p',
-                            metavar='<p>',
-                            type=int,
-                            help="size of the parts")
+        parser.usage = "usage:\n {0} M p".format(parser.prog)
+        parser.description = """The formula claims that a set of M elements can be partitioned in sets
+of size p each. This is of course possible only if p divides M.
+
+positional arguments:
+  M                       domain size
+  p                       size of each part
+optional arguments:
+  --help, -h              show this help message and exit
+"""
+        parser.add_argument('M', type=nonnegative_int)
+        parser.add_argument('p', type=positive_int)
 
     @staticmethod
     def build_cnf(args):
@@ -96,9 +118,11 @@ class CountingCmdHelper(FormulaHelper):
         return CountingPrinciple(args.M, args.p)
 
 
-tse_help_usage = """
- {0} N                --- random 4-regular graph with N vertices. Random odd charge
- {0} N d              --- random d-regular graph with N vertices. Random odd charge
+tse_help_usage = """usage:
+ {0} N                --- random 4-regular graph with N vertices.
+ {1}                      Random odd charge
+ {0} N d              --- random d-regular graph with N vertices.
+ {1}                      Random odd charge
  {0} <charge> <graph> --- specific <charge> on specific <graph>
 """
 
@@ -109,6 +133,7 @@ each vertex is equal (mod 2) with the sum of the values of the edges
 adjacent to that edge.
 
 examples:
+
  {0} 100 4                 --- Random odd charge on 4-regular graph of size 100
  {0} randomeven gnd 20 6   --- Random odd charge on 6-regular graph of size 20
  {0} first file.dot        --- Put odd charge just on first vertex on graph in 'file.dot'
@@ -120,6 +145,9 @@ positional arguments:
                      `randomodd' puts random odd  charge on vertices;
                      `randomeven' puts random even charge on vertices.
   <graph>        --- a simple undirected graph (see 'cnfgen --help-graph')
+
+optional arguments:
+  --help, -h            show this help message and exit
 """
 
 
@@ -127,7 +155,6 @@ class TseitinCmdHelper(FormulaHelper):
     """Command line helper for Tseitin  formulas
     """
     name = 'tseitin'
-    description = 'tseitin formula'
 
     @staticmethod
     def setup_command_line(parser):
@@ -137,7 +164,8 @@ class TseitinCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
 
-        parser.usage = tse_help_usage.format(parser.prog)
+        parser.usage = tse_help_usage.format(
+            parser.prog, " " * len(parser.prog))
         parser.description = tse_help_description.format(
             parser.prog, " " * len(parser.prog))
 
@@ -226,13 +254,11 @@ class TseitinCmdHelper(FormulaHelper):
         return TseitinFormula(G, charge)
 
 
-ssc_help_usage = """{0} [-h] [--equal] <bipartite>
-
-usage variants:
+ssc_help_usage = """usage:
  {0} N               --- unsat instance of width 3
  {0} N d             --- unsat instance of width d//2 + 1
- {0} <bipartite>     --- formula over a bipartite graph (see 'cnfgen --help-bipartite')
-"""
+ {0} <bipartite>     --- formula over a bipartite graph
+ {1}                     (see 'cnfgen --help-bipartite')"""
 
 ssc_help_description = """Subset cardinality formula is defined over a bipartite graph: boolean
 values are associated to the edges of the graph are set to {{0,1}}.
@@ -240,24 +266,32 @@ The formula claims that all vertices on the left have the (loose)
 majority of edges set to 1, and all vertices on the right have the
 (loose) majority of edges set to 0. The hard unsat cases are when the
 graph is a (N,N)-bipartite d-regular graph with an additional edge.
-In particular with d=4 such formula is an unsat 3-CNF, typically hard
+ In particular with d=4 such formula is an unsat 3-CNF, typically hard
 for resolution.
 
 examples:
  {0} 100             --- (100,100)-bipartite 4-regular + 1 edge
  {0} 20 6            --- (20,20)-bipartite 4-regular + 1 edge
  {0} scheme.matrix   --- edges of the graphs are specificed by
- {1}                     graph in 'scheme.matrix'"""
+ {1}                     graph in 'scheme.matrix'
 
+positional arguments:
+  N                  --- size of the bipartite graph
+  d                  --- size of each constraint
+  <bipartite>        --- bipartite graph underlying the formula
 
+optional arguments:
+  --equal, -e        encode cardinality constraints as equations
+  --help, -h         show this help message and exit
+"""
 class SCCmdHelper(FormulaHelper):
     name = 'subsetcard'
-    description = 'subset cardinality formulas'
 
     @staticmethod
     def setup_command_line(parser):
 
-        parser.usage = ssc_help_usage.format(parser.prog)
+        parser.usage = ssc_help_usage.format(
+            parser.prog, " " * len(parser.prog))
         parser.description = ssc_help_description.format(
             parser.prog, " " * len(parser.prog))
 

@@ -213,11 +213,19 @@ Here we assume that all parts have numeric arguments, except for
     # Test common mistakes. I.e. the format or the construction of
     # another graph type
     elif format_for_another_type(spec[0], graphtype):
-        raise ValueError('Graph format `{}` not valid for `{}` graphs'.format(
-            spec[0], graphtype))
+        validchoices=formats[graphtype]
+        msg1 = 'Graph format `{}` not valid for `{}` graphs'.format(
+            spec[0], graphtype)
+        msg2 = "Choose from\n   " + "\n   ".join(
+            repr(x) for x in validchoices)
+        raise ValueError(msg1 + "\n\n" + msg2)
     elif construction_for_another_type(spec[0], graphtype):
-        raise ValueError('Construction `{}` not valid for `{}` graphs'.format(
-            spec[0], graphtype))
+        validchoices = sorted(constructions[graphtype].keys())
+        msg1 = 'Construction `{}` not valid for `{}` graphs'.format(
+            spec[0], graphtype)
+        msg2 = "Choose from\n   " + "\n   ".join(
+            repr(x) for x in validchoices)
+        raise ValueError(msg1 + "\n\n" + msg2)
     # Or a file without format specification
     else:
         result['construction'] = None
@@ -242,9 +250,15 @@ Here we assume that all parts have numeric arguments, except for
                 "Optional arguments as `{}` should be before any positional/graph argument"
                 .format(optionname))
         elif optionname not in options[graphtype]:
-            raise ValueError(
-                "`{}` is not a valid option for '{}' graph\n{}".format(
-                    optionname, graphtype, grmsg))
+            validchoices = sorted(formats[graphtype] +
+                                  list(constructions[graphtype].keys()))
+            msg1 = "`{}` is not a valid option for '{}' graph\n{}".format(
+                optionname, graphtype, grmsg)
+            msg2 = "Maybe instead of" + \
+                " '{}' you meant one among\n ".format(result['filename']) + \
+                "\n  ".join(repr(x) for x in validchoices)
+            raise ValueError(msg1 + "\n\n" + msg2)
+
         elif optionname in result:
             raise ValueError(
                 "Multiple occurrences of `{}` option.".format(optionname))

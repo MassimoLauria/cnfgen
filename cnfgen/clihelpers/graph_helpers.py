@@ -153,7 +153,7 @@ examples:
  {0} gnm 10 5
 
 optiona arguments:
-  -h, --help               show this help message and exit
+  --help, -h               show this help message and exit
 """
 
 
@@ -207,7 +207,7 @@ positional arguments:
   G                       a simple undirected graph (see 'cnfgen --help-graph')
 
 optional arguments:
-  -h, --help              show this help message and exit
+  --help, -h              show this help message and exit
   --no-symmetry-breaking  do not break symmetries by enforcing the
                           solution to be in increasing order (default: on)
 """
@@ -217,8 +217,7 @@ optional arguments:
         parser.add_argument('--no-symmetry-breaking',
                             action='store_false',
                             default=True,
-                            dest='symmetrybreaking',
-                            help="Do not break symmetries by enforcing the solution to be in increasing order")
+                            dest='symmetrybreaking')
 
     @staticmethod
     def build_cnf(args):
