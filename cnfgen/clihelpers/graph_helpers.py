@@ -149,7 +149,6 @@ class TilingCmdHelper(FormulaHelper):
     """Command line helper for tiling
     """
     name = 'tiling'
-    description = 'tiling formula'
 
     @staticmethod
     def setup_command_line(parser):
@@ -158,10 +157,19 @@ class TilingCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
-        parser.add_argument(
-            'G',
-            help='simple undirected graph (see \'cnfgen --help-graph\')',
-            action=ObtainSimpleGraph)
+        parser.usage = """usage:\n {0} [-h|--help] G""".format(parser.prog)
+
+        parser.description = """The formula encodes the fact that the graph G has a tiling.
+This means that it is possible to pick a subset of vertices D so that
+all vertices have distance at most one from exactly one verteix in D.
+
+positional arguments:
+  G                       a simple undirected graph (see 'cnfgen --help-graph')
+
+optional arguments:
+  --help, -h              show this help message and exit
+"""
+        parser.add_argument('G', action=ObtainSimpleGraph)
 
     @staticmethod
     def build_cnf(args):
@@ -229,7 +237,7 @@ class KCliqueCmdHelper(FormulaHelper):
     def setup_command_line(parser):
         """Setup the command line options for k-clique formula
         """
-        parser.usage = "usage:\n cnfgen kclique [-h|--help] k G"
+        parser.usage = "usage:\n {0} [-h|--help] k G".format(parser.prog)
 
         parser.description = """The formula is satiafiable if and only if graph G contains
 a clique of size at least k, i.e. a set of k distinct vertices so that
@@ -275,7 +283,7 @@ class BinaryKCliqueCmdHelper(FormulaHelper):
         - `parser`: parser to load with options.
         """
 
-        parser.usage = "usage:\n cnfgen kcliquebin [-h|--help] k G"
+        parser.usage = "usage:\n {0} [-h|--help] k G".format(parser.prog)
 
         parser.description = """The formula is satiafiable if and only if graph G contains a clique
 of size at least k, i.e. a set of k distinct vertices so that every
@@ -308,7 +316,6 @@ class RWCmdHelper(FormulaHelper):
     """Command line helper for ramsey graph formula
     """
     name = 'ramlb'
-    description = 'unsat if G witnesses that r(k,s)>|V(G)| (i.e. G has not k-clique nor s-stable)'
 
     @staticmethod
     def setup_command_line(parser):
@@ -317,20 +324,33 @@ class RWCmdHelper(FormulaHelper):
         Arguments:
         - `parser`: parser to load with options.
         """
+        parser.usage = "usage:\n {0} [-h|--help] k s G".format(parser.prog)
+
+        parser.description = """The formula is satiafiable when graph G contains either a clique of
+size at least k, or an independent set of size s. Notice that any
+graph with r(k,s) vertices or more must contain one or the other.
+Therefore the formula is unsatifiable only for a graph G such that
+
+  r(k,s) > |V(G)|.
+
+
+positional arguments:
+  k                       size of the clique to be found
+  s                       size of the independent set to be found
+  G                       a simple undirected graph (see 'cnfgen --help-graph')
+
+optional arguments:
+  --help, -h              show this help message and exit
+"""
 
         parser.add_argument('k',
-                            metavar='<k>',
-                            type=int,
-                            action='store',
-                            help="size of the clique to be found")
+                            type=nonnegative_int,
+                            action='store')
         parser.add_argument('s',
-                            metavar='<s>',
-                            type=int,
-                            action='store',
-                            help="size of the stable to be found")
+                            type=nonnegative_int,
+                            action='store')
         parser.add_argument(
             'G',
-            help='a simple undirected graph (see \'cnfgen --help-graph\')',
             action=ObtainSimpleGraph)
 
     @staticmethod

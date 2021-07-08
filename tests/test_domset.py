@@ -30,7 +30,6 @@ def test_cycles():
         assert not F.is_satisfiable()
 
 
-
 def test_complete():
     for n in range(10, 12):
         parameters = ["cnfgen", "-q", "domset", 1, "complete", n]
