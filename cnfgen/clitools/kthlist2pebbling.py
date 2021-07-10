@@ -32,6 +32,51 @@ from cnfgen.clitools.msg import InternalBug
 #          Command line tool follows
 #################################################################
 
+# Help strings
+USAGE_STRING = """usage:
+ {0} [-h|--help] [-i <input>] [-o <output>] [<transformation> <args>]
+"""
+
+DESCRIPTION_STRING = """Transforms a graph file in kthlist format into a pebbling formula,
+with the possibility to apply further transformations to it.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --input <input>, -i <input>
+                        The DAG is read from a file instead of being
+                        read from standard output. Setting '<input>'
+                        to '-' is another way to read from standard
+                        input. (default: -)
+  --output <output>, -o <output>
+                        Save the formula to <output>.
+                        Setting '<output>' to '-' sends the
+                        formula to standard output. (default: -)
+  --quiet, -q           Output just the formula with no header.
+
+Choices for <transformation>:
+    anybut          substitute x with x1 + x2 + ... + xN != K
+    atleast         substitute x with x1 + x2 + ... + xN >= K
+    atmost          substitute x with x1 + x2 + ... + xN <= K
+    eq              substitute x with predicate x1==x2==...==xN
+                    (i.e. all equals)
+    exact           substitute x with x1 + x2 + ... + xN == K
+    flip            negate all variables in the formula
+    ite             substitute x with "if X then Y else Z"
+    lift            one dimensional lifting x -> x1 y1 OR ... OR xN yN,
+                    with y1 + ... + yN = 1
+    maj             substitute x with Majority(x1,x2,...,xN)
+    majcomp         variable compression using Majority
+    neq             substitute x with |{x1,x2,...,xN}|>1
+                    (i.e. not all equals)
+    none            no transformation
+    one             substitute x with x1 + x2 + ... + xN = 1
+    or              substitute variable x with OR(x1,x2,...,xN)
+    shuffle         Permute variables, clauses and/or
+                    polarity of literals at random
+    xor             substitute variable x with XOR(x1,x2,...,xN)
+    xorcomp         variable compression using XOR
+"""
+
 
 # Command line helpers
 def setup_command_line(parser):
@@ -40,40 +85,29 @@ def setup_command_line(parser):
     Arguments:
     - `parser`: parser to fill with options
     """
+    parser.usage = USAGE_STRING.format(parser.prog)
+    parser.description = DESCRIPTION_STRING
     parser.add_argument('--output',
                         '-o',
                         type=argparse.FileType('w'),
                         metavar="<output>",
-                        default='-',
-                        help="""Output file. The formula is saved
-                        on file instead of being sent to standard
-                        output. Setting '<output>' to '-' is another
-                        way to send the formula to standard output.
-                        (default: -)
-                        """)
+                        default='-')
     parser.add_argument(
         '--input',
         '-i',
         type=argparse.FileType('r'),
         metavar="<input>",
-        default='-',
-        help=
-        """Input file. The DAG is read from a file instead of being read from
-                        standard output. Setting '<input>' to '-' is
-                        another way to read from standard
-                        input.  (default: -)
-                        """)
+        default='-')
     parser.add_argument('--quiet',
                         '-q',
                         action='store_false',
-                        dest='verbose',
-                        help="""Output just the formula with no header.""")
+                        dest='verbose')
 
     subparsers = parser.add_subparsers(title="Available transformation",
                                        metavar="<transformation>")
 
     for sc in get_transformation_helpers():
-        p = subparsers.add_parser(sc.name, help=sc.description)
+        p = subparsers.add_parser(sc.name)
         sc.setup_command_line(p)
         p.set_defaults(transformation=sc)
 
