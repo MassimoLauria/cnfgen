@@ -58,7 +58,7 @@ upload: testpackage
 #
 # $ pyenv install -l
 #
-DEV_DEPENDENCES:=yapf pytest pytest-datadir flake8 'python-language-server[all]'
+DEV_DEPENDENCES:=yapf pytest pytest-datadir flake8 'python-lsp-server[all]'
 PKG_DEPENDENCES:=wheel twine keyring
 DOC_DEPENDENCES:=sphinx sphinx-autobuild numpydoc sphinx_rtd_theme
 
