@@ -6,9 +6,9 @@
 
 
 #+begin_html
-   <a href='https://travis-ci.org/MassimoLauria/cnfgen'>
+   <a href='https://app.travis-ci.com/github/MassimoLauria/cnfgen'>
        <img
-       src='https://travis-ci.org/MassimoLauria/cnfgen.svg?branch=master'
+       src='https://app.travis-ci.com/github/MassimoLauria/cnfgen.svg?branch=master'
        alt='Build Status' />
    </a>
    <a href='http://cnfgen.readthedocs.org/en/latest/?badge=latest'>
