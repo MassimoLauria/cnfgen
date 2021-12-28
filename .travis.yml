@@ -5,16 +5,20 @@ python:
   - "3.7"
   - "3.8"
   - "3.9"
+  - "3.10"
 # dependencies
 env:
   - NETWORKX_VERSION=2.3
   - NETWORKX_VERSION=2.4
   - NETWORKX_VERSION=2.5
+  - NETWORKX_VERSION=2.6
 
 jobs:
   exclude:
     - python: 3.9
       env: NETWORKX_VERSION=2.3
+    - python: 3.6
+      env: NETWORKX_VERSION=2.6
 
 before_install:
   - sudo apt-get install minisat
