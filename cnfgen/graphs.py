@@ -13,7 +13,7 @@ from bisect import bisect_right, bisect_left
 
 import networkx
 
-from cnfgen.localtypes import positive_int,non_negative_int
+from cnfgen.localtypes import positive_int, non_negative_int
 
 __all__ = [
     "readGraph", "writeGraph",
@@ -45,6 +45,7 @@ class BipartiteEdgeList():
         for u in range(1, self.B.left_order() + 1):
             yield from ((u, v) for v in self.B.right_neighbors(u))
 
+
 class GraphEdgeList():
     """Edge list for bipartite graphs"""
 
@@ -67,10 +68,11 @@ class GraphEdgeList():
                 yield (u, v)
                 pos += 1
 
+
 class DirectedEdgeList():
     """Edge list for bipartite graphs"""
 
-    def __init__(self, D, sort_by_predecessors = True):
+    def __init__(self, D, sort_by_predecessors=True):
         self.D = D
         self.sort_by_pred = sort_by_predecessors
 
@@ -120,7 +122,7 @@ have that u < v."""
         return self.number_of_vertices()
 
     def vertices(self):
-        return range(1,self.number_of_vertices()+1)
+        return range(1, self.number_of_vertices()+1)
 
     def number_of_vertices(self):
         raise NotImplementedError
@@ -210,7 +212,6 @@ have that u < v."""
         return readGraph(fileorname, typename, fileformat)
 
 
-
 class Graph(BaseGraph):
 
     def is_dag(self):
@@ -220,7 +221,7 @@ class Graph(BaseGraph):
         return False
 
     def __init__(self, n, name=None):
-        non_negative_int(n,'n')
+        non_negative_int(n, 'n')
         self.n = n
         self.m = 0
         self.adjlist = [[] for i in range(n+1)]
@@ -272,12 +273,12 @@ class Graph(BaseGraph):
 
 The sequence of neighbors is guaranteed to be sorted.
 """
-        if not( 1<= u <= self.n):
+        if not(1 <= u <= self.n):
             raise ValueError("vertex u not in the graph")
         yield from self.adjlist[u]
 
-    def degree(self,u):
-        if not( 1<= u <= self.n):
+    def degree(self, u):
+        if not(1 <= u <= self.n):
             raise ValueError("vertex u not in the graph")
         return len(self.adjlist[u])
 
@@ -289,9 +290,9 @@ The sequence of neighbors is guaranteed to be sorted.
         C = cls(G.order())
         C.add_edges_from(G.edges())
         try:
-            C.name= G.name
+            C.name = G.name
         except AttributeError:
-            C.name='<unknown graph>'
+            C.name = '<unknown graph>'
         return C
 
     @classmethod
@@ -310,18 +311,18 @@ The sequence of neighbors is guaranteed to be sorted.
 
     @classmethod
     def null_graph(cls):
-        return cls(0,'the null graph')
+        return cls(0, 'the null graph')
 
     @classmethod
-    def empty_graph(cls,n):
-        return cls(n,'the empty graph of order '+str(n))
+    def empty_graph(cls, n):
+        return cls(n, 'the empty graph of order '+str(n))
 
     @classmethod
-    def complete_graph(cls,n):
-        G = cls(n,'the complete graph of order '+str(n))
-        for u in range(1,n):
-            for v in range(u+1,n+1):
-                G.add_edge(u,v)
+    def complete_graph(cls, n):
+        G = cls(n, 'the complete graph of order '+str(n))
+        for u in range(1, n):
+            for v in range(u+1, n+1):
+                G.add_edge(u, v)
         return G
 
     @classmethod
@@ -330,7 +331,6 @@ The sequence of neighbors is guaranteed to be sorted.
         for u in range(1, n+1):
             G.add_edge(u, n+1)
         return G
-
 
     @classmethod
     def normalize(cls, G, varname=''):
@@ -381,7 +381,7 @@ edges can be added and not removed."""
         return True
 
     def __init__(self, n, name='a simple directed graph'):
-        non_negative_int(n,'n')
+        non_negative_int(n, 'n')
         self.n = n
         self.m = 0
         self.edgeset = set()
@@ -409,7 +409,7 @@ edges can be added and not removed."""
         self.succ[src].insert(pos, dest)
 
         self.m += 1
-        self.edgeset.add((src,dest))
+        self.edgeset.add((src, dest))
 
     def has_edge(self, src, dest):
         """True if graph contains directed edge (src,dest)"""
@@ -422,7 +422,7 @@ edges can be added and not removed."""
         return DirectedEdgeList(self)
 
     def edges_ordered_by_successors(self):
-        return DirectedEdgeList(self,sort_by_predecessors=False)
+        return DirectedEdgeList(self, sort_by_predecessors=False)
 
     def number_of_vertices(self):
         return self.n
@@ -440,7 +440,7 @@ edges can be added and not removed."""
         """Outputs the predecessors of vertex `u`
 
 The sequence of predecessors is guaranteed to be sorted."""
-        if not( 1<= u <= self.n):
+        if not(1 <= u <= self.n):
             raise ValueError("vertex u not in the graph")
         yield from self.pred[u]
 
@@ -448,17 +448,17 @@ The sequence of predecessors is guaranteed to be sorted."""
         """Outputs the successors of vertex `u`
 
 The sequence of successors is guaranteed to be sorted."""
-        if not( 1<= u <= self.n):
+        if not(1 <= u <= self.n):
             raise ValueError("vertex u not in the graph")
         yield from self.succ[u]
 
-    def in_degree(self,u):
-        if not( 1<= u <= self.n):
+    def in_degree(self, u):
+        if not(1 <= u <= self.n):
             raise ValueError("vertex u not in the graph")
         return len(self.pred[u])
 
-    def out_degree(self,v):
-        if not( 1<= v <= self.n):
+    def out_degree(self, v):
+        if not(1 <= v <= self.n):
             raise ValueError("vertex v not in the graph")
         return len(self.succ[v])
 
@@ -470,9 +470,9 @@ The sequence of successors is guaranteed to be sorted."""
         C = cls(G.order())
         C.add_edges_from(G.edges())
         try:
-            C.name= G.name
+            C.name = G.name
         except AttributeError:
-            C.name='<unknown graph>'
+            C.name = '<unknown graph>'
         return C
 
     @classmethod
@@ -487,7 +487,6 @@ The sequence of successors is guaranteed to be sorted."""
             return ['kthlist', 'gml', 'dot', 'dimacs']
         else:
             return ['kthlist', 'gml', 'dimacs']
-
 
     @classmethod
     def normalize(cls, G, varname='G'):
@@ -525,6 +524,7 @@ If `G` is already a `cnfgen.graphs.DirectedGraph` object, nothing is done.
             return G2
         except AttributeError:
             raise ValueError(conversionmsg.format(varname))
+
 
 class BaseBipartiteGraph(BaseGraph):
     """Base class for bipartite graphs"""
@@ -589,7 +589,7 @@ class BipartiteGraph(BaseBipartiteGraph):
         self.edgeset = set()
 
     def has_edge(self, u, v):
-        return (u,v) in self.edgeset
+        return (u, v) in self.edgeset
 
     def add_edge(self, u, v):
         """Add an edge to the graph.
@@ -621,7 +621,7 @@ class BipartiteGraph(BaseBipartiteGraph):
         pu = bisect_right(self.radj[v], u)
         self.ladj[u].insert(pv, v)
         self.radj[v].insert(pu, u)
-        self.edgeset.add((u,v))
+        self.edgeset.add((u, v))
 
     def number_of_edges(self):
         return len(self.edgeset)
@@ -694,9 +694,9 @@ The sequence of neighbors is guaranteed to be sorted."""
             else:
                 B.add_edge(iv, iu)
         try:
-            B.name= G.name
+            B.name = G.name
         except AttributeError:
-            B.name='<unknown graph>'
+            B.name = '<unknown graph>'
         return B
 
     @classmethod
@@ -947,6 +947,12 @@ def readGraph(input_file,
         #
         try:
             G = networkx.nx_pydot.read_dot(input_file)
+            try:
+                # work around for a weird parse error in pydot, which
+                # adds an additiona vertex '\\n' in the graph.
+                G.remove_node('\\n')
+            except networkx.exception.NetworkXError:
+                pass
             G = graph_class.normalize(G)
         except TypeError:
             raise ValueError('Parse Error in dot file')
@@ -965,7 +971,8 @@ def readGraph(input_file,
         # object too.
         #
         try:
-            G = networkx.read_gml((line.encode('ascii') for line in input_file), label='id')
+            G = networkx.read_gml((line.encode('ascii')
+                                  for line in input_file), label='id')
             G = graph_class.normalize(G)
         except networkx.NetworkXError as errmsg:
             raise ValueError("[Parse error in GML input] {} ".format(errmsg))
@@ -979,7 +986,7 @@ def readGraph(input_file,
 
     elif file_format == 'kthlist' and graph_type != 'bipartite':
 
-        G = _read_nonbipartite_kthlist(input_file,graph_class)
+        G = _read_nonbipartite_kthlist(input_file, graph_class)
 
     elif file_format == 'dimacs':
 
@@ -994,7 +1001,8 @@ def readGraph(input_file,
             "[Internal error] Format {} not implemented".format(file_format))
 
     if graph_type == "dag" and not G.is_dag():
-        raise ValueError("[Input error] Graph must be explicitly acyclic (src->dest edges where src<dest)")
+        raise ValueError(
+            "[Input error] Graph must be explicitly acyclic (src->dest edges where src<dest)")
 
     return G
 
@@ -1183,7 +1191,8 @@ def _read_bipartite_kthlist(inputfile):
     for left, right, lineno in parser:
 
         if left <= previous:
-            raise ValueError("Vertex at line {} is smaller than the previous one.".format(lineno))
+            raise ValueError(
+                "Vertex at line {} is smaller than the previous one.".format(lineno))
 
         # Check the bi-coloring on both side
         if left > bipartition_ambiguous[1]:
@@ -1209,7 +1218,7 @@ def _read_bipartite_kthlist(inputfile):
 
     for u in edges:
         for v in edges[u]:
-            G.add_edge(u, v - L )
+            G.add_edge(u, v - L)
 
     if size != G.number_of_vertices():
         raise ValueError("{} vertices expected. Got {} instead.".format(
@@ -1252,7 +1261,8 @@ def _read_nonbipartite_kthlist(inputfile, graph_class):
     for succ, predecessors, lineno in parser:
 
         if succ <= previous:
-            raise ValueError("Vertex at line {} is smaller than the previous one.".format(lineno))
+            raise ValueError(
+                "Vertex at line {} is smaller than the previous one.".format(lineno))
 
         # after vertices, add the edges
         for v in predecessors:
@@ -1483,7 +1493,8 @@ def _write_graph_kthlist_bipartite(G, output_file):
 
     for u in U:
         output.write(str(u) + " :")
-        output.write("".join([' '+str(v + offset) for v in G.right_neighbors(u)]))
+        output.write("".join([' '+str(v + offset)
+                     for v in G.right_neighbors(u)]))
         output.write(" 0\n")
 
     print(output.getvalue(), file=output_file)
@@ -1504,7 +1515,7 @@ def _write_graph_dimacs_format(G, output_file):
     print("c {}".format(G.name).strip(), file=output_file)
     n = G.number_of_vertices()
     m = G.number_of_edges()
-    print("p edge {} {}".format(n,m), file=output_file)
+    print("p edge {} {}".format(n, m), file=output_file)
 
     for v, w in G.edges():
         print("e {} {}".format(v, w), file=output_file)
@@ -1846,7 +1857,7 @@ def dag_pyramid(height):
     if height < 0:
         raise ValueError("The height of the tree must be >= 0")
 
-    n = (height+1)*(height+2) // 2 # number of vertices
+    n = (height+1)*(height+2) // 2  # number of vertices
     D = DirectedGraph(n, 'Pyramid of height {}'.format(height))
 
     # edges
@@ -1888,7 +1899,7 @@ def dag_complete_binary_tree(height):
     # vertices plus 1
     N = 2 * (2**height)
     name = 'Complete binary tree of height {}'.format(height)
-    D = DirectedGraph(N-1,name)
+    D = DirectedGraph(N-1, name)
 
     # edges
     leftsrc = 1
@@ -1922,7 +1933,7 @@ def dag_path(length):
         raise ValueError("The lenght of the path must be >= 0")
 
     name = 'Directed path of length {}'.format(length)
-    D = DirectedGraph(length+1,name)
+    D = DirectedGraph(length+1, name)
     # edges
     for i in range(1, length+1):
         D.add_edge(i, i + 1)
