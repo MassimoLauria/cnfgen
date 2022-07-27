@@ -2041,7 +2041,7 @@ class VariablesManager:
             return
         if isinstance(f, UnaryMappingVariables):
             for x in f.domain():
-                F.at_most(f(x, None), 1, check=False)
+                F.cardinality_leq(f(x, None), 1, check=False)
 
     def force_surjective_mapping(self, f):
         """Enforce the mapping `f` to be surjective
@@ -2105,7 +2105,7 @@ class VariablesManager:
 
         if isinstance(f, UnaryMappingVariables):
             for y in f.range():
-                F.at_most(f(None, y), 1, check=False)
+                F.cardinality_leq(f(None, y), 1, check=False)
 
         if isinstance(f, BinaryMappingVariables):
             for y in f.range():

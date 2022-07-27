@@ -174,17 +174,21 @@ class CNFLinear(BaseCNF):
         for clause in combinations(lits, k):
             self.add_clause(clause, check=False)
 
-    def at_least(self, lits, value,check=True):
+    def cardinality_geq(self, lits, value,check=True):
         """Clauses encoding a \"at least " constraint """
-        if isgenerator(lits):
-            lits = list(lits)
         return self.add_linear(lits, '>=', value, check=check)
 
-    def at_most(self, lits, value,check=True):
-        """Clauses encoding a \"at least " constraint """
-        if isgenerator(lits):
-            lits = list(lits)
+    def cardinality_leq(self, lits, value,check=True):
+        """Clauses encoding a \"at most " constraint """
         return self.add_linear(lits, '<=', value, check=check)
+
+    def cardinality_eq(self, lits, value,check=True):
+        """Clauses encoding a 'exactly equal to' constraint """
+        return self.add_linear(lits, '==', value, check=check)
+
+    def cardinality_neq(self, lits, value,check=True):
+        """Clauses encoding a 'different from' constraint """
+        return self.add_linear(lits, '!=', value, check=check)
 
     def add_loose_majority(self, lits, check=True):
         """Clauses encoding a \"at least half\" constraint

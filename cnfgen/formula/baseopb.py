@@ -5,7 +5,7 @@
 
 from functools import reduce
 from operator import mul
-from itertools import product
+from itertools import product,combinations
 from inspect import isgenerator
 
 from collections import OrderedDict
@@ -159,7 +159,7 @@ class BaseOPB:
         description: string, optional
             a description of the formula
         """
-        default_description = 'Formula in CNF'
+        default_description = 'Pseudo-boolean formula'
         self.header = OrderedDict()
         if description is not None:
             self.header['description'] = description
@@ -181,8 +181,8 @@ class BaseOPB:
         """String representation of the formula
         """
         n = self._numvar
-        m = len(self._clauses)
-        text = "pseudo-boolean formula with {} vars and {} constraints".format(n, m)
+        m = len(self._constraints)
+        text = "Formula with {} vars and {} constraints".format(n, m)
         if 'description' in self.header:
             text += " -- " + self.header['description']
         return text
@@ -422,22 +422,22 @@ not have any effect."""
         """
         return ConstraintsView(self)
 
-    def at_least(self, lits, value,check=True):
+    def cardinality_geq(self, lits, value,check=True):
         """Encoding of \"at least\" constraint
 
         >>> c = BaseOPB()
-        >>> c.at_least([1,4,2,-3,6],3)
+        >>> c.cardinality_geq([1,4,2,-3,6],3)
         >>> print(c[0])
         [(1, 1), (1, 4), (1, 2), (1, -3), (1, 6), '>=', 3]
         """
         lits = [(1,l) for l in lits]
         self.add_constraint(lits + ['>=', value], check=check)
 
-    def at_most(self, lits, value,check=True):
+    def cardinality_leq(self, lits, value,check=True):
         """Encoding of \"at most\" constraint
 
         >>> c = BaseOPB()
-        >>> c.at_most([1,4,2,-3,6],4)
+        >>> c.cardinality_leq([1,4,2,-3,6],4)
         >>> print(c[0])
         [(1, -1), (1, -4), (1, -2), (1, 3), (1, -6), '>=', 1]
         """
@@ -445,7 +445,7 @@ not have any effect."""
         self.add_constraint(lits + ['<=', value], check=check)
 
     def cardinality_eq(self, lits, value,check=True):
-        """Encoding of \"at most\" constraint
+        """Encoding of \"equal to\" constraint
 
         >>> c = BaseOPB()
         >>> c.cardinality_eq([1,4,2,-3,6],3)
@@ -454,6 +454,33 @@ not have any effect."""
         """
         lits = [(1,l) for l in lits]
         self.add_constraint(lits + ['==', value], check=check)
+
+    def cardinality_neq(self, lits, value,check=True):
+        """Encoding of \"not equal\" constraint
+
+        This is not a linear constraint, thus it has to be blasted
+        into clauses.
+
+        >>> c = BaseOPB()
+        >>> c.cardinality_neq([1,4,2,-3,6],3)
+        >>> print(len(c))
+        10
+        """
+        if isgenerator(lits):
+            lits = list(lits)
+        if check:
+            # dummy constraint, just to check the literals once
+            self._check_and_update([(1,l) for l in lits]+ ['==',0])
+
+        n = len(lits)
+        if value < 0 or value > n:
+            return
+        for flips in combinations(range(n), value):
+            for i in flips:
+                lits[i] *= -1
+            self.add_clause(lits, check=False)
+            for i in flips:
+                lits[i] *= -1
 
     def add_loose_majority(self, lits, check=True):
         """Encoding of \"at least half\" constraint

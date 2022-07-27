@@ -9,7 +9,6 @@ from cnfgen.formula.cnfio import guess_output_format
 
 from cnfgen.utils.latexoutput import to_latex_string, to_latex_document
 from cnfgen.utils.opb    import to_opb_file
-
 from cnfgen.formula.baseopb import BaseOPB
 
 class OPBio(BaseOPB):
@@ -22,7 +21,7 @@ class OPBio(BaseOPB):
     Examples
     --------
     >>> c=OPBio()
-    >>> c.at_least([1,2,4,-3],3)
+    >>> c.cardinality_geq([1,2,4,-3],3)
     >>> print( c.to_opb(),end='')
     * #variable= 4 #constraint= 1
     +1 x1 +1 x2 +1 x4 +1 ~x3 >= 3
@@ -44,7 +43,7 @@ class OPBio(BaseOPB):
         Examples
         --------
         >>> c=OPBio()
-        >>> c.at_most([1,4,2],2)
+        >>> c.cardinality_leq([1,4,2],2)
         >>> c.cardinality_eq([3,-4],1)
         >>> print(c.to_opb(),end='')
         * #variable= 4 #constraint= 2
@@ -86,7 +85,7 @@ class OPBio(BaseOPB):
         Examples
         --------
         >>> c=OPBio()
-        >>> c.at_least([1,3,-2,4],3)
+        >>> c.cardinality_geq([1,3,-2,4],3)
         >>> c.cardinality_eq([1,3,-2,4],3)
         >>> c.add_constraint([(2,3),(2,-1),(1,-2),">=",2])
         >>> print(c.to_latex())
