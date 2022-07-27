@@ -10,7 +10,7 @@ The module defines functionality to conviniently represent mapping,
 The module implements the :py:class:`CNFMapping` object, which is
 supposed to be inherited from the :py:class:`VariablesManager` object.
 
-Copyright (C) 2019-2021  Massimo Lauria <lauria.massimo@gmail.com>
+Copyright (C) 2019-2022  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -20,6 +20,7 @@ from itertools import combinations, product, islice
 from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph
 from cnfgen.formula.variables import BipartiteEdgesVariables, BaseVariableGroup
 from cnfgen.formula.variables import VariablesManager
+from cnfgen.formula.linear import CNFLinear
 
 
 class UnaryMappingVariables(BipartiteEdgesVariables):
@@ -291,7 +292,7 @@ class BinaryMappingVariables(BaseVariableGroup):
         return [ s*v for s,v in pairs ]
 
 
-class CNFMapping(VariablesManager):
+class CNFMapping(VariablesManager, CNFLinear):
     """CNF with a variable manager
 
     A CNF formula needs to keep track on variables.
@@ -332,9 +333,10 @@ class CNFMapping(VariablesManager):
         """Construct a variable manager object
         """
         self._groups = []
-        VariablesManager.__init__(self,
-                                  clauses=clauses,
-                                  description=description)
+        CNFLinear.__init__(self,
+                           clauses=clauses,
+                           description=description)
+        VariablesManager.__init__(self,self)
 
     def new_mapping(self, n, m, label='f({})={}'):
         """Adds variables for a mapping from `n` to `m`

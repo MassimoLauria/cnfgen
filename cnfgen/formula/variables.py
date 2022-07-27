@@ -26,7 +26,6 @@ from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph
 from cnfgen.graphs import Graph, DirectedGraph
 
 from cnfgen.formula.basecnf import BaseCNF
-from cnfgen.formula.linear import CNFLinear
 
 
 class BaseVariableGroup():
@@ -98,7 +97,8 @@ class BaseVariableGroup():
 
         Examples
         --------
-        >>> V = VariablesManager()
+        >>> F = BaseCNF()
+        >>> V = VariablesManager(F)
         >>> m = V.new_block(2,5,label='m[{},{}]')
         >>> isinstance(m,BaseVariableGroup)
         True
@@ -256,7 +256,7 @@ class BlockOfVariables(BaseVariableGroup):
 
     Examples
     --------
-    >>> F = VariablesManager()
+    >>> F = BaseCNF()
     >>> G = BlockOfVariables(F,[2,3],'G[{},{}]')
     >>> print(*G.label())
     G[1,1] G[1,2] G[1,3] G[2,1] G[2,2] G[2,3]
@@ -264,7 +264,8 @@ class BlockOfVariables(BaseVariableGroup):
     (1, 1) (1, 2) (1, 3) (2, 1) (2, 2) (2, 3)
     >>> G(2,1)
     4
-    >>> V = VariablesManager()
+    >>> F = BaseCNF()
+    >>> V = VariablesManager(F)
     >>> p = V.new_block(10,5,label='p({},{})')
     >>> q = V.new_block(3,3,label='q({},{})')
     >>> isinstance(p,BlockOfVariables)
@@ -416,8 +417,8 @@ class BlockOfVariables(BaseVariableGroup):
 
         Examples
         --------
-        >>> V = VariablesManager()
-        >>> VG = BlockOfVariables(V,[3,5,4,3])
+        >>> F = BaseCNF()
+        >>> VG = BlockOfVariables(F,[3,5,4,3])
         >>> VG.to_index(1)
         [1, 1, 1, 1]
         >>> VG.to_index(-5)
@@ -463,7 +464,7 @@ class WordOfIndicesVariables(BaseVariableGroup):
 
     Examples
     --------
-    >>> F = VariablesManager()
+    >>> F = BaseCNF()
     >>> G = WordOfIndicesVariables(F,4,2,'[{}]')
     >>> print(*G.label())
     [1,2] [1,3] [1,4] [2,3] [2,4] [3,4]
@@ -471,7 +472,8 @@ class WordOfIndicesVariables(BaseVariableGroup):
     (1, 2) (1, 3) (1, 4) (2, 3) (2, 4) (3, 4)
     >>> G(2,3)
     4
-    >>> V = VariablesManager()
+    >>> F =BaseCNF()
+    >>> V = VariablesManager(F)
     >>> p = V.new_combinations(5,3,label='p({})')
     >>> q = V.new_combinations(3,3,label='q({})')
     >>> print(len(p))
@@ -635,8 +637,8 @@ class WordOfIndicesVariables(BaseVariableGroup):
 
         Examples
         --------
-        >>> V = VariablesManager()
-        >>> VG = BlockOfVariables(V,[3,5,4,3])
+        >>> F = BaseCNF()
+        >>> VG = BlockOfVariables(F,[3,5,4,3])
         >>> VG.to_index(1)
         [1, 1, 1, 1]
         >>> VG.to_index(-5)
@@ -672,7 +674,7 @@ class BipartiteEdgesVariables(BaseVariableGroup):
     >>> G.add_edge(2,1)
     >>> G.add_edge(1,3)
     >>> G.add_edge(2,2)
-    >>> F = VariablesManager()
+    >>> F = BaseCNF()
     >>> F.update_variable_number(11)
     >>> e = BipartiteEdgesVariables(F, G, labelfmt='E[{},{}]')
     >>> print(*[e.label(u,v) for u,v in e.indices()])
@@ -773,7 +775,7 @@ class BipartiteEdgesVariables(BaseVariableGroup):
         >>> G.add_edge(2,1)
         >>> G.add_edge(1,3)
         >>> G.add_edge(2,2)
-        >>> F = VariablesManager()
+        >>> F = BaseCNF()
         >>> V = BipartiteEdgesVariables(F, G, labelfmt='X[{},{}]')
         >>> print(*V.indices(None,1))
         (2, 1)
@@ -839,7 +841,7 @@ class BipartiteEdgesVariables(BaseVariableGroup):
         >>> G.add_edge(2,1)
         >>> G.add_edge(1,3)
         >>> G.add_edge(2,2)
-        >>> F = VariablesManager()
+        >>> F = BaseCNF()
         >>> F.update_variable_number(100)
         >>> V = BipartiteEdgesVariables(F, G, labelfmt='e[{},{}]')
         >>> V.to_index(102)
@@ -870,7 +872,7 @@ class DiGraphEdgesVariables(BaseVariableGroup):
     >>> G.add_edge(3,4)
     >>> G.add_edge(4,5)
     >>> G.add_edge(5,1)
-    >>> F = VariablesManager()
+    >>> F = BaseCNF()
     >>> F.update_variable_number(100)
     >>> a = DiGraphEdgesVariables(F, G, labelfmt='a({},{})')
     >>> a.to_index(101)
@@ -891,7 +893,7 @@ class DiGraphEdgesVariables(BaseVariableGroup):
     >>> H.add_edge(2,3)
     >>> H.add_edge(2,4)
     >>> H.add_edge(5,1)
-    >>> F = VariablesManager()
+    >>> F = BaseCNF()
     >>> F.update_variable_number(11)
     >>> b = DiGraphEdgesVariables(F,H,labelfmt='b({},{})',sortby='succ')
     >>> b(1,3)
@@ -968,7 +970,7 @@ class DiGraphEdgesVariables(BaseVariableGroup):
         >>> H.add_edge(2,3)
         >>> H.add_edge(2,4)
         >>> H.add_edge(5,1)
-        >>> F = VariablesManager()
+        >>> F = BaseCNF()
         >>> F.update_variable_number(11)
         >>> b = DiGraphEdgesVariables(F,H,labelfmt='b({},{})',sortby='succ')
         >>> print(*b.indices())
@@ -1026,7 +1028,7 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
     >>> G.add_edge(3,2)
     >>> G.add_edge(1,3)
     >>> G.add_edge(4,2)
-    >>> F = VariablesManager()
+    >>> F = BaseCNF()
     >>> V = GraphEdgesVariables(F, G, labelfmt='E[{},{}]')
     >>> print(*[V.label(u,v) for u,v in V.indices()])
     E[1,2] E[1,3] E[2,3] E[2,4]
@@ -1104,7 +1106,7 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
         >>> G = Graph(3)
         >>> G.add_edge(2,1)
         >>> G.add_edge(1,3)
-        >>> F = VariablesManager()
+        >>> F = BaseCNF()
         >>> V = GraphEdgesVariables(F, G, labelfmt='X[{},{}]')
         >>> print(*V.indices(None,1))
         (1, 2) (1, 3)
@@ -1176,7 +1178,7 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
         >>> G.add_edge(3,2)
         >>> G.add_edge(1,3)
         >>> G.add_edge(4,2)
-        >>> F = VariablesManager()
+        >>> F = BaseCNF()
         >>> F.update_variable_number(100)
         >>> V = GraphEdgesVariables(F, G)
         >>> V.to_index(102)
@@ -1189,10 +1191,9 @@ class GraphEdgesVariables(BipartiteEdgesVariables):
         return self.BG.to_index(lit)
 
 
-class VariablesManager(CNFLinear):
-    """CNF with a variable manager
+class VariablesManager:
+    """Class for a formula with a variable manager
 
-    A CNF formula needs to keep track on variables.
     A :py:class:`VariableManager` allows to do that, while providing
     a nice interface that allows to focus on variable meaning.
 
@@ -1211,11 +1212,12 @@ class VariablesManager(CNFLinear):
 
     Examples
     --------
-    >>> V=VariablesManager()
+    >>> F=BaseCNF()
+    >>> V=VariablesManager(F)
     >>> X = V.new_variable(label="X")
     >>> Y = V.new_variable(label="Y")
     >>> Zs = V.new_block(2,3,label='z_{{{},{}}}')
-    >>> V.number_of_variables()
+    >>> F.number_of_variables()
     8
     >>> len(Zs)
     6
@@ -1224,11 +1226,12 @@ class VariablesManager(CNFLinear):
 
     """
 
-    def __init__(self, clauses=None, description=None):
-        """Construct a variable manager object
+
+    def __init__(self,F):
+        """Construct a variable manager object for formula F
         """
         self._groups = []
-        CNFLinear.__init__(self, clauses=clauses, description=description)
+        self._formula = F
 
     def _add_variable_group(self, vg):
         """Add a group of variables to the formula"""
@@ -1239,11 +1242,11 @@ class VariablesManager(CNFLinear):
 
         begin, end = vg[0], vg[-1]
         assert end >= begin
-        if begin <= self.number_of_variables():
+        if begin <= self._formula.number_of_variables():
             raise ValueError(
                 "The new variable group must not overlaps old variables")
         self._groups.append(vg)
-        self.update_variable_number(end)
+        self._formula.update_variable_number(end)
 
     def new_variable(self, label=None):
         """
@@ -1260,22 +1263,23 @@ class VariablesManager(CNFLinear):
 
         Examples
         --------
-        >>> V=VariablesManager()
+        >>> F=BaseCNF()
+        >>> V=VariablesManager(F)
         >>> V.new_variable(label='X')
         1
-        >>> V.number_of_variables()
+        >>> F.number_of_variables()
         1
         >>> V.new_variable(label='Y')
         2
         >>> V.new_variable(label='Z')
         3
-        >>> V.number_of_variables()
+        >>> F.number_of_variables()
         3
-        >>> V.add_clause([1,3,-4])
-        >>> V.number_of_variables()
+        >>> F.add_clause([1,3,-4])
+        >>> F.number_of_variables()
         4
         """
-        newgroup = SingletonVariableGroup(self, label)
+        newgroup = SingletonVariableGroup(self._formula, label)
         self._add_variable_group(newgroup)
         return newgroup()
 
@@ -1297,16 +1301,17 @@ class VariablesManager(CNFLinear):
 
         Examples
         --------
-        >>> V=VariablesManager()
+        >>> F = BaseCNF()
+        >>> V = VariablesManager(F)
         >>> V.new_variable(label='X')
         1
-        >>> V.number_of_variables()
+        >>> F.number_of_variables()
         1
         >>> V.new_variable(label='Y')
         2
         >>> V.new_variable(label='Z')
         3
-        >>> V.number_of_variables()
+        >>> F.number_of_variables()
         3
         >>> v = V.new_block(3,5,4,3,label='v({},{},{},{})')
         >>> v.to_index(4)
@@ -1326,14 +1331,14 @@ class VariablesManager(CNFLinear):
         >>> v(3,5,4,3)
         183
         """
-        newgroup = BlockOfVariables(self, ranges, label)
+        newgroup = BlockOfVariables(self._formula, ranges, label)
         self._add_variable_group(newgroup)
         return newgroup
 
     def new_combinations(self, n, k, label='p_{{{}}}'):
         """Create a new group of variables indexed by k-subsets of [n]"""
 
-        newgroup = WordOfIndicesVariables(self, n, k, labelfmt=label,
+        newgroup = WordOfIndicesVariables(self._formula, n, k, labelfmt=label,
                                           wordtype='combinations')
         self._add_variable_group(newgroup)
         return newgroup
@@ -1341,7 +1346,7 @@ class VariablesManager(CNFLinear):
     def new_combinations_with_replacement(self, n, k, label='p_{{{}}}'):
         """Create a new group of variables indexed by k-subsets of [n]"""
 
-        newgroup = WordOfIndicesVariables(self, n, k, labelfmt=label,
+        newgroup = WordOfIndicesVariables(self._formula, n, k, labelfmt=label,
                                           wordtype='combinations_with_replacement')
         self._add_variable_group(newgroup)
         return newgroup
@@ -1351,7 +1356,7 @@ class VariablesManager(CNFLinear):
 
         if k is None:
             k = n
-        newgroup = WordOfIndicesVariables(self, n, k, labelfmt=label,
+        newgroup = WordOfIndicesVariables(self._formula, n, k, labelfmt=label,
                                           wordtype='permutations')
         self._add_variable_group(newgroup)
         return newgroup
@@ -1359,7 +1364,7 @@ class VariablesManager(CNFLinear):
     def new_words(self, n, k, label='p_{{{}}}'):
         """Create a new group of variables indexed by sequences [n]^k"""
 
-        newgroup = WordOfIndicesVariables(self, n, k, labelfmt=label,
+        newgroup = WordOfIndicesVariables(self._formula, n, k, labelfmt=label,
                                           wordtype='words')
         self._add_variable_group(newgroup)
         return newgroup
@@ -1382,10 +1387,11 @@ class VariablesManager(CNFLinear):
 
         Examples
         --------
-        >>> V=VariablesManager()
+        >>> F = BaseCNF()
+        >>> V=VariablesManager(F)
         >>> V.new_variable(label='X')
         1
-        >>> V.number_of_variables()
+        >>> F.number_of_variables()
         1
         >>> V.new_variable(label='Y')
         2
@@ -1398,7 +1404,7 @@ class VariablesManager(CNFLinear):
         >>> G.add_edge(4,2)
         >>> G.add_edge(5,1)
         >>> e = V.new_bipartite_edges(G,label='X[{},{}]')
-        >>> V.number_of_variables()
+        >>> F.number_of_variables()
         9
         >>> e.to_index(4)
         (2, 1)
@@ -1409,7 +1415,7 @@ class VariablesManager(CNFLinear):
         >>> e(5,1)
         9
         """
-        newgroup = BipartiteEdgesVariables(self, G, labelfmt=label)
+        newgroup = BipartiteEdgesVariables(self._formula, G, labelfmt=label)
         self._add_variable_group(newgroup)
         return newgroup
 
@@ -1430,10 +1436,11 @@ class VariablesManager(CNFLinear):
 
         Examples
         --------
-        >>> V=VariablesManager()
+        >>> F = BaseCNF()
+        >>> V=VariablesManager(F)
         >>> V.new_variable(label='X')
         1
-        >>> V.number_of_variables()
+        >>> F.number_of_variables()
         1
         >>> V.new_variable(label='Y')
         2
@@ -1461,7 +1468,7 @@ class VariablesManager(CNFLinear):
         3
         """
         G = Graph.normalize(G)
-        newgroup = GraphEdgesVariables(self,
+        newgroup = GraphEdgesVariables(self._formula,
                                          G,
                                          labelfmt=label)
         self._add_variable_group(newgroup)
@@ -1486,10 +1493,11 @@ class VariablesManager(CNFLinear):
 
         Examples
         --------
-        >>> V=VariablesManager()
+        >>> F=BaseCNF()
+        >>> V=VariablesManager(F)
         >>> V.new_variable(label='X')
         1
-        >>> V.number_of_variables()
+        >>> F.number_of_variables()
         1
         >>> V.new_variable(label='Y')
         2
@@ -1515,8 +1523,10 @@ class VariablesManager(CNFLinear):
         (4, 3)
         >>> a(2,1)
         3
+        >>> F.number_of_variables()
+        9
         """
-        newgroup = DiGraphEdgesVariables(self,
+        newgroup = DiGraphEdgesVariables(self._formula,
                                          G,
                                          labelfmt=label,
                                          sortby=sortby)
@@ -1533,6 +1543,7 @@ argument `default_label_format` (e.g. 'x{}').
         # We cycle through all variables,
         #
         varid = 1
+        end = self._formula.number_of_variables()
         for vg in self._groups:
             if len(vg) == 0:
                 continue
@@ -1546,7 +1557,7 @@ argument `default_label_format` (e.g. 'x{}').
                 varid += 1
             yield from vg.label()
             varid += len(vg)
-        while varid <= self._numvar:
+        while varid <= end:
             yield default_label_format.format(varid)
             varid += 1
-        assert varid == self._numvar+1
+        assert varid == end+1

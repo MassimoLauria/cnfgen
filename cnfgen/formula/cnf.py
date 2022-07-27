@@ -9,14 +9,10 @@ ready to be fed to sat solvers.
 The module implements the `CNF` object, which is the main entry point
 to the `cnfgen` library.
 
-Copyright (C) 2012-2021  Massimo Lauria <lauria.massimo@gmail.com>
+Copyright (C) 2012-2022  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
-from itertools import combinations
-from itertools import product, islice
-from math import ceil, log
-
 from cnfgen.formula.cnfio import CNFio
 from cnfgen.formula.linear import CNFLinear
 from cnfgen.formula.mapping import CNFMapping
