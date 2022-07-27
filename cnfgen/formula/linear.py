@@ -8,7 +8,7 @@ This CNF formula type supports
   for example 'atmost k'
 
 
-Copyright (C) 2021 Massimo Lauria <lauria.massimo@gmail.com>
+Copyright (C) 2021, 2022 Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
@@ -173,6 +173,18 @@ class CNFLinear(BaseCNF):
         k = len(lits) - constant + 1
         for clause in combinations(lits, k):
             self.add_clause(clause, check=False)
+
+    def at_least(self, lits, value,check=True):
+        """Clauses encoding a \"at least " constraint """
+        if isgenerator(lits):
+            lits = list(lits)
+        return self.add_linear(lits, '>=', value, check=check)
+
+    def at_most(self, lits, value,check=True):
+        """Clauses encoding a \"at least " constraint """
+        if isgenerator(lits):
+            lits = list(lits)
+        return self.add_linear(lits, '<=', value, check=check)
 
     def add_loose_majority(self, lits, check=True):
         """Clauses encoding a \"at least half\" constraint

@@ -15,10 +15,10 @@ https://github.com/MassimoLauria/cnfgen.git
 """
 from cnfgen.formula.cnfio import CNFio
 from cnfgen.formula.linear import CNFLinear
-from cnfgen.formula.mapping import CNFMapping
+from cnfgen.formula.variables import VariablesManager
 
 
-class CNF(CNFMapping, CNFio, CNFLinear):
+class CNF(VariablesManager, CNFio, CNFLinear):
     """Propositional formulas in conjunctive normal form.
 
     A CNF  formula is a  sequence of  clauses, which are  sequences of
@@ -68,5 +68,7 @@ class CNF(CNFMapping, CNFio, CNFLinear):
         description: string, optional
             a description of the formula
         """
-        CNFMapping.__init__(
-            self, clauses=clauses, description=description)
+        CNFLinear.__init__(self,
+                           clauses=clauses,
+                           description=description)
+        VariablesManager.__init__(self,self)
