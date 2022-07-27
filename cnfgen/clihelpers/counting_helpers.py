@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Implementation of counting/matching formulas helpers
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2022 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -49,7 +49,7 @@ optional arguments:
         parser.add_argument('N', type=nonnegative_int)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         return CountingPrinciple(args.N, 2)
 
 
@@ -78,7 +78,7 @@ optional arguments:
         parser.add_argument('G',action=ObtainSimpleGraph)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         return PerfectMatchingPrinciple(args.G)
 
 
@@ -108,7 +108,7 @@ optional arguments:
         parser.add_argument('p', type=positive_int)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build an Counting Principle formula according to the arguments
 
         Arguments:
@@ -200,7 +200,7 @@ class TseitinCmdHelper(FormulaHelper):
                             help=argparse.SUPPRESS)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build Tseitin formula according to the arguments
 
         Arguments:
@@ -319,7 +319,7 @@ class SCCmdHelper(FormulaHelper):
                             help=argparse.SUPPRESS)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         if hasattr(args, 'N'):
             N = args.N
             d = args.d

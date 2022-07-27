@@ -45,7 +45,7 @@ optional arguments:
         parser.add_argument('c', type=positive_int)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build Thapen's size-width tradeoff formula according to the arguments
 
         Arguments:

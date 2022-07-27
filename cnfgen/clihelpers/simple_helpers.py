@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Formula Helpers for simple and random formulas
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2022 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -41,7 +41,7 @@ optional arguments:
         parser.add_argument('N', type=nonnegative_int)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build an disjunction
 
         Arguments:
@@ -85,7 +85,7 @@ optional arguments:
         parser.add_argument('N', type=nonnegative_int)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a conjunction
 
         Arguments:
@@ -117,7 +117,7 @@ optional arguments:
 """
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build an empty CNF formula
 
         Parameters
@@ -144,7 +144,7 @@ optional arguments:
 """
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a CNF formula with an empty clause
 
         Parameters
@@ -192,7 +192,7 @@ optional arguments:
                             default=False)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a conjunction
 
         Arguments:

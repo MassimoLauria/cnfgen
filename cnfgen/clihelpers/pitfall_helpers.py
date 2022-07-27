@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Formula Helpers for the Pitfall formula
 
-Copyright (C) 2012-2021 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012-2022 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -54,5 +54,5 @@ class PitfallCmdHelper(FormulaHelper):
         parser.add_argument('k',  type=positive_even_int)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         return PitfallFormula(args.v, args.d, args.ny, args.nz, args.k)

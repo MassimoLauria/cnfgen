@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Formula Helpers for pigeonhole principle formulas
 
-Copyright (C) 2012-2021 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012-2022 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -144,7 +144,7 @@ class PHPCmdHelper(FormulaHelper):
                             help="every hole has a sitting pigeon")
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a PHP formula according to the arguments
 
         Arguments:
@@ -207,7 +207,7 @@ optional arguments:
         parser.add_argument('N', type=positive_int)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a PHP formula according to the arguments
 
         Arguments:
@@ -254,7 +254,7 @@ optional arguments:
         parser.add_argument('c', type=positive_int)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a Clique-coclique formula according to the arguments
 
         Arguments:
@@ -306,7 +306,7 @@ optional arguments:
         parser.add_argument('N', type=nonnegative_int)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a Ramsey formula according to the arguments
 
         Arguments:
@@ -363,7 +363,7 @@ class VDWCmdHelper(FormulaHelper):
                             help=argparse.SUPPRESS)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a Ramsey formula according to the arguments
 
         Arguments:
@@ -415,7 +415,7 @@ optional arguments:
         parser.add_argument('N', type=nonnegative_int)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a PTN formula according to the arguments
 
         Arguments:
@@ -465,7 +465,7 @@ optional arguments:
         parser.add_argument('holes',          type=nonnegative_int)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a RPHP formula according to the arguments
         Arguments:
         - `args`: command line options

@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Formula Helper interface
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2022 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -16,8 +16,6 @@ class FormulaHelper:
         raise NotImplementedError("Formula family helper must be subclassed")
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Buil the CNF according to the parameters on the command line"""
         raise NotImplementedError("Formula family helper must be subclassed")
-
-

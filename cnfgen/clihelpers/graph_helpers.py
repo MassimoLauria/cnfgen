@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Implementation of some graph formulas helpers
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2022 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 import argparse
@@ -56,7 +56,7 @@ optional arguments:
         parser.add_argument('G', action=ObtainSimpleGraph)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a k-colorability formula according to the arguments
 
         Arguments:
@@ -93,7 +93,7 @@ optional arguments:
         parser.add_argument('G', action=ObtainSimpleGraph)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         return EvenColoringFormula(args.G)
 
 
@@ -136,7 +136,7 @@ optional arguments:
             'G', action=ObtainSimpleGraph)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build the k-dominating set formula
 
         Arguments:
@@ -172,7 +172,7 @@ optional arguments:
         parser.add_argument('G', action=ObtainSimpleGraph)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build the tiling formula
 
         Arguments:
@@ -219,7 +219,7 @@ class GIsoCmdHelper(FormulaHelper):
 
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         G = args.G
         if hasattr(args, 'G2'):
             G2 = args.G2
@@ -261,7 +261,7 @@ optional arguments:
                             dest='symmetrybreaking')
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a k-clique formula according to the arguments
 
         Arguments:
@@ -303,7 +303,7 @@ optional arguments:
         parser.add_argument('G', action=ObtainSimpleGraph)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a k-clique formula according to the arguments
 
         Arguments:
@@ -354,7 +354,7 @@ optional arguments:
             action=ObtainSimpleGraph)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a formula to check that a graph is a ramsey number lower bound
 
         Arguments:
@@ -408,7 +408,7 @@ class SubGraphCmdHelper(FormulaHelper):
                             action=ObtainSimpleGraph)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build a subgraph formula according to the arguments
 
         Arguments:

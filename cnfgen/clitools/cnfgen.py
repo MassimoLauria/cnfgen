@@ -504,7 +504,7 @@ def cli(argv=None, mode='output'):
             random.seed(args.seed)
 
         try:
-            cnf = args.generator.build_cnf(args)
+            cnf = args.generator.build_formula(args)
         except (CLIError, ValueError) as e:
             args.generator.subparser.error(e)
         except RuntimeError as e:

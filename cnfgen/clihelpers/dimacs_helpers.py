@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Formula Helpers for reading dimacs
 
-Copyright (C) 2012-2021 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012-2022 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -45,7 +45,7 @@ class DimacsCmdHelper(FormulaHelper):
                             default='-')
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
 
         msg = """Waiting for a DIMACS formula on <stdin>."""
 

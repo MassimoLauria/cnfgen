@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Implementation of some Ordering principle helpers
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2022 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -120,7 +120,7 @@ class OPCmdHelper(FormulaHelper):
                             help=argparse.SUPPRESS)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build an Ordering principle formula according to the arguments
 
         Arguments:

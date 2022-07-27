@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Implementation of some graph formulas helpers
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2022 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -52,7 +52,7 @@ optional arguments:
         parser.add_argument('D', action=ObtainDirectedAcyclicGraph)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build the pebbling formula
 
         Arguments:
@@ -103,7 +103,7 @@ optional arguments:
         parser.add_argument('--sparse', metavar='<degree>', type=positive_int)
 
     @staticmethod
-    def build_cnf(args):
+    def build_formula(args):
         """Build the stone formula
 
         Arguments:
