@@ -3,6 +3,11 @@
 """The implementaton of the basic CNF object
 """
 
+from functools import reduce
+from operator import mul
+from itertools import product
+from inspect import isgenerator
+
 from collections import OrderedDict
 from cnfgen.info import info
 
@@ -499,3 +504,51 @@ not have any effect."""
         lits = [(1,l) for l in lits]
         threshold = ((len(lits) + 1) // 2)
         self.add_constraint(lits + ['<', threshold], check=check)
+
+    def add_parity(self, lits, constant, check=True):
+        """Adds the CNF encoding of a parity constraint
+
+        E.g. X1 + X2 + X3 = 1 (mod 2) is encoded as
+
+        ( X1 v  X2 v  X3)
+        (~X1 v ~X2 v  X3)
+        (~X1 v  X2 v ~X3)
+        ( X1 v ~X2 v ~X3)
+
+        Parameters
+        ----------
+        variables : array-like
+            literals
+        constant : {0,1}
+            the constant of the linear equation
+        check : bool
+            check that the literals are valid and update the variable count
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> C=BaseOPB()
+        >>> C.add_parity([-1,2],1)
+        >>> print(list(C))
+        [[(1, -1), (1, 2), '>=', 1], [(1, 1), (1, -2), '>=', 1]]
+        >>> C=BaseOPB()
+        >>> C.add_parity([-1,2],0)
+        >>> print(list(C))
+        [[(1, -1), (1, -2), '>=', 1], [(1, 1), (1, 2), '>=', 1]]
+        """
+        if isgenerator(lits):
+            lits = list(lits)
+        if check:
+            # dummy constraint, just to check the literals once
+            self._check_and_update([(1,l) for l in lits]+ ['==',0])
+
+        desired_sign = 1 if constant == 1 else -1
+        for signs in product([1, -1], repeat=len(lits)):
+            # Save only the clauses with the right polarity
+            parity = reduce(mul, signs, 1)
+            if parity == desired_sign:
+                self.add_clause([lit*sign for lit, sign in zip(lits, signs)],
+                                check=False)
