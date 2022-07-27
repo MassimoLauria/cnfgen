@@ -120,9 +120,9 @@ class CNFio(BaseCNF):
         >>> c=CNFio([[-1, 2, -3], [-2,-4], [2, 3, -4]])
         >>> print(c.to_opb(),end='')
         * #variable= 4 #constraint= 3
-        1 ~x1 1  x2 1 ~x3 >= 1
-        1 ~x2 1 ~x4 >= 1
-        1  x2 1  x3 1 ~x4 >= 1
+        +1 ~x1 +1 x2 +1 ~x3 >= 1
+        +1 ~x2 +1 ~x4 >= 1
+        +1 x2 +1 x3 +1 ~x4 >= 1
 
         >>> c=CNFio()
         >>> print(c.to_opb(),end='')

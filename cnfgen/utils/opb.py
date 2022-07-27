@@ -68,7 +68,7 @@ def to_opb_file(formula, fileorname=None,
     for cls in formula:
         for lit in cls:
             if lit>=0:
-                output.write("1  x{} ".format(lit) )
+                output.write("+1 x{} ".format(lit) )
             else:
-                output.write("1 ~x{} ".format(-lit))
+                output.write("+1 ~x{} ".format(-lit))
         output.write(">= 1\n")
