@@ -81,10 +81,11 @@ optional arguments:
                         Save the formula to <output>.
                         Setting '<output>' to '-' sends the
                         formula to standard output. (default: -)
-  --output-format {latex,dimacs}, -of {latex,dimacs}
+  --output-format {latex,dimacs,opb}, -of {latex,dimacs,opb}
                         Output format of the formulas. 'latex' is
                         convenient to insert formulas into papers, and
                         'dimacs' is the format used by sat solvers.
+                        The 'opb' format is suitable for pseudo boolean solvers.
                         (default: dimacs)
   --latex, -l           Outputs formula in 'latex' format
   --seed <seed>, -S <seed>
@@ -299,7 +300,7 @@ def setup_command_line_parsers(progname, fhelpers, thelpers):
     ofgroup = parser.add_mutually_exclusive_group()
     ofgroup.add_argument('--output-format',
                          '-of',
-                         choices=['latex', 'dimacs'],
+                         choices=['latex', 'dimacs','opb'],
                          default=None)
     ofgroup.add_argument('--latex',
                          '-l',
@@ -479,7 +480,7 @@ def cli(argv=None, mode='output'):
 
     # Correctly infer the comment character, useful to shield
     # the output.
-    comment_char = {'dimacs': 'c ', 'latex': '% '}
+    comment_char = {'dimacs': 'c ', 'latex': '% ', 'opb': '* '}
     try:
         cprefix = comment_char[output_format]
     except KeyError as e:
@@ -527,6 +528,9 @@ def cli(argv=None, mode='output'):
         if mode == 'string':
             if output_format == 'latex':
                 return cnf.to_latex()
+
+            if output_format == 'opb':
+                return cnf.to_opb()
 
             if output_format == 'dimacs':
                 return cnf.to_dimacs()

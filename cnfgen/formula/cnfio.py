@@ -10,6 +10,7 @@ from cnfgen.formula.basecnf import BaseCNF
 from cnfgen.utils.parsedimacs import to_dimacs_file, from_dimacs_file
 from cnfgen.utils.latexoutput import to_latex_string, to_latex_document
 from cnfgen.utils.solver import sat_solve, some_solver_installed
+from cnfgen.utils.opb    import to_opb_file
 
 
 def guess_output_format(fileorname, fileformat_request):
@@ -21,7 +22,7 @@ def guess_output_format(fileorname, fileformat_request):
     If `fileformat` is `None`, then DIMACS format is the default
     output format unless the file name ends with '.tex'.
     """
-    if fileformat_request in ['latex', 'dimacs']:
+    if fileformat_request in ['latex', 'dimacs','opb']:
         return fileformat_request
 
     if fileformat_request is None:
@@ -36,15 +37,21 @@ def guess_output_format(fileorname, fileformat_request):
         except (AttributeError, ValueError, IndexError):
             pass
 
-        return 'latex' if ext == 'tex' else 'dimacs'
+        if ext == 'tex':
+            return 'latex'
+        elif ext =='opb':
+            return 'opb'
+        else:
+            return 'dimacs'
 
-    raise ValueError("fileformat_request can be either None, 'latex' or 'dimacs'")
+    raise ValueError("fileformat_request can be either None, 'latex', 'opb' or 'dimacs'")
 
 
 class CNFio(BaseCNF):
     """CNF class with I/O capabilities
 
     - read and write DIMACS
+    - write to OPB format
     - write to LaTeX format
     - communicate with SAT solver
 
@@ -92,6 +99,41 @@ class CNFio(BaseCNF):
         """
         output = StringIO()
         to_dimacs_file(self, output, export_header=False, export_varnames=False)
+        return output.getvalue()
+
+    def to_opb(self):
+        """Produce the OPB encoding of the formula
+
+        The CNF formula is rendered in the OPB format,
+        which is a particularly popular input format for pseudo boolean solvers [1]_.
+
+        .. note:: the OPB output is *ascii* encoded,
+                  with non-ascii characters replaced.
+
+        Returns
+        -------
+        string
+            the string contains the OPB code
+
+        Examples
+        --------
+        >>> c=CNFio([[-1, 2, -3], [-2,-4], [2, 3, -4]])
+        >>> print(c.to_opb(),end='')
+        * #variable= 4 #constraint= 3
+        1 ~x1 1  x2 1 ~x3 >= 1
+        1 ~x2 1 ~x4 >= 1
+        1  x2 1  x3 1 ~x4 >= 1
+
+        >>> c=CNFio()
+        >>> print(c.to_opb(),end='')
+        * #variable= 0 #constraint= 0
+
+        References
+        ----------
+        .. [1] https://www.cril.univ-artois.fr/PB12/format.pdf
+        """
+        output = StringIO()
+        to_opb_file(self, output, export_header=False, export_varnames=False)
         return output.getvalue()
 
     def to_latex(self):
@@ -172,17 +214,21 @@ class CNFio(BaseCNF):
         """
         fileformat = guess_output_format(fileorname,fileformat)
 
-        if fileformat in 'latex':
+        if fileformat == 'latex':
             to_latex_document(self,
                               fileorname,
                               export_header=export_header,
                               extra_text=extra_text)
+        elif fileformat == 'opb':
+            to_opb_file(self,
+                        fileorname,
+                        export_header=export_header,
+                        export_varnames=export_varnames)
         else:
             to_dimacs_file(self,
                            fileorname,
                            export_header=export_header,
                            export_varnames=export_varnames)
-
     @classmethod
     def from_file(cls, fileorname=None):
         """Reads a DIMACS file into a CNF object

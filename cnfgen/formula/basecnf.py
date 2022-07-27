@@ -135,12 +135,12 @@ class BaseCNF:
         return len(self._clauses)
 
     def __iter__(self):
-        """Number of clauses in the formula
+        """Iterator for clauses in the formula
         """
         return iter(self._clauses)
 
     def __getitem__(self,idx):
-        """Number of clauses in the formula
+        """Get a clause in the formula
         """
         return self._clauses[idx][:]
 
