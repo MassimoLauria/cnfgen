@@ -23,6 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'cnfgen=cnfgen.clitools.cnfgen:main',
+            'pbgen=cnfgen.clitools.pbgen:main',
             'cnfshuffle=cnfgen.clitools.cnfshuffle:main'
         ],
     },
