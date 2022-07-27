@@ -100,5 +100,5 @@ def EvenColoringFormula(G):
 
         edge_vars = [e(u, v) for u,v in e.indices(v,None)]
 
-        F.add_linear(edge_vars,'==', len(edge_vars) // 2)
+        F.cardinality_eq(edge_vars, len(edge_vars) // 2)
     return F

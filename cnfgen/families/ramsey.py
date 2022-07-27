@@ -213,7 +213,7 @@ def VanDerWaerden(N, k1, k2, *ks):
     else:
         X = vdw.new_block(N, len(K), label='x_{{{0},{1}}}')
         for i in range(1, N + 1):
-            vdw.add_linear(X(i, None), '==', 1)
+            vdw.cardinality_eq(X(i, None),  1)
 
         # Forbid arithmetic progressions
         for c in range(1,len(K)+1):

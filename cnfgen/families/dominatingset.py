@@ -125,6 +125,6 @@ def Tiling(G):
     x = F.new_block(G.number_of_vertices() , label='x_{{{0}}}')
     # Every neighborhood must have exactly one variable
     for N in unique_neighborhoods(G):
-        F.add_linear([x(v) for v in N],'==',1)
+        F.cardinality_eq([x(v) for v in N],1)
 
     return F

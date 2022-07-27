@@ -41,7 +41,7 @@ def CountingPrinciple(M, p):
 
     # Each element of the domain is in exactly one part.
     for star in stars:
-        F.add_linear(star, '==', 1)
+        F.cardinality_eq(star,  1)
 
     return F
 
@@ -67,6 +67,6 @@ def PerfectMatchingPrinciple(G):
     # Each vertex has exactly one edge set to one.
     for u in G.vertices():
 
-        F.add_linear(e(u, None), '==', 1)
+        F.cardinality_eq(e(u, None),  1)
 
     return F

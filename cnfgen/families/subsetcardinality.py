@@ -88,7 +88,7 @@ def SubsetCardinalityFormula(B, equalities=False):
 
         hceil = (B.right_degree(u)+1) // 2
         if equalities:
-            F.add_linear(e(u, None), '==', hceil)
+            F.cardinality_eq(e(u, None),  hceil)
         else:
             F.add_loose_majority(e(u, None))
 
@@ -96,7 +96,7 @@ def SubsetCardinalityFormula(B, equalities=False):
 
         hfloor = B.left_degree(v) // 2
         if equalities:
-            F.add_linear(e(None, v), '==', hfloor)
+            F.cardinality_eq(e(None, v),  hfloor)
         else:
             F.add_loose_minority(e(None, v))
 

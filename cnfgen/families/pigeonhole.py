@@ -336,7 +336,7 @@ def RelativizedPigeonholePrinciple(pigeons, resting_places, holes):
     # (3.1b) ~p[u,v] v ~p[u',v] for all u, u' \in [k], u != u', v \in [n]
     # no conflict on any resting place
     for v in p.range():
-        rphp.add_linear(p(None,v), '<=', 1)
+        rphp.cardinality_leq(p(None,v), 1)
     # (3.1c) ~p[u,v] v r[v] for all u \in [k], v \in [n]
     # resting place activation
     for (v, u) in product(p.range(), p.domain()):
