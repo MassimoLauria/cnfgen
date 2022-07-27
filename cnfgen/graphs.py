@@ -246,6 +246,22 @@ class Graph(BaseGraph):
         self.edgeset.add((u, v))
         self.edgeset.add((v, u))
 
+    def update_vertex_number(self, new_value):
+        """Raises the number of vertices to `new_value`"""
+        non_negative_int(new_value, 'new_value')
+        for _ in range(self.n,new_value):
+            self.adjlist.append([])
+        self.n = max(self.n, new_value)
+
+    def remove_edge(self,u,v):
+        if not self.has_edge(u,v):
+            return
+        self.edgeset.remove((u,v))
+        self.edgeset.remove((v,u))
+        self.adjlist[u].remove(v)
+        self.adjlist[v].remove(u)
+        self.m -= 1
+
     def has_edge(self, u, v):
         return (u, v) in self.edgeset
 
@@ -1939,6 +1955,54 @@ def dag_path(length):
         D.add_edge(i, i + 1)
 
     return D
+
+
+def split_random_edges(G,k, seed=None):
+    """Split m random missing edges to G
+
+    If :math:`G` is a simple graph, it picks k random edges (and fails
+    if there are not enough of them), and splits the edges in 2 adding
+    a new vertex for each of them.
+
+    Parameters
+    ----------
+    G : Graph
+        a graph with at least :math:`m` missing edges
+    k : int
+       the number of  edges to sample
+    seed : hashable object
+       seed of random generator
+
+    Example
+    -------
+    >>> G = Graph(5)
+    >>> G.add_edges_from([(1,4),(4,5),(2,4),(2,3)])
+    >>> G.number_of_edges()
+    4
+    >>> split_random_edges(G,2)
+    >>> G.number_of_edges()
+    6
+    >>> G.number_of_vertices()
+    7
+    """
+    if seed is not None:
+        random.seed(seed)
+
+    if not isinstance(G,Graph):
+        raise TypeError("Edge splitting can only be done on simple graphs")
+
+    if k > G.number_of_edges():
+        raise ValueError("You can only sample a subset of the edges.")
+
+    tosplit = random.sample(list(G.edges()),k)
+    nv = G.number_of_vertices()
+    G.update_vertex_number(nv+k)
+    x = nv + 1
+    for u,v in tosplit:
+        G.remove_edge(u,v)
+        G.add_edge(u,x)
+        G.add_edge(x,v)
+        x += 1
 
 
 def add_random_missing_edges(G, m, seed=None):

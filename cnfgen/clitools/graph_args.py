@@ -35,7 +35,7 @@ into a file. `save` must be followed either by
 - a filename which implies the graph format; or
 - a graph format followed by filename.
 
-Copyright (C) 2020, 2021  Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2020, 2021, 2022  Massimo Lauria <massimo.lauria@uniroma1.it>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -56,6 +56,7 @@ from cnfgen.clitools.graph_build import obtain_torus
 from cnfgen.clitools.graph_build import obtain_complete_simple
 from cnfgen.clitools.graph_build import obtain_empty_simple
 from cnfgen.clitools.graph_build import modify_simple_graph_plantclique
+from cnfgen.clitools.graph_build import modify_graph_splitedges
 
 # Bipartite graphs
 from cnfgen.clitools.graph_build import obtain_glrp
@@ -119,7 +120,7 @@ constructions = {
 options = {
     'dag': ['save'],
     'digraph': ['save'],
-    'simple': ['plantclique', 'addedges', 'save'],
+    'simple': ['plantclique', 'addedges', 'splitedges', 'save'],
     'bipartite': ['plantbiclique', 'addedges', 'save']
 }
 
@@ -321,6 +322,10 @@ def obtain_graph(parsed):
     # Add random edges
     if 'addedges' in parsed:
         G = modify_graph_addedges(parsed, G)
+
+    # Random edge splits
+    if 'splitedges' in parsed:
+        G = modify_graph_splitedges(parsed, G)
 
     # Output the graph when requested
     if 'save' in parsed:

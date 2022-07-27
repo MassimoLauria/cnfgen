@@ -41,6 +41,7 @@ of the following options to the graph specifications.
 
   plantclique k            --- add a randomly chosen k-clique
   addedges    m            --- add m new edges at random
+  splitedges  k            --- randomly split k edges putting a vertex in between
 
                   ---- Saving the graph ----
 For reproducibility it is possible the graph using the option

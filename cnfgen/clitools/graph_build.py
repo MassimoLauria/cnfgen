@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Graph constructions that are available on the command line
 
-Copyright (C) 2020, 2021  Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2020, 2021, 2022  Massimo Lauria <massimo.lauria@uniroma1.it>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
@@ -23,6 +23,7 @@ from cnfgen.graphs import dag_pyramid
 from cnfgen.graphs import dag_path
 
 from cnfgen.graphs import add_random_missing_edges
+from cnfgen.graphs import split_random_edges
 from cnfgen.graphs import normalize_networkx_labels
 
 
@@ -228,6 +229,18 @@ def modify_graph_addedges(parsed, G):
     G.name += " + {} random edges".format(k)
     return G
 
+def modify_graph_splitedges(parsed, G):
+    try:
+        if len(parsed['splitedges']) != 1:
+            raise ValueError
+        k = int(parsed['splitedges'][0])
+        assert k >= 0
+    except (TypeError, ValueError, AssertionError) as e:
+        raise ValueError('\'splitedges\' expects argument k with k>=0') from e
+
+    split_random_edges(G, k)
+    G.name += " + {} splitted edges".format(k)
+    return G
 
 #
 # Bipartite graphs
