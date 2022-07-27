@@ -2,9 +2,9 @@
 # -*- coding:utf-8 -*-
 """Build and manipulate CNF formulas
 
-The module `contains facilities to generate cnf formulas, in
-order to be printed in DIMACS or LaTeX formats. Such formulas are
-ready to be fed to sat solvers.
+The module `contains facilities to generate cnf formulas, in order to
+be printed in DIMACS, OPB or LaTeX formats. Such formulas are ready to
+be fed to sat solvers.
 
 The module implements the `CNF` object, which is the main entry point
 to the `cnfgen` library.

@@ -7,21 +7,21 @@ in opb format, and leveraging on a smarter pseudo boolean encoding.
 
 Create the formula:
 
->>> from cnfgen.formula.cnf import OPB
->>> c=OPB(3)
+>>> from cnfgen.formula.opb import OPB
+>>> c=OPB()
 >>> c.add_constraint([(1,3),(2,1),(3,-2),'>=',3])
 >>> print( c.to_opb() )
-* #variable= 5 #constraint= 1
+* #variable= 3 #constraint= 1
 +1 x3 +2 x1 +3 ~x2 >= 3
 <BLANKLINE>
 
-Contraints are normalized
+Constraints are normalized
 
->>> from cnfgen.formula.cnf import OPB
->>> c=OPB(5)
+>>> from cnfgen.formula.opb import OPB
+>>> c=OPB()
 >>> c.add_constraint([(1,3),(-2,2),(1,4),'>',3])
 >>> print( c.to_opb() )
-* #variable= 5 #constraint= 1
+* #variable= 4 #constraint= 1
 +1 x3 +2 ~x2 +1 x4 >= 6
 <BLANKLINE>
 """

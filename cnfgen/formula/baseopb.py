@@ -146,7 +146,7 @@ class BaseOPB:
     """
 
     def __init__(self, constraints=None, description=None):
-        """Propositional formulas in conjunctive normal form.
+        """Basic pseudo-boolean formulas
 
         Parameters
         ----------
@@ -155,8 +155,6 @@ class BaseOPB:
             representing a literal (see `add_clause`). First element
             is the polarity and the second is the variable, which must
             be an hashable object.
-
-            E.g. (not x3) or x4 or (not x2) is encoded as [-3,4,-2]
 
         description: string, optional
             a description of the formula
