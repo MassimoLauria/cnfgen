@@ -16,6 +16,6 @@ class FormulaHelper:
         raise NotImplementedError("Formula family helper must be subclassed")
 
     @staticmethod
-    def build_formula(args):
+    def build_formula(args, formula_class):
         """Buil the CNF according to the parameters on the command line"""
         raise NotImplementedError("Formula family helper must be subclassed")

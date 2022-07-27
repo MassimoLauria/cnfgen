@@ -45,7 +45,7 @@ class DimacsCmdHelper(FormulaHelper):
                             default='-')
 
     @staticmethod
-    def build_formula(args):
+    def build_formula(args, formula_class):
 
         msg = """Waiting for a DIMACS formula on <stdin>."""
 

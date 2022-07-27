@@ -120,7 +120,7 @@ class OPCmdHelper(FormulaHelper):
                             help=argparse.SUPPRESS)
 
     @staticmethod
-    def build_formula(args):
+    def build_formula(args, formula_class):
         """Build an Ordering principle formula according to the arguments
 
         Arguments:

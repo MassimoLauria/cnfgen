@@ -52,7 +52,7 @@ optional arguments:
         parser.add_argument('D', action=ObtainDirectedAcyclicGraph)
 
     @staticmethod
-    def build_formula(args):
+    def build_formula(args, formula_class):
         """Build the pebbling formula
 
         Arguments:
@@ -103,7 +103,7 @@ optional arguments:
         parser.add_argument('--sparse', metavar='<degree>', type=positive_int)
 
     @staticmethod
-    def build_formula(args):
+    def build_formula(args, formula_class):
         """Build the stone formula
 
         Arguments:

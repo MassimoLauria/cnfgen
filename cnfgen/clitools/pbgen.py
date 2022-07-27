@@ -46,6 +46,8 @@ from cnfgen.clitools.msg import error_msg
 from cnfgen.clitools.msg import msg_prefix
 from cnfgen.clitools.msg import InternalBug
 
+from cnfgen.formula.opb  import OPB
+
 from cnfgen.clitools.graph_docs import make_graph_doc
 
 #################################################################
@@ -422,7 +424,7 @@ def cli(argv=None, mode='output'):
             random.seed(args.seed)
 
         try:
-            opb = args.generator.build_formula(args)
+            opb = args.generator.build_formula(args, formula_class=OPB)
         except (CLIError, ValueError) as e:
             args.generator.subparser.error(e)
         except RuntimeError as e:

@@ -48,6 +48,8 @@ from cnfgen.clitools.msg import error_msg
 from cnfgen.clitools.msg import msg_prefix
 from cnfgen.clitools.msg import InternalBug
 
+from cnfgen.formula.cnf import CNF
+
 from cnfgen.clitools.graph_docs import make_graph_doc
 
 #################################################################
@@ -504,7 +506,7 @@ def cli(argv=None, mode='output'):
             random.seed(args.seed)
 
         try:
-            cnf = args.generator.build_formula(args)
+            cnf = args.generator.build_formula(args, formula_class=CNF)
         except (CLIError, ValueError) as e:
             args.generator.subparser.error(e)
         except RuntimeError as e:

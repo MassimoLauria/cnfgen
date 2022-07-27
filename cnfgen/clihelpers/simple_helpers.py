@@ -192,7 +192,7 @@ optional arguments:
                             default=False)
 
     @staticmethod
-    def build_formula(args):
+    def build_formula(args, formula_class):
         """Build a conjunction
 
         Arguments:

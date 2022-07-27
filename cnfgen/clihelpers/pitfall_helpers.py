@@ -54,5 +54,5 @@ class PitfallCmdHelper(FormulaHelper):
         parser.add_argument('k',  type=positive_even_int)
 
     @staticmethod
-    def build_formula(args):
+    def build_formula(args, formula_class):
         return PitfallFormula(args.v, args.d, args.ny, args.nz, args.k)
