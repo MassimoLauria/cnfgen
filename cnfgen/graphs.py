@@ -1989,10 +1989,11 @@ def split_random_edges(G,k, seed=None):
         random.seed(seed)
 
     if not isinstance(G,Graph):
-        raise TypeError("Edge splitting can only be done on simple graphs")
+        raise TypeError("Edge splitting is only implemented for simple graphs")
 
+    non_negative_int(k,'k')
     if k > G.number_of_edges():
-        raise ValueError("You can only sample a subset of the edges.")
+        raise ValueError("The graph does not have {} edges.".format(k))
 
     tosplit = random.sample(list(G.edges()),k)
     nv = G.number_of_vertices()
