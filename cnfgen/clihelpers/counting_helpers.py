@@ -327,4 +327,5 @@ class SCCmdHelper(FormulaHelper):
                                      ['regular', N, N, d, 'addedges', 1])
         elif hasattr(args, 'B'):
             B = args.B
-        return SubsetCardinalityFormula(B, args.equal)
+        return SubsetCardinalityFormula(B, args.equal,
+                                        formula_class=formula_class)

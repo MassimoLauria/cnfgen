@@ -8,7 +8,7 @@ from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import BipartiteGraph
 
 
-def SubsetCardinalityFormula(B, equalities=False):
+def SubsetCardinalityFormula(B, equalities=False, formula_class=CNF):
     r"""SubsetCardinalityFormula
 
     Consider a bipartite graph :math:`B`. The CNF claims that at least half
@@ -80,7 +80,7 @@ def SubsetCardinalityFormula(B, equalities=False):
     Left, Right = B.parts()
 
     description = "Subset cardinality formula for {0}".format(B.name)
-    F = CNF(description=description)
+    F = formula_class(description=description)
 
     e = F.new_bipartite_edges(B, label='x_{{{0},{1}}}')
 
