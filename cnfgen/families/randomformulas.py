@@ -75,7 +75,7 @@ def sample_clauses_dense(k, n, m, planted_assignments):
     return random.sample(list(all_clauses(k, n, planted_assignments)), m)
 
 
-def RandomKCNF(k, n, m, seed=None, planted_assignments=None):
+def RandomKCNF(k, n, m, seed=None, planted_assignments=None, formula_class=CNF):
     """Build a random k-CNF
 
     Sample :math:`m` clauses over :math:`n` variables, each of width
@@ -124,7 +124,7 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=None):
         raise ValueError("clauses width is {}, and we only have {} variables".format(k,n))
 
     descr = "Random {}-CNF over {} variables and {} clauses".format(k, n, m)
-    F = CNF(description=descr)
+    F = formula_class(description=descr)
 
     F.update_variable_number(n)
     try:

@@ -51,4 +51,4 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return CPLSFormula(args.a, args.b, args.c)
+        return CPLSFormula(args.a, args.b, args.c, formula_class=formula_class)

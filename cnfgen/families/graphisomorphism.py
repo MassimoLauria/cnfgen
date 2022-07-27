@@ -6,7 +6,7 @@ from itertools import combinations
 from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import Graph
 
-def GraphIsomorphism(G1, G2, nontrivial=False):
+def GraphIsomorphism(G1, G2, nontrivial=False, formula_class=CNF):
     """Graph Isomorphism formula
 
     The formula is the CNF encoding of the statement that two simple
@@ -33,7 +33,7 @@ def GraphIsomorphism(G1, G2, nontrivial=False):
     description = "Graph isomorphism between (1) '{}' and (2) '{}'"
     description = description.format(G1.name, G2.name)
 
-    F = CNF(description=description)
+    F = formula_class(description=description)
 
     f = F.new_mapping(G1.order(), G2.order(),
                       label='x_{{{},{}}}')
@@ -54,7 +54,7 @@ def GraphIsomorphism(G1, G2, nontrivial=False):
     return F
 
 
-def GraphAutomorphism(G):
+def GraphAutomorphism(G, formula_class=CNF):
     """Graph Automorphism formula
 
     The formula is the CNF encoding of the statement that a graph G
@@ -73,7 +73,7 @@ def GraphAutomorphism(G):
     G = Graph.normalize(G, 'G')
     description = "Graph automorphism formula for " + G.name
 
-    F = GraphIsomorphism(G, G)
+    F = GraphIsomorphism(G, G, formula_class=formula_class)
     F.header['description'] = description
 
     f = F._mapping

@@ -7,7 +7,7 @@ from itertools import combinations
 from cnfgen.formula.cnf import CNF
 from cnfgen.localtypes import non_negative_int
 
-def CliqueColoring(n, k, c):
+def CliqueColoring(n, k, c, formula_class=CNF):
     r"""Clique-coloring CNF formula
 
     The formula claims that a graph :math:`G` with :math:`n` vertices
@@ -50,7 +50,7 @@ def CliqueColoring(n, k, c):
 
     description = "There is a graph of {0} vertices with a {1}-clique and a {2}-coloring".format(
         n, k, c)
-    F = CNF(description=description)
+    F = formula_class(description=description)
 
     # Variables
     e = F.new_combinations(n,2,label='e_{{{}}}')

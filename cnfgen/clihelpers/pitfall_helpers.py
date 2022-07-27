@@ -55,4 +55,5 @@ class PitfallCmdHelper(FormulaHelper):
 
     @staticmethod
     def build_formula(args, formula_class):
-        return PitfallFormula(args.v, args.d, args.ny, args.nz, args.k)
+        return PitfallFormula(args.v, args.d, args.ny, args.nz, args.k,
+                              formula_class=formula_class)

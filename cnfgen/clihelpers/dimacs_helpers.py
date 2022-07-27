@@ -8,6 +8,7 @@ https://massimolauria.net/cnfgen/
 
 import argparse
 from cnfgen.formula.cnf import CNF
+from cnfgen.utils.parsedimacs import from_dimacs_file
 
 from cnfgen.clitools import interactive_msg
 from cnfgen.clitools import msg_prefix
@@ -45,12 +46,12 @@ class DimacsCmdHelper(FormulaHelper):
                             default='-')
 
     @staticmethod
-    def build_formula(args, formula_class):
+    def build_formula(args, formula_class=CNF):
 
         msg = """Waiting for a DIMACS formula on <stdin>."""
 
         with msg_prefix("INPUT: "):
             interactive_msg(msg)
-        F = CNF.from_file(args.input)
 
+        F = from_dimacs_file(formula_class,args.input)
         return F

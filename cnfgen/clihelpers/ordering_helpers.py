@@ -128,7 +128,8 @@ class OPCmdHelper(FormulaHelper):
         """
         if hasattr(args, 'G'):
             return GraphOrderingPrinciple(args.G, args.total, args.smart,
-                                          args.plant, args.knuth)
+                                          args.plant, args.knuth,
+                                          formula_class=formula_class)
         elif hasattr(args, 'd') and args.d is not None:
             N = args.N
             d = args.d
@@ -138,7 +139,9 @@ class OPCmdHelper(FormulaHelper):
                         d, N))
             G = make_graph_from_spec('simple', ['gnd', N, d])
             return GraphOrderingPrinciple(G, args.total, args.smart,
-                                          args.plant, args.knuth)
+                                          args.plant, args.knuth,
+                                          formula_class=formula_class)
         else:
             return OrderingPrinciple(args.N, args.total, args.smart,
-                                     args.plant, args.knuth)
+                                     args.plant, args.knuth,
+                                     formula_class=formula_class)

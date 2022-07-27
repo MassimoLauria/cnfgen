@@ -7,7 +7,7 @@ from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import Graph
 
 
-def TseitinFormula(G, charges=None):
+def TseitinFormula(G, charges=None, formula_class=CNF):
     """Build a Tseitin formula based on the input graph.
 
     By default, an odd charge is put on the first vertex, unless
@@ -42,7 +42,7 @@ def TseitinFormula(G, charges=None):
     # init formula
     description = "Tseitin formula on {0}, with {1} charge".format(
         G.name, parity)
-    tse = CNF(description=description)
+    tse = formula_class(description=description)
     e = tse.new_graph_edges(G, label="E_{{{0},{1}}}")
 
     # add constraints

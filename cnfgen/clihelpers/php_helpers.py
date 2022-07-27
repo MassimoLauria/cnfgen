@@ -153,19 +153,22 @@ class PHPCmdHelper(FormulaHelper):
         if hasattr(args, 'B') and args.B is not None:
             return GraphPigeonholePrinciple(args.B,
                                             functional=args.functional,
-                                            onto=args.onto)
+                                            onto=args.onto,
+                                            formula_class=formula_class)
 
         elif args.holes == args.degree:
             return PigeonholePrinciple(args.pigeons,
                                        args.holes,
                                        functional=args.functional,
-                                       onto=args.onto)
+                                       onto=args.onto,
+                                       formula_class=formula_class)
         else:
             G = bipartite_random_left_regular(args.pigeons, args.holes,
                                               args.degree)
             return GraphPigeonholePrinciple(G,
                                             functional=args.functional,
-                                            onto=args.onto)
+                                            onto=args.onto,
+                                            formula_class=formula_class)
 
 
 class BPHPCmdHelper(FormulaHelper):
@@ -213,7 +216,8 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return BinaryPigeonholePrinciple(args.M, args.N)
+        return BinaryPigeonholePrinciple(args.M, args.N,
+                                         formula_class=formula_class)
 
 
 class CliqueColoringCmdHelper(FormulaHelper):
@@ -260,7 +264,8 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return CliqueColoring(args.n, args.k, args.c)
+        return CliqueColoring(args.n, args.k, args.c,
+                              formula_class=formula_class)
 
 
 class RamseyCmdHelper(FormulaHelper):
@@ -312,7 +317,8 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return RamseyNumber(args.s, args.k, args.N)
+        return RamseyNumber(args.s, args.k, args.N,
+                            formula_class=formula_class)
 
 
 vdw_help_usage = """usage:
@@ -369,7 +375,8 @@ class VDWCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        return VanDerWaerden(args.N, args.k1, args.k2, *args.ks)
+        return VanDerWaerden(args.N, args.k1, args.k2, *args.ks,
+                             formula_class=formula_class)
 
 
 class PTNCmdHelper(FormulaHelper):
@@ -421,8 +428,8 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return PythagoreanTriples(args.N)
-
+        return PythagoreanTriples(args.N,
+                                  formula_class=formula_class)
 
 class RPHPCmdHelper(FormulaHelper):
     """Command line helper for the Relativized Pigeonhole principle CNF"""
@@ -471,4 +478,6 @@ optional arguments:
         - `args`: command line options
         """
         return RelativizedPigeonholePrinciple(args.pigeons,
-                                              args.resting_places, args.holes)
+                                              args.resting_places,
+                                              args.holes,
+                                              formula_class=formula_class)

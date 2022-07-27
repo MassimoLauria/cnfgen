@@ -62,7 +62,8 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return GraphColoringFormula(args.G, args.k)
+        return GraphColoringFormula(args.G, args.k,
+                                    formula_class=formula_class)
 
 
 class ECCmdHelper(FormulaHelper):
@@ -94,7 +95,8 @@ optional arguments:
 
     @staticmethod
     def build_formula(args, formula_class):
-        return EvenColoringFormula(args.G)
+        return EvenColoringFormula(args.G,
+                                   formula_class=formula_class)
 
 
 class DominatingSetCmdHelper(FormulaHelper):
@@ -142,7 +144,9 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return DominatingSet(args.G, args.d, alternative=args.alternative)
+        return DominatingSet(args.G, args.d,
+                             alternative=args.alternative,
+                             formula_class=formula_class)
 
 
 class TilingCmdHelper(FormulaHelper):
@@ -178,7 +182,7 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return Tiling(args.G)
+        return Tiling(args.G,formula_class=formula_class)
 
 
 iso_description = """The formula takes one or two graphs as input.
@@ -223,9 +227,11 @@ class GIsoCmdHelper(FormulaHelper):
         G = args.G
         if hasattr(args, 'G2'):
             G2 = args.G2
-            return GraphIsomorphism(G, G2)
+            return GraphIsomorphism(G, G2,
+                                    formula_class=formula_class)
         else:
-            return GraphAutomorphism(G)
+            return GraphAutomorphism(G,
+                                    formula_class=formula_class)
 
 
 class KCliqueCmdHelper(FormulaHelper):
@@ -267,7 +273,9 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return CliqueFormula(args.G, args.k, args.symmetrybreaking)
+        return CliqueFormula(args.G, args.k,
+                             args.symmetrybreaking,
+                             formula_class=formula_class)
 
 
 class BinaryKCliqueCmdHelper(FormulaHelper):
@@ -309,7 +317,8 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return BinaryCliqueFormula(args.G, args.k)
+        return BinaryCliqueFormula(args.G, args.k,
+                                   formula_class=formula_class)
 
 
 class RWCmdHelper(FormulaHelper):
@@ -360,7 +369,8 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return RamseyWitnessFormula(args.G, args.k, args.s)
+        return RamseyWitnessFormula(args.G, args.k, args.s,
+                                    formula_class=formula_class)
 
 
 subgraph_description = """The formula takes two graphs: a main <graph>
@@ -414,4 +424,7 @@ class SubGraphCmdHelper(FormulaHelper):
         Arguments:
         - `args`: command line options
         """
-        return SubgraphFormula(args.G, args.H, induced=False, symbreak=False)
+        return SubgraphFormula(args.G, args.H,
+                               induced=False,
+                               symbreak=False,
+                               formula_class=formula_class)

@@ -9,7 +9,7 @@ from cnfgen.graphs import Graph
 from cnfgen.localtypes import non_negative_int
 
 
-def OrderingPrinciple(size, total=False, smart=False, plant=False, knuth=0):
+def OrderingPrinciple(size, total=False, smart=False, plant=False, knuth=0, formula_class=CNF):
     """Generates the clauses for ordering principle
 
     Arguments:
@@ -33,7 +33,7 @@ def OrderingPrinciple(size, total=False, smart=False, plant=False, knuth=0):
         description += " (Knuth variant {})".format(knuth)
 
     F = GraphOrderingPrinciple(Graph.complete_graph(size), total, smart,
-                               plant, knuth)
+                               plant, knuth, formula_class=formula_class)
     F.header['description'] = description
     return F
 
@@ -42,7 +42,8 @@ def GraphOrderingPrinciple(graph,
                            total=False,
                            smart=False,
                            plant=False,
-                           knuth=0):
+                           knuth=0,
+                           formula_class=CNF):
     """Generates the clauses for graph ordering principle
 
     Arguments:
@@ -68,7 +69,7 @@ def GraphOrderingPrinciple(graph,
 
     description += " on " + graph.name
 
-    gop = CNF(description=description)
+    gop = formula_class(description=description)
 
     # Fix the vertex order
     n = graph.number_of_vertices()

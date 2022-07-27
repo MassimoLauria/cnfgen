@@ -17,7 +17,7 @@ def intlog2(x):
     return ilog
 
 
-def CPLSFormula(a, b, c):
+def CPLSFormula(a, b, c, formula_class=CNF):
     """Thapen's size-width tradeoff formula
 
     The formula is a propositional version of the coloured polynomial
@@ -53,7 +53,7 @@ def CPLSFormula(a, b, c):
         raise ValueError("c must be a power of two.")
 
     description = "Thapen's CPLS formula with {} levels, {} nodes per level, {} colours".format(a, b, c)
-    F = CNF(description=description)
+    F = formula_class(description=description)
 
     # 1. For each 1 <= i <= a, 1 <= x <= b and 1 <= y <= c
     # G_i(x, y)
@@ -92,5 +92,5 @@ def CPLSFormula(a, b, c):
     nvars = a*b*c + a*b*intlog2(b) + b*intlog2(c)
     ncls = c + (a-1)*b*b*c + b*c
     assert F.number_of_variables() == nvars
-    assert F.number_of_clauses() == ncls
+    assert len(F) == ncls
     return F

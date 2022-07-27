@@ -8,7 +8,7 @@ from cnfgen.graphs import Graph
 from cnfgen.localtypes import positive_int, non_negative_int
 
 
-def CountingPrinciple(M, p):
+def CountingPrinciple(M, p, formula_class=CNF):
     """Counting principle
 
     The principle claims that there is a way to partition M elements
@@ -30,7 +30,7 @@ def CountingPrinciple(M, p):
 
     description = "Counting Principle: {0} divided in parts of size {1}.".format(
         M, p)
-    F = CNF(description=description)
+    F = formula_class(description=description)
 
     X = F.new_combinations(M, p)
 
@@ -46,7 +46,7 @@ def CountingPrinciple(M, p):
     return F
 
 
-def PerfectMatchingPrinciple(G):
+def PerfectMatchingPrinciple(G, formula_class=CNF):
     """Generates the clauses for the graph perfect matching principle.
 
     The principle claims that there is a way to select edges to such
@@ -61,7 +61,7 @@ def PerfectMatchingPrinciple(G):
     G = Graph.normalize(G, 'G')
 
     description = "Perfect Matching Principle on {}".format(G.name)
-    F = CNF(description=description)
+    F = formula_class(description=description)
     e = F.new_graph_edges(G, label='e_{{{0},{1}}}')
 
     # Each vertex has exactly one edge set to one.

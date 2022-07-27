@@ -26,7 +26,8 @@ from cnfgen.graphs import BaseBipartiteGraph, BipartiteGraph
 from cnfgen.localtypes import non_negative_int
 
 
-def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
+def PigeonholePrinciple(pigeons, holes, functional=False, onto=False,
+                        formula_class=CNF):
     """Pigeonhole Principle CNF formula
 
     The pigeonhole principle CNF formula claims that that it is
@@ -111,7 +112,7 @@ def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
 
     description = "{0} formula for {1} pigeons and {2} holes".format(
         formula_name, pigeons, holes)
-    F = CNF(description=description)
+    F = formula_class(description=description)
 
     p = F.new_mapping(pigeons, holes, label='p_{{{},{}}}')
     F.force_complete_mapping(p)
@@ -127,7 +128,8 @@ def PigeonholePrinciple(pigeons, holes, functional=False, onto=False):
     return F
 
 
-def GraphPigeonholePrinciple(G, functional=False, onto=False):
+def GraphPigeonholePrinciple(G, functional=False, onto=False,
+                             formula_class=CNF):
     """Graph Pigeonhole Principle CNF formula
 
     The graph pigeonhole principle CNF formula, defined on a bipartite
@@ -197,7 +199,7 @@ def GraphPigeonholePrinciple(G, functional=False, onto=False):
             formula_name = "Graph pigeonhole principle"
 
     description = "{0} formula on {1}".format(formula_name, G.name)
-    F = CNF(description=description)
+    F = formula_class(description=description)
     p = F.new_sparse_mapping(G, label='p_{{{},{}}}')
     F.force_complete_mapping(p)
 
@@ -212,7 +214,7 @@ def GraphPigeonholePrinciple(G, functional=False, onto=False):
     return F
 
 
-def BinaryPigeonholePrinciple(pigeons, holes):
+def BinaryPigeonholePrinciple(pigeons, holes, formula_class=CNF):
     """Binary Pigeonhole Principle CNF formula
 
     The binary pigeonhole principle CNF formula claims that that it is
@@ -250,7 +252,7 @@ def BinaryPigeonholePrinciple(pigeons, holes):
 
     description = "Binary Pigeonhole Principle for {0} pigeons and {1} holes".format(
         pigeons, holes)
-    F = CNF(description=description)
+    F = formula_class(description=description)
 
     p = F.new_binary_mapping(pigeons, holes)
     F.force_complete_mapping(p)
@@ -258,7 +260,7 @@ def BinaryPigeonholePrinciple(pigeons, holes):
     return F
 
 
-def RelativizedPigeonholePrinciple(pigeons, resting_places, holes):
+def RelativizedPigeonholePrinciple(pigeons, resting_places, holes, formula_class=CNF):
     """Relativized Pigeonhole Principle CNF formula
 
     This formula is a variant of the pigeonhole principle. We consider
@@ -314,7 +316,7 @@ def RelativizedPigeonholePrinciple(pigeons, resting_places, holes):
     non_negative_int(resting_places, 'resting_places')
     non_negative_int(holes, 'holes')
 
-    rphp = CNF()
+    rphp = formula_class()
     rphp.header[
         'description'] = "Relativized pigeonhole principle formula for {0} pigeons, {1} resting places and {2} holes".format(
             pigeons, resting_places, holes)

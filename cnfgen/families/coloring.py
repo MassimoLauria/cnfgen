@@ -7,7 +7,7 @@ from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import Graph
 from cnfgen.localtypes import non_negative_int
 
-def GraphColoringFormula(G, colors, functional=True):
+def GraphColoringFormula(G, colors, functional=True, formula_class=CNF):
     """Generates the clauses for colorability formula
 
     The formula encodes the fact that the graph :math:`G` has a coloring
@@ -35,7 +35,7 @@ def GraphColoringFormula(G, colors, functional=True):
 
     # Describe the formula
     description = "Graph {}-Colorability of {}".format(colors,G)
-    F = CNF(description=description)
+    F = formula_class(description=description)
     col = F.new_mapping(G.order(), colors,label='x_{{{0}{1}}}')
 
     # Color each vertex
@@ -52,7 +52,7 @@ def GraphColoringFormula(G, colors, functional=True):
     return F
 
 
-def EvenColoringFormula(G):
+def EvenColoringFormula(G, formula_class=CNF):
     """Even coloring formula
 
     The formula is defined on a graph :math:`G` and claims that it is
@@ -86,7 +86,7 @@ def EvenColoringFormula(G):
     G = Graph.normalize(G, 'G')
 
     description = "Even coloring formula on " + G.name
-    F = CNF(description=description)
+    F = formula_class(description=description)
 
     e = F.new_graph_edges(G)
 

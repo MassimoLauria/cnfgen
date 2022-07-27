@@ -30,7 +30,7 @@ they are enumerated in a sorted fashion."""
 
 
 
-def DominatingSet(G, d, alternative=False):
+def DominatingSet(G, d, alternative=False, formula_class=CNF):
     r"""Generates the clauses for a dominating set for G of size <= d
 
     The formula encodes the fact that the graph :math:`G` has
@@ -59,7 +59,7 @@ def DominatingSet(G, d, alternative=False):
     positive_int(d, 'd')
 
     description = "{}-dominating set on {}".format(d, G.name)
-    F = CNF(description=description)
+    F = formula_class(description=description)
 
     # Create variables
     V = G.number_of_vertices()
@@ -98,7 +98,7 @@ def DominatingSet(G, d, alternative=False):
         F.add_clause([D(v) for v in N])
     return F
 
-def Tiling(G):
+def Tiling(G, formula_class=CNF):
     r"""Generates the clauses for a tiling of G
 
     The formula encodes the fact that the graph :math:`G` has a
@@ -121,7 +121,7 @@ def Tiling(G):
     G = Graph.normalize(G,'G')
     description = "tiling of {}".format(G.name)
 
-    F = CNF(description=description)
+    F = formula_class(description=description)
     x = F.new_block(G.number_of_vertices() , label='x_{{{0}}}')
     # Every neighborhood must have exactly one variable
     for N in unique_neighborhoods(G):

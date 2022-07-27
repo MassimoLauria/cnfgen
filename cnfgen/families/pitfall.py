@@ -22,7 +22,7 @@ from cnfgen.localtypes import positive_int
 from cnfgen.graphs import Graph
 
 
-def PitfallFormula(v, d, ny, nz, k):
+def PitfallFormula(v, d, ny, nz, k, formula_class=CNF):
     """Pitfall Formula
 
     The Pitfall formula was designed to be specifically easy for
@@ -84,7 +84,7 @@ def PitfallFormula(v, d, ny, nz, k):
             "No regular {}-degree graph with {}-vertices exists.\n".format(
                 d, v) +
             "It requires  degree <= #vertices and degree*#vertices even")
-    phi = CNF(
+    phi = formula_class(
         description=
         'Pitfall Formula with parameters (v={},d={},ny={},nz={},k={})'.format(
             v, d, ny, nz, k))

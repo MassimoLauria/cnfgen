@@ -23,7 +23,7 @@ def non_edges(G):
 
 
 
-def SubgraphFormula(G, H, induced=False, symbreak=False):
+def SubgraphFormula(G, H, induced=False, symbreak=False, formula_class=CNF):
     """Test whether a graph has a k-clique.
 
     Given two graphs :math:`H` and :math:`G`, the
@@ -49,7 +49,7 @@ def SubgraphFormula(G, H, induced=False, symbreak=False):
     G = Graph.normalize(G, 'G')
     H = Graph.normalize(H, 'H')
 
-    F = CNF()
+    F = formula_class()
     if induced:
         description = "{} is not an induced subgraph of {}".format(H.name, G.name)
     else:
@@ -85,7 +85,7 @@ def SubgraphFormula(G, H, induced=False, symbreak=False):
     return F
 
 
-def CliqueFormula(G, k, symbreak=True):
+def CliqueFormula(G, k, symbreak=True, formula_class=CNF):
     """Test whether a graph has a k-clique.
 
     Given a graph :math:`G` and a non negative value :math:`k`, the
@@ -108,7 +108,7 @@ def CliqueFormula(G, k, symbreak=True):
     non_negative_int(k, 'k')
     G = Graph.normalize(G, 'G')
 
-    F = CNF()
+    F = formula_class()
     description = "{} does not contain any {}-clique.".format(G.name, k)
     F.header['description'] = description
 
@@ -134,7 +134,7 @@ def CliqueFormula(G, k, symbreak=True):
     return F
 
 
-def BinaryCliqueFormula(G, k, symbreak=True):
+def BinaryCliqueFormula(G, k, symbreak=True, formula_class=CNF):
     """Test whether a graph has a k-clique (binary encoding)
 
     Given a graph :math:`G` and a non negative value :math:`k`, the
@@ -159,7 +159,7 @@ def BinaryCliqueFormula(G, k, symbreak=True):
     non_negative_int(k, 'k')
     G = Graph.normalize(G, 'G')
 
-    F = CNF()
+    F = formula_class()
     description = "{} does not contain any {}-clique (Binary encoding).".format(G.name, k)
     F.header['description'] = description
 
@@ -183,7 +183,7 @@ def BinaryCliqueFormula(G, k, symbreak=True):
     return F
 
 
-def RamseyWitnessFormula(G, k, s, symbreak=True):
+def RamseyWitnessFormula(G, k, s, symbreak=True, formula_class=CNF):
     """True if graph contains either k-clique or and s independent set
 
     Given a graph :math:`G` and a non negative values :math:`k` and
@@ -210,7 +210,7 @@ def RamseyWitnessFormula(G, k, s, symbreak=True):
     non_negative_int(s, 's')
     G = Graph.normalize(G, 'G')
 
-    F = CNF()
+    F = formula_class()
     description = "{} does not contain {}-cliques nor {}-independent sets.".format(
         G.name, k, s)
     F.header['description'] = description

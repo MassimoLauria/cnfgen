@@ -58,7 +58,8 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return PebblingFormula(args.D)
+        return PebblingFormula(args.D,
+                               formula_class=formula_class)
 
 
 class StoneCmdHelper(FormulaHelper):
@@ -117,6 +118,8 @@ optional arguments:
             if degree > nstones:
                 raise ValueError("It must hold that <degree> <= <stones>")
             B = bipartite_random_left_regular(nvertices, nstones, degree)
-            return SparseStoneFormula(D, B)
+            return SparseStoneFormula(D, B,
+                                      formula_class=formula_class)
         else:
-            return StoneFormula(D, args.s)
+            return StoneFormula(D, args.s,
+                                formula_class=formula_class)

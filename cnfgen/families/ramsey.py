@@ -11,7 +11,7 @@ from cnfgen.formula.cnf import CNF
 from cnfgen.localtypes import positive_int, positive_int_seq
 from cnfgen.localtypes import non_negative_int
 
-def PythagoreanTriples(N):
+def PythagoreanTriples(N, formula_class=CNF):
     """There is a Pythagorean triples free coloring on N
 
     The formula claims that it is possible to bicolor the numbers from
@@ -43,7 +43,7 @@ def PythagoreanTriples(N):
     non_negative_int(N, 'N')
 
     description = "Pythagorean triples problem on 1...{}".format(N)
-    F = CNF(description=description)
+    F = formula_class(description=description)
 
     # Variables represent the coloring of the number
     v = F.new_block(N, label='v({})')
@@ -57,7 +57,7 @@ def PythagoreanTriples(N):
     return F
 
 
-def RamseyNumber(s, k, N):
+def RamseyNumber(s, k, N, formula_class=CNF):
     """Ramsey number r(s,k) > N
 
     This formula, given :math:`s`, :math:`k`, and :math:`N`, claims
@@ -98,7 +98,7 @@ def RamseyNumber(s, k, N):
     positive_int(s, 's')
     positive_int(k, 'k')
     description = "{}-vertices graph free of {}-independent sets and {}-cliques".format(N, s, k)
-    ram = CNF(description=description)
+    ram = formula_class(description=description)
 
     # One variable per edge (indices are ordered)
     e = ram.new_combinations(N, 2, label='e_{{{}}}')
@@ -129,7 +129,7 @@ def _vdw_ap_generator(N, k):
             yield [i + d * t for t in range(k)]
 
 
-def VanDerWaerden(N, k1, k2, *ks):
+def VanDerWaerden(N, k1, k2, *ks, formula_class=CNF):
     """Formula claims that van der Waerden number vdw(k1,k2,k3,k4,...) > N
 
     Consider a coloring the of integers from 1 to :math:`N`, with
@@ -198,7 +198,7 @@ def VanDerWaerden(N, k1, k2, *ks):
     K_text = ", ".join(str(k) for k in K)
     description = "is van der Waerden number vdw({1}) > {0} ?".format(
         N, K_text)
-    vdw = CNF(description=description)
+    vdw = formula_class(description=description)
 
     # Only one row of variable needed for 2 colors.
     if len(K) == 2:

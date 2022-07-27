@@ -22,7 +22,7 @@ def _uniqify_list(seq):
     return [x for x in seq if x not in seen and not seen.add(x)]
 
 
-def PebblingFormula(digraph):
+def PebblingFormula(digraph, formula_class=CNF):
     """Pebbling formula
 
     Build a pebbling formula from the directed graph. If the graph has
@@ -40,7 +40,7 @@ def PebblingFormula(digraph):
     description = 'Pebbling formula'
     description += " for " + digraph.name
 
-    peb = CNF(description=description)
+    peb = formula_class(description=description)
     x = peb.new_block(digraph.number_of_vertices(), label='x({})')
 
     for v in digraph.vertices():
@@ -54,7 +54,7 @@ def PebblingFormula(digraph):
 
 
 
-def StoneFormula(D, nstones):
+def StoneFormula(D, nstones, formula_class=CNF):
     """Stone formulas
 
     The stone formulas have been introduced in [2]_ and generalized in
@@ -113,11 +113,11 @@ def StoneFormula(D, nstones):
 
     description = "Stone formula of {} with {} stones".format(D.name, nstones)
     B = CompleteBipartiteGraph(D.number_of_vertices(),nstones)
-    F = SparseStoneFormula(D, B)
+    F = SparseStoneFormula(D, B, formula_class=formula_class)
     F.header['description'] = description
     return F
 
-def SparseStoneFormula(D, B):
+def SparseStoneFormula(D, B, formula_class=CNF):
     """Sparse Stone formulas
 
     This is a variant of the :py:func:`StoneFormula`. See that for
@@ -183,7 +183,7 @@ def SparseStoneFormula(D, B):
         )
 
     description = "Sparse stone formula of {} with {} stones".format(D.name, len(stones))
-    F = CNF(description=description)
+    F = formula_class(description=description)
 
     # Add variables in the appropriate order
     R = F.new_block(len(stones), label='R_{{{0}}}')  # a stone j is red

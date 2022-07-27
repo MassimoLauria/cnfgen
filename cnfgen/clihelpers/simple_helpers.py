@@ -41,7 +41,7 @@ optional arguments:
         parser.add_argument('N', type=nonnegative_int)
 
     @staticmethod
-    def build_formula(args):
+    def build_formula(args, formula_class):
         """Build an disjunction
 
         Arguments:
@@ -49,7 +49,7 @@ optional arguments:
         """
         description = "A clause with {} positive and {} negative literals".format(
             args.P, args.N)
-        F = CNF(description=description)
+        F = formula_class(description=description)
         positive = F.new_block(args.P,label='x_{}')
         negative = F.new_block(args.N,label='y_{}')
         clause = []
@@ -85,7 +85,7 @@ optional arguments:
         parser.add_argument('N', type=nonnegative_int)
 
     @staticmethod
-    def build_formula(args):
+    def build_formula(args, formula_class):
         """Build a conjunction
 
         Arguments:
@@ -93,7 +93,7 @@ optional arguments:
         """
         description = "Singleton clauses: {} positive and {} negative".format(
             args.P, args.N)
-        F = CNF(description=description)
+        F = formula_class(description=description)
         positive = F.new_block(args.P,label='x_{}')
         negative = F.new_block(args.N,label='y_{}')
         F.add_clauses_from([v] for v in positive)
@@ -117,7 +117,7 @@ optional arguments:
 """
 
     @staticmethod
-    def build_formula(args):
+    def build_formula(args, formula_class):
         """Build an empty CNF formula
 
         Parameters
@@ -125,7 +125,7 @@ optional arguments:
         args : ignored
              command line options
         """
-        return CNF(description='Formula with no clauses')
+        return formula_class(description='Formula with no clauses')
 
 
 class FALSE(FormulaHelper):
@@ -144,7 +144,7 @@ optional arguments:
 """
 
     @staticmethod
-    def build_formula(args):
+    def build_formula(args, formula_class):
         """Build a CNF formula with an empty clause
 
         Parameters
@@ -152,7 +152,9 @@ optional arguments:
         args : ignored
              command line options
         """
-        return CNF([[]], description='Formula with one empty clause')
+        F = formula_class(description='Formula with one empty clause')
+        F.add_clause([])
+        return F
 
 
 class RandCmdHelper(FormulaHelper):
@@ -204,6 +206,8 @@ optional arguments:
             return RandomKCNF(args.k,
                               args.n,
                               args.m,
-                              planted_assignments=[planted])
+                              planted_assignments=[planted],
+                              formula_class=formula_class)
         else:
-            return RandomKCNF(args.k, args.n, args.m)
+            return RandomKCNF(args.k, args.n, args.m,
+                              formula_class=formula_class)
