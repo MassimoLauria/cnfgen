@@ -12,6 +12,9 @@ References
 """
 
 import sys
+from cnfgen.formula.basecnf import BaseCNF
+from cnfgen.formula.baseopb import BaseOPB
+
 
 def to_opb_file(formula, fileorname=None,
                 export_header=True,
@@ -45,7 +48,7 @@ def to_opb_file(formula, fileorname=None,
 
     # Count the number of variables and clauses
     n = formula.number_of_variables()
-    m = formula.number_of_clauses()
+    m = len(formula)
 
     # Formula specs on top
     output.write("* #variable= {n} #constraint= {m}\n".format(n=n,m=m))
@@ -61,14 +64,25 @@ def to_opb_file(formula, fileorname=None,
 
     if export_varnames:
         for varid, label in enumerate(formula.all_variable_labels(), start=1):
-            output.write("* varname {0} {1}\n".format(varid, label))
+            output.write("* varname x{0} {1}\n".format(varid, label))
         output.write("*\n")
 
     # Clauses
-    for cls in formula:
-        for lit in cls:
-            if lit>=0:
-                output.write("+1 x{} ".format(lit) )
-            else:
-                output.write("+1 ~x{} ".format(-lit))
-        output.write(">= 1\n")
+    if isinstance(formula,BaseCNF):
+        for cls in formula:
+            for lit in cls:
+                if lit>=0:
+                    output.write("+1 x{} ".format(lit) )
+                else:
+                    output.write("+1 ~x{} ".format(-lit))
+            output.write(">= 1\n")
+    elif isinstance(formula,BaseOPB):
+        for lin in formula:
+            op = ">=" if lin[-2]==">=" else "="
+            value = lin[-1]
+            for (c,l) in lin[:-2]:
+                if l>=0:
+                    output.write("{:+} x{} ".format(c,l) )
+                else:
+                    output.write("{:+} ~x{} ".format(c,-l) )
+            output.write("{} {}\n".format(op,value))

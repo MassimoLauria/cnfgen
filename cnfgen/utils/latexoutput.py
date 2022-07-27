@@ -41,13 +41,16 @@ References
 import sys
 from io import StringIO
 
+from cnfgen.formula.basecnf import BaseCNF
+from cnfgen.formula.baseopb import BaseOPB
+
 def to_latex_string(F):
     """LaTeX string of the CNF formula
 
     Parameters
     ----------
-    F : cnfgen.formula.cnf.CNF
-        cnf formula
+    F : cnfgen.formula.cnf.CNF or cnfgen.formula.opb.OPB
+        formula
 
     Returns
     -------
@@ -79,6 +82,11 @@ def _print_latex(F, outputfile, split_every=-1, compact=True):
             littext[-varid] = "{\\overline{" + \
                 name[:split_point] + "}" + name[split_point:] + "}"
 
+    # Take away residual space. Not nice when printing inequalities
+    if isinstance(F,BaseOPB):
+        for v in littext:
+            littext[v] = littext[v].strip()
+
     def write_clause(cls, first, compact):
         """Write the clause in LaTeX."""
         outputfile.write("\n&" if first else " \\\\\n&")
@@ -94,7 +102,33 @@ def _print_latex(F, outputfile, split_every=-1, compact=True):
         else:
             outputfile.write(" \\lor ".join(littext[lit] for lit in cls))
 
+    def write_constraint(constraint, first, compact):
+        """Write the clause in LaTeX."""
+        outputfile.write("\n& " if first else " \\\\\n& ")
+
+        lin = constraint[:-2]
+        op = constraint[-2]
+        op ="\\geq" if constraint[-2]==">=" else "="
+        value = constraint[-1]
+
+        # build the latex clause
+        if len(lin) == 0:
+            text="0"
+        else:
+            text = []
+            for c,l in lin:
+                ct=str(c) if c>1 else ""
+                lt=littext[l]
+                text.append(ct+lt)
+            text = " + ".join(text)
+        outputfile.write("{} {} {}".format(text,op,value))
+
     outputfile.write("\\begin{align}")
+
+    if isinstance(F,BaseCNF):
+        writef=write_clause
+    else:
+        writef=write_constraint
 
     if len(F) == 0:
         outputfile.write("\n   \\top")
@@ -103,11 +137,14 @@ def _print_latex(F, outputfile, split_every=-1, compact=True):
             if split_every > 0 and i % split_every == 0 and i != 0:
                 outputfile.write("\n\\end{align}\\pagebreak")
                 outputfile.write("\n\\begin{align}")
-                write_clause(F[i], True, compact)
+                writef(F[i], True, compact)
             else:
-                write_clause(F[i], i == 0, compact)
+                writef(F[i], i == 0, compact)
 
     outputfile.write("\n\\end{align}")
+
+
+
 
 def to_latex_document(F, fileorname, export_header=True, extra_text=""):
     """Output a LaTeX document describing the CNF formula
@@ -171,8 +208,12 @@ def to_latex_document(F, fileorname, export_header=True, extra_text=""):
     output.write(extra_text)
 
     # Output the clauses
-    output.write("\\noindent\\textbf{{CNF with {} variables and and {} clauses:}}\n".
+    if isinstance(F,BaseCNF):
+        output.write("\\noindent\\textbf{{CNF with {} variables and and {} clauses:}}\n".
                  format(F.number_of_variables(), F.number_of_clauses()))
+    elif isinstance(F,BaseOPB):
+        output.write("\\noindent\\textbf{{Pseudo-boolean formula with {} variables and and {} constraints:}}\n".
+                 format(F.number_of_variables(), F.number_of_constraints()))
 
     _print_latex(F,output,split_every=clauses_per_page,compact=False)
 

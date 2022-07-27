@@ -332,12 +332,11 @@ def build_latex_cmdline_description(argv, args):
 
     # Find input files specified in the command line
     input_files = []
-    for namespace in [args]:
-        data = iter(vars(namespace).items())
-        data = [v for k, v in data if not k.startswith("_")]
-        data = [f for f in data if isinstance(f, io.IOBase)]
-        data = [f for f in data if not isinstance(f, io.IOBase) and f.mode == 'r']
-        input_files.extend(data)
+    data = iter(vars(args).items())
+    data = [v for k, v in data if not k.startswith("_")]
+    data = [f for f in data if isinstance(f, io.IOBase)]
+    data = [f for f in data if not isinstance(f, io.IOBase) and f.mode == 'r']
+    input_files.extend(data)
 
     # Add them all to the latex document
     for f in input_files:
@@ -438,15 +437,15 @@ def cli(argv=None, mode='output'):
 
         if mode == 'string':
             if output_format == 'latex':
-                return cnf.to_latex()
+                return opb.to_latex()
 
             if output_format == 'opb':
-                return cnf.to_opb()
+                return opb.to_opb()
 
             raise InternalBug("Unknown output format")
 
         extra_text = build_latex_cmdline_description(argv, args)
-        cnf.to_file(args.output,
+        opb.to_file(args.output,
                     fileformat=output_format,
                     export_header=args.verbose,
                     export_varnames=args.varnames,

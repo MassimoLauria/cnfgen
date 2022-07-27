@@ -110,9 +110,6 @@ class BaseCNF:
         self.header['copyright'] = info['copyright']
         self.header['url'] = info['url']
 
-        # Problem representation via encoders and variable groups.
-        self._encoders = []
-
         # Initial empty formula
         self._numvar = 0
         self._clauses = []

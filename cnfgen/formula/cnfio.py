@@ -16,11 +16,11 @@ from cnfgen.utils.opb    import to_opb_file
 def guess_output_format(fileorname, fileformat_request):
     """Try to guess the appropriate file format
 
-    If `fileformat` is either `dimacs` or `tex` then the output is
+    If `fileformat` is either `dimacs`, 'opb' or `tex` then the output is
     saved in the corresponding format.
 
     If `fileformat` is `None`, then DIMACS format is the default
-    output format unless the file name ends with '.tex'.
+    output format unless the file name ends with '.tex' or '.opb'
     """
     if fileformat_request in ['latex', 'dimacs','opb']:
         return fileformat_request
@@ -186,21 +186,21 @@ class CNFio(BaseCNF):
                 extra_text=""):
         """Save the formula to a file
 
-        The formula is saved on file, in either as a DIMACS file, or
-        as a LaTeX document.
+        The formula is saved on file, in either as a DIMACS file, OPB
+        file, or as a LaTeX document.
 
-        If `fileformat` is either `dimacs` or `tex` then the output is
+        If `fileformat` is either `dimacs`, 'opb' or `tex` then the output is
         saved in the corresponding format.
 
         If `fileformat` is `None`, then DIMACS format is the default
-        output format unless the file name ends with '.tex'.
+        output format unless the file name ends with '.tex' or '.opb'
 
         Parameters
         ----------
         fileorname: file name or file object
             where to print the file (default: <stdout>)
 
-        fileformat: 'tex', 'dimacs' or None
+        fileformat: 'tex', 'opb', 'dimacs' or None
             format of the output file
 
         export_header: bool
@@ -211,6 +211,7 @@ class CNFio(BaseCNF):
 
         extra_text: str
             additional text to be included in the LaTeX output document
+
         """
         fileformat = guess_output_format(fileorname,fileformat)
 
