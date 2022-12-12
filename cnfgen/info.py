@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-copyright_years = '(C) 2012-2021'
+copyright_years = '(C) 2012-2022'
 
 __all__ = ['info']
 
