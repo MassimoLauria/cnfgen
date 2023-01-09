@@ -30,6 +30,7 @@ from cnfgen.info import info
 extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.autodoc',
+    'sphinx_autodoc_typehints',
     'sphinx.ext.doctest',
     'sphinx.ext.mathjax',
     'sphinx.ext.intersphinx',
