@@ -60,7 +60,7 @@ upload: testpackage
 #
 DEV_DEPENDENCES:=yapf pytest pytest-datadir flake8 'python-lsp-server[all]'
 PKG_DEPENDENCES:=wheel twine keyring
-DOC_DEPENDENCES:=sphinx sphinx-autobuild numpydoc sphinx_rtd_theme sphinx-autodoc-typehints
+DOC_DEPENDENCES:='sphinx<6' sphinx-autobuild numpydoc sphinx_rtd_theme sphinx-autodoc-typehints
 
 PYENV:= $(shell command -v pyenv 2> /dev/null)
 PYENV_PYVERSION:=$(shell pyenv install -l | grep '[[:space:]]3.10.[[:digit:]]*' | grep -v 'rc\|dev' | tail -1)

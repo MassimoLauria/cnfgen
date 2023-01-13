@@ -1,2 +1,2 @@
-networkx>=2.3
+networkx>=2.3,<3.0
 pydot>=1.2.3
