@@ -90,9 +90,9 @@ class OPBio(BaseOPB):
         >>> c.add_constraint([(2,3),(2,-1),(1,-2),">=",2])
         >>> print(c.to_latex())
         \\begin{align}
-        & {x_1} + {x_3} + {\\overline{x}_2} + {x_4} \geq 3 \\\\
+        & {x_1} + {x_3} + {\\overline{x}_2} + {x_4} \\geq 3 \\\\
         & {x_1} + {x_3} + {\\overline{x}_2} + {x_4} = 3 \\\\
-        & 2{x_3} + 2{\\overline{x}_1} + {\overline{x}_2} \geq 2
+        & 2{x_3} + 2{\\overline{x}_1} + {\\overline{x}_2} \\geq 2
         \\end{align}
 
         References
