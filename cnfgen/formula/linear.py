@@ -8,7 +8,7 @@ This CNF formula type supports
   for example 'atmost k'
 
 
-Copyright (C) 2021, 2022 Massimo Lauria <lauria.massimo@gmail.com>
+Copyright (C) 2021, 2022, 2023 Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
@@ -62,6 +62,14 @@ class CNFLinear(BaseCNF):
         >>> C.add_parity([-1,2],0)
         >>> list(C)
         [[-1, -2], [1, 2]]
+        >>> C=CNFLinear()
+        >>> C.add_parity([1,2,3],1)
+        >>> list(C)
+        [[1, 2, 3], [1, -2, -3], [-1, 2, -3], [-1, -2, 3]]
+        >>> C=CNFLinear()
+        >>> C.add_parity([1,2,3],0)
+        >>> list(C)
+        [[1, 2, -3], [1, -2, 3], [-1, 2, 3], [-1, -2, -3]]
         """
         if isgenerator(lits):
             lits = list(lits)

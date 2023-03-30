@@ -125,6 +125,7 @@ Choices for <formula>:
     ramlb               unsat if G witnesses that r(k,s)>|V(G)|
                         (i.e. G has neither a k-clique nor an s-stable)
     randkcnf            random k-CNF
+    randkxor            random k-XOR
     rphp                relativized pigeonhole principle
     stone               stone formula (dense and sparse)
     subgraph            subgraph formula

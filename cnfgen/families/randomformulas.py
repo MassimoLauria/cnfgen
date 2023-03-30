@@ -15,8 +15,6 @@ def clause_satisfied(cls, assignments):
 Test if clauses `cls` is satisfied by all assigment in the
 list assignments.
 """
-    if assignments is None:
-        return True
     for assignment in assignments:
         for lit in cls:
             if lit in assignment:
@@ -57,9 +55,17 @@ wasteful for just few samples."""
         sampled.add(tcls)
         clauses.append(cls)
 
-    if len(clauses) < m:
-        return sample_clauses_dense(k, n, m, planted_assignments)
-    return clauses
+    if len(clauses) == m:
+        return clauses
+
+    # dense sampling
+    fullset = list(all_clauses(k, n, planted_assignments))
+    if len(fullset) < m:
+        if len(planted_assignments)>0:
+            raise ValueError("Not enough clauses satisfying the planted assignment")
+        else:
+            raise ValueError("Too many clauses requested")
+    return random.sample(fullset, m)
 
 
 def all_clauses(k, n, planted_assignments):
@@ -71,8 +77,6 @@ def all_clauses(k, n, planted_assignments):
                 yield cls
 
 
-def sample_clauses_dense(k, n, m, planted_assignments):
-    return random.sample(list(all_clauses(k, n, planted_assignments)), m)
 
 
 def RandomKCNF(k, n, m, seed=None, planted_assignments=None, formula_class=CNF):
@@ -120,6 +124,9 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=None, formula_class=CNF):
     if seed is not None:
         random.seed(seed)
 
+    if planted_assignments is None:
+        planted_assignments = []
+
     if k > n:
         raise ValueError("clauses width is {}, and we only have {} variables".format(k,n))
 
@@ -132,6 +139,6 @@ def RandomKCNF(k, n, m, seed=None, planted_assignments=None, formula_class=CNF):
             F.add_clause(clause, check=False)
     except ValueError:
         raise ValueError(
-            "There are fewer clauses available than the number requested")
+            "The number of clauses available is less than m")
 
     return F

@@ -2,12 +2,13 @@
 # -*- coding:utf-8 -*-
 """Formula Helpers for simple and random formulas
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2022 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2022, 2023 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
 from cnfgen.formula.cnf import CNF
 from cnfgen.families.randomformulas import RandomKCNF
+from cnfgen.families.randomkxor import RandomKXOR
 from cnfgen.clitools import nonnegative_int, positive_int
 from .formula_helpers import FormulaHelper
 
@@ -210,4 +211,59 @@ optional arguments:
                               formula_class=formula_class)
         else:
             return RandomKCNF(args.k, args.n, args.m,
+                              formula_class=formula_class)
+
+class RandXorHelper(FormulaHelper):
+    """Command line helper for random formulas
+    """
+    name = 'randkxor'
+    description = 'random k-XOR'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for an and of literals
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.usage = "usage:\n {0} [-h|--help] [-p|--plant] <k> <n> <m>".format(parser.prog)
+        parser.description = """ Sample <m> parity constraints over <n> variables, each of width <k>,
+uniformly at random. The sampling is done without repetition, meaning
+that whenever a xor is already in the formula, it is never
+picked again. It never picks two opposite xors.
+
+positional arguments:
+  <k>                  width of the parities
+  <n>                  number of variables in the formula
+  <m>                  number of sampled xors
+
+optional arguments:
+  --plant, -p          plant a random satisfying assignment (default: no)
+  --help, -h           show this help message and exit
+"""
+        parser.add_argument('k', type=positive_int)
+        parser.add_argument('n', type=positive_int)
+        parser.add_argument('m', type=nonnegative_int)
+        parser.add_argument('--plant',
+                            '-p',
+                            action='store_true',
+                            default=False)
+
+    @staticmethod
+    def build_formula(args, formula_class):
+        """Build a conjunction
+
+        Arguments:
+        - `args`: command line options
+        """
+        n = args.n
+        if args.plant:
+            planted = [random.choice([-1,1])*v for v in range(1,n+1)]
+            return RandomKXOR(args.k,
+                              args.n,
+                              args.m,
+                              planted_assignments=[planted],
+                              formula_class=formula_class)
+        else:
+            return RandomKXOR(args.k, args.n, args.m,
                               formula_class=formula_class)

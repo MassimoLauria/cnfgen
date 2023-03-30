@@ -44,6 +44,7 @@ from cnfgen.families.ramsey import RamseyNumber
 from cnfgen.families.ramsey import PythagoreanTriples
 from cnfgen.families.ramsey import VanDerWaerden
 from cnfgen.families.randomformulas import RandomKCNF
+from cnfgen.families.randomkxor import RandomKXOR
 from cnfgen.families.subgraph import SubgraphFormula
 from cnfgen.families.subgraph import CliqueFormula
 from cnfgen.families.subgraph import BinaryCliqueFormula
