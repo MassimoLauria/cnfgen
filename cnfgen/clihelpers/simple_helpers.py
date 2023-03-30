@@ -230,7 +230,7 @@ class RandXorHelper(FormulaHelper):
         parser.description = """ Sample <m> parity constraints over <n> variables, each of width <k>,
 uniformly at random. The sampling is done without repetition, meaning
 that whenever a xor is already in the formula, it is never
-picked again. It never picks two opposite xors.
+picked again.
 
 positional arguments:
   <k>                  width of the parities
