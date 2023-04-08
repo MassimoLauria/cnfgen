@@ -172,8 +172,7 @@ def from_dimacs_file(cnfclass, fileorname=None):
         name = '<stdin>'
     elif isinstance(fileorname, str):
         with open(fileorname, 'r', encoding='utf-8') as filehandle:
-            from_dimacs_file(cnfclass, filehandle)
-            return
+            return from_dimacs_file(cnfclass, filehandle)
     else:
         inputfile = fileorname
         try:
