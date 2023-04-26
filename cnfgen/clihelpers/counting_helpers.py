@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Implementation of counting/matching formulas helpers
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2022 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2022, 2023 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
@@ -142,7 +142,9 @@ positional arguments:
                      `first'  puts odd charge on first vertex;
                      `random' puts a random charge on vertices;
                      `randomodd' puts random odd  charge on vertices;
-                     `randomeven' puts random even charge on vertices.
+                     `randomeven' puts random even charge on vertices;
+                     `zero' puts charge 0 on every vertex;
+                     `one'  puts charge 1 on every vertex.
   <graph>        --- a simple undirected graph (see 'cnfgen --help-graph')
 
 optional arguments:
@@ -180,12 +182,14 @@ class TseitinCmdHelper(FormulaHelper):
         longform.add_argument(
             'charge',
             metavar='<charge>',
-            choices=['first', 'random', 'randomodd', 'randomeven'],
+            choices=['first', 'random', 'randomodd', 'randomeven','zero','one'],
             help="""charge on the vertices.
                                     `first'  puts odd charge on first vertex;
                                     `random' puts a random charge on vertices;
                                     `randomodd' puts random odd  charge on vertices;
-                                    `randomeven' puts random even charge on vertices.
+                                    `randomeven' puts random even charge on vertices;
+                                    `zero' puts charge 0 on every vertex;
+                                    `one'  puts charge 1 on every vertex.
                                      """)
         longform.add_argument(
             'G',
@@ -234,6 +238,14 @@ class TseitinCmdHelper(FormulaHelper):
         elif args.charge == 'first':
 
             charge = [1] + [0] * (G.order() - 1)
+
+        elif args.charge == 'zero':
+
+            charge = [0] * G.order()
+
+        elif args.charge == 'one':
+
+            charge = [1] * G.order()
 
         else:  # random vector
             charge = [random.randint(0, 1) for _ in range(G.order() - 1)]
