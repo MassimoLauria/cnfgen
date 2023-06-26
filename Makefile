@@ -32,7 +32,7 @@ clean:
 package:
 	$(MAKE) clean
 	$(MAKE) $(VERSIONFILE)
-	$(PYTHON) setup.py sdist bdist_egg bdist_wheel
+	$(PYTHON) setup.py sdist bdist_wheel
 
 
 testpackage: test
