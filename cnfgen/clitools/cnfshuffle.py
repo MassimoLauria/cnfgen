@@ -117,8 +117,9 @@ def cli(argv=sys.argv, mode='output'):
              Alternatively you can feed a formula to <stdin>
              with piping or using '-i' command line argument."""
 
-    with msg_prefix("c INPUT: "):
-        interactive_msg(msg, filltext=70)
+    if args.input == sys.stdin:
+        with msg_prefix("c INPUT: "):
+            interactive_msg(msg, filltext=70)
     F = CNF.from_file(args.input)
 
     # Default permutation
