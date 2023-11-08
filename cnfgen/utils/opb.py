@@ -75,7 +75,7 @@ def to_opb_file(formula, fileorname=None,
                     output.write("+1 x{} ".format(lit) )
                 else:
                     output.write("+1 ~x{} ".format(-lit))
-            output.write(">= 1\n")
+            output.write(">= 1 ;\n")
     elif isinstance(formula,BaseOPB):
         for lin in formula:
             op = ">=" if lin[-2]==">=" else "="
@@ -85,4 +85,4 @@ def to_opb_file(formula, fileorname=None,
                     output.write("{:+} x{} ".format(c,l) )
                 else:
                     output.write("{:+} ~x{} ".format(c,-l) )
-            output.write("{} {}\n".format(op,value))
+            output.write("{} {} ;\n".format(op,value))
