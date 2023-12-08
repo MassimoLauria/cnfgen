@@ -63,7 +63,7 @@ PKG_DEPENDENCES:=wheel twine keyring
 DOC_DEPENDENCES:='sphinx<6' sphinx-autobuild numpydoc sphinx_rtd_theme sphinx-autodoc-typehints
 
 PYENV:= $(shell command -v pyenv 2> /dev/null)
-PYENV_PYVERSION:=$(shell pyenv install -l | grep '[[:space:]]3.10.[[:digit:]]*' | grep -v 'rc\|dev' | tail -1)
+PYENV_PYVERSION:=$(shell pyenv install -l | grep '[[:space:]]3.11.[[:digit:]]*' | grep -v 'rc\|dev' | tail -1)
 
 docs: docs-install-tools $(VERSIONFILE)
 	. $(VIRTUALENV)/bin/activate && \
