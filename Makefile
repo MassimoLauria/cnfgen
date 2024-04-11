@@ -48,7 +48,7 @@ testpackage: test
 
 upload: testpackage
 	$(MAKE) package
-	twine upload dist/*
+	twine upload --repository cnfgen dist/*
 
 #
 # Development is based on pyenv
