@@ -6,7 +6,7 @@ CNFgen has many command line entry points to its functionality, and
 some of them expose the same functionality over and over. This module
 contains useful common components.
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2023
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2023, 2024
 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://github.com/MassimoLauria/cnfgen.git
 
@@ -101,7 +101,7 @@ def find_in_package(package, test, sortkey=None):
             module = sys.modules[module_name]
         else:
             modspec = importlib.util.find_spec(module_name)
-            module  = importlib.util.module_from_spec(ms)
+            module  = importlib.util.module_from_spec(modspec)
             modspec.loader.exec_module(module)
         for objname in dir(module):
             obj = getattr(module, objname)
