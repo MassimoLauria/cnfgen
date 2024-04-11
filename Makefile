@@ -10,7 +10,7 @@ all : test
 .PHONY: testpackage package upload
 
 $(VERSIONFILE): force
-	@echo "version = '"`git describe --always --tags`"'" > $(VERSIONFILE)
+	echo "version = '"`git describe --always --tags | sed s/-g/+g/g`"'" > $(VERSIONFILE)
 
 test: venv $(VERSIONFILE)
 	. $(VIRTUALENV)/bin/activate && \
