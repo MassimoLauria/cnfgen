@@ -53,7 +53,7 @@ upload: testpackage
 #
 # Development is based on pyenv
 #
-# The environment is based on the latest 3.8 python with is neither
+# The environment is based on the latest 3.12 python with is neither
 # a '-dev' nor an 'rc*' version. At least according to the list produced by
 #
 # $ pyenv install -l
@@ -63,7 +63,7 @@ PKG_DEPENDENCES:=wheel twine keyring
 DOC_DEPENDENCES:='sphinx<6' sphinx-autobuild numpydoc sphinx_rtd_theme sphinx-autodoc-typehints
 
 PYENV:= $(shell command -v pyenv 2> /dev/null)
-PYENV_PYVERSION:=$(shell pyenv install -l | grep '[[:space:]]3.11.[[:digit:]]*' | grep -v 'rc\|dev' | tail -1)
+PYENV_PYVERSION:=$(shell pyenv install -l | grep '[[:space:]]3.12.[[:digit:]]*' | grep -v 'rc\|dev' | tail -1)
 
 docs: docs-install-tools $(VERSIONFILE)
 	. $(VIRTUALENV)/bin/activate && \
