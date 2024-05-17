@@ -10,6 +10,7 @@ from cnfgen import CNF
 from cnfgen import CliqueFormula
 from cnfgen import RamseyWitnessFormula
 from cnfgen import SubgraphFormula
+from cnfgen import BinaryCliqueFormula
 
 from cnfgen.graphs import readGraph, normalize_networkx_labels
 
@@ -154,3 +155,24 @@ def test_parameters(base, template):
     lib = F.to_dimacs()
     cli = cnfgen(parameters, mode='string')
     assert lib == cli
+
+def test_github_issue_115():
+    F = cnfgen(['cnfgen','kcliquebin',3,'complete',3,2],
+               mode='formula')
+    assertUNSAT(F)
+
+
+def test_kcliquebib5_complete_1_4():
+    F = cnfgen(['cnfgen','kcliquebin',5,'complete',1,4],
+               mode='formula')
+    assertUNSAT(F)
+
+def test_kcliquebin4_complete_1_4():
+    F = cnfgen(['cnfgen','kcliquebin',4,'complete',1,4],
+               mode='formula')
+    assertSAT(F)
+
+def test_kcliquebin2():
+    G = nx.empty_graph(2)
+    F = BinaryCliqueFormula(G, 2)
+    assertUNSAT(F)

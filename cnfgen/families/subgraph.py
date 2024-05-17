@@ -22,7 +22,6 @@ def non_edges(G):
 
 
 
-
 def SubgraphFormula(G, H, induced=False, symbreak=False, formula_class=CNF):
     """Test whether a graph has a k-clique.
 
@@ -170,15 +169,20 @@ def BinaryCliqueFormula(G, k, symbreak=True, formula_class=CNF):
     if symbreak:
         F.force_nondecreasing_mapping(m)
 
-    # Local consistency
+    # Local consistency on non edges
+    #
+    # NOTE: vertices in binary are numbered from 0. Issue #115 was due
+    # to an off-by-one error because of this
+
+    non_edges_zero_indexed = ((u-1,v-1) for (u,v) in non_edges(G))
     nonconsistents = product(combinations(list(range(1, k+1)), 2),
-                             non_edges(G))
+                             non_edges_zero_indexed)
 
     for (i1, i2), (j1, j2) in nonconsistents:
         # check if this mapping is compatible
-        F.add_clause(m.forbid(i1, j1) + m.forbid(i2, j2), check=False)
+        F.add_clause(m.forbid(i1, j1) + m.forbid(i2, j2), check=True)
         if not symbreak:
-            F.add_clause(m.forbid(i1, j2) + m.forbid(i2, j1), check=False)
+            F.add_clause(m.forbid(i1, j2) + m.forbid(i2, j1), check=True)
 
     return F
 
