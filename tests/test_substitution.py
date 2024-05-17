@@ -75,6 +75,15 @@ def test_inequality():
     assert lift.number_of_variables() == expected.number_of_variables()
     assert lift.clauses() == expected.clauses()
 
+def test_labels_escaping():
+    cnf = CNF()
+    cnf.new_block(4, label='x_{{{}}}')
+    cnf.add_clause([-1,-2,-3])
+    lift = XorSubstitution(cnf, 2)
+    assert lift.number_of_variables() == 8
+    assert len(lift.clauses()) == 8
+
+
 
 def test_inequality_pos_clause():
     cnf = CNF([[1]])
@@ -149,6 +158,7 @@ def test_cli_majcompression_good1():
     assert len(list(F.variables())) == 12
 
 
+
 def test_cli_majcompression_good2():
     F = cnfgen(["cnfgen", 'php', 7, 5, '-T', 'majcomp', 'glrd', 35, 12, 3],
                mode='formula')
@@ -159,3 +169,9 @@ def test_cli_majcompression_bad():
     with pytest.raises(CLIError):
         cnfgen(["cnfgen", 'php', 7, 5, '-T', 'majcomp', 'glrd', 30, 12, 3],
                mode='formula')
+
+def test_cli_op_xor():
+    "Test against bug #114 in the repo due to label escaping"
+    F = cnfgen(["cnfgen", 'op', 10, 3, '-T', 'xor', 2],
+               mode='formula')
+    assert True

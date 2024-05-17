@@ -12,6 +12,9 @@ from cnfgen.graphs import BipartiteGraph
 # Utilities
 #
 
+def escape_curly(text):
+    return text.replace('{','{{').replace('}','}}')
+
 def add_description(F, text):
     """Add the description of a transformation
 
@@ -99,7 +102,7 @@ def XorSubstitution(F, k):
     newF = CNF()
     newF.header = copy(F.header)
     for name in F.all_variable_labels():
-        newF.new_block(k, label='{{'+name+'}}^{}')
+        newF.new_block(k, label='{{'+escape_curly(name)+'}}^{}')
     add_description(newF, "Substitution with XOR of arity {}".format(k))
 
     def xorify(lit):
@@ -126,7 +129,7 @@ def ExactlyOneSubstitution(F, k):
     newF = CNF()
     newF.header = copy(F.header)
     for name in F.all_variable_labels():
-        newF.new_block(k, label='{{'+name+'}}^{}')
+        newF.new_block(k, label='{{'+escape_curly(name)+'}}^{}')
     add_description(newF, "Substitution with exaclty-one, of arity {}".format(k))
 
     def oneify(lit):
@@ -173,7 +176,7 @@ def LinearSubstitution(F, k, op, C):
     newF = CNF()
     newF.header = copy(F.header)
     for name in F.all_variable_labels():
-        newF.new_block(k, label='{{'+name+'}}^{}')
+        newF.new_block(k, label='{{'+escape_curly(name)+'}}^{}')
     desc = "Substitution x --> x1 + x2 + ... x{} {} {}".format(k, op, C)
     add_description(newF, desc)
 
@@ -204,7 +207,7 @@ def MajoritySubstitution(F, k):
     newF = CNF()
     newF.header = copy(F.header)
     for name in F.all_variable_labels():
-        newF.new_block(k, label='{{'+name+'}}^{}')
+        newF.new_block(k, label='{{'+escape_curly(name)+'}}^{}')
     add_description(newF, "Substitution with majority of arity {}".format(k))
 
     def majorify(lit):
@@ -236,7 +239,7 @@ def AllEqualSubstitution(F, k, invert=False):
     newF = CNF()
     newF.header = copy(F.header)
     for name in F.all_variable_labels():
-        newF.new_block(k, label='{{'+name+'}}^{}')
+        newF.new_block(k, label='{{'+escape_curly(name)+'}}^{}')
     if invert:
         add_description(newF, "Substitution with not-all-equals of arity {}".format(k))
     else:
@@ -286,7 +289,7 @@ def OrSubstitution(F, k):
     newF = CNF()
     newF.header = copy(F.header)
     for name in F.all_variable_labels():
-        newF.new_block(k, label='{{'+name+'}}^{}')
+        newF.new_block(k, label='{{'+escape_curly(name)+'}}^{}')
     add_description(newF, "Substitution with OR of arity {}".format(k))
 
     def orify(lit):
@@ -313,7 +316,7 @@ def AndSubstitution(F, k):
     newF = CNF()
     newF.header = copy(F.header)
     for name in F.all_variable_labels():
-        newF.new_block(k, label='{{'+name+'}}^{}')
+        newF.new_block(k, label='{{'+escape_curly(name)+'}}^{}')
     add_description(newF, "Substitution with AND of arity {}".format(k))
 
     def andify(lit):
@@ -344,11 +347,11 @@ def IfThenElseSubstitution(F):
     newF.header = copy(F.header)
     N = F.number_of_variables()
     for name in F.all_variable_labels():
-        newF.new_variable('{{'+name+'}}^{i}')
+        newF.new_variable('{{'+escape_curly(name)+'}}^{i}')
     for name in F.all_variable_labels():
-        newF.new_variable('{{'+name+'}}^{t}')
+        newF.new_variable('{{'+escape_curly(name)+'}}^{t}')
     for name in F.all_variable_labels():
-        newF.new_variable('{{'+name+'}}^{e}')
+        newF.new_variable('{{'+escape_curly(name)+'}}^{e}')
     add_description(newF, "If-Then-Else substitution formula")
 
     def ite(lit):
@@ -373,8 +376,8 @@ def FormulaLifting(F, k):
     newF = CNF()
     newF.header = copy(F.header)
     for name in F.all_variable_labels():
-        newF.new_block(k, label='X_{{'+name+'}}^{}')
-        newF.new_block(k, label='Y_{{'+name+'}}^{}')
+        newF.new_block(k, label='X_{{'+escape_curly(name)+'}}^{}')
+        newF.new_block(k, label='Y_{{'+escape_curly(name)+'}}^{}')
     add_description(newF, "Lifting with selectors over {} values".format(k))
 
     N = newF.number_of_variables()
