@@ -170,7 +170,7 @@ def test_cli_majcompression_bad():
         cnfgen(["cnfgen", 'php', 7, 5, '-T', 'majcomp', 'glrd', 30, 12, 3],
                mode='formula')
 
-def test_cli_op_xor():
+def test_github_issue_114():
     "Test against bug #114 in the repo due to label escaping"
     F = cnfgen(["cnfgen", 'op', 10, 3, '-T', 'xor', 2],
                mode='formula')
