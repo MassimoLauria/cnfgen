@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Graph constructions that are available on the command line
 
-Copyright (C) 2020, 2021, 2022  Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2020, 2021, 2022, 2024  Massimo Lauria <massimo.lauria@uniroma1.it>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
@@ -126,21 +126,22 @@ def obtain_complete_simple(parsed):
     try:
         if len(parsed['args']) == 1:
             n = int(parsed['args'][0])
-            b = 1
+            b = None
         elif len(parsed['args']) == 2:
             n = int(parsed['args'][0])
             b = int(parsed['args'][1])
         else:
             raise ValueError
         assert n > 0
-        assert b > 0
+        assert b is None or b > 0
+
     except (TypeError, ValueError, AssertionError):
         raise ValueError(
             '\'complete\' expects argument N with N>0,\n' +
             'and optional B with B>0 to get complete B multipartite\n' +
             "with N vertices per block.")
 
-    if b == 1:
+    if b is None:
         G = Graph.complete_graph(n)
     else:
         blocksizes = [n] * b

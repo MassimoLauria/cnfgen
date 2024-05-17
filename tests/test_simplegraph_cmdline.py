@@ -40,6 +40,11 @@ def test_complete():
     for v in G.vertices():
         assert G.degree(v) == 9
 
+def test_complete_multipartite_of_one():
+    G = M("complete 5 1")
+    assert G.number_of_vertices() == 5
+    assert G.number_of_edges() == 0
+
 
 def test_complete_multipartite():
     G = M("complete 5 4")
