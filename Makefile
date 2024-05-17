@@ -83,6 +83,7 @@ $(VIRTUALENV)/bin/activate: requirements.txt
 ifndef PYENV
     $(error "Development is based on pyenv, please install it.")
 endif
+	pyenv update
 	@echo "Setting up virtualenv $(PROJECT) using python $(PYENV_PYVERSION)"
 	-rm -f .python-version
 	-pyenv virtualenv-delete -f $(PROJECT)-venv
