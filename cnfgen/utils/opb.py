@@ -67,6 +67,14 @@ def to_opb_file(formula, fileorname=None,
             output.write("* varname x{0} {1}\n".format(varid, label))
         output.write("*\n")
 
+    # Objective
+    if isinstance(formula,BaseOPB):
+        if formula.objective():
+            output.write("min: ")
+            for (c,l) in formula.objective():
+                output.write("{:+} x{} ".format(c,l) )
+            output.write(" ;\n")
+
     # Clauses
     if isinstance(formula,BaseCNF):
         for cls in formula:
@@ -75,7 +83,7 @@ def to_opb_file(formula, fileorname=None,
                     output.write("+1 x{} ".format(lit) )
                 else:
                     output.write("+1 ~x{} ".format(-lit))
-            output.write(">= 1\n")
+            output.write(">= 1 ;\n")
     elif isinstance(formula,BaseOPB):
         for lin in formula:
             op = ">=" if lin[-2]==">=" else "="
@@ -85,4 +93,4 @@ def to_opb_file(formula, fileorname=None,
                     output.write("{:+} x{} ".format(c,l) )
                 else:
                     output.write("{:+} ~x{} ".format(c,-l) )
-            output.write("{} {}\n".format(op,value))
+            output.write("{} {} ;\n".format(op,value))
