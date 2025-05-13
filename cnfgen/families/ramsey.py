@@ -139,12 +139,12 @@ def VanDerWaerden(N, k1, k2, *ks, formula_class=CNF):
 
     .. math::
 
-         i, i+d, i+2d, \ldots, i +(k-1)d
+         i, i+d, i+2d, \\ldots, i +(k-1)d
 
     have color :math:`c`. In fact, given any number of lengths
     :math:`k_1`, :math:`k_2`,..., :math:`k_C`, there is some value of
     :math:`N` large enough so that no matter how the integers
-    :math:`1, \ldots, N` are colored with :math:`C` colors, such
+    :math:`1, \\ldots, N` are colored with :math:`C` colors, such
     coloring must have one arithmetic progression of color
     :math:`c` and length :math:`k_c`.
 
@@ -154,14 +154,14 @@ def VanDerWaerden(N, k1, k2, *ks, formula_class=CNF):
 
     .. math::
 
-         VDW(k_1, k_2 , \ldots, k_C)
+         VDW(k_1, k_2 , \\ldots, k_C)
 
-    The formula, given :math:`N` and :math`k_1`, :math`k_2` , \ldots,
+    The formula, given :math:`N` and :math`k_1`, :math`k_2` , \\ldots,
     :math`k_C`, is the CNF encoding of the claim
 
     .. math::
 
-         VDW(k_1, k_2 , \ldots, k_C) > N
+         VDW(k_1, k_2 , \\ldots, k_C) > N
 
     which is expressed, more concretely, as a CNF which forbids, for
     each color :math:`c` between 1 and :math:`C`, all arithmetic
