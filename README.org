@@ -99,4 +99,4 @@
    Please contribute to the code by sending pull requests.
 
 
-Copyright 2012-2021 © Massimo Lauria ([[mailto:massimo.lauria@uniroma1.it][massimo.lauria@uniroma1.it]])
+Copyright 2012-2025 © Massimo Lauria ([[mailto:massimo.lauria@uniroma1.it][massimo.lauria@uniroma1.it]])

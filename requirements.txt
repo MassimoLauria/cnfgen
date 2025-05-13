@@ -1,2 +1,3 @@
-networkx>=2.3
-pydot>=1.2.3
+# Pydot 4.0.0 introduces buts in networkx < 3.5
+networkx>=2.4
+pydot>=1.2.3,<4.0.0

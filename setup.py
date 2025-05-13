@@ -27,8 +27,8 @@ setup(
             'cnfshuffle=cnfgen.clitools.cnfshuffle:main'
         ],
     },
-    install_requires=['networkx>=2.3', 'pydot>=1.2.3'],
-    python_requires='>=3.6',
+    install_requires=['networkx>=2.4', 'pydot>=1.2.3,<4.0.0'],
+    python_requires='>=3.7',
 
     # Package long description in Markdown
     long_description=long_description,
