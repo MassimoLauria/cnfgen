@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "CNFgen"
+dynamic = ["version"]
+description= "CNF formula generator"
+authors = [
+{name = "Massimo Lauria", email = "massimo.lauria@uniroma1.it"},
+]
+readme = "PyPI.md"
+license = "GPL-3.0"
+license-files = [
+    "LICENSE",
+]
+
+requires-python = ">=3.7"
+dependencies = [
+    "networkx>=2.4", 
+    "pydot>=1.2.3,<4.0.0"
+]
+
+
+[project.urls]
+Homepage = "https://massimolauria.net/cnfgen"
+Repository = "https://github.com/MassimoLauria/cnfgen"
+Documentation = "https://cnfgen.readthedocs.io/en/latest/"
+
+[project.scripts]
+cnfgen = "cnfgen.clitools.cnfgen:main"
+pbgen = "cnfgen.clitools.pbgen:main"
+cnfshuffle = "cnfgen.clitools.cnfshuffle:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["docs*", "tests*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "cnfgen.version.version"}

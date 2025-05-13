@@ -18,6 +18,8 @@ import os
 # Import project information
 sys.path.insert(0, os.path.abspath('..'))
 from cnfgen.info import info
+from intersphinx_registry import get_intersphinx_mapping
+
 
 # -- General configuration ------------------------------------------------
 
@@ -65,7 +67,7 @@ release = info['version']
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -106,11 +108,14 @@ doctest_global_setup = "import cnfgen"
 todo_include_todos = False
 
 # Intersphinx mapping
-intersphinx_mapping = {
-    'python': ('https://docs.python.org/2.7', None),
-    'networkx': ('https://networkx.github.io/', None),
-    'numpy': ('http://docs.scipy.org/doc/numpy/', None)
-}
+intersphinx_mapping = get_intersphinx_mapping(
+    packages={"python", "networkx", "numpy"}
+)
+# intersphinx_mapping = {
+#     'python': ('https://docs.python.org/3', None),
+#     'networkx': ('https://networkx.github.io/', None),
+#     'numpy': ('https://numpy.org/doc/stable/', None)
+# }
 
 # -- Options for HTML output ----------------------------------------------
 

@@ -27,5 +27,5 @@ command
 - Zenodo link (DOI) <https://zenodo.org/record/3548843>
 
 
-Copyright 2012-2020  © Massimo
+Copyright 2012-2025  © Massimo
 Lauria ([massimo.lauria@uniroma1.it](mailto:massimo.lauria@uniroma1.it))
