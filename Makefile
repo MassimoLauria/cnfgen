@@ -1,6 +1,5 @@
 PROJECT:=cnfgen
-VERSIONFILE=$(PROJECT)/version.py
-
+VERSIONFILE:=$(PROJECT)/version.py
 VIRTUALENV:= $(PWD)/.venv/$(PROJECT)-venv
 ACTIVATE:= $(VIRTUALENV)/bin/activate
 
@@ -21,7 +20,7 @@ test: $(VERSIONFILE) $(ACTIVATE)
 	. $(ACTIVATE) && pytest
 
 clean:
-	rm -fr version.py
+	rm -fr $(VERSIONFILE)
 	rm -fr build
 	rm -fr dist
 	rm -fr *.egg-info
@@ -34,8 +33,8 @@ package: $(VERSIONFILE) $(ACTIVATE)
 	$(MAKE) clean
 	. $(ACTIVATE) && python -m build
 
-upload: package
-	twine upload --repository cnfgen dist/*
+upload: package  $(ACTIVATE)
+	. $(ACTIVATE) && twine upload --repository cnfgen dist/*
 
 
 docs: $(VERSIONFILE)
