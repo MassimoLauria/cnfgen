@@ -5,7 +5,7 @@ VIRTUALENV:= $(PWD)/.venv/$(PROJECT)-venv
 ACTIVATE:= $(VIRTUALENV)/bin/activate
 
 DEV_DEPENDENCES:=yapf pytest pytest-datadir flake8
-PKG_DEPENDENCES:=setuptools wheel twine keyring
+PKG_DEPENDENCES:=setuptools wheel twine keyring build
 DOC_DEPENDENCES:=sphinx sphinx-autobuild numpydoc sphinx_rtd_theme sphinx-autodoc-typehints docutils intersphinx_registry
 
 all : test
