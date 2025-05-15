@@ -30,7 +30,6 @@ clean:
 	find . -name 'flycheck*.py' -delete
 
 package: $(VERSIONFILE) $(ACTIVATE)
-	$(MAKE) clean
 	. $(ACTIVATE) && python -m build
 
 upload: package  $(ACTIVATE)
