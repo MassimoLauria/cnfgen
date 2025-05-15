@@ -21,6 +21,7 @@ test: $(VERSIONFILE) $(ACTIVATE)
 
 clean:
 	rm -fr $(VERSIONFILE)
+	$(MAKE) $(VERSIONFILE)
 	rm -fr build
 	rm -fr dist
 	rm -fr *.egg-info
@@ -29,7 +30,9 @@ clean:
 	find . -name '*.pyo' -delete
 	find . -name 'flycheck*.py' -delete
 
-package: $(VERSIONFILE) $(ACTIVATE)
+package: $(ACTIVATE)
+	$(MAKE) clean
+	$(MAKE) $(VERSIONFILE)
 	. $(ACTIVATE) && python -m build
 
 upload: package  $(ACTIVATE)
