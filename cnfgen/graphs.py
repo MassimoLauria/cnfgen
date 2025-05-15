@@ -1510,7 +1510,7 @@ def _write_graph_dot(G, output_file):
             output.write(f"{i};\n")
         for u in G.vertices():
             for v in G.neighbors(u):
-                if u<v:
+                if u<=v:
                     output.write(f"{u} -- {v};\n")
         output.write("}")
 
