@@ -1078,8 +1078,9 @@ def writeGraph(G, output_file, graph_type, file_format='autodetect'):
 
     if file_format == 'dot':
 
-        G = G.to_networkx()
-        networkx.nx_pydot.write_dot(G, output_file)
+        _write_graph_dot(G,output_file)
+        # G = G.to_networkx()
+        # networkx.nx_pydot.write_dot(G, output_file)
 
     elif file_format == 'gml':
 
@@ -1452,8 +1453,71 @@ def _read_graph_matrix_format(inputfile):
 #
 # In-house graph writers
 #
+def _write_graph_dot(G, output_file):
+    """Write a graph to a file, in dot format.
+
+ I use a custom writer to reduce the dependency from pydot and
+ networkx.
+
+    Parameters
+    ----------
+    G : Graph or DirectGraph or Bipartite
+        the graph to write on file
+
+    output_file : file object
+        file handle of the output
+
+    """
+    assert isinstance(G, (Graph, DirectedGraph,BipartiteGraph))
+
+    from io import StringIO
+    output = StringIO()
+
+    # preamble
+    if isinstance(G, DirectedGraph):
+        output.write("strict digraph ")
+    else:
+        output.write("strict graph ")
+    if G.name is not None:
+        output.write('"'+G.name+'"')
+    output.write(" {\n")
+
+    # directed
+    if isinstance(G, DirectedGraph):
+        for i in G.vertices():
+            output.write(f"{i};\n")
+        for u in G.vertices():
+            for v in G.successors(u):
+                output.write(f"{u} -> {v};\n")
+        output.write("}")
+
+    # bipartite
+    elif isinstance(G, BipartiteGraph):
+        L,R = G.parts()
+        for i in L:
+            output.write(f"{i} [bipartite=0];\n")
+        for i in R:
+            output.write(f"{i+len(L)} [bipartite=1];\n")
+
+        for u in L:
+            for v in G.right_neighbors(u):
+                output.write(f"{u} -- {v+len(L)};\n")
+        output.write("}")
+
+    # simple graph
+    else:
+        for i in G.vertices():
+            output.write(f"{i};\n")
+        for u in G.vertices():
+            for v in G.neighbors(u):
+                if u<v:
+                    output.write(f"{u} -- {v};\n")
+        output.write("}")
+
+    print(output.getvalue(), file=output_file)
+
 def _write_graph_kthlist_nonbipartite(G, output_file):
-    """Wrire a graph to a file, in the KTH reverse adjacency lists format.
+    """Write a graph to a file, in the KTH reverse adjacency lists format.
 
     Parameters
     ----------

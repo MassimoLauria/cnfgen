@@ -75,6 +75,30 @@ kthlist_bipartite_strict = """
 2: 4 0
 """
 
+dot_output_php43="""
+strict graph "Complete bipartite graph with (4,3) vertices" {
+1 [bipartite=0];
+2 [bipartite=0];
+3 [bipartite=0];
+4 [bipartite=0];
+5 [bipartite=1];
+6 [bipartite=1];
+7 [bipartite=1];
+1 -- 5;
+1 -- 6;
+1 -- 7;
+2 -- 5;
+2 -- 6;
+2 -- 7;
+3 -- 5;
+3 -- 6;
+3 -- 7;
+4 -- 5;
+4 -- 6;
+4 -- 7;
+}
+"""
+
 
 def test_low_level_dot_read_path2():
 
