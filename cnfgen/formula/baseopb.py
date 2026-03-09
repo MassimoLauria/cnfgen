@@ -176,6 +176,7 @@ class BaseOPB:
         self._constraints = []
         for c in constraints or []:
             self.add_constraint(c, check=True)
+        self._objective = None
 
     def __str__(self):
         """String representation of the formula
@@ -215,18 +216,23 @@ class BaseOPB:
         for i in range(1, self._numvar+1):
             yield default_label_format.format(i)
 
+    def _check_and_update_literals(self, data, positive):
+        maxv = self._numvar
+        for c,l in data:
+            if l==0:
+                raise ValueError("0 is not a valid literal")
+            # Make sure c is an int even if the sign does not matter
+            if c<0:
+                if positive:
+                    raise ValueError("coefficients should be positive")
+                maxv = max(abs(l),maxv)
+        self._numvar = maxv
+
     def _check_and_update(self, data):
         if len(data) == 0:
             return
         try:
-            maxv = self._numvar
-            for c,l in data[:-2]:
-                if l==0:
-                    raise ValueError("0 is not a valid literal")
-                if c<0:
-                    raise ValueError("coefficients should be positive")
-                maxv = max(abs(l),maxv)
-            self._numvar = maxv
+            self._check_and_update_literals(data[:-2], True)
             if data[-2] not in ['>=','==']:
                 raise ValueError("only >= and == operators allowed")
         except (TypeError, ValueError) as te:
@@ -413,6 +419,30 @@ not have any effect."""
         for c in constraints:
             self.add_constraint(c, check=check)
 
+    def set_objective(self, objective, check=True):
+        """Set the objective function
+
+        Parameters
+        ----------
+        objective: list of (coeff,literal)
+            the objective to be set
+
+            The objective is a list containing pairs
+            (coefficient,literal)
+
+            Coefficients must be integers.
+
+
+        check : bool
+            check that all literals are integer and update the
+            number of variables, based on the literal present in the
+            objective. (default: True)
+        """
+        self._objective = objective
+
+        if check:
+            self._check_and_update_literals(objective, False)
+
     def variables(self):
         """Return the list of variables"""
         return range(1, self.number_of_variables()+1)
@@ -421,6 +451,10 @@ not have any effect."""
         """Return the list of clauses
         """
         return ConstraintsView(self)
+
+    def objective(self):
+        """Return the objective"""
+        return self._objective
 
     def cardinality_geq(self, lits, value,check=True):
         """Encoding of \"at least\" constraint
@@ -470,7 +504,7 @@ not have any effect."""
             lits = list(lits)
         if check:
             # dummy constraint, just to check the literals once
-            self._check_and_update([(1,l) for l in lits]+ ['==',0])
+            self._check_and_update_literals([(1,l) for l in lits], True)
 
         n = len(lits)
         if value < 0 or value > n:
@@ -568,7 +602,7 @@ not have any effect."""
             lits = list(lits)
         if check:
             # dummy constraint, just to check the literals once
-            self._check_and_update([(1,l) for l in lits]+ ['==',0])
+            self._check_and_update_literals([(1,l) for l in lits], True)
 
         desired_sign = 1 if constant == 1 else -1
         for signs in product([1, -1], repeat=len(lits)):

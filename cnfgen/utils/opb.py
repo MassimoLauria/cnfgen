@@ -67,6 +67,14 @@ def to_opb_file(formula, fileorname=None,
             output.write("* varname x{0} {1}\n".format(varid, label))
         output.write("*\n")
 
+    # Objective
+    if isinstance(formula,BaseOPB):
+        if formula.objective():
+            output.write("min: ")
+            for (c,l) in formula.objective():
+                output.write("{:+} x{} ".format(c,l) )
+            output.write(" ;\n")
+
     # Clauses
     if isinstance(formula,BaseCNF):
         for cls in formula:
