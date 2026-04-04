@@ -222,10 +222,9 @@ class BaseOPB:
             if l==0:
                 raise ValueError("0 is not a valid literal")
             # Make sure c is an int even if the sign does not matter
-            if c<0:
-                if positive:
+            if c<0 and positive:
                     raise ValueError("coefficients should be positive")
-                maxv = max(abs(l),maxv)
+            maxv = max(abs(l),maxv)
         self._numvar = maxv
 
     def _check_and_update(self, data):

@@ -12,7 +12,7 @@ Create the formula:
 >>> c.add_constraint([(1,3),(2,1),(3,-2),'>=',3])
 >>> print( c.to_opb() )
 * #variable= 3 #constraint= 1
-+1 x3 +2 x1 +3 ~x2 >= 3
++1 x3 +2 x1 +3 ~x2 >= 3 ;
 <BLANKLINE>
 
 Constraints are normalized
@@ -22,7 +22,7 @@ Constraints are normalized
 >>> c.add_constraint([(1,3),(-2,2),(1,4),'>',3])
 >>> print( c.to_opb() )
 * #variable= 4 #constraint= 1
-+1 x3 +2 ~x2 +1 x4 >= 6
++1 x3 +2 ~x2 +1 x4 >= 6 ;
 <BLANKLINE>
 """
 

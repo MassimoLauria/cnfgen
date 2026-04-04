@@ -9,7 +9,7 @@ ready to be fed to sat solvers.
 The module implements the `OPB` object, which is the main entry point
 to the `cnfgen` library.
 
-Copyright (C) 2012-2022  Massimo Lauria <lauria.massimo@gmail.com>
+Copyright (C) 2012-2022, 2026  Massimo Lauria <lauria.massimo@gmail.com>
 https://github.com/MassimoLauria/cnfgen.git
 
 """
@@ -59,15 +59,15 @@ class OPB(VariablesManager, OPBio):
     >>> c.force_injective_mapping(f)
     >>> print( c.to_opb(), end='')
     * #variable= 20 #constraint= 9
-    +1 x1 +1 x2 +1 x3 +1 x4 >= 1
-    +1 x5 +1 x6 +1 x7 +1 x8 >= 1
-    +1 x9 +1 x10 +1 x11 +1 x12 >= 1
-    +1 x13 +1 x14 +1 x15 +1 x16 >= 1
-    +1 x17 +1 x18 +1 x19 +1 x20 >= 1
-    +1 ~x1 +1 ~x5 +1 ~x9 +1 ~x13 +1 ~x17 >= 4
-    +1 ~x2 +1 ~x6 +1 ~x10 +1 ~x14 +1 ~x18 >= 4
-    +1 ~x3 +1 ~x7 +1 ~x11 +1 ~x15 +1 ~x19 >= 4
-    +1 ~x4 +1 ~x8 +1 ~x12 +1 ~x16 +1 ~x20 >= 4
+    +1 x1 +1 x2 +1 x3 +1 x4 >= 1 ;
+    +1 x5 +1 x6 +1 x7 +1 x8 >= 1 ;
+    +1 x9 +1 x10 +1 x11 +1 x12 >= 1 ;
+    +1 x13 +1 x14 +1 x15 +1 x16 >= 1 ;
+    +1 x17 +1 x18 +1 x19 +1 x20 >= 1 ;
+    +1 ~x1 +1 ~x5 +1 ~x9 +1 ~x13 +1 ~x17 >= 4 ;
+    +1 ~x2 +1 ~x6 +1 ~x10 +1 ~x14 +1 ~x18 >= 4 ;
+    +1 ~x3 +1 ~x7 +1 ~x11 +1 ~x15 +1 ~x19 >= 4 ;
+    +1 ~x4 +1 ~x8 +1 ~x12 +1 ~x16 +1 ~x20 >= 4 ;
     """
 
     def __init__(self, constraints=None, description=None):

@@ -24,7 +24,7 @@ class OPBio(BaseOPB):
     >>> c.cardinality_geq([1,2,4,-3],3)
     >>> print( c.to_opb(),end='')
     * #variable= 4 #constraint= 1
-    +1 x1 +1 x2 +1 x4 +1 ~x3 >= 3
+    +1 x1 +1 x2 +1 x4 +1 ~x3 >= 3 ;
     """
     def __init__(self, constraints=None, description=None):
         BaseOPB.__init__(self, constraints=constraints, description=description)
@@ -47,8 +47,8 @@ class OPBio(BaseOPB):
         >>> c.cardinality_eq([3,-4],1)
         >>> print(c.to_opb(),end='')
         * #variable= 4 #constraint= 2
-        +1 ~x1 +1 ~x4 +1 ~x2 >= 1
-        +1 x3 +1 ~x4 = 1
+        +1 ~x1 +1 ~x4 +1 ~x2 >= 1 ;
+        +1 x3 +1 ~x4 = 1 ;
 
         >>> c=OPBio()
         >>> print(c.to_opb(),end='')

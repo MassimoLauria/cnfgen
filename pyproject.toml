@@ -17,8 +17,8 @@ license-files = [
 
 requires-python = ">=3.7"
 dependencies = [
-    "networkx>=2.4", 
-    "pydot>=1.2.3,<4.0.0"
+    "networkx>=2.4",
+    "pydot>=1.2.3,<4.0.0",
 ]
 
 
@@ -38,3 +38,11 @@ exclude = ["docs*", "tests*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "cnfgen.version.version"}
+
+[dependency-groups]
+dev = [
+    "mypy>=1.4.1",
+    "pyright>=1.1.408",
+    "pytest>=7.4.4",
+    "ruff>=0.15.9",
+]
