@@ -2,11 +2,11 @@
 # -*- coding:utf-8 -*-
 """Implementation of counting/matching formulas helpers
 
-Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2022, 2023 Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2022, 2023, 2026 Massimo Lauria <massimo.lauria@uniroma1.it>
 https://massimolauria.net/cnfgen/
 """
 
-from cnfgen.families.counting import CountingPrinciple
+from cnfgen.families.counting import CountingPrinciple, MutilatedChessboard
 from cnfgen.families.counting import PerfectMatchingPrinciple
 from cnfgen.families.tseitin import TseitinFormula
 from cnfgen.families.subsetcardinality import SubsetCardinalityFormula
@@ -114,7 +114,7 @@ optional arguments:
         Arguments:
         - `args`: command line options
         """
-        return CountingPrinciple(args.M, args.p)
+        return CountingPrinciple(args.M, args.p,formula_class=formula_class)
 
 
 tse_help_usage = """usage:
@@ -341,3 +341,43 @@ class SCCmdHelper(FormulaHelper):
             B = args.B
         return SubsetCardinalityFormula(B, args.equal,
                                         formula_class=formula_class)
+
+
+
+class MutilatedChessboardCmdHelper(FormulaHelper):
+    """Command line helper for Mutilated Chessboard formula
+    """
+    name = 'mchess'
+
+    @staticmethod
+    def setup_command_line(parser):
+        """Setup the command line options for Counting Principle formula
+
+        Arguments:
+        - `parser`: parser to load with options.
+        """
+        parser.usage = "usage:\n {0} [-h|--help] W H".format(parser.prog)
+        parser.description = """Mutilated Chessboard formula.
+It claims that a W x H chessboard with top left and bottom right
+squares removed can be filled by 2x1 rectangles, with no overlap.
+The formula is satisfiable if and only if W+H is odd.
+
+positional arguments:
+  W                       width of the chessboard (>=2)
+  H                       height of the chessboard (>=2)
+optional arguments:
+  --help, -h              show this help message and exit
+"""
+        parser.add_argument('W', type=positive_int)
+        parser.add_argument('H', type=positive_int)
+
+    @staticmethod
+    def build_formula(args, formula_class):
+        """Build an Counting Principle formula according to the arguments
+
+        Arguments:
+        - `args`: command line options
+        """
+        if args.W<2 or args.H<2:
+            raise ValueError("Both W and H should be at least 2")
+        return MutilatedChessboard(args.W, args.H,formula_class=formula_class)

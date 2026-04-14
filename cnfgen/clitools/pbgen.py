@@ -108,6 +108,7 @@ Choices for <formula>:
     kcliquebin          Binary k clique formula
     kcolor              k-colorability formula
     matching            perfect matching principle
+    mchess              mutilated chessboard
     op                  ordering principle
     or                  a single disjunction
     parity              parity principle

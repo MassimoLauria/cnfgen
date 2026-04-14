@@ -7,7 +7,7 @@ from cnfgen.clitools import get_transformation_helpers
 def test_find_formula_helpers():
     """All formula families are detected."""
     subcommands = get_formula_helpers()
-    assert len(subcommands) == 33
+    assert len(subcommands) == 34
 
 
 def test_find_formula_examples():
@@ -29,6 +29,7 @@ def test_find_formula_examples():
     assert 'kcliquebin' in names
     assert 'ptn' in names
     assert 'vdw' in names
+    assert 'mchess' in names
 
 
 def test_find_transformation_helpers():
