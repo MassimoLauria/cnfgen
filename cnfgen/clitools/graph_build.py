@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Graph constructions that are available on the command line
 
-Copyright (C) 2020, 2021, 2022, 2024  Massimo Lauria <massimo.lauria@uniroma1.it>
+Copyright (C) 2020, 2021, 2022, 2024, 2026  Massimo Lauria <massimo.lauria@uniroma1.it>
 https://github.com/MassimoLauria/cnfgen.git
 """
 
@@ -184,6 +184,9 @@ def obtain_grid_or_torus(parsed, periodic):
                 name))
 
     G = networkx.grid_graph(dimensions, periodic=periodic)
+    if periodic:
+        G.remove_edges_from(networkx.selfloop_edges(G)) # networkx creates torus with self-loops
+                                                        # but cnfgen does not like loops and multi-arcs
     G = Graph.from_networkx(G)
     G.name = "{} graph of dimension {}".format(name, dimensions)
     return G

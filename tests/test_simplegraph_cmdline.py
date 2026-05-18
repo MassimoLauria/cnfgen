@@ -94,6 +94,22 @@ def test_regular():
     assert G.number_of_edges() == 10 * 3 // 2
 
 
+def test_grid():
+    G = M("grid 8 5")
+    assert G.number_of_vertices() == 40
+
+    for v in G.vertices():
+        assert G.degree(v) in [2,3,4]
+
+def test_grid():
+    G = M("grid 3 1")
+    assert G.number_of_vertices() == 3
+
+    assert G.degree(1) == 1
+    assert G.degree(2) == 2
+    assert G.degree(3) == 1
+
+
 def test_torus():
     G = M("torus 8 5")
     assert G.number_of_vertices() == 40
@@ -101,6 +117,23 @@ def test_torus():
     for v in G.vertices():
         assert G.degree(v) == 4
 
+def test_torus2():
+    G = M("torus 2 2")
+    assert G.number_of_vertices() == 4
+    for v in G.vertices():
+        assert G.degree(v) == 2
+
+def test_torus_no_self_loops():
+    G = M("torus 3 1 3")
+    assert G.number_of_vertices() == 9
+    for v in G.vertices():
+        assert G.degree(v) == 4
+
+def test_torus_no_self_loops2():
+    G = M("torus 3 1 2 1")
+    assert G.number_of_vertices() == 6
+    for v in G.vertices():
+        assert G.degree(v) == 3
 
 def test_already_complete_addedge():
     with pytest.raises(ValueError):
