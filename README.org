@@ -72,22 +72,20 @@
 
    : pip3 install [--user] [--break-system-packages] cnfgen
 
-   or
+   or, if =pip3= is not installed,
 
    : python3 -m pip install  [--user] [--break-system-packages] cnfgen
 
-   if =pip3= is  not a program on your path.  Otherwise it is possible
-   to  install  from source
+   To install from source do
    
    : python3 -m pip install [--break-system-packages] .
 
-*** Explanation
-   
-   =--user= installs the package in the home directory, e.g.
+   With =--user= and =--break-system-packages=?
+
+     - =--user= installs the package in the home directory, e.g.
    in =~/.local/= on Linux. You may need to have =~/.local/bin= on
    your =PATH=. 
-
-   =--break-system-packages= installs =cnfgen= in your user
+     - =--break-system-packages= installs =cnfgen= in your user
    environment without the need of creating virtual environments.
    
 ** Resources
