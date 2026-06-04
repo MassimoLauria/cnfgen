@@ -83,10 +83,10 @@
    With =--user= and =--break-system-packages=?
 
      - =--user= installs the package in the home directory, e.g.
-   in =~/.local/= on Linux. You may need to have =~/.local/bin= on
-   your =PATH=. 
+       in =~/.local/= on Linux. You may need to have =~/.local/bin= on
+       your =PATH=. 
      - =--break-system-packages= installs =cnfgen= in your user
-   environment without the need of creating virtual environments.
+       environment without the need of creating virtual environments.
    
 ** Resources
 
