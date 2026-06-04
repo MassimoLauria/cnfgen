@@ -70,22 +70,26 @@
    You can install CNFgen from  [[http://pypi.python.org][Python Package Index]], together with all
    its dependencies, typing either
 
-   : pip3 install [--user] cnfgen
+   : pip3 install [--user] [--break-system-packages] cnfgen
 
    or
 
-   : python3 -m pip install  [--user] cnfgen
+   : python3 -m pip install  [--user] [--break-system-packages] cnfgen
 
    if =pip3= is  not a program on your path.  Otherwise it is possible
-   to  install  from source,  assuming  the  requirements are  already
-   installed, using
+   to  install  from source
    
-   : python3 setup.py install [--user]
+   : python3 -m pip install [--break-system-packages] .
 
-   The =--user= option allows to install  the package in the user home
-   directory. If you do that please check that the target location for
-   the command line utilities are in your $PATH.
+*** Explanation
+   
+   =--user= installs the package in the home directory, e.g.
+   in =~/.local/= on Linux. You may need to have =~/.local/bin= on
+   your =PATH=. 
 
+   =--break-system-packages= installs =cnfgen= in your user
+   environment without the need of creating virtual environments.
+   
 ** Resources
 
    - Webpage of the project at http://massimolauria.net/cnfgen/
