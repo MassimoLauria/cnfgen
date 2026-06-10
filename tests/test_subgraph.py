@@ -1,10 +1,6 @@
 import pytest
-import networkx as nx
 from io import StringIO as sio
 from itertools import combinations,product
-
-
-
 
 from cnfgen import CNF
 from cnfgen import CliqueFormula
@@ -12,7 +8,7 @@ from cnfgen import RamseyWitnessFormula
 from cnfgen import SubgraphFormula
 from cnfgen import BinaryCliqueFormula
 
-from cnfgen.graphs import readGraph, normalize_networkx_labels
+from cnfgen.graphs import readGraph, Graph
 
 from cnfgen.clitools import cnfgen, CLIError
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs, assertSAT, assertUNSAT
@@ -71,10 +67,8 @@ def test_empty_in_complete_non_induced():
 
     This checks that both parts are implemented correctly.
     """
-    G = nx.complete_graph(4)
-    T = nx.empty_graph(3)
-    normalize_networkx_labels(G)
-    normalize_networkx_labels(T)
+    G = Graph.complete_graph(4)
+    T = Graph.empty_graph(3)
     F = SubgraphFormula(G, T)
     assertSAT(F)
 
@@ -87,41 +81,36 @@ def test_empty_in_complete_induced():
 
     This checks that both parts are implemented correctly.
     """
-    G = nx.complete_graph(4)
-    T = nx.empty_graph(3)
-    G = normalize_networkx_labels(G)
-    T = normalize_networkx_labels(T)
+    G = Graph.complete_graph(4)
+    T = Graph.empty_graph(3)
     F = SubgraphFormula(G, T, induced=True)
     assertUNSAT(F)
 
 
 def test_induced_min_unsat():
-    G = nx.complete_graph(4)
-    T = nx.empty_graph(4)
-    G = normalize_networkx_labels(G)
-    T = normalize_networkx_labels(T)
-    edges = list(combinations(T.nodes(), 2))
-    print(edges)
-    T.add_edges_from(edges[1:])
+    G = Graph.complete_graph(4)
+    T = Graph.empty_graph(4)
+    skipone=1
+    for u,v in combinations(T.vertices(), 2):
+        if skipone:
+            skipone=0
+            continue
+        T.add_edge(u,v)
     F = SubgraphFormula(G, T, induced=True)
     assertUNSAT(F)
 
 
 def test_not_symmetric_but_break():
-    G = nx.empty_graph(4)
-    G = normalize_networkx_labels(G)
-    T = nx.empty_graph(4)
-    T = normalize_networkx_labels(T)
+    G = Graph.empty_graph(4)
+    T = Graph.empty_graph(4)
     G.add_edge(1,2)
     T.add_edge(2,3)
     F = SubgraphFormula(G, T, symbreak=True)
     assertUNSAT(F)
 
 def test_not_symmetric_dont_break():
-    G = nx.empty_graph(4)
-    G = normalize_networkx_labels(G)
-    T = nx.empty_graph(4)
-    T = normalize_networkx_labels(T)
+    G = Graph.empty_graph(4)
+    T = Graph.empty_graph(4)
     G.add_edge(1,2)
     T.add_edge(2,3)
     F = SubgraphFormula(G, T, symbreak=False)
@@ -134,10 +123,8 @@ def test_parameters(base, template):
         "cnfgen", "-q", "subgraph", "-G", "complete", base, "-H",
         "complete", template
     ]
-    G = nx.complete_graph(base)
-    H = nx.complete_graph(template)
-    G = normalize_networkx_labels(G)
-    H = normalize_networkx_labels(H)
+    G = Graph.complete_graph(base)
+    H = Graph.complete_graph(template)
     F = SubgraphFormula(G, H)
     lib = F.to_dimacs()
     cli = cnfgen(parameters, mode='string')
@@ -147,10 +134,8 @@ def test_parameters(base, template):
         "cnfgen", "-q", "subgraph", "-G", "complete", base, "-H",
         "empty", template
     ]
-    G = nx.complete_graph(base)
-    H = nx.empty_graph(template)
-    G = normalize_networkx_labels(G)
-    H = normalize_networkx_labels(H)
+    G = Graph.complete_graph(base)
+    H = Graph.empty_graph(template)
     F = SubgraphFormula(G, H)
     lib = F.to_dimacs()
     cli = cnfgen(parameters, mode='string')
@@ -173,6 +158,6 @@ def test_kcliquebin4_complete_1_4():
     assertSAT(F)
 
 def test_kcliquebin2():
-    G = nx.empty_graph(2)
+    G = Graph.empty_graph(2)
     F = BinaryCliqueFormula(G, 2)
     assertUNSAT(F)

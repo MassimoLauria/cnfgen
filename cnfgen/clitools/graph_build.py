@@ -9,6 +9,10 @@ import random
 import networkx
 from itertools import combinations, product
 
+from cnfgen.graphs import random_gnp
+from cnfgen.graphs import random_gnm
+from cnfgen.graphs import multipartite_random
+
 from cnfgen.graphs import bipartite_random
 from cnfgen.graphs import bipartite_random_regular
 from cnfgen.graphs import bipartite_random_m_edges
@@ -24,7 +28,6 @@ from cnfgen.graphs import dag_path
 
 from cnfgen.graphs import add_random_missing_edges
 from cnfgen.graphs import split_random_edges
-from cnfgen.graphs import normalize_networkx_labels
 
 
 #
@@ -50,28 +53,6 @@ def obtain_gnd(parsed):
     G.name = 'Random {}-regular graph of {} vertices'.format(d, n)
     return G
 
-
-def multipartite_tnp(t, n, p, shuffleblocks=False):
-    """Build a t-partite graph with n vertex per partition, and p-biased edges"""
-
-    G = Graph.empty_graph(t * n)
-    V = list(range(1,t * n + 1))
-    if shuffleblocks:
-        random.shuffle(V)
-
-    for i, j in combinations(range(t), 2):
-        for a in range(n * i, n * (i + 1)):
-            for b in range(n * j, n * (j + 1)):
-                if random.random() < p:
-                    G.add_edge(V[a], V[b])
-
-    G.name = 'Random {2}-biased {0}-partite graph with {1} vertices per part'.format(
-        t, n, p)
-    if shuffleblocks:
-        G.name = G.name + " (shuffled)"
-    return G
-
-
 def obtain_gnp(parsed):
     """Build a graph according to gnp construction"""
     try:
@@ -94,12 +75,9 @@ def obtain_gnp(parsed):
             'and optional argument t>0 for a t-partite random graph')
 
     if t == 1:
-        G = networkx.gnp_random_graph(n, p)
-        G = Graph.normalize(G)
-        G.name = 'Random {}-biased graph of {} vertices'.format(p, n)
+        return random_gnp(n,p)
     else:
-        G = multipartite_tnp(t, n, p)
-    return G
+        return multipartite_random(t, n, p)
 
 
 def obtain_gnm(parsed):
@@ -115,10 +93,7 @@ def obtain_gnm(parsed):
         raise ValueError(
             '\'gnm\' expects arguments N m with N>0 and 0 <= m <= N(N-1)/2')
 
-    G = networkx.gnm_random_graph(n, m)
-    G = Graph.from_networkx(G)
-    G.name = 'Random graph of {} vertices with {} edges'.format(n, m)
-    return G
+    return random_gnm(n,m)
 
 
 def obtain_complete_simple(parsed):
@@ -145,12 +120,10 @@ def obtain_complete_simple(parsed):
         G = Graph.complete_graph(n)
     else:
         blocksizes = [n] * b
-        G = networkx.complete_multipartite_graph(*blocksizes)
-        G = Graph.from_networkx(G)
+        G = multipartite_random(b,n,1)
         G.name = "Complete multipartite graph with {} blocks of {} vertices".format(
             b, n)
     return G
-
 
 def obtain_empty_simple(parsed):
     """Build a simple empty graph"""

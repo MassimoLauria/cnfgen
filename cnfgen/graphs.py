@@ -10,6 +10,7 @@ import random
 from io import StringIO
 import copy
 from bisect import bisect_right, bisect_left
+from itertools import combinations
 
 import networkx
 
@@ -20,7 +21,9 @@ __all__ = [
     "Graph", "DirectedGraph", "BipartiteGraph",
     "supported_graph_formats",
     "bipartite_random_left_regular", "bipartite_random_regular",
-    "bipartite_random_m_edges", "bipartite_random",
+    "bipartite_random_m_edges", "bipartite_random", "bipartite_shift"
+    "multipartite_random",
+    "random_gnp", "random_gnm",
     "dag_complete_binary_tree", "dag_pyramid", "dag_path"
 ]
 
@@ -1787,6 +1790,162 @@ def bipartite_random(L, R, p, seed=None):
                 G.add_edge(u, v)
     return G
 
+
+def multipartite_random(t, n, p, seed=None, shuffleblocks=False):
+    """Returns a random t-partite graph with independent edges
+
+    Build a random multipartite graph with :math:`t` blocks and
+    :math:`n` vertices per block with probability :math:`p`.
+
+    Parameters
+    ----------
+    t : int
+        number of blocks
+    n : int
+        size of each block
+    p : float
+        probability to pick an edge
+
+    seed : hashable object
+        seed the random generator
+
+    shuffleblocks : bool
+        randomize vertex order
+
+    Returns
+    -------
+    Graph
+
+    Raises
+    ------
+    ValueError
+        unless ``t``, ``n`` are positive and 0<=``p``<=1.
+
+    """
+    import random
+    if seed is not None:
+        random.seed(seed)
+
+    if n<1 or t<1 or p<0 or p>1:
+        raise ValueError('b and n must be positive integers, and 0<=p<=1')
+
+    G = Graph.empty_graph(t * n)
+    V = list(range(1,t * n + 1))
+    if shuffleblocks:
+        random.shuffle(V)
+
+    for i, j in combinations(range(t), 2):
+        for a in range(n * i, n * (i + 1)):
+            for b in range(n * j, n * (j + 1)):
+                if p==1:
+                    G.add_edge(V[a], V[b])
+                elif p == 0:
+                    continue
+                elif random.random() < p:
+                    G.add_edge(V[a], V[b])
+
+    G.name = 'Random {2}-biased {0}-partite graph with {1} vertices per part'.format(
+        t, n, p)
+    if shuffleblocks:
+        G.name = G.name + " (shuffled)"
+    return G
+
+def random_gnp(n, p, seed=None):
+    """Returns a random graph G(n,p)
+
+    Build a random graph with :math:`n` vertices where each edge is
+    sampled with probability :math:`p`.
+
+    Parameters
+    ----------
+    n : int
+        number of vertices
+    p : float
+        probability to pick an edge
+    seed : hashable object
+        seed the random generator
+
+    Returns
+    -------
+    Graph
+
+    Raises
+    ------
+    ValueError
+        unless ``n`` is positive and 0<=``p``<=1.
+
+    """
+    import random
+    if seed is not None:
+        random.seed(seed)
+
+    if n<1 or p<0 or p>1:
+        raise ValueError('n must be a positive integer, and 0<=p<=1')
+
+    G = Graph.empty_graph(n)
+
+    for i in range(1,n):
+        for j in range(i+1,n+1):
+            if p==1:
+                G.add_edge(i,j)
+            elif p == 0:
+                continue
+            elif random.random() < p:
+                G.add_edge(i,j)
+
+    G.name = 'Random {}-biased graph of {} vertices'.format(p, n)
+    return G
+
+def random_gnm(n, m, seed=None):
+    """Returns a random graph with n vertices and m edges
+
+    Build a random graph with :math:`n` vertices, :math:`m` edges
+    sampled at random without repetition.
+
+    Parameters
+    ----------
+    n : int
+        number vertices
+    m : int
+        number of edges.
+    seed : hashable object
+        seed the random generator
+
+    Returns
+    -------
+    Graph
+
+    Raises
+    ------
+    ValueError
+        unless ``n`` is positive, ``m'' non negative, and ``m<=n*(n-1)/2``.
+    """
+    import random
+    if seed is not None:
+        random.seed(seed)
+
+    if n < 1 or m < 0 or m > n*(n-1)//2:
+        raise ValueError(
+            "need n>1, m>0 and m<=n")
+    G = Graph(n)
+    G.name = "Random graph with {} vertices and {} edges".format(n,m)
+
+    if m > n*n // 6:
+        # Sampling strategy (dense)
+        E = list(combinations(G.vertices(),2))
+        for u, v in random.sample(E, m):
+            G.add_edge(u, v)
+    else:
+        # Sampling strategy (sparse)
+        count = 0
+        while count < m:
+            u = random.randint(1, n)
+            v = random.randint(1, n)
+            if (u != v) and not G.has_edge(u, v):
+                G.add_edge(u, v)
+                count += 1
+    assert G.number_of_edges() == m
+    return G
 
 def bipartite_shift(N, M, pattern=[]):
     """Returns a bipartite graph where edges are a fixed shifted sequence.
