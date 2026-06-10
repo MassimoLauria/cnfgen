@@ -1947,6 +1947,61 @@ def random_gnm(n, m, seed=None):
     assert G.number_of_edges() == m
     return G
 
+
+def random_gnd(n, d, seed=None):
+    """Returns a random d-regular graph
+
+    Build a random regular graph with :math:`n` vertices and degree
+    :math:`d`. It must hold that d*n is even. It uses a simple method
+    described by by Bollobas (1980), with wonds only for d^2 << n
+
+    Parameters
+    ----------
+    n : int
+        number of vertices
+    d : int
+        degree
+    seed : hashable object
+        seed the random generator
+
+    Returns
+    -------
+    Graph
+
+    Raises
+    ------
+    ValueError
+        unless ``n`` is positive, ``d``>=0 and d*n is even
+
+    """
+    import random
+    if seed is not None:
+        random.seed(seed)
+
+    if n<1 or d<0 or (n*d)%2==1:
+        raise ValueError('must be that: n>0, d>=0, n*d is even')
+
+    number_of_attemps = 100
+
+    for _ in range(number_of_attemps):
+        G = Graph(n)
+        G.name = 'Random {}-regular graph of {} vertices'.format(n,d)
+        success=True
+        copies = [v for v in range(1,n+1) for _ in range(d)]
+        random.shuffle(copies)
+        for i in range(0,n*d,2):
+            u = copies[i]
+            v = copies[i+1]
+            if u==v or u in G.adjlist[v]:
+                success=False
+                break
+            G.add_edge(u,v)
+        if success:
+            return G
+    raise RuntimeError("Exceeded the number of tries")
+
+
+
 def bipartite_shift(N, M, pattern=[]):
     """Returns a bipartite graph where edges are a fixed shifted sequence.
 
