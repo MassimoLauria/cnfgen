@@ -2043,13 +2043,13 @@ def random_gnd(n, d, seed=None):
         raise ValueError('must be that: n>0, d>=0, n*d is even')
 
     if d==0:
-        return Graph.empty_graph(n)
-    if d==(n-1):
-        return Graph.complete_graph(n)
-
-    return _random_gnd_kimvu(n,d)
-
-
+        G = Graph.empty_graph(n)
+    elif d==(n-1):
+        G = Graph.complete_graph(n)
+    else:
+        G = _random_gnd_kimvu(n,d)
+    G.name="random {}-regular graph on {} verices".format(d,n)
+    return G
 
 def grid_graph(dimensions, torus=False):
     """Returns a grid/torus graph
@@ -2093,6 +2093,12 @@ def grid_graph(dimensions, torus=False):
 
     V = { v:i for i,v in enumerate(product(*spans),start=1) }
     G = Graph(len(V))
+    if torus:
+        G.name="torus graph of dimensions "
+    else:
+        G.name="grid graph of dimensions "
+    G.name += "x".join(str(d) for d in dimensions)
+
     for v in V:
         src = list(v)
         for i in range(len(spans)):
