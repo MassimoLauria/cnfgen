@@ -2,14 +2,14 @@
 
 from io import StringIO as sio
 from io import BytesIO
-import networkx as nx
 import pytest
 
 import cnfgen
 from cnfgen.clitools import CLIError
 from cnfgen.graphs import readGraph, writeGraph, supported_graph_formats
-from cnfgen.graphs import has_dot_library
 from cnfgen.graphs import Graph, BipartiteGraph,DirectedGraph
+
+from cnfgen.graphs import _has_dot_support,_has_gml_support
 
 dot_path2 = 'graph G { 0 -- 1 -- 2}'
 gml_path2 = """
@@ -102,8 +102,12 @@ strict graph "Complete bipartite graph with (4,3) vertices" {
 
 def test_low_level_dot_read_path2():
 
-    if not has_dot_library():
-        pytest.skip("DOT library not installed. Can't test DOT I/O")
+    try:
+        import networkx as nx
+        if not _has_dot_support():
+            pytest.skip("DOT library not installed. Can't test DOT I/O")
+    except ImportError:
+        pytest.skip("networkx library not installed. Can't test DOT I/O")
 
     G = nx.Graph(nx.nx_pydot.read_dot(sio(dot_path2)))
 
@@ -116,14 +120,23 @@ def test_low_level_dot_read_path2():
 
 def test_low_level_dot_broken_TypeError():
 
-    if not has_dot_library():
-        pytest.skip("DOT library not installed. Can't test DOT I/O")
+    try:
+        import networkx as nx
+        if not _has_dot_support():
+            pytest.skip("DOT library not installed. Can't test DOT I/O")
+    except ImportError:
+        pytest.skip("networkx library not installed. Can't test DOT I/O")
 
     with pytest.raises(TypeError):
         nx.Graph(nx.nx_pydot.read_dot(sio("jsjd jfdakh jkad ")))
 
 
 def test_low_level_gml_read_path2():
+
+    try:
+        import networkx as nx
+    except ImportError:
+        pytest.skip("networkx library not installed. Can't test GML I/O")
 
     G = nx.read_gml(BytesIO(gml_path2.encode("ascii")))
 
@@ -135,6 +148,11 @@ def test_low_level_gml_read_path2():
 
 
 def test_low_level_gml_broken_NetworkXError():
+
+    try:
+        import networkx as nx
+    except ImportError:
+        pytest.skip("networkx library not installed. Can't test GML I/O")
 
     with pytest.raises(nx.exception.NetworkXError):
         nx.read_gml(BytesIO(b"jsjd jfdakh jkad "))
@@ -155,7 +173,7 @@ def test_low_level_dimacs_read_path2():
 def test_readGraph_dot_path2():
 
     if 'dot' not in supported_graph_formats()['simple']:
-        pytest.skip("No support for Dot file I/O.")
+        pytest.skip("No support for GML file I/O.")
 
     with pytest.raises(ValueError):
         readGraph(sio(dot_path2), graph_type='simple')
@@ -167,6 +185,9 @@ def test_readGraph_dot_path2():
 
 
 def test_readGraph_gml_path2():
+
+    if 'gml' not in supported_graph_formats()['simple']:
+        pytest.skip("No support for GML file I/O.")
 
     with pytest.raises(ValueError):
         readGraph(sio(gml_path2), graph_type='simple')
@@ -296,7 +317,7 @@ the original file name so we can guess the format."""
 
 def test_write_graph_typecheck():
     with pytest.raises(TypeError):
-        G = nx.Graph()
+        G = Graph()
         writeGraph(G, "/does_not_exist.gml", graph_type='simple')
 
 def test_undoable_io():
@@ -360,7 +381,7 @@ def test_readGraph_bipartite_good_gml(shared_datadir):
 
 def test_readGraph_bipartite_bad_monoedge_dot(shared_datadir):
 
-    if not has_dot_library():
+    if 'dot' not in supported_graph_formats()['bipartite']:
         pytest.skip("DOT library not installed. Can't test DOT I/O")
 
     filename = "bipartite_bad_monoedge.dot"
@@ -370,7 +391,7 @@ def test_readGraph_bipartite_bad_monoedge_dot(shared_datadir):
 
 def test_readGraph_bipartite_bad_bipartition_dot(shared_datadir):
 
-    if not has_dot_library():
+    if 'dot' not in supported_graph_formats()['bipartite']:
         pytest.skip("DOT library not installed. Can't test DOT I/O")
 
     filename = "bipartite_bad_bipartition.dot"
@@ -380,7 +401,7 @@ def test_readGraph_bipartite_bad_bipartition_dot(shared_datadir):
 
 def test_readGraph_bipartite_bad_bipartition2_dot(shared_datadir):
 
-    if not has_dot_library():
+    if 'dot' not in supported_graph_formats()['bipartite']:
         pytest.skip("DOT library not installed. Can't test DOT I/O")
 
     filename = "bipartite_bad_bipartition2.dot"

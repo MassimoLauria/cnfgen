@@ -337,11 +337,12 @@ The sequence of neighbors is guaranteed to be sorted.
     @classmethod
     def supported_file_formats(cls):
         """File formats supported for simple graph I/O"""
-        # Check that DOT is a supported format
-        if has_dot_library():
-            return ['kthlist', 'gml', 'dot', 'dimacs']
-        else:
-            return ['kthlist', 'gml', 'dimacs']
+        formats = ['kthlist', 'gml', 'dot', 'dimacs']
+        if not _has_dot_support():
+            formats.remove('dot')
+        if not _has_gml_support():
+            formats.remove('gml')
+        return formats
 
     @classmethod
     def null_graph(cls):
@@ -540,10 +541,12 @@ The sequence of successors is guaranteed to be sorted."""
     @classmethod
     def supported_file_formats(cls):
         """File formats supported for directed graph I/O"""
-        if has_dot_library():
-            return ['kthlist', 'gml', 'dot', 'dimacs']
-        else:
-            return ['kthlist', 'gml', 'dimacs']
+        formats = ['kthlist', 'gml', 'dot', 'dimacs']
+        if not _has_dot_support():
+            formats.remove('dot')
+        if not _has_gml_support():
+            formats.remove('gml')
+        return formats
 
     @classmethod
     def normalize(cls, G, varname=''):
@@ -780,10 +783,12 @@ The sequence of neighbors is guaranteed to be sorted."""
     @classmethod
     def supported_file_formats(cls):
         """File formats supported for bipartite graph I/O"""
-        if has_dot_library():
-            return ['kthlist', 'gml', 'dot', 'matrix']
-        else:
-            return ['kthlist', 'gml', 'matrix']
+        formats = ['kthlist', 'gml', 'dot', 'matrix']
+        if not _has_dot_support():
+            formats.remove('dot')
+        if not _has_gml_support():
+            formats.remove('gml')
+        return formats
 
     @classmethod
     def normalize(cls, G, varname=''):
@@ -853,8 +858,8 @@ class CompleteBipartiteGraph(BipartiteGraph):
         return range(1, self.lorder + 1)
 
 
-def has_dot_library():
-    """Test the presence of pydot
+def _has_dot_support():
+    """Test the presence of DOT support in networkx
     """
     try:
         # newer version of networkx
@@ -867,6 +872,16 @@ def has_dot_library():
 
     return False
 
+def _has_gml_support():
+    """Test the presence of GML support
+    """
+    try:
+        from networkx import read_gml,write_gml
+        return True
+    except ImportError:
+        pass
+
+    return False
 
 #################################################################
 #          Graph reader/writer
