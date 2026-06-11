@@ -372,11 +372,13 @@ The sequence of neighbors is guaranteed to be sorted.
         """Guarantees a cnfgen.Graph object
 
         A graph, given in a different format that cnfgen.Graph, is
-        converted to cnfgen.Graph. In particular we support
-        networkx.Graph objects, if networkx library is installed.
+        converted to cnfgen.Graph.
 
-        A cnfgen.BipartiteGraph is translated just by renaming
-        vertices and forgetting the explicit bipartition.
+        - cnfgen.BipartiteGraph, forgetting the explicit bipartition.
+
+        - cnfgen.DirectedGraph objects, forgetting the orientations
+
+        - networkx.Graph objects, if networkx library is installed
 
         For networkx graphs, we relabel vertices so that vertices are
         labeled as numbers from 1 to `n`, where `n` is the number of
@@ -401,6 +403,12 @@ The sequence of neighbors is guaranteed to be sorted.
                 newG.add_edge(u,v+l)
             return newG
 
+        if isinstance(G, DirectedGraph):
+            newG = Graph(G.order())
+            for u,v in G.edges():
+                newG.add_edge(u,v)
+            return newG
+
         # is it worth to consider networkx graphs?
         import importlib.util
         networkx_spec = importlib.util.find_spec("networkx")
@@ -415,7 +423,7 @@ The sequence of neighbors is guaranteed to be sorted.
                     raise ValueError("Error converting networkx.Graph object into cnfgen.Graph object")
 
         # no other graph type known
-        raise TypeError("argument must either be cnfgen.Graph or networkx.Graph")
+        raise TypeError("argument must either be Graph, DirectedGraph, BipartiteGraph or networkx.Graph")
 
 
 class DirectedGraph(BaseGraph):
@@ -562,9 +570,13 @@ The sequence of successors is guaranteed to be sorted."""
     def normalize(cls, G, varname=''):
         """Guarantees a cnfgen.DirectedGraph object
 
-        A graph, given in a different format than cnfgen.DirectedGraph,
-        is converted to cnfgen.DirectedGraph. In particular we support
+        A graph, given in a different format than
+        cnfgen.DirectedGraph, is converted to cnfgen.DirectedGraph.
+        In particular we support cnfgen.BipartiteGraph and
         networkx.DiGraph objects, if networkx library is installed.
+
+        For cnfgen.BipartiteGraph, we consider all edges directed from
+        the left side to the right side.
 
         For networkx graphs, we relabel vertices so that vertices are
         labeled as numbers from 1 to `n`, where `n` is the number of
@@ -586,6 +598,13 @@ The sequence of successors is guaranteed to be sorted."""
         if isinstance(G, DirectedGraph):
             return G
 
+        if isinstance(G, BipartiteGraph):
+            l = G.left_order()
+            newG = DirectedGraph(G.number_of_vertices())
+            for u,v in G.edges():
+                newG.add_edge(u,v+l)
+            return newG
+
         # is it worth to consider networkx graphs?
         import importlib.util
         networkx_spec = importlib.util.find_spec("networkx")
@@ -600,7 +619,7 @@ The sequence of successors is guaranteed to be sorted."""
                     raise ValueError("Error converting networkx.DiGraph object into cnfgen.DirectedGraph object")
 
         # no other graph type known
-        raise TypeError("argument must either be cnfgen.DirectedGraph or networkx.DiGraph")
+        raise TypeError("argument must either be DirectedGraph, BipartiteGraph or networkx.DiGraph")
 
 
 class BaseBipartiteGraph(BaseGraph):
