@@ -2203,7 +2203,16 @@ def grid_graph(dimensions, torus=False):
 def torus_graph(dimensions):
     return grid_graph(dimensions, torus=True)
 
+def undirected_path_graph(n):
+    if n<2:
+        raise ValueError("An undirected path must have at least 2 vertices")
+    return grid_graph([n], torus=False)
 
+def undirected_cycle_graph(n):
+    """Undirected cycle of length n, where n>=3."""
+    if n<3:
+        raise ValueError("An undirected cycle must have at least 3 vertices")
+    return grid_graph([n], torus=True)
 
 def bipartite_shift(N, M, pattern=[]):
     """Returns a bipartite graph where edges are a fixed shifted sequence.
