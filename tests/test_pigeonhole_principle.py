@@ -6,9 +6,8 @@ from cnfgen import PigeonholePrinciple
 from cnfgen import GraphPigeonholePrinciple
 from cnfgen import BinaryPigeonholePrinciple
 from cnfgen import RelativizedPigeonholePrinciple
-from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph
+from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph, Graph
 
-import networkx as nx
 
 from cnfgen.clitools import cnfgen, CLIError
 
@@ -146,10 +145,10 @@ def test_complete():
 
 
 def test_gphp_not_bipartite():
-    graph = nx.complete_graph(3)
+    graph = Graph.complete_graph(3)
     for functional in (True, False):
         for onto in (True, False):
-            with pytest.raises(ValueError):
+            with pytest.raises(TypeError):
                 GraphPigeonholePrinciple(graph, functional, onto)
 
 
