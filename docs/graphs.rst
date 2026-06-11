@@ -10,10 +10,10 @@ is realized over a star graph with five arms.
    >>> from pprint import pprint
    >>> G = cnfgen.Graph.star_graph(5)
    >>> list(G.edges())
-   [(1, 6), (2, 6), (3, 6), (4, 6), (5, 6)]
+   [(1, 2), (1, 3), (1, 4), (1, 5), (1, 6)]
    >>> F = cnfgen.TseitinFormula(G,charges=[0,1,0,0,1,0])
    >>> pprint(F.solve())
-   (True, [-1, 2, -3, -4, 5])
+   (True, [1, -2, -3, 4, -5])
 
 Tseitin formulas can  be really hard for if the  graph has large `edge
 expansion <https://en.wikipedia.org/wiki/Expander_graph>`_. Indeed the

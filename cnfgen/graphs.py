@@ -363,8 +363,8 @@ The sequence of neighbors is guaranteed to be sorted.
     @classmethod
     def star_graph(cls, n):
         G = cls(n+1, 'the star graph with {} arms'.format(n))
-        for u in range(1, n+1):
-            G.add_edge(u, n+1)
+        for u in range(2, n+2):
+            G.add_edge(1, u)
         return G
 
     @classmethod
