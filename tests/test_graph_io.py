@@ -361,6 +361,9 @@ def test_readGraph_bipartite_good_matrix(shared_datadir):
 
 def test_readGraph_bipartite_good_dot(shared_datadir):
 
+    if 'dot' not in supported_graph_formats()['bipartite']:
+        pytest.skip("No support for Dot file I/O.")
+
     filename = "bipartite_good.dot"
     B = readGraph(str(shared_datadir / filename), graph_type='bipartite')
     assert B.order() == 7
@@ -370,6 +373,9 @@ def test_readGraph_bipartite_good_dot(shared_datadir):
 
 
 def test_readGraph_bipartite_good_gml(shared_datadir):
+
+    if 'gml' not in supported_graph_formats()['bipartite']:
+        pytest.skip("No support for GML file I/O.")
 
     filename = "bipartite_good.gml"
     B = readGraph(str(shared_datadir / filename), graph_type='bipartite')
@@ -382,7 +388,7 @@ def test_readGraph_bipartite_good_gml(shared_datadir):
 def test_readGraph_bipartite_bad_monoedge_dot(shared_datadir):
 
     if 'dot' not in supported_graph_formats()['bipartite']:
-        pytest.skip("DOT library not installed. Can't test DOT I/O")
+        pytest.skip("No support for Dot file I/O.")
 
     filename = "bipartite_bad_monoedge.dot"
     with pytest.raises(ValueError):
@@ -392,7 +398,7 @@ def test_readGraph_bipartite_bad_monoedge_dot(shared_datadir):
 def test_readGraph_bipartite_bad_bipartition_dot(shared_datadir):
 
     if 'dot' not in supported_graph_formats()['bipartite']:
-        pytest.skip("DOT library not installed. Can't test DOT I/O")
+        pytest.skip("No support for Dot file I/O.")
 
     filename = "bipartite_bad_bipartition.dot"
     with pytest.raises(ValueError):
@@ -411,6 +417,9 @@ def test_readGraph_bipartite_bad_bipartition2_dot(shared_datadir):
 
 def test_readGraph_bipartite_bad_monoedge_gml(shared_datadir):
 
+    if 'gml' not in supported_graph_formats()['bipartite']:
+        pytest.skip("No support for GML file I/O.")
+
     filename = "bipartite_bad_monoedge.gml"
     with pytest.raises(ValueError):
         readGraph(str(shared_datadir / filename), graph_type='bipartite')
@@ -418,12 +427,18 @@ def test_readGraph_bipartite_bad_monoedge_gml(shared_datadir):
 
 def test_readGraph_bipartite_bad_bipartition_gml(shared_datadir):
 
+    if 'gml' not in supported_graph_formats()['bipartite']:
+        pytest.skip("No support for GML file I/O.")
+
     filename = "bipartite_bad_bipartition.gml"
     with pytest.raises(ValueError):
         readGraph(str(shared_datadir / filename), graph_type='bipartite')
 
 
 def test_readGraph_bipartite_bad_bipartition2_monoedge_gml(shared_datadir):
+
+    if 'gml' not in supported_graph_formats()['bipartite']:
+        pytest.skip("No support for GML file I/O.")
 
     filename = "bipartite_bad_bipartition2.gml"
     with pytest.raises(ValueError):

@@ -3,8 +3,6 @@
 """Implementation of formulas that check for subgraphs
 """
 
-import networkx as nx
-
 from itertools import combinations
 from itertools import product
 

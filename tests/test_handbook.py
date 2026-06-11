@@ -3,6 +3,7 @@
 import pytest
 
 from cnfgen.clitools import cnfgen, CLIError
+from cnfgen import supported_graph_formats
 
 
 def test_php_cli():
@@ -61,6 +62,12 @@ def test_parity_cli(shared_datadir):
     cnfgen(['cnfgen', 'matching', 'gnd', 10, 3], mode='formula')
     with pytest.raises(CLIError):
         cnfgen(['cnfgen', 'matching', 'gnd', 9, 3], mode='formula')
+
+def test_parity_cli_gml(shared_datadir):
+
+    if 'gml' not in supported_graph_formats()['bipartite']:
+        pytest.skip("No support for GML file I/O.")
+
     F = cnfgen(
         ['cnfgen', 'matching', shared_datadir / 'oddvertices_gnd_15_4.gml'],
         mode='formula')
