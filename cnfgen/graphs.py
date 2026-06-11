@@ -23,7 +23,7 @@ __all__ = [
     "bipartite_random_left_regular", "bipartite_random_regular",
     "bipartite_random_m_edges", "bipartite_random", "bipartite_shift"
     "multipartite_random",
-    "random_gnp", "random_gnm",
+    "random_gnp", "random_gnm", "random_gnd",
     "dag_complete_binary_tree", "dag_pyramid", "dag_path"
 ]
 
@@ -1948,12 +1948,72 @@ def random_gnm(n, m, seed=None):
     return G
 
 
+def _random_gnd_kimvu(n, d, tentatives=None):
+
+    def _still_good_edges(edges, deg_sequence):
+        for u,v in combinations(deg_sequence,2):
+            if u > v:
+                u,v = v,u
+            if (u, v) not in edges:
+                return True
+        return False
+
+    G=Graph(n)
+    tentative = 0
+    complement =  d > (n-1- d)  # cheaper to sample the complement graph
+    if complement:
+        d = n - 1 - d
+
+    while tentatives is None or tentative < tentatives:
+
+        # tentative edge set
+        degrees = {v:d for v in range(1,n+1)}
+        copies  = [ v for v in degrees for _ in range(degrees[v])]
+        edges = set()
+        tentative += 1
+
+        while copies:
+            random.shuffle(copies)
+            for i in range(0,len(copies),2):
+                s1, s2 = copies[i], copies[i+1]
+                if s1 > s2:
+                    s1, s2 = s2, s1
+                if s1 != s2 and ((s1, s2) not in edges):
+                    edges.add((s1, s2))
+                    degrees[s1] -= 1
+                    degrees[s2] -= 1
+                    if degrees[s1]==0: degrees.pop(s1)
+                    if degrees[s2]==0: degrees.pop(s2)
+
+            if _still_good_edges(edges, degrees):
+                copies  = [ v for v in degrees for _ in range(degrees[v])]
+            else:
+                copies  = [ ]
+
+        if len(edges) == n*d // 2 :  # good outcome
+            if complement:
+                G.add_edges_from(e for e in combinations(range(1,n+1),2) if e not in edges)
+            else:
+                G.add_edges_from(edges)
+            return G
+
+    raise RuntimeError("Exceeded the number of tries")
+
+
 def random_gnd(n, d, seed=None):
     """Returns a random d-regular graph
 
     Build a random regular graph with :math:`n` vertices and degree
-    :math:`d`. It must hold that d*n is even. It uses a simple method
-    described by by Bollobas (1980), with wonds only for d^2 << n
+    :math:`d`. It must hold that d*n is even.
+
+    We use the method by
+
+    Jeong Han Kim and Van H. Vu,
+    Generating random regular graphs,
+    Proceedings of the thirty-fifth ACM symposium on Theory of computing,
+    San Diego, CA, USA, pp 213--222, 2003.
+    http://portal.acm.org/citation.cfm?id=780542.780576
+
 
     Parameters
     ----------
@@ -1978,27 +2038,15 @@ def random_gnd(n, d, seed=None):
     if seed is not None:
         random.seed(seed)
 
-    if n<1 or d<0 or (n*d)%2==1:
+    if n<1 or d<0 or d>=n or (n*d)%2==1:
         raise ValueError('must be that: n>0, d>=0, n*d is even')
 
-    number_of_attemps = 100
+    if d==0:
+        return Graph.empty_graph(n)
+    if d==(n-1):
+        return Graph.complete_graph(n)
 
-    for _ in range(number_of_attemps):
-        G = Graph(n)
-        G.name = 'Random {}-regular graph of {} vertices'.format(n,d)
-        success=True
-        copies = [v for v in range(1,n+1) for _ in range(d)]
-        random.shuffle(copies)
-        for i in range(0,n*d,2):
-            u = copies[i]
-            v = copies[i+1]
-            if u==v or u in G.adjlist[v]:
-                success=False
-                break
-            G.add_edge(u,v)
-        if success:
-            return G
-    raise RuntimeError("Exceeded the number of tries")
+    return _random_gnd_kimvu(n,d)
 
 
 

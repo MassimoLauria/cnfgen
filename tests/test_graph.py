@@ -16,12 +16,20 @@ def assert_d_regular(G:Graph,d):
 
 
 
-def test_d_regular_nx():
-    import networkx as nx
-    G = nx.random_regular_graph(3,10)
-    G = Graph.from_networkx(G)
-    assert_d_regular(G,3)
-
 def test_d_regular():
-    G = random_gnd(30,3)
-    assert_d_regular(G,3)
+    for d in range(10):
+        G = random_gnd(10,d)
+        assert_d_regular(G,d)
+
+
+def test_d_regular_odd():
+    G = random_gnd(11,6)
+    assert_d_regular(G,6)
+
+def test_d_regular_odd_bad():
+    with pytest.raises(ValueError):
+        G = random_gnd(11,5)
+
+def test_d_regular_large():
+    G = random_gnd(100,80)
+    assert_d_regular(G,80)

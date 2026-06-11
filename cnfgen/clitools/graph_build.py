@@ -11,6 +11,7 @@ from itertools import combinations, product
 
 from cnfgen.graphs import random_gnp
 from cnfgen.graphs import random_gnm
+from cnfgen.graphs import random_gnd
 from cnfgen.graphs import multipartite_random
 
 from cnfgen.graphs import bipartite_random
@@ -47,11 +48,7 @@ def obtain_gnd(parsed):
 
     if (n * d) % 2 == 1:
         raise ValueError('\'gnd\' expects arguments N d with even N * d')
-
-    G = networkx.random_regular_graph(d, n)
-    G = Graph.normalize(G)
-    G.name = 'Random {}-regular graph of {} vertices'.format(d, n)
-    return G
+    return random_gnd(n,d)
 
 def obtain_gnp(parsed):
     """Build a graph according to gnp construction"""
