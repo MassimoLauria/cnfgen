@@ -7,7 +7,7 @@ from cnfgen import TseitinFormula
 from cnfgen import MutilatedChessboard
 
 from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph,bipartite_random
-from cnfgen.graphs import Graph, undirected_cycle_graph
+from cnfgen.graphs import Graph, undirected_cycle
 
 from cnfgen.clitools import cnfgen
 from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
@@ -36,7 +36,7 @@ def test_random_bipartite():
 
 @pytest.mark.parametrize('n', range(3, 8))
 def test_cycle(n):
-    graph = undirected_cycle_graph(n)
+    graph = undirected_cycle(n)
     F = PerfectMatchingPrinciple(graph)
     G = TseitinFormula(graph, [1] * n)
     assertCnfEqualsIgnoreVariables(F, G)

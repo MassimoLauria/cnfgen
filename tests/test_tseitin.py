@@ -3,7 +3,7 @@ import pytest
 import io
 
 from cnfgen import TseitinFormula
-from cnfgen.graphs import Graph, grid_graph
+from cnfgen.graphs import Graph, grid
 
 from cnfgen.clitools import cnfgen, CLIError
 from cnfgen.clitools import redirect_stdin
@@ -36,7 +36,7 @@ def test_one_edge():
     1 0
     -1 0
     """
-    graph = grid_graph([2])
+    graph = grid([2])
     F = TseitinFormula(graph)
     assertCnfEqualsDimacs(F, dimacs)
 

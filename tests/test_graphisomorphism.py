@@ -4,7 +4,7 @@ import pytest
 
 from cnfgen import CNF
 from cnfgen import GraphAutomorphism, GraphIsomorphism
-from cnfgen.graphs import Graph, undirected_cycle_graph
+from cnfgen.graphs import Graph, undirected_cycle
 
 from tests.utils import assertSAT, assertUNSAT, assertCnfEqual,assertCnfEqualsIgnoreVariables
 
@@ -53,6 +53,6 @@ def test_example_graph_noauto():
 
 def test_example_graph_auto():
     """Simple graph with automorphisms."""
-    G = undirected_cycle_graph(10)
+    G = undirected_cycle(10)
     F = GraphAutomorphism(G)
     assertSAT(F)

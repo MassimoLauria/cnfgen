@@ -22,7 +22,8 @@ __all__ = [
     "bipartite_random_m_edges", "bipartite_random", "bipartite_shift"
     "multipartite_random",
     "random_gnp", "random_gnm", "random_gnd",
-    "grid_graph","torus_graph",
+    "grid","torus",
+    "undirected_path", "undirected_cycle"
     "dag_complete_binary_tree", "dag_pyramid", "dag_path"
 ]
 
@@ -2165,7 +2166,7 @@ def random_gnd(n, d, seed=None):
     G.name="random {}-regular graph on {} verices".format(d,n)
     return G
 
-def grid_graph(dimensions, torus=False):
+def grid(dimensions, torus=False):
     """Returns a grid/torus graph
 
     Build a grid graph with dimensions specified by ``dimensions``
@@ -2231,19 +2232,19 @@ def grid_graph(dimensions, torus=False):
             G.add_edge(V[v],V[w])
     return G
 
-def torus_graph(dimensions):
-    return grid_graph(dimensions, torus=True)
+def torus(dimensions):
+    return grid(dimensions, torus=True)
 
-def undirected_path_graph(n):
+def undirected_path(n):
     if n<2:
         raise ValueError("An undirected path must have at least 2 vertices")
-    return grid_graph([n], torus=False)
+    return grid([n], torus=False)
 
-def undirected_cycle_graph(n):
+def undirected_cycle(n):
     """Undirected cycle of length n, where n>=3."""
     if n<3:
         raise ValueError("An undirected cycle must have at least 3 vertices")
-    return grid_graph([n], torus=True)
+    return grid([n], torus=True)
 
 def bipartite_shift(N, M, pattern=[]):
     """Returns a bipartite graph where edges are a fixed shifted sequence.

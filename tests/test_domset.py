@@ -1,7 +1,7 @@
 from cnfgen import CNF
 from cnfgen import DominatingSet
 from cnfgen.clitools import cnfgen, CLIError
-from cnfgen.graphs import Graph, undirected_cycle_graph
+from cnfgen.graphs import Graph, undirected_cycle
 
 import pytest
 from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
@@ -22,7 +22,7 @@ def test_bad_arg():
 
 def test_cycles():
     for n in range(10, 15):
-        graph = undirected_cycle_graph(n)
+        graph = undirected_cycle(n)
         F = DominatingSet(graph, (n+2)//3)
         assert F.is_satisfiable()
         F = DominatingSet(graph, (n+2)//3-1)

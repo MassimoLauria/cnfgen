@@ -23,8 +23,8 @@ from cnfgen.graphs import CompleteBipartiteGraph
 from cnfgen.graphs import BipartiteGraph
 from cnfgen.graphs import Graph
 
-from cnfgen.graphs import grid_graph
-from cnfgen.graphs import torus_graph
+from cnfgen.graphs import grid
+from cnfgen.graphs import torus
 
 from cnfgen.graphs import dag_complete_binary_tree
 from cnfgen.graphs import dag_pyramid
@@ -158,9 +158,9 @@ def obtain_grid_or_torus(parsed, periodic):
                 name))
 
     if periodic:
-        return torus_graph(dimensions)
+        return torus(dimensions)
     else:
-        return grid_graph(dimensions)
+        return grid(dimensions)
 
 def obtain_grid(parsed):
     return obtain_grid_or_torus(parsed, periodic=False)

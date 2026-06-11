@@ -1,7 +1,7 @@
 from cnfgen import CNF
 from cnfgen import EvenColoringFormula, TseitinFormula
 from cnfgen.clitools import cnfgen, CLIError
-from cnfgen.graphs import Graph, undirected_path_graph,undirected_cycle_graph
+from cnfgen.graphs import Graph, undirected_path,undirected_cycle
 
 import pytest
 from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
@@ -15,14 +15,14 @@ def test_empty():
 
 
 def test_odd_degree():
-    graph = undirected_path_graph(2)
+    graph = undirected_path(2)
     with pytest.raises(ValueError):
         EvenColoringFormula(graph)
 
 
 def test_cycle():
     for n in range(3, 8):
-        graph = undirected_cycle_graph(n)
+        graph = undirected_cycle(n)
         F = EvenColoringFormula(graph)
         G = TseitinFormula(graph, [1] * n)
         assertCnfEqualsIgnoreVariables(F, G)
