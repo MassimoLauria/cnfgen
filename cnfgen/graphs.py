@@ -12,8 +12,6 @@ import copy
 from bisect import bisect_right, bisect_left
 from itertools import combinations, product
 
-import networkx
-
 from cnfgen.localtypes import positive_int, non_negative_int
 
 __all__ = [
@@ -283,6 +281,10 @@ class Graph(BaseGraph):
         return self.m
 
     def to_networkx(self):
+        try:
+            import networkx
+        except ImportError:
+            raise ImportError('networkx not installed')
         G = networkx.Graph()
         G.add_nodes_from(range(1, self.n+1))
         G.add_edges_from(self.edges())
@@ -304,9 +306,21 @@ The sequence of neighbors is guaranteed to be sorted.
 
     @classmethod
     def from_networkx(cls, G):
+        try:
+            import networkx
+        except ImportError:
+            raise ImportError('networkx not installed')
+
         if not isinstance(G, networkx.Graph):
             raise ValueError('G is expected to be of type networkx.Graph')
-        G = normalize_networkx_labels(G)
+        try:
+            G = networkx.convert_node_labels_to_integers(
+                G, first_label=1, ordering='sorted')
+        except TypeError:
+            # Ids cannot be sorted natively
+            G = networkx.convert_node_labels_to_integers(
+                G, first_label=1, ordering='default')
+
         C = cls(G.order())
         C.add_edges_from(G.edges())
         try:
@@ -354,36 +368,43 @@ The sequence of neighbors is guaranteed to be sorted.
 
     @classmethod
     def normalize(cls, G, varname=''):
-        """Guarantees a cnfgen.graphs.Graph object
+        """Guarantees a cnfgen.Graph object
 
-If the given graph `G` is a networkx.Graph object, this method
-produces a CNFgen simple graph object, relabeling vertices so that
-vertices are labeled as numbers from 1 to `n`, where `n` is the number
-of vertices in `G`. If the vertices in the original graph have some
-kind of order, the order is preserved.
+        A graph, given in a different format that cnfgen.Graph, is
+        converted to cnfgen.Graph. In particular we support
+        networkx.Graph objects, if networkx library is installed.
 
-If `G` is already a `cnfgen.graphs.Graph` object, nothing is done.
+        For networkx graphs, we relabel vertices so that vertices are
+        labeled as numbers from 1 to `n`, where `n` is the number of
+        vertices in `G`. If the vertices in the original graph have
+        some kind of order, the order is preserved.
 
         Parameters
         ----------
         cls: a class
 
-        G : networkx.Graph or cnfgen.Graph
-            the graph to normalize/check
-        varname: str
-            the variable name, for error messages (default: 'G')
+        G : any
+            the graph to normalize
+
         """
-        typemsg = "type of argument '{}' must be either networx.Graph or cnfgen.Graph"
-        conversionmsg = "cannot convert '{}' into a cnfgen.Graph object"
-        if not isinstance(G, (Graph, networkx.Graph)):
-            raise TypeError(typemsg.format(varname))
         if isinstance(G, Graph):
             return G
-        try:
-            G2 = cls.from_networkx(G)
-            return G2
-        except AttributeError:
-            raise ValueError(conversionmsg.format(varname))
+
+        # is it worth to consider networkx graphs?
+        import importlib.util
+        networkx_spec = importlib.util.find_spec("networkx")
+        found = networkx_spec is not None
+        if found:
+            import networkx
+            if isinstance(G, networkx.Graph):
+                try:
+                    G2 = cls.from_networkx(G)
+                    return G2
+                except AttributeError:
+                    raise ValueError("Error converting networkx.Graph object into cnfgen.Graph object")
+
+        # no other graph type known
+        raise TypeError("argument must either be cnfgen.Graph or networkx.Graph")
 
 
 class DirectedGraph(BaseGraph):
@@ -451,6 +472,10 @@ edges can be added and not removed."""
         return self.m
 
     def to_networkx(self):
+        try:
+            import networkx
+        except ImportError:
+            raise ImportError('networkx not installed')
         G = networkx.DiGraph()
         G.add_nodes_from(range(1, self.n+1))
         G.add_edges_from(self.edges())
@@ -484,9 +509,21 @@ The sequence of successors is guaranteed to be sorted."""
 
     @classmethod
     def from_networkx(cls, G):
+        try:
+            import networkx
+        except ImportError:
+            raise ImportError('networkx not installed')
+
         if not isinstance(G, networkx.DiGraph):
             raise ValueError('G is expected to be of type networkx.DiGraph')
-        G = normalize_networkx_labels(G)
+        try:
+            G = networkx.convert_node_labels_to_integers(
+                G, first_label=1, ordering='sorted')
+        except TypeError:
+            # Ids cannot be sorted natively
+            G = networkx.convert_node_labels_to_integers(
+                G, first_label=1, ordering='default')
+
         C = cls(G.order())
         C.add_edges_from(G.edges())
         try:
@@ -497,7 +534,7 @@ The sequence of successors is guaranteed to be sorted."""
 
     @classmethod
     def graph_type_name(cls):
-        """Directed graphs are laleled as 'digraph'"""
+        """Directed graphs are labeled as 'digraph'"""
         return 'digraph'
 
     @classmethod
@@ -509,41 +546,48 @@ The sequence of successors is guaranteed to be sorted."""
             return ['kthlist', 'gml', 'dimacs']
 
     @classmethod
-    def normalize(cls, G, varname='G'):
-        """Guarantees a cnfgen.graphs.DirerctedGraph object
+    def normalize(cls, G, varname=''):
+        """Guarantees a cnfgen.DirectedGraph object
 
-If the given graph `G` is a networkx.DiGraph object, this method
-produces a CNFgen directed graph object, relabeling vertices so that
-vertices are labeled as numbers from 1 to `n`, where `n` is the number
-of vertices in `G`. If the vertices in the original graph have some
-kind of order, the order is preserved.
+        A graph, given in a different format than cnfgen.DirectedGraph,
+        is converted to cnfgen.DirectedGraph. In particular we support
+        networkx.DiGraph objects, if networkx library is installed.
 
-If all edges go from lower vertices to higher vertices, with respect
-to the labeling, then t he graph is considered a directed acyclic
-graph DAG.
+        For networkx graphs, we relabel vertices so that vertices are
+        labeled as numbers from 1 to `n`, where `n` is the number of
+        vertices in `G`. If the vertices in the original graph have
+        some kind of order, the order is preserved.
 
-If `G` is already a `cnfgen.graphs.DirectedGraph` object, nothing is done.
+        If all edges go from lower vertices to higher vertices, with
+        respect to the labeling, then the graph is considered
+        a directed acyclic graph DAG.
 
         Parameters
         ----------
         cls: a class
 
-        G : networkx.DiGraph or cnfgen.DirectedGraph
-            the graph to normalize/check
-        varname: str
-            the variable name, for error messages (default: 'G')
+        G : any
+            the graph to normalize
+
         """
-        typemsg = "type of argument '{}' must be either networx.DiGraph or cnfgen.DirectedGraph"
-        conversionmsg = "cannot convert '{}' into a cnfgen.DirectedGraph object"
-        if not isinstance(G, (DirectedGraph, networkx.DiGraph)):
-            raise TypeError(typemsg.format(varname))
         if isinstance(G, DirectedGraph):
             return G
-        try:
-            G2 = cls.from_networkx(G)
-            return G2
-        except AttributeError:
-            raise ValueError(conversionmsg.format(varname))
+
+        # is it worth to consider networkx graphs?
+        import importlib.util
+        networkx_spec = importlib.util.find_spec("networkx")
+        found = networkx_spec is not None
+        if found:
+            import networkx
+            if isinstance(G, networkx.DiGraph):
+                try:
+                    G2 = DirectedGraph.from_networkx(G)
+                    return G2
+                except AttributeError:
+                    raise ValueError("Error converting networkx.DiGraph object into cnfgen.DirectedGraph object")
+
+        # no other graph type known
+        raise TypeError("argument must either be cnfgen.DirectedGraph or networkx.DiGraph")
 
 
 class BaseBipartiteGraph(BaseGraph):
@@ -590,6 +634,10 @@ class BaseBipartiteGraph(BaseGraph):
         return range(1, self.lorder + 1), range(1, self.rorder + 1)
 
     def to_networkx(self):
+        try:
+            import networkx
+        except ImportError:
+            raise ImportError('networkx not installed')
         G = networkx.Graph()
         n, m = self.lorder, self.rorder
         G.add_nodes_from(range(1, n+1), bipartite=0)
@@ -675,6 +723,7 @@ The sequence of neighbors is guaranteed to be sorted."""
 
         Example
         -------
+        >>> import networkx
         >>> G = networkx.bipartite.complete_bipartite_graph(5,7)
         >>> B = BipartiteGraph.from_networkx(G)
         >>> print(B.order())
@@ -684,6 +733,10 @@ The sequence of neighbors is guaranteed to be sorted."""
         >>> print(B.has_edge(2,3))
         True
         """
+        try:
+            import networkx
+        except ImportError:
+            raise ImportError('networkx not installed')
         if not isinstance(G, networkx.Graph):
             raise ValueError('G is expected to be of type networkx.Graph')
         side = [[], []]
@@ -733,31 +786,49 @@ The sequence of neighbors is guaranteed to be sorted."""
             return ['kthlist', 'gml', 'matrix']
 
     @classmethod
-    def normalize(cls, G, varname='G'):
-        """Guarantees a cnfgen.graphs.BipartiteGraph object
+    def normalize(cls, G, varname=''):
+        """Guarantees a cnfgen.BipartiteGraph object
 
-If the given graph `G` is a networkx.Graph object with a bipartition,
-this method produces a CNFgen bipartite graph object, relabeling
-vertices so that vertices og each side are labeled as numbers from 1
-to `n` and 1 to `m` respectively, where `n` and `m` are the numbers of
-vertices in `G` on the left and right side, respectively. If the
-vertices in the original graph have some kind of order, the order
-is preserved.
+        A graph, given in a different format that
+        cnfgen.BipartiteGraph, is converted to such format.
+        In particular we support networkx.Graph objects, if networkx
+        library is installed.
 
-If `G` is already a `cnfgen.graphs.BipartiteGraph` object, nothing is done.
+        If the given graph `G` is a networkx.Graph object with
+        a bipartition, this method produces a CNFgen bipartite graph
+        object, relabeling vertices so that vertices of each side are
+        labeled as numbers from 1 to `n` and 1 to `m` respectively,
+        where `n` and `m` are the numbers of vertices in `G` on the
+        left and right side, respectively. If the vertices in the
+        original graph have some kind of order, the order
+        is preserved.
+
+        Parameters
+        ----------
+        cls: a class
+
+        G : any
+            the graph to normalize
 
         """
-        typemsg = "type of argument '{}' must be either networx.Graph or cnfgen.BipartiteGraph"
-        conversionmsg = "cannot convert '{}' to a bipartite graph: inconsistent 'bipartite' labeling"
-        if not isinstance(G, (BipartiteGraph, networkx.Graph)):
-            raise TypeError(typemsg.format(varname))
         if isinstance(G, BipartiteGraph):
             return G
-        try:
-            G2 = cls.from_networkx(G)
-            return G2
-        except AttributeError:
-            raise ValueError(conversionmsg.format(varname))
+
+        # is it worth to consider networkx graphs?
+        import importlib.util
+        networkx_spec = importlib.util.find_spec("networkx")
+        found = networkx_spec is not None
+        if found:
+            import networkx
+            if isinstance(G, networkx.Graph):
+                try:
+                    G2 = cls.from_networkx(G)
+                    return G2
+                except AttributeError:
+                    raise ValueError("Error converting networkx.Graph object into cnfgen.BipartiteGraph object")
+
+        # no other graph type known
+        raise TypeError("argument must either be cnfgen.BipartiteGraph or networkx.Graph")
 
 
 class CompleteBipartiteGraph(BipartiteGraph):
@@ -869,19 +940,6 @@ def _process_graph_io_arguments(iofile, graph_type, file_format, multi_edges):
     return (grtype, file_format)
 
 
-def normalize_networkx_labels(G):
-    """Relabel all vertices as integer starting from 1"""
-    # Normalize GML file. All nodes are integers starting from 1
-    try:
-        G = networkx.convert_node_labels_to_integers(
-            G, first_label=1, ordering='sorted')
-    except TypeError:
-        # Ids cannot be sorted natively
-        G = networkx.convert_node_labels_to_integers(
-            G, first_label=1, ordering='default')
-    return G
-
-
 def readGraph(input_file,
               graph_type,
               file_format='autodetect',
@@ -966,6 +1024,7 @@ def readGraph(input_file,
         # networkx seems to mismanage that and to cause a TypeError
         #
         try:
+            import networkx
             G = networkx.nx_pydot.read_dot(input_file)
             try:
                 # work around for a weird parse error in pydot, which
@@ -976,6 +1035,8 @@ def readGraph(input_file,
             G = graph_class.normalize(G)
         except TypeError:
             raise ValueError('Parse Error in dot file')
+        except ImportError:
+            raise ImportError('networkx not installed. Reading DOT files is not rupported')
 
     elif file_format == 'gml':
 
@@ -991,6 +1052,7 @@ def readGraph(input_file,
         # object too.
         #
         try:
+            import networkx
             G = networkx.read_gml((line.encode('ascii')
                                   for line in input_file), label='id')
             G = graph_class.normalize(G)
@@ -999,6 +1061,8 @@ def readGraph(input_file,
         except UnicodeEncodeError as errmsg:
             raise ValueError(
                 "[Non-ascii chars in GML file] {} ".format(errmsg))
+        except ImportError:
+            raise ImportError('networkx not installed. Reading GML files is not rupported')
 
     elif file_format == 'kthlist' and graph_type == 'bipartite':
 
@@ -1092,6 +1156,10 @@ def writeGraph(G, output_file, graph_type, file_format='autodetect'):
         # binary file. Thus we need to let Networkx write to
         # a temporary binary ascii encoded buffer and then convert the
         # content before sending it to the output file.
+        try:
+            import networkx
+        except ImportError:
+            raise ImportError('networkx not installed. Saving in GML format is not supported')
         tempbuffer = io.BytesIO()
         G = G.to_networkx()
         networkx.write_gml(G, tempbuffer)
