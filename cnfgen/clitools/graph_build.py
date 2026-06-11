@@ -23,6 +23,9 @@ from cnfgen.graphs import CompleteBipartiteGraph
 from cnfgen.graphs import BipartiteGraph
 from cnfgen.graphs import Graph
 
+from cnfgen.graphs import grid_graph
+from cnfgen.graphs import torus_graph
+
 from cnfgen.graphs import dag_complete_binary_tree
 from cnfgen.graphs import dag_pyramid
 from cnfgen.graphs import dag_path
@@ -136,8 +139,9 @@ def obtain_empty_simple(parsed):
     return G
 
 
+
 def obtain_grid_or_torus(parsed, periodic):
-    """Build a graph according to grid/toris construction"""
+    """Build a graph according to grid/torus construction"""
     dimensions = parsed['args']
     if periodic:
         name = 'torus'
@@ -153,14 +157,10 @@ def obtain_grid_or_torus(parsed, periodic):
             'Dimensions d1 x ... x dn of a {} must be positive integer'.format(
                 name))
 
-    G = networkx.grid_graph(dimensions, periodic=periodic)
     if periodic:
-        G.remove_edges_from(networkx.selfloop_edges(G)) # networkx creates torus with self-loops
-                                                        # but cnfgen does not like loops and multi-arcs
-    G = Graph.from_networkx(G)
-    G.name = "{} graph of dimension {}".format(name, dimensions)
-    return G
-
+        return torus_graph(dimensions)
+    else:
+        return grid_graph(dimensions)
 
 def obtain_grid(parsed):
     return obtain_grid_or_torus(parsed, periodic=False)

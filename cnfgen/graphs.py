@@ -10,7 +10,7 @@ import random
 from io import StringIO
 import copy
 from bisect import bisect_right, bisect_left
-from itertools import combinations
+from itertools import combinations, product
 
 import networkx
 
@@ -24,6 +24,7 @@ __all__ = [
     "bipartite_random_m_edges", "bipartite_random", "bipartite_shift"
     "multipartite_random",
     "random_gnp", "random_gnm", "random_gnd",
+    "grid_graph","torus_graph",
     "dag_complete_binary_tree", "dag_pyramid", "dag_path"
 ]
 
@@ -2047,6 +2048,71 @@ def random_gnd(n, d, seed=None):
         return Graph.complete_graph(n)
 
     return _random_gnd_kimvu(n,d)
+
+
+
+def grid_graph(dimensions, torus=False):
+    """Returns a grid/torus graph
+
+    Build a grid graph with dimensions specified by ``dimensions``
+    parameter. If ``torus`` is true there will be loop back edges.
+
+    Neither loops nor multi arcs are allowed hence
+    - dimensions of length 1 are irrelevant
+    - along dimensions of length 2 loop edges are not added
+
+    Parameters
+    ----------
+    dimensions : list[int]
+        number of vertices
+    torus: bool
+        edges loopback along dimensions
+
+    Returns
+    -------
+    Graph
+
+    Raises
+    ------
+    ValueError
+        unless dimension is a sequence of positive integers of length > 0
+
+    """
+    if len(dimensions)<1 :
+        raise ValueError('dimensions must have length > 0')
+
+    spans=[]
+    for d in dimensions:
+        if d < 1:
+            raise ValueError('dimensions must be a sequence of positive integers')
+        elif d>1:
+            spans.append(range(d))
+
+    if len(spans)==0:  # grid [1,1,1,...,1] is a single vertex graph
+        return Graph(1)
+
+    V = { v:i for i,v in enumerate(product(*spans),start=1) }
+    G = Graph(len(V))
+    for v in V:
+        src = list(v)
+        for i in range(len(spans)):
+            d = len(spans[i])
+
+            if d==1: continue  # no self loop
+            if d==2 and src[i]==1: continue  # no multi arc (even in torus)
+            if src[i]==d-1 and not torus: continue
+
+            src[i] += 1
+            src[i] %= d
+            w = tuple(src)
+            src[i] -= 1
+            src[i] %= d
+
+            G.add_edge(V[v],V[w])
+    return G
+
+def torus_graph(dimensions):
+    return grid_graph(dimensions, torus=True)
 
 
 
