@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 """Implementation of Tseitin formulas
 """
-import networkx as nx
+
 from cnfgen.formula.cnf import CNF
 from cnfgen.graphs import Graph
 

@@ -154,16 +154,11 @@ def GraphPigeonholePrinciple(G, functional=False, onto=False,
     - onto-PHP: each :math:`v \\in R` must get a pigeon
     - matching: :math:`E'` must be a perfect matching
 
-    Parameter `G` can be either of type
-    :py:class:`cnfgen.graphs.BipartiteGraph` or of type
-    a :py:class:`networkx.graph`. In the latter case it must be
-    a correct representation of a bipartite graph according to
-    [NetworkX]_.
+    Parameter `G` should be of type :py:class:`cnfgen.BipartiteGraph`.
 
     Parameters
     ----------
-    G : :py:class:`cnfgen.graphs.BipartiteGraph` or :py:class:`networkx.graph`
-        the bipartite graph describing the possible pairings
+    G : :py:class:`cnfgen.graphs.BipartiteGraph
     functional: bool
         enforce at most one edge per left vertex
     onto: bool
@@ -181,12 +176,8 @@ def GraphPigeonholePrinciple(G, functional=False, onto=False,
     ValueError
         `G` is not a proper bipartite graph
 
-    References
-    ----------
-    [Networkx] https://networkx.org/documentation/networkx-2.5/reference/algorithms/generated/networkx.algorithms.bipartite.basic.is_bipartite.html
-
     """
-    G = BipartiteGraph.normalize(G, 'G')
+    G = BipartiteGraph.normalize(G)
     if functional:
         if onto:
             formula_name = "Graph matching"

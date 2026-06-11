@@ -14,9 +14,9 @@ def GraphIsomorphism(G1, G2, nontrivial=False, formula_class=CNF):
 
     Parameters
     ----------
-    G1 : networkx.Graph
+    G1 : cnfgen.Graph
         an undirected graph object
-    G2 : networkx.Graph
+    G2 : cnfgen.Graph
         an undirected graph object
     nontrivial: bool
         forbid identical mapping
@@ -27,8 +27,8 @@ def GraphIsomorphism(G1, G2, nontrivial=False, formula_class=CNF):
     are isomorphic.
 
     """
-    G1 = Graph.normalize(G1, 'G1')
-    G2 = Graph.normalize(G2, 'G2')
+    G1 = Graph.normalize(G1)
+    G2 = Graph.normalize(G2)
 
     description = "Graph isomorphism between (1) '{}' and (2) '{}'"
     description = description.format(G1.name, G2.name)
@@ -63,7 +63,8 @@ def GraphAutomorphism(G, formula_class=CNF):
 
     Parameter
     ---------
-    G : a simple graph
+    G1 : cnfgen.Graph
+        an undirected graph object
 
     Returns
     -------

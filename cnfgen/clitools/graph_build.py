@@ -6,7 +6,7 @@ https://github.com/MassimoLauria/cnfgen.git
 """
 
 import random
-import networkx
+
 from itertools import combinations, product
 
 from cnfgen.graphs import random_gnp

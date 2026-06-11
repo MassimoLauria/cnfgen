@@ -14,12 +14,10 @@ the paper [MV20].
 from itertools import combinations
 from itertools import product
 
-import networkx
-
 from cnfgen.formula.cnf import CNF
 from cnfgen.families.tseitin import TseitinFormula
 from cnfgen.localtypes import positive_int
-from cnfgen.graphs import Graph
+from cnfgen.graphs import Graph,random_gnd
 
 
 def PitfallFormula(v, d, ny, nz, k, formula_class=CNF):
@@ -89,7 +87,7 @@ def PitfallFormula(v, d, ny, nz, k, formula_class=CNF):
         'Pitfall Formula with parameters (v={},d={},ny={},nz={},k={})'.format(
             v, d, ny, nz, k))
 
-    graph = networkx.random_regular_graph(d, v)
+    graph = random_gnd(v,d)
     graph = Graph.normalize(graph)
 
     # Template for the hard variables

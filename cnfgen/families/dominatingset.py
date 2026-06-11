@@ -40,7 +40,7 @@ def DominatingSet(G, d, alternative=False, formula_class=CNF):
 
     Parameters
     ----------
-    G : cnfgen.Graph or networkx.Graph
+    G : cnfgen.Graph
         a simple undirected graph
     d : a positive int
         the size limit for the dominating set
@@ -55,7 +55,7 @@ def DominatingSet(G, d, alternative=False, formula_class=CNF):
 
     """
     # Describe the formula
-    G = Graph.normalize(G, 'G')
+    G = Graph.normalize(G)
     positive_int(d, 'd')
 
     description = "{}-dominating set on {}".format(d, G.name)
@@ -118,7 +118,7 @@ def Tiling(G, formula_class=CNF):
 
     """
     # Describe the formula
-    G = Graph.normalize(G,'G')
+    G = Graph.normalize(G)
     description = "tiling of {}".format(G.name)
 
     F = formula_class(description=description)
