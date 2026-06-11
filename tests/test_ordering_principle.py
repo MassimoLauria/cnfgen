@@ -1,6 +1,4 @@
 import pytest
-import networkx as nx
-import sys
 
 from cnfgen import CNF
 from cnfgen import OrderingPrinciple, GraphOrderingPrinciple

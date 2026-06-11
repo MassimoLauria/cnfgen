@@ -49,7 +49,7 @@ class BipartiteEdgeList():
 
 
 class GraphEdgeList():
-    """Edge list for bipartite graphs"""
+    """Edge list for graphs"""
 
     def __init__(self, G):
         self.G = G
@@ -72,7 +72,7 @@ class GraphEdgeList():
 
 
 class DirectedEdgeList():
-    """Edge list for bipartite graphs"""
+    """Edge list for directed graphs"""
 
     def __init__(self, D, sort_by_predecessors=True):
         self.D = D
@@ -375,6 +375,9 @@ The sequence of neighbors is guaranteed to be sorted.
         converted to cnfgen.Graph. In particular we support
         networkx.Graph objects, if networkx library is installed.
 
+        A cnfgen.BipartiteGraph is translated just by renaming
+        vertices and forgetting the explicit bipartition.
+
         For networkx graphs, we relabel vertices so that vertices are
         labeled as numbers from 1 to `n`, where `n` is the number of
         vertices in `G`. If the vertices in the original graph have
@@ -390,6 +393,13 @@ The sequence of neighbors is guaranteed to be sorted.
         """
         if isinstance(G, Graph):
             return G
+
+        if isinstance(G, BipartiteGraph):
+            l = G.left_order()
+            newG = Graph(G.number_of_vertices())
+            for u,v in G.edges():
+                newG.add_edge(u,v+l)
+            return newG
 
         # is it worth to consider networkx graphs?
         import importlib.util

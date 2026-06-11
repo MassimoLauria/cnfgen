@@ -4,7 +4,7 @@
 """
 
 from cnfgen.formula.cnf import CNF
-from cnfgen.graphs import Graph
+from cnfgen.graphs import Graph, BipartiteGraph
 from cnfgen.localtypes import positive_int, non_negative_int
 
 

@@ -1,5 +1,3 @@
-import networkx as nx
-
 import pytest
 
 from cnfgen import CNF
@@ -8,9 +6,8 @@ from cnfgen import GraphPigeonholePrinciple
 from cnfgen import TseitinFormula
 from cnfgen import MutilatedChessboard
 
-from networkx.algorithms.bipartite import random_graph as bipartite_random_graph
-from networkx.algorithms.bipartite import complete_bipartite_graph
-from cnfgen.graphs import Graph, BipartiteGraph, CompleteBipartiteGraph
+from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph,bipartite_random
+from cnfgen.graphs import Graph, undirected_cycle_graph
 
 from cnfgen.clitools import cnfgen
 from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
@@ -24,24 +21,22 @@ def test_empty():
 
 
 def test_complete_bipartite():
-    G = complete_bipartite_graph(5, 7)
     B = CompleteBipartiteGraph(5, 7)
     PHP = GraphPigeonholePrinciple(B, functional=True, onto=True)
-    PM = PerfectMatchingPrinciple(G)
+    PM = PerfectMatchingPrinciple(B)
     assertCnfEqualsIgnoreVariables(PHP, PM)
 
 
 def test_random_bipartite():
-    G = bipartite_random_graph(5, 7, .3, seed=42)
-    B = BipartiteGraph.from_networkx(G)
+    B = bipartite_random(5, 7, .3, seed=42)
     PHP = GraphPigeonholePrinciple(B, functional=True, onto=True)
-    PM = PerfectMatchingPrinciple(G)
+    PM = PerfectMatchingPrinciple(B)
     assertCnfEqualsIgnoreVariables(PHP, PM)
 
 
 @pytest.mark.parametrize('n', range(3, 8))
 def test_cycle(n):
-    graph = nx.cycle_graph(n)
+    graph = undirected_cycle_graph(n)
     F = PerfectMatchingPrinciple(graph)
     G = TseitinFormula(graph, [1] * n)
     assertCnfEqualsIgnoreVariables(F, G)

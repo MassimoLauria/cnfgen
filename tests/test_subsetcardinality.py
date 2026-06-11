@@ -1,10 +1,9 @@
 import pytest
-import networkx as nx
 from itertools import product
 
 from cnfgen import CNF
 from cnfgen import SubsetCardinalityFormula
-from cnfgen.graphs import BipartiteGraph, CompleteBipartiteGraph
+from cnfgen.graphs import Graph,BipartiteGraph, CompleteBipartiteGraph
 
 from cnfgen.clitools import cnfgen, CLIError
 from tests.utils import assertCnfEqual, assertCnfEqualsDimacs
@@ -18,8 +17,8 @@ def test_empty():
 
 
 def test_not_bipartite():
-    graph = nx.complete_graph(3)
-    with pytest.raises(ValueError):
+    graph = Graph.complete_graph(3)
+    with pytest.raises(TypeError):
         SubsetCardinalityFormula(graph)
 
 
