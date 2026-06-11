@@ -1,8 +1,7 @@
-import networkx as nx
 from cnfgen import CNF
 from cnfgen import EvenColoringFormula, TseitinFormula
 from cnfgen.clitools import cnfgen, CLIError
-from cnfgen.graphs import Graph
+from cnfgen.graphs import Graph, undirected_path_graph,undirected_cycle_graph
 
 import pytest
 from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
@@ -10,20 +9,20 @@ from tests.utils import assertCnfEqual, assertCnfEqualsIgnoreVariables
 
 def test_empty():
     G = CNF()
-    graph = nx.Graph()
+    graph = Graph(0)
     F = EvenColoringFormula(graph)
     assertCnfEqual(F, G)
 
 
 def test_odd_degree():
-    graph = nx.path_graph(2)
+    graph = undirected_path_graph(2)
     with pytest.raises(ValueError):
         EvenColoringFormula(graph)
 
 
 def test_cycle():
     for n in range(3, 8):
-        graph = nx.cycle_graph(n)
+        graph = undirected_cycle_graph(n)
         F = EvenColoringFormula(graph)
         G = TseitinFormula(graph, [1] * n)
         assertCnfEqualsIgnoreVariables(F, G)
