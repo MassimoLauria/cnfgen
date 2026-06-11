@@ -1194,23 +1194,10 @@ def writeGraph(G, output_file, graph_type, file_format='autodetect'):
     if file_format == 'dot':
 
         _write_graph_dot(G,output_file)
-        # G = G.to_networkx()
-        # networkx.nx_pydot.write_dot(G, output_file)
 
     elif file_format == 'gml':
 
-        # Networkx's GML writer expects to write to an ascii encoded
-        # binary file. Thus we need to let Networkx write to
-        # a temporary binary ascii encoded buffer and then convert the
-        # content before sending it to the output file.
-        try:
-            import networkx
-        except ImportError:
-            raise ImportError('networkx not installed. Saving in GML format is not supported')
-        tempbuffer = io.BytesIO()
-        G = G.to_networkx()
-        networkx.write_gml(G, tempbuffer)
-        print(tempbuffer.getvalue().decode('ascii'), file=output_file)
+        _write_graph_gml(G,output_file)
 
     elif file_format == 'kthlist' and graph_type != 'bipartite':
 
@@ -1634,6 +1621,61 @@ def _write_graph_dot(G, output_file):
         output.write("}")
 
     print(output.getvalue(), file=output_file)
+
+
+
+
+def _write_graph_gml(G, output_file):
+    assert isinstance(G, (Graph, DirectedGraph,BipartiteGraph))
+
+    from io import StringIO
+    output = StringIO()
+
+    # preamble
+    output.write("graph [\n")
+    if isinstance(G, DirectedGraph):
+        output.write("  directed 1\n")
+    if G.name is not None:
+        output.write('  name "'+G.name+'"\n')
+
+    if not isinstance(G, BipartiteGraph):
+
+        # print nodes for non bipartite
+        right_offset=0
+        for i in range(G.order()):
+            output.write("""  node [
+    id {}
+    label \"{}\"
+  ]\n""".format(i,i+1))
+
+    else:
+        # left side
+        right_offset=G.left_order()
+        for i in range(G.left_order()):
+            output.write("""  node [
+    id {}
+    label \"{}\"
+    bipartite 0
+  ]\n""".format(i,i+1))
+
+        # right side
+        for i in range(G.right_order()):
+            output.write("""  node [
+    id {}
+    label \"{}\"
+    bipartite 1
+  ]\n""".format(i+right_offset,i+1+right_offset))
+
+    # edges
+    for u,v in G.edges():
+        output.write("""  edge [
+    source {}
+    target {}
+  ]\n""".format(u-1,v-1+right_offset))
+    output.write("]\n")
+    print(output.getvalue(), file=output_file)
+
+
 
 def _write_graph_kthlist_nonbipartite(G, output_file):
     """Write a graph to a file, in the KTH reverse adjacency lists format.
