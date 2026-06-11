@@ -288,6 +288,7 @@ class Graph(BaseGraph):
         G = networkx.Graph()
         G.add_nodes_from(range(1, self.n+1))
         G.add_edges_from(self.edges())
+        G.name = self.name
         return G
 
     def neighbors(self, u):
@@ -498,6 +499,7 @@ edges can be added and not removed."""
         G = networkx.DiGraph()
         G.add_nodes_from(range(1, self.n+1))
         G.add_edges_from(self.edges())
+        G.name = self.name
         return G
 
     def predecessors(self, u):
