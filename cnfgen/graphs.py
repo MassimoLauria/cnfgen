@@ -908,7 +908,7 @@ def _has_gml_support():
     """Test the presence of GML support
     """
     try:
-        from networkx import read_gml,write_gml
+        from networkx import read_gml
         return True
     except ImportError:
         pass
@@ -1627,6 +1627,9 @@ def _write_graph_dot(G, output_file):
 
 def _write_graph_gml(G, output_file):
     assert isinstance(G, (Graph, DirectedGraph,BipartiteGraph))
+
+    if not G.name.isascii() or not G.nams.isprintable():
+        raise ValueError("GML files onyl support ascii graph names")
 
     from io import StringIO
     output = StringIO()

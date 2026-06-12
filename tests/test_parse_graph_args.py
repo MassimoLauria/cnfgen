@@ -1,6 +1,7 @@
 import pytest
 
 from cnfgen.clitools.graph_args import parse_graph_argument as P
+from cnfgen import supported_graph_formats
 
 
 def test_empty_args():
@@ -14,9 +15,10 @@ def test_consume_args():
 
 
 def test_consume_args2():
+
     r = P(
         'simple',
-        'grid 10 10 10 addedges 3 save dot grid.dot',
+        'grid 10 10 10 addedges 3 save grid.kthlist',
     )
     assert r['args'] == ['10', '10', '10']
     assert r['addedges'] == ['3']
@@ -51,14 +53,32 @@ def test_complete_multipartite_graph():
     assert r['args'] == ['14', '5']
 
 
-def test_redundant_save_format():
+def test_redundant_save_format_dot():
+
+    if 'dot' not in supported_graph_formats()['simple']:
+        pytest.skip("No support for DOT file I/O.")
+
     r = P('simple', 'complete 10 save dot file.dot')
     assert r['save'] == ['dot', 'file.dot']
 
+def test_redundant_save_format_dimacs():
 
-def test_redundant_graph_format():
+    r = P('simple', 'complete 10 save dimacs file.dimacs')
+    assert r['save'] == ['dimacs', 'file.dimacs']
+
+
+def test_redundant_graph_format_dot():
+
+    if 'dot' not in supported_graph_formats()['simple']:
+        pytest.skip("No support for DOT file I/O.")
+
     r = P('simple', 'dot file.dot addedges 10')
     assert r['fileformat'] == 'dot'
+
+def test_redundant_graph_format_dimacs():
+
+    r = P('simple', 'dimacs file.dimacs addedges 10')
+    assert r['fileformat'] == 'dimacs'
 
 
 def test_detect_graph_format():

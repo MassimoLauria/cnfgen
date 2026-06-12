@@ -93,11 +93,16 @@ def test_tseitin_cli(shared_datadir):
 
     F = cnfgen(['cnfgen', 'tseitin', 'randomeven', 'grid', 4, 4],
                mode='formula')
-    assert F.is_satisfiable()
 
-    cnfgen(
+def test_tseitin_cli_gml(shared_datadir):
+
+    if 'gml' not in supported_graph_formats()['simple']:
+        pytest.skip("No support for GML file I/O.")
+
+    F = cnfgen(
         ['cnfgen', 'tseitin', 'randomodd', shared_datadir / 'gnm_10_30.gml'],
         mode='formula')
+    assert not F.is_satisfiable()
 
 
 def test_randkcnf_cli():
@@ -127,9 +132,16 @@ def test_kcolor_cli(shared_datadir):
     F = cnfgen(['cnfgen', 'kcolor', 4, 'gnd', 10, 3], mode='formula')
     assert F.is_satisfiable()
     F = cnfgen(['cnfgen', 'kcolor', 4, 'gnp', 10, .3], mode='formula')
-    cnfgen(
+
+def test_kcolor_cli_gml(shared_datadir):
+
+    if 'gml' not in supported_graph_formats()['simple']:
+        pytest.skip("No support for GML file I/O.")
+
+    F = cnfgen(
         ['cnfgen', 'kcolor', 3, shared_datadir / 'oddvertices_gnd_15_4.gml'],
         mode='formula')
+    assert F.is_satisfiable()
 
 
 def test_kclique_cli(shared_datadir):
@@ -138,6 +150,12 @@ def test_kclique_cli(shared_datadir):
                mode='formula')
     assert F.is_satisfiable()
     F = cnfgen(['cnfgen', 'kclique', 4, 'gnp', 10, .3], mode='formula')
+
+def test_kclique_cli_gml(shared_datadir):
+
+    if 'gml' not in supported_graph_formats()['simple']:
+        pytest.skip("No support for GML file I/O.")
+
     F = cnfgen(
         ['cnfgen', 'kclique', 5, shared_datadir / 'oddvertices_gnd_15_4.gml'],
         mode='formula')
@@ -200,7 +218,11 @@ def test_peb_cli_or(shared_datadir):
     assert F.number_of_variables() == 42
     assert not F.is_satisfiable()
 
-def test_peb_cli_read(shared_datadir):
+def test_peb_cli_read_gml(shared_datadir):
+
+    if 'gml' not in supported_graph_formats()['dag']:
+        pytest.skip("No support for GML file I/O.")
+
     F = cnfgen(['cnfgen', 'peb', shared_datadir / 'dag.gml', '-T', 'xor', 2],
                mode='formula')
     assert not F.is_satisfiable()
