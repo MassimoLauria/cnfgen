@@ -758,15 +758,15 @@ The sequence of neighbors is guaranteed to be sorted."""
 
         Example
         -------
-        >>> import networkx
-        >>> G = networkx.bipartite.complete_bipartite_graph(5,7)
-        >>> B = BipartiteGraph.from_networkx(G)
-        >>> print(B.order())
-        12
-        >>> print(B.left_order())
-        5
-        >>> print(B.has_edge(2,3))
-        True
+        >>> import networkx                                       # doctest: +SKIP
+        >>> G = networkx.bipartite.complete_bipartite_graph(5,7)  # doctest: +SKIP
+        >>> B = BipartiteGraph.from_networkx(G)                   # doctest: +SKIP
+        >>> print(B.order())                                      # doctest: +SKIP
+        12                                                        # doctest: +SKIP
+        >>> print(B.left_order())                                 # doctest: +SKIP
+        5                                                         # doctest: +SKIP
+        >>> print(B.has_edge(2,3))                                # doctest: +SKIP
+        True                                                      # doctest: +SKIP
         """
         try:
             import networkx

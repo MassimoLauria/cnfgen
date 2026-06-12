@@ -5,6 +5,35 @@ import pytest
 import cnfgen
 from cnfgen.graphs import Graph, BipartiteGraph,DirectedGraph
 from cnfgen.graphs import random_gnm,random_gnp,random_gnd,multipartite_random
+from cnfgen.graphs import bipartite_random
+
+
+def test_conversion_from_networkx():
+    try:
+        import networkx
+    except:
+        pytest.skip("networkx not installed. Skip conversion test")
+
+    G = networkx.bipartite.complete_bipartite_graph(5,7)
+    B = BipartiteGraph.from_networkx(G)
+    assert B.order() == 12
+    assert B.left_order() == 5
+    assert B.has_edge(2,3)
+
+
+def test_conversion_to_networkx():
+    try:
+        import networkx
+    except:
+        pytest.skip("networkx not installed. Skip conversion test")
+
+    G = networkx.bipartite.complete_bipartite_graph(5,7)
+    B = bipartite_random(5,4,0.3)
+    D = B.to_networkx().nodes(data=True)
+    assert D[1]['bipartite']==0
+    assert D[5]['bipartite']==0
+    assert D[6]['bipartite']==1
+    assert D[9]['bipartite']==1
 
 
 def assert_d_regular(G:Graph,d):
