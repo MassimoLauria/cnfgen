@@ -18,7 +18,7 @@ license-files = [
 requires-python = ">=3.7"
 dependencies = [
     "networkx>=2.4",
-    "pydot>=1.2.3,<4.0.0",
+    "pydot>=1.2.3",
 ]
 
 

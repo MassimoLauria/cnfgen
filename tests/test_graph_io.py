@@ -10,6 +10,7 @@ from cnfgen.graphs import readGraph, writeGraph, supported_graph_formats
 from cnfgen.graphs import Graph, BipartiteGraph,DirectedGraph
 
 from cnfgen.graphs import _has_dot_support,_has_gml_support
+from cnfgen.graphs import _read_bipartite_dot_format,_read_non_bipartite_dot_format
 
 dot_path2 = 'graph G { 0 -- 1 -- 2}'
 gml_path2 = """
@@ -103,32 +104,30 @@ strict graph "Complete bipartite graph with (4,3) vertices" {
 def test_low_level_dot_read_path2():
 
     try:
-        import networkx as nx
         if not _has_dot_support():
             pytest.skip("DOT library not installed. Can't test DOT I/O")
     except ImportError:
         pytest.skip("networkx library not installed. Can't test DOT I/O")
 
-    G = nx.Graph(nx.nx_pydot.read_dot(sio(dot_path2)))
+    G = _read_non_bipartite_dot_format(sio(dot_path2),Graph)
 
     assert G.order() == 3
     assert len(G.edges()) == 2
-    assert G.has_edge('0', '1')
-    assert G.has_edge('1', '2')
-    assert not G.has_edge('0', '2')
+    assert G.has_edge(1, 2)
+    assert G.has_edge(2, 3)
+    assert not G.has_edge(1, 3)
 
 
 def test_low_level_dot_broken_TypeError():
 
     try:
-        import networkx as nx
         if not _has_dot_support():
             pytest.skip("DOT library not installed. Can't test DOT I/O")
     except ImportError:
         pytest.skip("networkx library not installed. Can't test DOT I/O")
 
-    with pytest.raises(TypeError):
-        nx.Graph(nx.nx_pydot.read_dot(sio("jsjd jfdakh jkad ")))
+    with pytest.raises(ValueError):
+        _read_non_bipartite_dot_format(sio("jsjd jfdakh jkad "),Graph)
 
 
 def test_low_level_gml_read_path2():

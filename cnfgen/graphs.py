@@ -1468,12 +1468,17 @@ def _read_non_bipartite_dot_format(inputfile, graph_class):
     edges=[]
     next_vertex_idx=1
 
-    D = pydot.graph_from_dot_data(inputfile.read())[0]
+    D = pydot.graph_from_dot_data(inputfile.read())
+    if D is None:
+        raise ValueError("[Input error] input is not a valid DOT file")
+    D=D[0]
     if graph_class==DirectedGraph and D.get_graph_type()!='digraph':
         raise ValueError("[Input error] expecting a digraph in the DOT file")
 
     # Load vertices
     for node in D.get_nodes():
+        if node.get_name()=='"\\n"':     # bug of old versions of pydot
+            continue
         vertices[node.get_name()]=next_vertex_idx
         next_vertex_idx +=1
     # Load vertices and edges
@@ -1514,18 +1519,25 @@ def _read_bipartite_dot_format(inputfile, graph_class):
     next_left_idx=1
     next_right_idx=1
 
-    D = pydot.graph_from_dot_data(inputfile.read())[0]
-    if D.get_graph_type()!='graph':
+    D = pydot.graph_from_dot_data(inputfile.read())
+    if D is None:
+        raise ValueError("[Input error] input is not a valid DOT file")
+    D=D[0]
+    if D is None or D.get_graph_type()!='graph':
         raise ValueError("[Input error] expecting a graph in the DOT file")
 
     # Check vertices
     for node in D.get_nodes():
+        if node.get_name()=='"\\n"':     # bug of old versions of pydot
+            continue
         attr = node.get_attributes()
-        if 'bipartite' not in attr or attr['bipartite'] not in '01':
+        if 'bipartite' not in attr or attr['bipartite'] not in [0,1,'0','1']:
             raise ValueError("DOT format: vertices needs 'bipartite=0/1' specification")
 
     # Load vertices
     for node in D.get_nodes():
+        if node.get_name()=='"\\n"':     # bug of old versions of pydot
+            continue
         attr = node.get_attributes()
         if attr['bipartite']=='0':
             left[node.get_name()]=next_left_idx
