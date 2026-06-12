@@ -1890,7 +1890,7 @@ def bipartite_random_m_edges(L, R, m, seed=None):
 
     if m > L * R // 3:
         # Sampling strategy (dense)
-        E = ((u, v) for u in U for v in V)
+        E = [(u, v) for u in U for v in V]
         for u, v in random.sample(E, m):
             G.add_edge(u, v)
     else:
