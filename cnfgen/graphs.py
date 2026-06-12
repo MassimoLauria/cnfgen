@@ -895,7 +895,6 @@ def _has_dot_support():
     """
     try:
         # newer version of networkx
-        from networkx import nx_pydot
         import pydot
         del pydot
         return True
@@ -1064,26 +1063,13 @@ def readGraph(input_file,
                                                            file_format,
                                                            multi_edges)
 
-    if file_format == 'dot':
+    if file_format == 'dot' and graph_class!=BipartiteGraph:
 
-        # This is a workaround. In theory a broken dot file should
-        # cause a pyparsing.ParseError but the dot_reader used by
-        # networkx seems to mismanage that and to cause a TypeError
-        #
-        try:
-            import networkx
-            G = networkx.nx_pydot.read_dot(input_file)
-            try:
-                # work around for a weird parse error in pydot, which
-                # adds an additiona vertex '\\n' in the graph.
-                G.remove_node('\\n')
-            except networkx.exception.NetworkXError:
-                pass
-            G = graph_class.normalize(G)
-        except TypeError:
-            raise ValueError('Parse Error in dot file')
-        except ImportError:
-            raise ImportError('networkx not installed. Reading DOT files is not rupported')
+        G = _read_non_bipartite_dot_format(input_file, graph_class)
+
+    elif file_format == 'dot' and graph_class==BipartiteGraph:
+
+        G = _read_bipartite_dot_format(input_file, graph_class)
 
     elif file_format == 'gml':
 
@@ -1460,6 +1446,104 @@ def _read_graph_dimacs_format(inputfile, graph_class):
     if m != m_cnt:
         raise ValueError("[Syntax error] " +
                          "{} edges were expected.".format(m))
+
+    return G
+
+def _read_non_bipartite_dot_format(inputfile, graph_class):
+    """Read a graph from file, in the DOT format.
+
+    Parameters
+    ----------
+    inputfile : file object
+        file handle of the input
+
+    graph_class: class object
+        either Graph or DirectedGraph
+    """
+    assert graph_class in [Graph, DirectedGraph]
+    assert _has_dot_support()
+    import pydot
+
+    vertices={}
+    edges=[]
+    next_vertex_idx=1
+
+    D = pydot.graph_from_dot_data(inputfile.read())[0]
+    if graph_class==DirectedGraph and D.get_graph_type()!='digraph':
+        raise ValueError("[Input error] expecting a digraph in the DOT file")
+
+    # Load vertices
+    for node in D.get_nodes():
+        vertices[node.get_name()]=next_vertex_idx
+        next_vertex_idx +=1
+    # Load vertices and edges
+    for edge in D.get_edges():
+        src = edge.get_source()
+        dst = edge.get_destination()
+        if src not in vertices:
+            vertices[src]=next_vertex_idx
+            next_vertex_idx +=1
+        if dst not in vertices:
+            vertices[dst]=next_vertex_idx
+            next_vertex_idx +=1
+        edges.append((src,dst))
+    G = graph_class(len(vertices))
+    G.name = D.get_name().strip('"') or ""
+    for src,dst in edges:
+        G.add_edge(vertices[src],vertices[dst])
+
+    return G
+
+def _read_bipartite_dot_format(inputfile, graph_class):
+    """Read a bipartite graph from file, in the DOT format.
+
+    Parameters
+    ----------
+    inputfile : file object
+        file handle of the input
+
+    graph_class: class object
+        BipartiteGraph
+    """
+    assert graph_class == BipartiteGraph
+    assert _has_dot_support()
+    import pydot
+
+    left={}
+    right={}
+    next_left_idx=1
+    next_right_idx=1
+
+    D = pydot.graph_from_dot_data(inputfile.read())[0]
+    if D.get_graph_type()!='graph':
+        raise ValueError("[Input error] expecting a graph in the DOT file")
+
+    # Check vertices
+    for node in D.get_nodes():
+        attr = node.get_attributes()
+        if 'bipartite' not in attr or attr['bipartite'] not in '01':
+            raise ValueError("DOT format: vertices needs 'bipartite=0/1' specification")
+
+    # Load vertices
+    for node in D.get_nodes():
+        attr = node.get_attributes()
+        if attr['bipartite']=='0':
+            left[node.get_name()]=next_left_idx
+            next_left_idx +=1
+        else:
+            right[node.get_name()]=next_right_idx
+            next_right_idx +=1
+
+    G = BipartiteGraph(len(left),len(right))
+    G.name = D.get_name().strip('"') or ""
+
+    # Load edges
+    for edge in D.get_edges():
+        src=edge.get_source()
+        dst=edge.get_destination()
+        if src not in left or dst not in right:
+            raise ValueError("DOT file: invalid edge {}--{} ".format(src,dst))
+        G.add_edge(left[src],right[dst])
 
     return G
 
