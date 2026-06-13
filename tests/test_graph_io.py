@@ -15,6 +15,7 @@ from cnfgen.graphs import _read_bipartite_dot_format,_read_non_bipartite_dot_for
 dot_path2 = 'graph G { 0 -- 1 -- 2}'
 gml_path2 = """
         graph [
+           name "caratteri &#224;&#232;&#236;&#242;&#249; non-ascii"
            node [
              id 0
              label 0
@@ -144,7 +145,7 @@ def test_low_level_gml_read_path2():
     assert G.has_edge(0, 1)
     assert G.has_edge(1, 2)
     assert not G.has_edge(0, 2)
-
+    assert G.name == "caratteri àèìòù non-ascii"
 
 def test_low_level_gml_broken_NetworkXError():
 

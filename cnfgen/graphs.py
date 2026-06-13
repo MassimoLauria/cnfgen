@@ -1735,7 +1735,8 @@ def _write_graph_gml(G, output_file):
     if isinstance(G, DirectedGraph):
         output.write("  directed 1\n")
     if G.name is not None:
-        output.write('  name "'+G.name+'"\n')
+        name_encoded = G.name.encode('ascii', 'xmlcharrefreplace').decode()
+        output.write('  name "'+name_encoded+'"\n')
 
     if not isinstance(G, BipartiteGraph):
 
