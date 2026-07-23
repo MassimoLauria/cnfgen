@@ -41,7 +41,7 @@ paramcases = product([23,45,10,24532],
                 ['fixed','shuffle'],
                 ['fixed','shuffle'])
 
-@pytest.mark.parametrize("seed,p,v,c", paramcases)
+@pytest.mark.parametrize("seed,p,v,c", list(paramcases))
 def test_cmdline_cnfshuffle_p(seed,p,v,c):
     cnf = RandomKCNF(4, 10, 3)
     lib, cli = run(cnf, seed, p,v,c)

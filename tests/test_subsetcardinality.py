@@ -80,7 +80,7 @@ def test_complete_odd():
     assertCnfEqualsDimacs(F, dimacs)
 
 
-cli_complete_cases=product(range(2, 5),range(2, 5))
+cli_complete_cases=list(product(range(2, 5),range(2, 5)))
 
 @pytest.mark.parametrize('rows,columns', cli_complete_cases)
 def test_cli_complete(rows,columns):

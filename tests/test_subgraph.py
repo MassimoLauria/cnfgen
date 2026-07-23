@@ -117,7 +117,7 @@ def test_not_symmetric_dont_break():
     assertSAT(F)
 
 
-@pytest.mark.parametrize("base,template", product(range(2, 5), range(2, 5)))
+@pytest.mark.parametrize("base,template", list(product(range(2, 5), range(2, 5))))
 def test_parameters(base, template):
     parameters = [
         "cnfgen", "-q", "subgraph", "-G", "complete", base, "-H",
